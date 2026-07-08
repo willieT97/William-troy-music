@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fretboard Atlas — Terra Incognita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --amber:#E0922A; --green:#1F9D55; --muted:#6F6757; --parch:#EFE4CB;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--body);
+    line-height:1.55; -webkit-font-smoothing:antialiased; position:relative; min-height:100vh;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:9; opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+  }
+  .mark{ position:fixed; width:16px; height:16px; z-index:8; opacity:.6; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--ink); }
+  .mark::before{ left:7px; top:0; width:2px; height:16px; }
+  .mark::after{ top:7px; left:0; height:2px; width:16px; }
+  .mark.tl{ left:12px; top:12px; } .mark.tr{ right:12px; top:12px; }
+  .mark.bl{ left:12px; bottom:12px; } .mark.br{ right:12px; bottom:12px; }
+
+  .wrap{ max-width:740px; margin:0 auto; padding:26px 20px 90px; position:relative; z-index:1; }
+
+  header.top{ text-align:center; margin-bottom:4px; }
+  .title{ position:relative; display:inline-block; font-family:var(--disp); font-weight:800;
+    font-size:clamp(1.5rem,5.5vw,2.4rem); letter-spacing:-.01em; line-height:1; }
+  .title::after{ content:attr(data-text); position:absolute; left:2.5px; top:2.5px; color:var(--pink);
+    mix-blend-mode:multiply; z-index:-1; }
+  .tagline{ font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin-top:9px; }
+
+  .bar{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin:18px 0 16px; border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); padding:8px 0; }
+  .pos{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .atlasbtn{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase;
+    padding:7px 14px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink); }
+  .atlasbtn:active{ transform:translate(3px,3px); box-shadow:none; }
+
+  .atlas{ position:relative; z-index:30; border:2.5px solid var(--ink); background:#FBF7EE;
+    padding:14px 16px 16px; margin-bottom:20px; box-shadow:8px 8px 0 var(--ink); }
+  .atlas.hidden{ display:none; }
+  .atlas h4{ font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin:14px 0 6px; }
+  .atlas a{ display:block; font-size:.9rem; padding:5px 8px; color:var(--ink); text-decoration:none;
+    cursor:pointer; border-left:3px solid transparent; }
+  .atlas a:hover{ background:rgba(36,56,200,.06); }
+  .atlas a.cur{ border-left-color:var(--pink); font-weight:600; background:rgba(255,78,134,.07); }
+  .atlas a.soon{ color:var(--muted); cursor:default; }
+  .atlas a.soon:hover{ background:none; }
+  .atlas .tag{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase;
+    border:1.5px solid var(--muted); color:var(--muted); padding:1px 5px; margin-left:6px; }
+  .atlas .flag{ color:var(--blue); font-weight:700; margin-left:6px; }
+  .mapbox{ border:2px solid var(--ink); background:var(--parch); padding:6px; }
+  .mapbox svg{ width:100%; height:auto; display:block; }
+  .maplegend{ font-family:var(--mono); font-size:.56rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); margin-top:6px; text-align:center; }
+
+  .stage{ position:relative; border:2.5px solid var(--ink); background:var(--paper); box-shadow:8px 8px 0 var(--ink); }
+  .stage::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:4; opacity:.10;
+    background:repeating-linear-gradient(0deg, transparent 0 3px, rgba(23,20,14,.5) 3px 4px); }
+  .banner{ position:relative; z-index:5; background:var(--ink); color:var(--paper); padding:9px 14px;
+    font-family:var(--mono); font-size:.66rem; letter-spacing:.12em; text-transform:uppercase;
+    display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .banner b{ color:#F5C76B; font-weight:700; }
+  .scene{ position:relative; z-index:3; display:flex; gap:0; align-items:stretch; min-height:230px; }
+  .scene::before{ content:""; position:absolute; left:0; right:0; bottom:0; height:56px;
+    background:linear-gradient(0deg, rgba(224,146,42,.16), transparent);
+    border-top:2px solid rgba(23,20,14,.25); z-index:0; }
+  .portrait{ position:relative; z-index:2; width:172px; flex:0 0 172px; display:flex; align-items:flex-end;
+    justify-content:center; padding:10px 0 0 6px; }
+  .portrait svg{ width:150px; height:auto; display:block; }
+  .speech{ position:relative; z-index:2; flex:1; margin:16px 14px 18px 4px; align-self:center;
+    border:2.5px solid var(--ink); background:#FBF7EE; box-shadow:4px 4px 0 var(--ink);
+    padding:20px 16px 26px; cursor:pointer; min-height:120px; }
+  .who{ position:absolute; top:-11px; left:12px; background:var(--ink); color:var(--paper);
+    font-family:var(--mono); font-size:.56rem; letter-spacing:.14em; text-transform:uppercase; padding:3px 8px; }
+  .scene.student .speech{ background:#FDF3F6; }
+  .scene.student .who{ background:var(--pink); color:#fff; }
+  #line{ font-size:.98rem; }
+  #line i{ color:var(--muted); }
+  .scene.student #line{ font-style:italic; }
+  .cont{ position:absolute; right:10px; bottom:6px; font-family:var(--mono); font-size:.6rem;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .cont.blink{ animation:blink 1s steps(2) infinite; }
+  @keyframes blink{ 50%{ opacity:.15; } }
+
+  .exwrap{ margin-top:22px; position:relative; z-index:20; }
+  .ex{ position:relative; z-index:21; border:2.5px solid var(--ink); background:var(--paper);
+    box-shadow:8px 8px 0 var(--ink); padding:18px 18px 20px; }
+  .extag{ font-family:var(--mono); font-size:.6rem; letter-spacing:.18em; text-transform:uppercase; color:var(--pink); }
+  .exttl2{ font-family:var(--disp); font-weight:800; font-size:1.35rem; margin:4px 0 6px; }
+  .exdesc{ color:var(--muted); font-size:.92rem; margin-bottom:6px; }
+  .goalchip{ display:inline-block; font-family:var(--mono); font-size:.6rem; letter-spacing:.1em;
+    text-transform:uppercase; border:1.5px solid var(--ink); padding:2px 8px; margin-bottom:10px; }
+  .goalchip.done{ background:var(--blue); color:#fff; border-color:var(--blue); }
+
+  .qline{ font-family:var(--disp); font-weight:700; font-size:1.02rem; margin:8px 0 6px; text-align:center; }
+  .neckbox{ border:2px solid var(--ink); background:var(--parch); padding:6px; margin:8px 0 12px; }
+  .neckbox svg{ width:100%; height:auto; display:block; }
+  .cell{ fill:transparent; cursor:pointer; }
+  .cell:hover{ fill:rgba(36,56,200,.10); }
+  .gstr.active{ stroke:var(--blue) !important; }
+
+  .row{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .btn{ font-family:var(--body); font-weight:600; font-size:.95rem; padding:10px 16px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink); cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink); transition:transform .05s, box-shadow .05s, background .12s; }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn:disabled{ opacity:.4; box-shadow:none; cursor:default; }
+  .btn.big{ font-family:var(--mono); font-weight:700; }
+  .btn.ink{ background:var(--ink); color:var(--paper); margin-top:10px; }
+  .btn.jc{ font-family:var(--mono); font-weight:700; min-width:52px; }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .fb{ min-height:1.4em; font-family:var(--disp); font-weight:700; font-size:1rem; text-align:center;
+    color:var(--muted); margin-top:12px; }
+  .fb.ok{ color:var(--blue); } .fb.no{ color:var(--pink); }
+  .streak{ font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); text-align:center; margin-top:12px; }
+  .streak b{ color:var(--ink); }
+
+  .navbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:22px; }
+  .lab2{ font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .endnote{ font-family:var(--mono); font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+
+  @media (max-width:560px){
+    .portrait{ width:118px; flex-basis:118px; }
+    .portrait svg{ width:104px; }
+  }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+  <span class="mark tl"></span><span class="mark tr"></span>
+  <span class="mark bl"></span><span class="mark br"></span>
+
+  <div class="wrap">
+    <header class="top">
+      <span class="title" data-text="The Fretboard Atlas">The Fretboard Atlas</span>
+      <div class="tagline">terra incognita · an expedition across the guitar neck</div>
+    </header>
+
+    <div class="bar">
+      <span class="pos" id="pos"></span>
+      <button class="atlasbtn" id="atlasBtn">🧭 Atlas</button>
+    </div>
+
+    <nav class="atlas hidden" id="atlas"></nav>
+
+    <div class="stage">
+      <div class="banner"><span id="bk"></span><b id="btitle"></b></div>
+      <div class="scene" id="scene">
+        <div class="portrait" id="portrait"></div>
+        <div class="speech" id="speech">
+          <span class="who" id="who">THE CARTOGRAPHER</span>
+          <div id="line"></div>
+          <span class="cont blink" id="cont">▾ tap</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="exwrap" id="exwrap" hidden></div>
+
+    <div class="navbar">
+      <button class="btn" id="prev">← Back</button>
+      <span id="nextslot"></span>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   THE FRETBOARD ATLAS — learning the notes on the guitar neck, framed
+   as a mapping expedition. An old cartographer teaches; each lesson is
+   a region of the neck. Reach the charting goal (a streak) and the
+   region is inked onto the atlas; the unexplored strings stay under
+   fog, where there be dragons.
+
+   Console helper for demos:  devChart(i)  charts region i instantly.
+   ==================================================================== */
+
+const el = id => document.getElementById(id);
+const rand = n => Math.floor(Math.random() * n);
+const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ===================== NOTE MATH ===================== */
+/* strings indexed 0 (low E, thickest) .. 5 (high E, thinnest) */
+const STRINGS = [
+  { l:'E', long:'low E',  pc:4,  f:82.41,  desc:'the thickest river — low E' },
+  { l:'A', long:'A',      pc:9,  f:110.00, desc:'the A river' },
+  { l:'D', long:'D',      pc:2,  f:146.83, desc:'the D river' },
+  { l:'G', long:'G',      pc:7,  f:196.00, desc:'the G river' },
+  { l:'B', long:'B',      pc:11, f:246.94, desc:'the B river' },
+  { l:'E', long:'high E', pc:4,  f:329.63, desc:'the thinnest river — high E' }
+];
+const PC_LETTER = { 0:'C', 2:'D', 4:'E', 5:'F', 7:'G', 9:'A', 11:'B' };
+function letterAt(s, f){ return PC_LETTER[(STRINGS[s].pc + f) % 12] || null; }
+function naturalFretsFor(s, maxF){ const out=[]; for(let f=0; f<=maxF; f++){ if(letterAt(s,f)) out.push(f); } return out; }
+function freqAt(s, f){ return STRINGS[s].f * Math.pow(2, f/12); }
+function ord(f){
+  if(f === 0) return 'open';
+  const suf = (f===1)?'st':(f===2)?'nd':(f===3)?'rd':'th';
+  return f + suf;
+}
+
+/* ===================== AUDIO ===================== */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; audioCtx = new AC(); }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function pluck(freq, when=0, dur=1.2, amp=0.3){
+  const c = ensureAudio(), t = c.currentTime + when;
+  const out = c.createGain(); out.connect(c.destination);
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime(amp, t+0.02);
+  out.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  [['sine',1.0],['triangle',0.22]].forEach(([type,a])=>{
+    const o = c.createOscillator(); o.type = type; o.frequency.value = freq;
+    const g = c.createGain(); g.gain.value = a;
+    o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.05);
+  });
+}
+function chartedFanfare(){        /* a little perfect-fifth chime when a region is inked */
+  pluck(261.63, 0, 0.9, 0.22); pluck(392.00, 0.16, 1.2, 0.22);
+}
+
+/* ===================== DIALOGUE HELPERS ===================== */
+const P    = html => ({ who:'guide', html });
+const QA   = (q, a) => [ { who:'student', html:q }, { who:'guide', html:a } ];
+const NOTE = html => ({ who:'guide', html:'<i>' + html + '</i>' });
+
+/* ===================== COURSE ===================== */
+const COURSE = [
+  {
+    title:'Expedition I — The First Survey', rank:'Apprentice Surveyor',
+    lessons:[
+      {
+        num:'1.1', title:'The Six Rivers',
+        teach:[
+          P(`Every land is unknown until someone walks it. This one is six rivers wide and twelve crossings long. Guitarists call it the neck. We shall call it what it is: <b>territory</b>.`),
+          P(`The six rivers, from the thickest water to the thinnest: <b>E, A, D, G, B, E</b>. Say them as you cross. E — A — D — G — B — E.`),
+          ...QA(`Two rivers named E?`,
+                `Sharp eyes. The thickest and the thinnest share a name — the same water, flowing an octave apart. We say <b>low E</b> and <b>high E</b>, and we are never lost.`),
+          P(`A rope for your memory, if you want one: <i>Eddie Ate Dynamite — Good Bye Eddie</i>. Now, to the field. I will point to a river; you will name it.`)
+        ],
+        ex:{ type:'riverName', exttl:'Name the river', desc:'A river lights up — its name hidden. Listen to its water and name it.', goal:6 }
+      },
+      {
+        num:'1.2', title:'Landmarks & the Great Divide',
+        teach:[
+          P(`A cartographer trusts landmarks before memory. This neck has them: markers set at crossings <b>3, 5, 7 and 9</b> — and a double mark at <b>12</b>.`),
+          P(`That twelfth crossing is the <b>Great Divide</b>. There, every river carries the very note of its source, one octave higher.`),
+          ...QA(`And past the Divide?`,
+                `The whole land repeats, crossing for crossing. Chart the first twelve and you have charted the entire country. That is why we go no further east — there <i>is</i> no further east.`),
+          P(`Learn the landmarks blind. I will cover the numbers; you will know each mark by its place alone.`)
+        ],
+        ex:{ type:'landmark', exttl:'Know the landmarks', desc:'Numbers covered: name the marked crossing. And at the Great Divide, name the note each river carries.', goal:6 }
+      },
+      {
+        num:'1.3', title:'The Southern Coast — Low E',
+        teach:[
+          P(`We chart the thickest river first: <b>low E</b>, the southern coast. Its notes walk the musical alphabet — A, B, C, D, E, F, G — then round again.`),
+          P(`Most steps of that alphabet are two crossings wide. Two are narrow passes, a single crossing each: <b>E to F</b>, and <b>B to C</b>. Mark them well.`),
+          P(`So, from the source: E open, <b>F at 1</b>, <b>G at 3</b> — on a landmark — <b>A at 5</b>, <b>B at 7</b>, <b>C at 8</b>, <b>D at 10</b>, and <b>E at 12</b>, the Divide.`),
+          ...QA(`Must I memorize each one?`,
+                `You must <i>walk</i> each one — memory follows the feet. Name what I mark; find what I name. Both directions, until the coast is yours.`)
+        ],
+        ex:{ type:'chartString', str:0, exttl:'Chart the low E', desc:'Two duties, alternating: name the note I mark, and plant a flag where I name a note.', goal:7 }
+      },
+      {
+        num:'1.4', title:'The A River',
+        teach:[
+          P(`The second river: <b>A</b>. The same alphabet, the same narrow passes — only the source has changed.`),
+          P(`From A: <b>B at 2</b>, <b>C at 3</b> — a landmark — <b>D at 5</b>, <b>E at 7</b>, <b>F at 8</b>, <b>G at 10</b>, and <b>A at 12</b>.`),
+          ...QA(`The pattern feels familiar.`,
+                `It is the same country seen from a different shore. Chart two rivers well and the rest will surrender quickly — as you are about to see.`)
+        ],
+        ex:{ type:'chartString', str:1, exttl:'Chart the A river', desc:'Same duties, new water: name what is marked, find what is named.', goal:7 }
+      },
+      {
+        num:'1.5', title:'Octave Bridges',
+        teach:[
+          P(`Now, the surveyor's shortcut. From the low E or the A river, travel <b>two rivers north and two crossings east</b> — and you stand on the very same note, an octave higher.`),
+          P(`G at the 3rd crossing of low E? Then G waits at the 5th crossing of the D river. Every note you have charted casts its twin across the water.`),
+          ...QA(`So I need not chart the D and G rivers note by note?`,
+                `You charted them the moment you charted the south — you only need to build the bridges. I will name a note; you will plant your flag on its octave.`)
+        ],
+        ex:{ type:'octaveBridge', sources:[0,1], shift:2, exttl:'Build the bridges', desc:'A charted note is shown on a southern river. Click where its octave lands: two rivers north, two crossings east.', goal:6 }
+      }
+    ]
+  },
+  {
+    title:'Expedition II — The Northern Rivers', rank:'Journeyman Mapmaker',
+    lessons:[
+      {
+        num:'2.1', title:'The Twin Coast — High E',
+        teach:[
+          P(`North at last. And here is the finest news a tired surveyor can hear: the far coast — the <b>high E</b> — is a twin of the southern coast you have already walked.`),
+          P(`Crossing for crossing, the names repeat: <b>F at 1</b>, <b>G at 3</b>, <b>A at 5</b>, <b>B at 7</b>, <b>C at 8</b>, <b>D at 10</b>, <b>E at 12</b>. The same country, two octaves higher.`),
+          ...QA(`So I have charted it already?`,
+                `Your memory has — your feet have not. Walk it once to make it yours. The water runs thinner up here; listen how high it sings.`)
+        ],
+        ex:{ type:'chartString', str:5, exttl:'Chart the high E', desc:'The twin of the southern coast — name what is marked, find what is named.', goal:6 }
+      },
+      {
+        num:'2.2', title:'The Crooked River — B',
+        teach:[
+          P(`Now the true work of the northern survey: the <b>B river</b>. I must warn you — it was dug crooked.`),
+          P(`Every river on this land sits a fourth above its neighbour — except B, which sits only a <i>third</i> above the G. Remember that kink; it bends every path that crosses it.`),
+          P(`Its towns, from the source: <b>C at 1</b> — a narrow pass right at the mouth — <b>D at 3</b>, <b>E at 5</b>, <b>F at 6</b> — the second pass — <b>G at 8</b>, <b>A at 10</b>, <b>B at 12</b>.`),
+          ...QA(`Why was it dug crooked?`,
+                `So that a hand may hold a chord without breaking its fingers. The builders chose comfort over symmetry — and every mapmaker since has paid for it. Chart it well.`)
+        ],
+        ex:{ type:'chartString', str:4, exttl:'Chart the B river', desc:'The crooked one. Name what is marked, find what is named — and mind the pass right at the mouth.', goal:7 }
+      },
+      {
+        num:'2.3', title:'The Long Bridges',
+        teach:[
+          P(`One more set of bridges and the whole country is yours. From the <b>D</b> or the <b>G</b> river, the octave again waits two rivers north — but now <b>three crossings east</b>, not two.`),
+          P(`The crooked B stretches every bridge that crosses it. D at the 3rd? Its twin sits on the B river at the 6th. G at the 5th? Find it on the high E at the 8th.`),
+          ...QA(`Two east in the south, three east in the north?`,
+                `Just so. South of the G river: two. Crossing the crooked water: three. Hold those two numbers, and no note on this neck can hide from you.`)
+        ],
+        ex:{ type:'octaveBridge', sources:[2,3], shift:3, exttl:'Build the long bridges', desc:'A charted note is shown on the D or G river. Click where its octave lands: two rivers north, three crossings east.', goal:6 }
+      }
+    ]
+  },
+  { title:'Expedition III — The Inland Passes', rank:'Pathfinder', soon:true,
+    blurb:'Sharps and flats: the half-step passes between every charted town.' },
+  { title:'Expedition IV — Beyond the Divide', rank:'Navigator', soon:true,
+    blurb:'Past crossing 12 the land repeats — learn to walk it at speed.' }
+];
+
+const LESSONS = [];
+COURSE.forEach(mod => { if(mod.lessons) mod.lessons.forEach(les => LESSONS.push(Object.assign({ module: mod.title, rank: mod.rank }, les))); });
+
+let idx = 0;
+const bests = {};                 /* lesson idx -> best streak (persists across visits, in-memory) */
+const chartedOf = i => (bests[i] || 0) >= (LESSONS[i].ex.goal || Infinity);
+function devChart(i){ bests[i] = 99; renderNav(); buildAtlas(); }   /* console helper for demos */
+
+/* ===================== THE CARTOGRAPHER (portrait) ===================== */
+const EXPLORER_SVG = `
+<svg viewBox="0 0 170 210" role="img" aria-label="The Cartographer, an old explorer holding a rolled map">
+  <ellipse cx="85" cy="200" rx="52" ry="7" fill="rgba(23,20,14,.18)"/>
+  <!-- coat -->
+  <path d="M 50,120 C 44,150 42,178 44,198 L 126,198 C 128,178 126,150 120,120
+           C 112,104 100,98 85,98 C 70,98 58,104 50,120 Z"
+        fill="#C88A3C" stroke="#17140E" stroke-width="3"/>
+  <path d="M 85,100 L 85,196" stroke="#17140E" stroke-width="2" opacity=".5"/>
+  <!-- satchel strap -->
+  <path d="M 60,108 L 116,178" stroke="#17140E" stroke-width="6"/>
+  <rect x="106" y="168" width="26" height="20" rx="2" fill="#8A5A22" stroke="#17140E" stroke-width="2.5"/>
+  <!-- belt -->
+  <rect x="48" y="150" width="74" height="9" fill="#17140E"/>
+  <rect x="79" y="149" width="12" height="11" fill="#F5C76B" stroke="#17140E" stroke-width="2"/>
+  <!-- arms: left holds rolled map -->
+  <path d="M 52,124 C 40,132 32,144 30,158" stroke="#C88A3C" stroke-width="13" fill="none"/>
+  <path d="M 52,124 C 40,132 32,144 30,158" stroke="#17140E" stroke-width="3" fill="none" opacity=".0"/>
+  <circle cx="30" cy="160" r="7" fill="#E8B98B" stroke="#17140E" stroke-width="2.5"/>
+  <!-- rolled map in hand -->
+  <g transform="rotate(-18 30 160)">
+    <rect x="6" y="150" width="50" height="14" rx="7" fill="#EFE4CB" stroke="#17140E" stroke-width="2.5"/>
+    <line x1="16" y1="150" x2="16" y2="164" stroke="#17140E" stroke-width="2"/>
+    <line x1="46" y1="150" x2="46" y2="164" stroke="#17140E" stroke-width="2"/>
+    <path d="M 22,157 h 18" stroke="#FF4E86" stroke-width="2" stroke-dasharray="3 3"/>
+  </g>
+  <!-- right arm -->
+  <path d="M 118,124 C 128,134 134,146 136,158" stroke="#C88A3C" stroke-width="13" fill="none"/>
+  <circle cx="136" cy="160" r="7" fill="#E8B98B" stroke="#17140E" stroke-width="2.5"/>
+  <!-- head -->
+  <circle cx="85" cy="74" r="26" fill="#E8B98B" stroke="#17140E" stroke-width="3"/>
+  <!-- beard -->
+  <path d="M 62,80 C 60,102 70,114 85,114 C 100,114 110,102 108,80 C 102,90 94,93 85,93 C 76,93 68,90 62,80 Z"
+        fill="#EFE7D6" stroke="#17140E" stroke-width="2.5"/>
+  <!-- face -->
+  <circle cx="76" cy="72" r="2.6" fill="#17140E"/>
+  <circle cx="94" cy="72" r="2.6" fill="#17140E"/>
+  <path d="M 72,64 l 9,-2 M 89,62 l 9,2" stroke="#17140E" stroke-width="2.5"/>
+  <path d="M 83,76 q 2,4 5,3" stroke="#17140E" stroke-width="2" fill="none"/>
+  <!-- wide-brim hat -->
+  <ellipse cx="85" cy="52" rx="42" ry="10" fill="#8A5A22" stroke="#17140E" stroke-width="3"/>
+  <path d="M 60,52 C 60,32 70,22 85,22 C 100,22 110,32 110,52 Z" fill="#8A5A22" stroke="#17140E" stroke-width="3"/>
+  <rect x="60" y="43" width="50" height="8" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+  <!-- tiny compass at belt -->
+  <circle cx="118" cy="154" r="7" fill="#EFE4CB" stroke="#17140E" stroke-width="2.5"/>
+  <path d="M 118,149 L 120,154 L 118,159 L 116,154 Z" fill="#FF4E86" stroke="#17140E" stroke-width="1"/>
+</svg>`;
+
+/* ===================== NECK GEOMETRY & DRAWING ===================== */
+const NUT = 64, FW = 42, TOPY = 30, GAP = 24, MAXF = 12;
+const strY = s => TOPY + (5 - s) * GAP;                    /* low E at the bottom */
+const fretX = f => f === 0 ? NUT - 20 : NUT + (f - 0.5) * FW;
+const NECK_W = NUT + MAXF * FW + 14;                       /* svg width */
+const STR_W = [3.2, 2.9, 2.6, 2.3, 2.0, 1.7];
+
+/* Draws the neck. opts:
+   hideLabels, hideNums, highlightStr, revealStr,
+   dots:[{s,f,label,wrong}], ring:f (pink ring on a marker), bridge:{s1,f1,s2,f2},
+   cellsOn: string index -> clickable cells (class .cell, data-f) */
+function svgNeck(o){
+  o = o || {};
+  let out = `<svg viewBox="0 0 ${NECK_W} 188" role="img" aria-label="Guitar neck diagram">`;
+  /* board */
+  out += `<rect x="${NUT}" y="${TOPY-12}" width="${MAXF*FW}" height="${5*GAP+24}" fill="#F0E6D2" stroke="#17140E" stroke-width="2.5"/>`;
+  out += `<rect x="${NUT-5}" y="${TOPY-12}" width="6" height="${5*GAP+24}" fill="#17140E"/>`;   /* nut */
+  for(let f=1; f<=MAXF; f++)
+    out += `<line x1="${NUT+f*FW}" y1="${TOPY-12}" x2="${NUT+f*FW}" y2="${TOPY+5*GAP+12}" stroke="#B9AE97" stroke-width="2"/>`;
+  /* landmark dots */
+  const yMid = (strY(2)+strY(3))/2;
+  [3,5,7,9].forEach(f => out += `<circle cx="${NUT+(f-0.5)*FW}" cy="${yMid}" r="5" fill="#B9AE97"/>`);
+  out += `<circle cx="${NUT+11.5*FW}" cy="${yMid-24}" r="5" fill="#B9AE97"/>`;
+  out += `<circle cx="${NUT+11.5*FW}" cy="${yMid+24}" r="5" fill="#B9AE97"/>`;
+  /* strings */
+  for(let s=0; s<6; s++){
+    const hi = o.highlightStr === s;
+    out += `<line class="gstr${hi?' active':''}" x1="${NUT-14}" y1="${strY(s)}" x2="${NUT+MAXF*FW}" y2="${strY(s)}"
+             stroke="${hi?'#2438C8':'#17140E'}" stroke-width="${hi?4:STR_W[s]}"/>`;
+  }
+  /* string labels */
+  for(let s=0; s<6; s++){
+    const show = !o.hideLabels || o.revealStr === s;
+    const t = show ? STRINGS[s].l : '?';
+    out += `<text x="26" y="${strY(s)+5}" font-family="'Space Mono',monospace" font-size="14" font-weight="700"
+             fill="${show?'#17140E':'#B9AE97'}" text-anchor="middle">${t}</text>`;
+    if(show && (s===0 || s===5))
+      out += `<text x="26" y="${strY(s)+16}" font-family="'Space Mono',monospace" font-size="7"
+               fill="#6F6757" text-anchor="middle">${s===0?'low':'high'}</text>`;
+  }
+  /* fret numbers */
+  if(!o.hideNums){
+    for(let f=1; f<=MAXF; f++)
+      out += `<text x="${NUT+(f-0.5)*FW}" y="182" font-family="'Space Mono',monospace" font-size="10"
+               fill="#6F6757" text-anchor="middle">${f}</text>`;
+  }
+  /* pink ring on a landmark (for the covered-numbers drill) */
+  if(o.ring){
+    if(o.ring === 12){
+      out += `<circle cx="${NUT+11.5*FW}" cy="${yMid-24}" r="10" fill="none" stroke="#FF4E86" stroke-width="3"/>`;
+      out += `<circle cx="${NUT+11.5*FW}" cy="${yMid+24}" r="10" fill="none" stroke="#FF4E86" stroke-width="3"/>`;
+    } else {
+      out += `<circle cx="${NUT+(o.ring-0.5)*FW}" cy="${yMid}" r="10" fill="none" stroke="#FF4E86" stroke-width="3"/>`;
+    }
+  }
+  /* octave bridge arc */
+  if(o.bridge){
+    const b = o.bridge, x1 = fretX(b.f1), y1 = strY(b.s1), x2 = fretX(b.f2), y2 = strY(b.s2);
+    out += `<path d="M ${x1},${y1} Q ${(x1+x2)/2},${Math.min(y1,y2)-34} ${x2},${y2}"
+             fill="none" stroke="#2438C8" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+  }
+  /* note dots */
+  (o.dots || []).forEach(d => {
+    const col = d.wrong ? '#FF4E86' : '#2438C8';
+    out += `<circle cx="${fretX(d.f)}" cy="${strY(d.s)}" r="11" fill="${col}" stroke="#17140E" stroke-width="2.5"/>`;
+    if(d.label)
+      out += `<text x="${fretX(d.f)}" y="${strY(d.s)+4.5}" font-family="'Space Mono',monospace" font-size="12"
+               font-weight="700" fill="#fff" text-anchor="middle">${d.label}</text>`;
+  });
+  /* clickable cells along one string */
+  if(o.cellsOn !== undefined){
+    const s = o.cellsOn, y = strY(s) - 12;
+    out += `<rect class="cell" data-f="0" x="${NUT-36}" y="${y}" width="30" height="24"/>`;
+    for(let f=1; f<=MAXF; f++)
+      out += `<rect class="cell" data-f="${f}" x="${NUT+(f-1)*FW}" y="${y}" width="${FW}" height="24"/>`;
+  }
+  out += `</svg>`;
+  return out;
+}
+
+/* ===================== DIALOGUE ENGINE ===================== */
+let pages = [], pageIdx = 0, dialogueDone = false;
+let typer = null, toks = [], shown = 0, lineDone = false;
+
+function buildPages(teach){ return teach.slice(); }
+function startType(html){
+  clearInterval(typer);
+  toks = html.match(/<[^>]+>|./gs) || [];
+  shown = 0; lineDone = false;
+  el('cont').classList.add('blink'); el('cont').textContent = '▾ tap';
+  if(reduced){ finishLine(); return; }
+  typer = setInterval(() => {
+    shown = Math.min(toks.length, shown + 2);
+    el('line').innerHTML = toks.slice(0, shown).join('');
+    if(shown >= toks.length){ clearInterval(typer); lineDone = true; }
+  }, 12);
+}
+function finishLine(){
+  clearInterval(typer);
+  el('line').innerHTML = toks.join('');
+  lineDone = true;
+}
+function showPage(){
+  const pg = pages[pageIdx];
+  el('scene').classList.toggle('student', pg.who === 'student');
+  el('who').textContent = pg.who === 'student' ? 'YOU' : 'THE CARTOGRAPHER';
+  startType(pg.html);
+}
+function advance(){
+  if(dialogueDone) return;
+  if(!lineDone){ finishLine(); return; }
+  if(pageIdx < pages.length - 1){ pageIdx += 1; showPage(); }
+  else endDialogue();
+}
+function endDialogue(){
+  dialogueDone = true;
+  el('cont').classList.remove('blink');
+  el('cont').textContent = '— to the field —';
+  el('exwrap').hidden = false;
+  if(el('exwrap').scrollIntoView) el('exwrap').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block:'start' });
+}
+
+/* ===================== EXERCISE SHELL ===================== */
+let exCur = null, exAnswered = false, exStreak = 0, exMode = 'name', exPrev = '';
+function devRound(){ return exCur; }                       /* console helper */
+
+function exHead(L){
+  const done = chartedOf(idx);
+  return `<div class="extag">FIELD WORK</div>
+    <div class="exttl2">${L.ex.exttl}</div>
+    <div class="exdesc">${L.ex.desc}</div>
+    <span class="goalchip${done?' done':''}" id="goalchip">${done ? '⚑ region charted' : '⚑ charting goal: ' + L.ex.goal + ' in a row'}</span>`;
+}
+function streakLine(){
+  const L = LESSONS[idx], best = bests[idx] || 0;
+  return `<div class="streak">streak <b>${exStreak}</b> · goal <b>${L.ex.goal}</b> · best <b>${best}</b></div>`;
+}
+function bump(ok){
+  const L = LESSONS[idx];
+  const was = chartedOf(idx);
+  if(ok){ exStreak += 1; bests[idx] = Math.max(bests[idx] || 0, exStreak); }
+  else exStreak = 0;
+  const now = chartedOf(idx);
+  if(now && !was){
+    chartedFanfare(); renderNav(); buildAtlas();
+    const gc = el('goalchip');
+    if(gc){ gc.textContent = '⚑ region charted'; gc.classList.add('done'); }
+  }
+  return now && !was;
+}
+function chartedNote(newly){
+  return newly ? ' <span style="color:var(--blue)">⚑ REGION CHARTED — the atlas remembers.</span>' : '';
+}
+
+/* ---- 1.1 name the river ---- */
+function mountRiverName(){ exMode=''; exPrev=-1; newRiverName(false); }
+function newRiverName(autoplay){
+  let s; do{ s = rand(6); } while(s === exPrev);
+  exPrev = s; exCur = { s }; exAnswered = false;
+  drawRiverName();
+  if(autoplay) pluck(STRINGS[s].f, 0, 1.3);
+}
+function drawRiverName(fbHtml, ok){
+  const s = exCur.s;
+  el('exbox').innerHTML = `
+    <div class="row"><button class="btn big" id="hearBtn">▶ Hear the river</button></div>
+    <div class="neckbox">${svgNeck({ hideLabels:true, highlightStr:s, revealStr: exAnswered ? s : undefined })}</div>
+    <div class="qline">Which river is this?</div>
+    <div class="row">${['E','A','D','G','B'].map(l => `<button class="btn jc lbtn" data-l="${l}" ${exAnswered?'disabled':''}>${l}</button>`).join('')}</div>
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next river →</button></div>' : ''}
+    ${streakLine()}`;
+  el('hearBtn').addEventListener('click', () => pluck(STRINGS[s].f, 0, 1.3));
+  document.querySelectorAll('.lbtn').forEach(b => b.addEventListener('click', () => answerRiverName(b.dataset.l)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newRiverName(true));
+}
+function answerRiverName(l){
+  if(exAnswered) return;
+  exAnswered = true;
+  const S = STRINGS[exCur.s], ok = l === S.l;
+  const newly = bump(ok);
+  pluck(S.f, 0, 1.3);
+  drawRiverName(ok ? `Yes — ${S.desc}.` + chartedNote(newly)
+                   : `Not that one — this is ${S.desc}.`, ok);
+}
+
+/* ---- 1.2 landmarks & the divide ---- */
+function mountLandmark(){ exPrev=''; newLandmark(false); }
+function newLandmark(autoplay){
+  const sub = Math.random() < 0.5 ? 'mark' : 'divide';
+  let cur;
+  do{
+    if(sub === 'mark'){ const mf = [3,5,7,9,12][rand(5)]; cur = { sub, mf, key:'m'+mf }; }
+    else { const s = rand(6); cur = { sub, s, key:'d'+s }; }
+  } while(cur.key === exPrev);
+  exPrev = cur.key; exCur = cur; exAnswered = false;
+  drawLandmark();
+  if(autoplay && cur.sub === 'divide') pluck(freqAt(cur.s, 12), 0, 1.3);
+}
+function drawLandmark(fbHtml, ok){
+  const c = exCur;
+  let neck, q, btns;
+  if(c.sub === 'mark'){
+    neck = svgNeck({ hideNums: !exAnswered, ring: c.mf });
+    q = 'Numbers covered — which crossing bears this mark?';
+    btns = [3,5,7,9,12].map(f => `<button class="btn jc mbtn" data-f="${f}" ${exAnswered?'disabled':''}>${f}</button>`).join('');
+  } else {
+    neck = svgNeck({ dots:[{ s:c.s, f:12, label: exAnswered ? STRINGS[c.s].l : '?' }] });
+    q = `The ${STRINGS[c.s].long} river at the Great Divide — what note?`;
+    btns = ['E','A','D','G','B'].map(l => `<button class="btn jc mbtn" data-l="${l}" ${exAnswered?'disabled':''}>${l}</button>`).join('');
+  }
+  el('exbox').innerHTML = `
+    ${c.sub==='divide' ? '<div class="row"><button class="btn big" id="hearBtn">▶ Hear it</button></div>' : ''}
+    <div class="neckbox">${neck}</div>
+    <div class="qline">${q}</div>
+    <div class="row">${btns}</div>
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next →</button></div>' : ''}
+    ${streakLine()}`;
+  const hb = el('hearBtn'); if(hb) hb.addEventListener('click', () => pluck(freqAt(c.s, 12), 0, 1.3));
+  document.querySelectorAll('.mbtn').forEach(b => b.addEventListener('click', () =>
+    answerLandmark(c.sub === 'mark' ? +b.dataset.f : b.dataset.l)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newLandmark(true));
+}
+function answerLandmark(v){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur;
+  let ok, fb;
+  if(c.sub === 'mark'){
+    ok = v === c.mf;
+    fb = ok ? `Yes — the landmark at the ${ord(c.mf)} crossing.`
+            : `Not quite — that mark sits at the ${ord(c.mf)} crossing.`;
+  } else {
+    ok = v === STRINGS[c.s].l;
+    fb = ok ? `Yes — ${STRINGS[c.s].l}, an octave above its source.`
+            : `No — at the Divide, the ${STRINGS[c.s].long} carries ${STRINGS[c.s].l} again, an octave up.`;
+    pluck(freqAt(c.s, 12), 0, 1.3);
+  }
+  const newly = bump(ok);
+  drawLandmark(fb + (ok ? chartedNote(newly) : ''), ok);
+}
+
+/* ---- 1.3 / 1.4 chart a string (name ↔ find, alternating) ---- */
+function mountChartString(L){ exMode='find'; exPrev=''; newChartString(L, false); }   /* flips to 'name' for round one */
+function newChartString(L, autoplay){
+  const s = L.ex.str, nats = naturalFretsFor(s, 12);
+  exMode = exMode === 'name' ? 'find' : 'name';           /* alternate duties */
+  let cur;
+  if(exMode === 'name'){
+    let f; do{ f = nats[rand(nats.length)]; } while('n'+f === exPrev);
+    cur = { mode:'name', s, f, key:'n'+f };
+  } else {
+    const letters = Array.from(new Set(nats.map(f => letterAt(s, f))));
+    let t; do{ t = letters[rand(letters.length)]; } while('f'+t === exPrev);
+    cur = { mode:'find', s, t, correct: nats.filter(f => letterAt(s, f) === t), key:'f'+t };
+  }
+  exPrev = cur.key; exCur = cur; exAnswered = false;
+  drawChartString(L);
+  if(autoplay && cur.mode === 'name') pluck(freqAt(s, cur.f), 0, 1.2);
+}
+function drawChartString(L, fbHtml, ok){
+  const c = exCur;
+  let neck, q, controls = '';
+  if(c.mode === 'name'){
+    neck = svgNeck({ dots:[{ s:c.s, f:c.f, label: exAnswered ? letterAt(c.s, c.f) : '' }] });
+    q = `Name the marked note on the ${STRINGS[c.s].long}.`;
+    controls = `<div class="row">${['C','D','E','F','G','A','B'].map(l =>
+      `<button class="btn jc nbtn" data-l="${l}" ${exAnswered?'disabled':''}>${l}</button>`).join('')}</div>`;
+  } else {
+    const dots = exAnswered ? c.reveal : [];
+    neck = svgNeck({ dots, cellsOn: exAnswered ? undefined : c.s });
+    q = `Find <b style="color:var(--blue)">${c.t}</b> on the ${STRINGS[c.s].long} — tap the crossing.`;
+  }
+  el('exbox').innerHTML = `
+    ${c.mode==='name' ? '<div class="row"><button class="btn big" id="hearBtn">▶ Hear it first</button></div>' : ''}
+    <div class="qline">${q}</div>
+    <div class="neckbox" id="neckbox">${neck}</div>
+    ${controls}
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next →</button></div>' : ''}
+    ${streakLine()}`;
+  const hb = el('hearBtn'); if(hb) hb.addEventListener('click', () => pluck(freqAt(c.s, c.f), 0, 1.2));
+  document.querySelectorAll('.nbtn').forEach(b => b.addEventListener('click', () => answerChartName(L, b.dataset.l)));
+  document.querySelectorAll('#neckbox .cell').forEach(r => r.addEventListener('click', () => answerChartFind(L, +r.dataset.f)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newChartString(L, true));
+}
+function answerChartName(L, l){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, ans = letterAt(c.s, c.f), ok = l === ans;
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.f), 0, 1.2);
+  drawChartString(L, ok ? `${ans} — the ${ord(c.f)} crossing of the ${STRINGS[c.s].long}.` + chartedNote(newly)
+                        : `That is ${ans} — the ${ord(c.f)} crossing. (You said ${l}.)`, ok);
+}
+function answerChartFind(L, f){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, ok = c.correct.includes(f);
+  c.reveal = c.correct.map(cf => ({ s:c.s, f:cf, label:c.t }));
+  if(!ok) c.reveal.push({ s:c.s, f, label: letterAt(c.s, f) || '✕', wrong:true });
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.correct[0]), 0, 1.2);
+  const where = c.correct.map(ord).join(' and ');
+  drawChartString(L, ok ? `Flag planted — ${c.t} at the ${where} crossing${c.correct.length>1?'s':''}.` + chartedNote(newly)
+                        : `Not there — ${c.t} lives at the ${where}.`, ok);
+}
+
+/* ---- 1.5 / 2.3 octave bridges (ex cfg: sources[], shift) ---- */
+const NUMWORD = { 2:'two', 3:'three' };
+function mountOctave(L){ exPrev=''; newOctave(L, false); }
+function newOctave(L, autoplay){
+  const cfg = L.ex;
+  let s, f;
+  do{
+    s = cfg.sources[rand(cfg.sources.length)];
+    const nats = naturalFretsFor(s, 12 - cfg.shift);
+    f = nats[rand(nats.length)];
+  } while(s + ':' + f === exPrev);
+  exPrev = s + ':' + f;
+  exCur = { s, f, t: letterAt(s, f), target: f + cfg.shift, ts: s + 2 };
+  exAnswered = false;
+  drawOctave(L);
+  if(autoplay) pluck(freqAt(s, f), 0, 1.1);
+}
+function drawOctave(L, fbHtml, ok){
+  const c = exCur;
+  const dots = [{ s:c.s, f:c.f, label:c.t }];
+  let bridge;
+  if(exAnswered){
+    dots.push({ s:c.ts, f:c.target, label:c.t });
+    if(c.picked !== undefined && c.picked !== c.target)
+      dots.push({ s:c.ts, f:c.picked, label:'✕', wrong:true });
+    bridge = { s1:c.s, f1:c.f, s2:c.ts, f2:c.target };
+  }
+  el('exbox').innerHTML = `
+    <div class="row"><button class="btn big" id="hearBtn">▶ Hear the note</button></div>
+    <div class="qline">Plant a flag on this <b style="color:var(--blue)">${c.t}</b>'s octave — on the ${STRINGS[c.ts].long} river.</div>
+    <div class="neckbox" id="neckbox">${svgNeck({ dots, bridge, cellsOn: exAnswered ? undefined : c.ts })}</div>
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next bridge →</button></div>' : ''}
+    ${streakLine()}`;
+  el('hearBtn').addEventListener('click', () => pluck(freqAt(c.s, c.f), 0, 1.1));
+  document.querySelectorAll('#neckbox .cell').forEach(r => r.addEventListener('click', () => answerOctave(L, +r.dataset.f)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newOctave(L, true));
+}
+function answerOctave(L, f){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur; c.picked = f;
+  const ok = f === c.target;
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.f), 0, 0.9);
+  pluck(freqAt(c.ts, c.target), 0.45, 1.2);
+  drawOctave(L, ok ? `The bridge holds — ${c.t} to ${c.t}, an octave up, at the ${ord(c.target)} crossing.` + chartedNote(newly)
+                   : `The octave waits at the ${ord(c.target)} crossing — two rivers north, ${NUMWORD[L.ex.shift]} east.`, ok);
+}
+
+/* ===================== RENDER ===================== */
+function renderExercise(L){
+  return `<div class="ex">${exHead(L)}<div id="exbox"></div></div>`;
+}
+function wireExercise(L){
+  exStreak = 0;
+  if(L.ex.type === 'riverName') mountRiverName();
+  else if(L.ex.type === 'landmark') mountLandmark();
+  else if(L.ex.type === 'chartString') mountChartString(L);
+  else if(L.ex.type === 'octaveBridge') mountOctave(L);
+}
+function renderLesson(){
+  const L = LESSONS[idx];
+  el('bk').textContent = 'EXPEDITION ' + L.num;
+  el('btitle').textContent = L.title;
+  const nCharted = LESSONS.filter((_, i) => chartedOf(i)).length;
+  el('pos').textContent = `${L.rank} · ⚑ ${nCharted}/${LESSONS.length} charted`;
+  el('portrait').innerHTML = EXPLORER_SVG;
+  pages = buildPages(L.teach); pageIdx = 0; dialogueDone = false;
+  el('exwrap').hidden = true;
+  el('exwrap').innerHTML = renderExercise(L);
+  wireExercise(L);
+  showPage();
+  renderNav();
+  buildAtlas();
+  window.scrollTo({ top:0, behavior: reduced ? 'auto' : 'smooth' });
+}
+function renderNav(){
+  const L = LESSONS[idx];
+  el('prev').disabled = (idx === 0);
+  const slot = el('nextslot');
+  if(idx < LESSONS.length - 1){
+    if(!chartedOf(idx)){
+      slot.innerHTML = `<span class="lab2">⚑ streak of ${L.ex.goal} charts this region →</span>`;
+    } else {
+      slot.innerHTML = `<button class="btn ink" id="next" style="margin-top:0">Press on →</button>`;
+      el('next').addEventListener('click', () => go(idx + 1));
+    }
+  } else {
+    slot.innerHTML = `<span class="endnote">${chartedOf(idx)
+      ? 'The northern rivers are charted — the open country is yours. The inland passes await.'
+      : 'The last bridges of the survey. Chart them, mapmaker.'}</span>`;
+  }
+}
+function go(i){ idx = Math.max(0, Math.min(LESSONS.length - 1, i)); renderLesson(); }
+
+/* ===================== THE ATLAS (map + contents) ===================== */
+function drawMap(){
+  const N = 90, W = 40, T = 64, G = 26;                     /* map-local geometry */
+  const y = s => T + (5 - s) * G;
+  const fx = f => f === 0 ? N - 16 : N + (f - 0.5) * W;
+  const ch = i => chartedOf(i);
+  let m = `<svg viewBox="0 0 640 262" role="img" aria-label="The expedition map of the fretboard">`;
+  m += `<rect x="2" y="2" width="636" height="258" fill="#EFE4CB" stroke="#17140E" stroke-width="2.5"/>`;
+  m += `<rect x="8" y="8" width="624" height="246" fill="none" stroke="#17140E" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>`;
+  /* cartouche */
+  m += `<g><rect x="20" y="16" width="220" height="30" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/>
+        <text x="130" y="35" font-family="'Space Mono',monospace" font-size="10" letter-spacing="2"
+          text-anchor="middle" fill="#17140E">THE FRETBOARD · FIRST SURVEY</text></g>`;
+  /* neck */
+  m += `<rect x="${N}" y="${T-12}" width="${12*W}" height="${5*G+24}" fill="#F0E6D2" stroke="#17140E" stroke-width="2"/>`;
+  m += `<rect x="${N-5}" y="${T-12}" width="5" height="${5*G+24}" fill="#17140E"/>`;
+  for(let f=1; f<=12; f++) m += `<line x1="${N+f*W}" y1="${T-12}" x2="${N+f*W}" y2="${T+5*G+12}" stroke="#B9AE97" stroke-width="1.5"/>`;
+  const yM = (y(2)+y(3))/2;
+  [3,5,7,9].forEach(f => m += `<circle cx="${N+(f-0.5)*W}" cy="${yM}" r="4" fill="#B9AE97"/>`);
+  m += `<circle cx="${N+11.5*W}" cy="${yM-20}" r="4" fill="#B9AE97"/><circle cx="${N+11.5*W}" cy="${yM+20}" r="4" fill="#B9AE97"/>`;
+  for(let s=0; s<6; s++){
+    m += `<line x1="${N-12}" y1="${y(s)}" x2="${N+12*W}" y2="${y(s)}" stroke="#17140E" stroke-width="${STR_W[s]*0.8}"/>`;
+    m += `<text x="${N-30}" y="${y(s)+4}" font-family="'Space Mono',monospace" font-size="11" font-weight="700"
+           text-anchor="middle" fill="${ch(0)?'#17140E':'#B9AE97'}">${ch(0)?STRINGS[s].l:'?'}</text>`;
+  }
+  [3,5,7,9,12].forEach(f => m += `<text x="${N+(f-0.5)*W}" y="${T+5*G+26}" font-family="'Space Mono',monospace"
+    font-size="9" text-anchor="middle" fill="#6F6757">${f}</text>`);
+  /* fog lifts region by region as the land is charted */
+  const fogRows = [];
+  if(!ch(5)) fogRows.push(5);
+  if(!ch(6)) fogRows.push(4);
+  if(!ch(4)) fogRows.push(3,2);
+  fogRows.forEach(s => {
+    m += `<rect x="${N}" y="${y(s)-11}" width="${12*W}" height="22" fill="#D9CFB6" opacity=".78"/>`;
+    for(let i=0;i<8;i++) m += `<path d="M ${N+20+i*58},${y(s)+3} q 10,-8 20,0 q 10,8 20,0" fill="none" stroke="#B9AE97" stroke-width="1.6"/>`;
+  });
+  if(!ch(5) && !ch(6) && idx < 5){                          /* dragons retreat once the surveyor heads north */
+    const yc = (y(5) + y(4)) / 2 + 3;
+    m += `<text x="${N+5.4*W}" y="${yc}" font-family="'Space Mono',monospace" font-size="10" letter-spacing="5"
+           text-anchor="middle" fill="#6F6757">HERE BE DRAGONS</text>`;
+    m += `<path d="M ${N+8.9*W},${yc-3} q 8,-10 16,0 q 8,10 16,0 q 8,-10 16,0 l 8,-5 l -3,7 l 7,2 l -9,3"
+           fill="none" stroke="#6F6757" stroke-width="2"/>`;
+    m += `<circle cx="${N+9.1*W}" cy="${yc-8}" r="1.6" fill="#6F6757"/>`;
+  }
+  /* region overlays */
+  const regionRect = (x, yy, w, h, i, label, lx, ly, mystery) => {
+    const state = ch(i) ? 'done' : (i === idx ? 'cur' : 'todo');
+    const stroke = state==='done' ? '#2438C8' : state==='cur' ? '#FF4E86' : '#6F6757';
+    const dash = state==='done' ? 'none' : '5 4';
+    const fill = state==='done' ? 'rgba(36,56,200,.10)' : 'transparent';
+    let r = `<g style="cursor:pointer" data-go="${i}"><rect x="${x}" y="${yy}" width="${w}" height="${h}" rx="4"
+      fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-dasharray="${dash}"/>`;
+    if(!mystery || ch(i) || i === idx)
+      r += `<text x="${lx}" y="${ly}" font-family="'Space Mono',monospace" font-size="8" letter-spacing="1"
+        fill="${stroke}" text-anchor="middle">${ch(i)?'⚑ ':''}${label}</text>`;
+    r += `<rect x="${x}" y="${yy}" width="${w}" height="${h}" fill="transparent"><title>Expedition ${LESSONS[i].num} — ${LESSONS[i].title}</title></rect></g>`;
+    return r;
+  };
+  m += regionRect(N-46, T-16, 40, 5*G+32, 0, 'RIVERS', N-26, T-22);
+  m += regionRect(N+10.9*W, T-16, 1.2*W+8, 5*G+32, 1, 'DIVIDE', N+11.5*W, T+5*G+42);
+  m += regionRect(N-4, y(0)-13, 12*W+8, 26, 2, 'THE SOUTHERN COAST — LOW E', N+6*W, y(0)+24);
+  m += regionRect(N-4, y(1)-13, 12*W+8, 26, 3, 'THE A RIVER', N+2.4*W, y(1)-17);
+  m += regionRect(N-4, y(5)-13, 12*W+8, 26, 5, 'HIGH E', N+12*W+36, y(5)+3, true);
+  m += regionRect(N-4, y(4)-13, 12*W+8, 26, 6, 'B RIVER', N+12*W+36, y(4)+3, true);
+  /* the long bridges (2.3): D->B and G->high E, three crossings east */
+  {
+    const i = 7, state = ch(i) ? 'done' : (i === idx ? 'cur' : 'todo');
+    const stroke = state==='done' ? '#2438C8' : state==='cur' ? '#FF4E86' : '#6F6757';
+    m += `<g style="cursor:pointer" data-go="7">
+      <path d="M ${fx(3)},${y(2)} Q ${(fx(3)+fx(6))/2},${y(4)-28} ${fx(6)},${y(4)}" fill="none" stroke="${stroke}" stroke-width="2" stroke-dasharray="5 4"/>
+      <path d="M ${fx(5)},${y(3)} Q ${(fx(5)+fx(8))/2},${y(5)-28} ${fx(8)},${y(5)}" fill="none" stroke="${stroke}" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="${fx(10)}" y="${(y(2)+y(3))/2+4}" font-family="'Space Mono',monospace" font-size="8" letter-spacing="1" fill="${stroke}">${ch(7)?'⚑ ':''}LONG BRIDGES</text>
+      <rect x="${fx(10)-8}" y="${(y(2)+y(3))/2-10}" width="120" height="24" fill="transparent"><title>Expedition 2.3 — The Long Bridges</title></rect>
+    </g>`;
+  }
+  /* bridges region: two sample arcs */
+  {
+    const i = 4, state = ch(i) ? 'done' : (i === idx ? 'cur' : 'todo');
+    const stroke = state==='done' ? '#2438C8' : state==='cur' ? '#FF4E86' : '#6F6757';
+    m += `<g style="cursor:pointer" data-go="4">
+      <path d="M ${fx(3)},${y(0)} Q ${(fx(3)+fx(5))/2},${y(2)-30} ${fx(5)},${y(2)}" fill="none" stroke="${stroke}" stroke-width="2" stroke-dasharray="5 4"/>
+      <path d="M ${fx(5)},${y(1)} Q ${(fx(5)+fx(7))/2},${y(3)-30} ${fx(7)},${y(3)}" fill="none" stroke="${stroke}" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="${fx(9)}" y="${(y(1)+y(2))/2+4}" font-family="'Space Mono',monospace" font-size="8" letter-spacing="1" fill="${stroke}">${ch(4)?'⚑ ':''}BRIDGES</text>
+      <rect x="${fx(9)-8}" y="${(y(1)+y(2))/2-10}" width="100" height="24" fill="transparent"><title>Expedition 1.5 — Octave Bridges</title></rect>
+    </g>`;
+  }
+  /* compass */
+  m += `<g transform="translate(596,224)"><circle r="18" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/>
+    <path d="M 0,-13 L 4,0 L 0,13 L -4,0 Z" fill="#2438C8" stroke="#17140E" stroke-width="1"/>
+    <path d="M 0,-13 L 4,0 L -4,0 Z" fill="#FF4E86" stroke="#17140E" stroke-width="1"/>
+    <text y="-22" font-family="'Space Mono',monospace" font-size="9" text-anchor="middle" fill="#17140E">N</text></g>`;
+  m += `</svg>`;
+  return m;
+}
+function buildAtlas(){
+  let h = `<div class="mapbox">${drawMap()}</div>
+    <div class="maplegend">— tap a region to travel · ⚑ charted · ┈ uncharted —</div>`;
+  COURSE.forEach(mod => {
+    h += `<h4>${mod.title} · ${mod.rank}</h4>`;
+    if(mod.lessons){
+      mod.lessons.forEach(les => {
+        const li = LESSONS.findIndex(x => x.num === les.num);
+        h += `<a href="#" class="${li === idx ? 'cur' : ''}" data-go="${li}">${les.num} · ${les.title}${chartedOf(li) ? '<span class="flag">⚑</span>' : ''}</a>`;
+      });
+    } else if(mod.soon){
+      h += `<a class="soon">${mod.blurb} <span class="tag">uncharted</span></a>`;
+    }
+  });
+  const atlas = el('atlas'); atlas.innerHTML = h;
+  atlas.querySelectorAll('[data-go]').forEach(a =>
+    a.addEventListener('click', e => { e.preventDefault(); go(+a.getAttribute('data-go')); el('atlas').classList.add('hidden'); }));
+}
+
+/* ===================== INIT ===================== */
+el('speech').addEventListener('click', advance);
+el('atlasBtn').addEventListener('click', () => el('atlas').classList.toggle('hidden'));
+el('prev').addEventListener('click', () => go(idx - 1));
+renderLesson();
+</script>
+</body>
+</html>

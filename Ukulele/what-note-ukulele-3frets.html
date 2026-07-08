@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Note? — ukulele fretboard training (open + 3 frets)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(440px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:18px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(2rem,7vw,3.2rem); letter-spacing:-.02em;
+    line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:clamp(16px,4vw,26px);
+  }
+
+  .fbwrap{ display:flex; justify-content:center; }
+  svg.fretboard{ width:100%; max-width:230px; height:auto; display:block; }
+
+  .string{ transition:stroke .1s ease, stroke-width .1s ease; }
+  .string.active{ stroke:var(--blue); stroke-width:4; animation:vibe .09s linear infinite; }
+  @keyframes vibe{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-1px);} 75%{ transform:translateX(1px);} }
+
+  .feedback{
+    min-height:1.5em; font-family:var(--display); font-weight:700;
+    font-size:1.05rem; text-align:center; color:var(--muted); margin:14px 0 12px;
+  }
+  .feedback.good{ color:var(--blue); } .feedback.bad{ color:var(--pink); }
+
+  /* piano */
+  .piano{ position:relative; height:108px; margin:2px 0 16px; user-select:none; touch-action:manipulation; }
+  .whites{ display:flex; height:100%; }
+  .wkey{
+    flex:1; height:100%; border:2.5px solid var(--ink); background:#FBF7EE; color:var(--ink);
+    font-family:var(--mono); font-weight:700; font-size:.92rem; cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:9px;
+    margin-left:-1.25px; transition:background .1s ease, color .1s ease;
+  }
+  .wkey:first-child{ margin-left:0; }
+  .wkey:active{ background:#fff; }
+  .bkey{
+    position:absolute; top:0; width:8.8%; height:63%;
+    border:2.5px solid var(--ink); background:var(--ink); color:var(--paper);
+    font-family:var(--mono); font-weight:700; font-size:.64rem; cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px;
+    z-index:2; box-shadow:2px 3px 0 rgba(23,20,14,.35); transition:background .1s ease, color .1s ease;
+  }
+  .wkey.correct, .bkey.correct{ background:var(--blue); color:#fff; }
+  .wkey.wrong,   .bkey.wrong{   background:var(--pink); color:#fff; }
+  .wkey:disabled,.bkey:disabled{ opacity:.26; cursor:default; }
+  .wkey:focus-visible,.bkey:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:.98rem; padding:12px 14px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; flex:1 1 auto; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .05s ease, box-shadow .05s ease, background .12s ease;
+  }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.primary:hover{ background:#1c2da6; }
+  .btn:disabled{ opacity:.4; box-shadow:none; cursor:default; }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  .diffrow{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .seg{ display:flex; border:2px solid var(--ink); }
+  .seg button{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em;
+    text-transform:uppercase; padding:7px 14px; border:0;
+    background:var(--paper); cursor:pointer; color:var(--ink);
+  }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+  .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .score{
+    display:flex; justify-content:center; gap:clamp(16px,6vw,40px); margin-top:20px;
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .score b{ display:block; font-size:1.5rem; color:var(--ink); letter-spacing:0; }
+
+  @media (max-width:380px){ .controls{ flex-direction:column; } }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="What Note?">What Note?</span>
+      <div class="subtitle">ukulele · open strings + 3 frets</div>
+    </header>
+
+    <div class="panel">
+      <div class="fbwrap">
+        <svg class="fretboard" viewBox="0 0 260 232" role="img" aria-label="Ukulele fretboard (open plus first three frets) with a marked note. Choose the note on the piano.">
+          <!-- fretboard -->
+          <rect x="40" y="50" width="180" height="162" fill="#F0E6D2" stroke="#17140E" stroke-width="3"/>
+          <!-- nut -->
+          <rect x="40" y="46" width="180" height="7" fill="#17140E"/>
+          <!-- fret wires -->
+          <line x1="40" y1="104" x2="220" y2="104" stroke="#B9AE97" stroke-width="2"/>
+          <line x1="40" y1="158" x2="220" y2="158" stroke="#B9AE97" stroke-width="2"/>
+          <!-- strings (G C E A) -->
+          <line class="string" id="str0" x1="61"  y1="38" x2="61"  y2="212" stroke="#17140E" stroke-width="2.4"/>
+          <line class="string" id="str1" x1="107" y1="38" x2="107" y2="212" stroke="#17140E" stroke-width="2.4"/>
+          <line class="string" id="str2" x1="153" y1="38" x2="153" y2="212" stroke="#17140E" stroke-width="2.4"/>
+          <line class="string" id="str3" x1="199" y1="38" x2="199" y2="212" stroke="#17140E" stroke-width="2.4"/>
+          <!-- open-string names (a marker over one of these = that open string) -->
+          <text x="61"  y="26" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">G</text>
+          <text x="107" y="26" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">C</text>
+          <text x="153" y="26" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+          <text x="199" y="26" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">A</text>
+          <!-- fret numbers -->
+          <text x="24" y="30"  font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">0</text>
+          <text x="24" y="82"  font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">1</text>
+          <text x="24" y="136" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">2</text>
+          <text x="24" y="190" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">3</text>
+          <!-- the mystery marker -->
+          <circle id="dot" cx="107" cy="131" r="15" fill="#2438C8" stroke="#17140E" stroke-width="2.5" style="display:none"/>
+          <text id="dotLabel" x="107" y="135" text-anchor="middle" font-family="'Space Mono',monospace" font-weight="700" font-size="13" fill="#fff" style="display:none"></text>
+        </svg>
+      </div>
+
+      <div class="feedback" id="feedback" aria-live="polite">Loading…</div>
+
+      <div class="piano" id="piano">
+        <div class="whites">
+          <button class="wkey" data-pc="0"  aria-label="C">C</button>
+          <button class="wkey" data-pc="2"  aria-label="D">D</button>
+          <button class="wkey" data-pc="4"  aria-label="E">E</button>
+          <button class="wkey" data-pc="5"  aria-label="F">F</button>
+          <button class="wkey" data-pc="7"  aria-label="G">G</button>
+          <button class="wkey" data-pc="9"  aria-label="A">A</button>
+          <button class="wkey" data-pc="11" aria-label="B">B</button>
+        </div>
+        <button class="bkey" data-pc="1"  style="left:10.0%" aria-label="C sharp / D flat">C♯</button>
+        <button class="bkey" data-pc="3"  style="left:24.3%" aria-label="D sharp / E flat">D♯</button>
+        <button class="bkey" data-pc="6"  style="left:52.8%" aria-label="F sharp / G flat">F♯</button>
+        <button class="bkey" data-pc="8"  style="left:67.1%" aria-label="G sharp / A flat">G♯</button>
+        <button class="bkey" data-pc="10" style="left:81.4%" aria-label="A sharp / B flat">A♯</button>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" id="newBtn">▶ New note</button>
+        <button class="btn" id="hearBtn" disabled>♪ Hear it</button>
+      </div>
+
+      <div class="diffrow">
+        <span>notes:</span>
+        <div class="seg" role="group" aria-label="Difficulty">
+          <button id="easyBtn" aria-pressed="true">Naturals</button>
+          <button id="hardBtn" aria-pressed="false">Chromatic</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="score">
+      <div>correct<b id="sCorrect">0</b></div>
+      <div>streak<b id="sStreak">0</b></div>
+      <div>best<b id="sBest">0</b></div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   WHAT NOTE? (ukulele, open + 3 frets) — a blank dot marks a position.
+   If it sits over a string's letter (fret 0), name that OPEN string;
+   otherwise name the fretted note. Tap the answer on the piano.
+
+   note at (string, fret) = (open pitch-class of the string + fret) mod 12
+   e.g. C string (pitch-class 0), 2nd fret -> 0 + 2 = 2 = D.
+   Open strings included, so every natural note (E among them) appears.
+   ==================================================================== */
+
+  const OPEN_PC = [7, 0, 4, 9];                       // G C E A pitch classes
+  const BASE    = [392.00, 261.63, 329.63, 440.00];   // G4 C4 E4 A4 (for audio)
+  const STR_NAMES = ['G','C','E','A'];
+  const SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+  const NATURAL = new Set([0,2,4,5,7,9,11]);
+  const ORD   = ['','1st','2nd','3rd'];
+  const FRETS = 3;                                     // positions are open(0)..3
+
+  // fretboard geometry (must match the SVG above)
+  const STRING_X = [61, 107, 153, 199];
+  const FRET_Y   = [22, 77, 131, 185];                // index by fret 0..3 (0 = over the letter)
+
+  // ---- audio ----
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx = new AC(); }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function pluck(freq, when=0, dur=1.2, amp=0.3){
+    const c = ensureAudio(), t = c.currentTime + when;
+    const out = c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(amp, t+0.02);
+    out.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    [['sine',1.0],['triangle',0.22]].forEach(([type,a])=>{
+      const o = c.createOscillator(); o.type=type; o.frequency.value = freq;
+      const g = c.createGain(); g.gain.value = a;
+      o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.05);
+    });
+  }
+
+  // ---- state ----
+  const el = id => document.getElementById(id);
+  const strings = [0,1,2,3].map(i => el('str'+i));
+  function setActive(i,on){ strings[i].classList.toggle('active',on); }
+  const accidental = pc => !NATURAL.has(pc);
+
+  let stringIdx=0, fret=0, answerPC=0, diff='easy';
+  let phase='idle', correct=0, streak=0, best=0;
+
+  // map pitch-class -> piano key element, and wire clicks
+  const keyMap = {};
+  document.querySelectorAll('.wkey,.bkey').forEach(b=>{
+    const pc = +b.dataset.pc; keyMap[pc] = b;
+    b.addEventListener('click', () => guess(pc));
+  });
+  function clearKeys(){ document.querySelectorAll('.wkey,.bkey').forEach(b=>b.classList.remove('correct','wrong')); }
+
+  function makeRound(){
+    let s,f,pc;
+    do{
+      s = Math.floor(Math.random()*4);
+      f = Math.floor(Math.random()*(FRETS+1));        // 0 (open) .. 3
+      pc = (OPEN_PC[s] + f) % 12;
+    } while(diff==='easy' && accidental(pc));
+    stringIdx=s; fret=f; answerPC=pc;
+  }
+
+  function drawDot(reveal){
+    const dot=el('dot'), lab=el('dotLabel');
+    dot.setAttribute('cx', STRING_X[stringIdx]);
+    dot.setAttribute('cy', FRET_Y[fret]);
+    dot.style.display='';
+    if(reveal){
+      lab.setAttribute('x', STRING_X[stringIdx]);
+      lab.setAttribute('y', FRET_Y[fret]+4.5);
+      lab.textContent = SHARP[answerPC];
+      lab.style.display='';
+    } else {
+      lab.style.display='none';
+    }
+  }
+
+  function newRound(){
+    clearKeys();
+    makeRound();
+    drawDot(false);
+    phase='guess';
+    el('hearBtn').disabled=false;
+    setFeedback(fret===0 ? 'Which open string is this?' : 'Which note is this?','');
+  }
+
+  function playNote(){
+    ensureAudio();
+    pluck(BASE[stringIdx] * Math.pow(2, fret/12));
+    setActive(stringIdx,true);
+    setTimeout(()=>setActive(stringIdx,false), 560);
+  }
+
+  function guess(pc){
+    if(phase!=='guess') return;
+    phase='done';
+    drawDot(true);
+    playNote();                                     // hear the answer
+    const right = (pc === answerPC);
+    keyMap[answerPC].classList.add('correct');
+    if(!right) keyMap[pc].classList.add('wrong');
+    const name = accidental(answerPC) ? SHARP[answerPC]+' / '+FLAT[answerPC] : SHARP[answerPC];
+    const where = fret===0
+      ? 'open ' + STR_NAMES[stringIdx] + ' string'
+      : STR_NAMES[stringIdx] + ' string · ' + ORD[fret] + ' fret';
+    if(right){
+      correct++; streak++; best=Math.max(best,streak);
+      setFeedback(where+' = '+name+' ✓','good');
+    } else {
+      streak=0;
+      const picked = accidental(pc) ? SHARP[pc]+'/'+FLAT[pc] : SHARP[pc];
+      setFeedback(where+' = '+name+'  (you picked '+picked+')','bad');
+    }
+    updateScore();
+  }
+
+  function setFeedback(msg,cls){ const f=el('feedback'); f.textContent=msg; f.className='feedback'+(cls?' '+cls:''); }
+  function updateScore(){ el('sCorrect').textContent=correct; el('sStreak').textContent=streak; el('sBest').textContent=best; }
+  function setDiff(d){
+    diff=d;
+    el('easyBtn').setAttribute('aria-pressed', d==='easy');
+    el('hardBtn').setAttribute('aria-pressed', d==='hard');
+    document.querySelectorAll('.bkey').forEach(b=> b.disabled = (d==='easy'));  // naturals = white keys only
+  }
+
+  // ---- wiring ----
+  el('newBtn').addEventListener('click', newRound);
+  el('hearBtn').addEventListener('click', () => { if(phase!=='idle') playNote(); });
+  el('easyBtn').addEventListener('click', () => setDiff('easy'));
+  el('hardBtn').addEventListener('click', () => setDiff('hard'));
+  // keyboard: letter names pick naturals (tap the piano for sharps); Enter = next; H = hear
+  window.addEventListener('keydown', e => {
+    const k = e.key.toUpperCase();
+    if(phase==='guess'){
+      const nat = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
+      if(k in nat){ guess(nat[k]); return; }
+    }
+    if(k==='H' && phase!=='idle'){ playNote(); return; }
+    if(e.key==='Enter' && (phase==='idle' || phase==='done')){ newRound(); }
+  });
+
+  // start with naturals, and drop the first note in straight away
+  setDiff('easy');
+  newRound();
+</script>
+</body>
+</html>

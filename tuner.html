@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tuner — chromatic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A; --green:#1F9D55;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(420px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:16px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(2.2rem,8vw,3.4rem); letter-spacing:-.02em;
+    line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:clamp(18px,5vw,30px);
+  }
+
+  .readout{ text-align:center; margin-bottom:6px; }
+  .note{
+    font-family:var(--display); font-weight:800; font-size:5rem; line-height:1;
+    color:var(--muted); letter-spacing:-.02em; transition:color .15s ease;
+  }
+  .note .oct{ font-size:2rem; vertical-align:super; opacity:.7; margin-left:2px; }
+  .note.lit{ color:var(--blue); }
+  .note.intune{ color:var(--green); }
+  .cents{ font-family:var(--mono); font-weight:700; font-size:1.1rem; color:var(--muted); min-height:1.3em; margin-top:2px; }
+  .cents.intune{ color:var(--green); }
+
+  .meter{ position:relative; height:60px; border:2.5px solid var(--ink); background:#FBF7EE; overflow:hidden; margin:14px 0 8px; }
+  .meter .zone{ position:absolute; top:0; bottom:0; left:45%; width:10%; background:rgba(31,157,85,.14); }
+  .meter .tick{ position:absolute; top:0; width:2px; background:rgba(23,20,14,.25); }
+  .meter .tick.major{ background:rgba(23,20,14,.5); }
+  .meter .ctr{ position:absolute; top:0; bottom:0; left:50%; width:2px; background:var(--ink); transform:translateX(-1px); }
+  .meter .needle{ position:absolute; top:5px; bottom:5px; width:5px; left:50%; background:var(--pink); transform:translateX(-2.5px); transition:background .15s ease; box-shadow:0 0 0 1.5px rgba(23,20,14,.9); }
+  .meter.intune .needle{ background:var(--green); }
+  .meterlabels{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:.66rem; color:var(--muted); letter-spacing:.05em; }
+
+  .hz{ text-align:center; font-family:var(--mono); font-size:.8rem; color:var(--muted); margin-top:10px; min-height:1.3em; }
+  .status{ text-align:center; font-family:var(--mono); font-size:.72rem; color:var(--muted); margin-top:4px; min-height:1.3em; line-height:1.5; }
+
+  .controls{ display:flex; gap:8px; margin-top:18px; }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:1rem; padding:13px 14px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; flex:1 1 auto; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .05s ease, box-shadow .05s ease, background .12s ease;
+  }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.primary:hover{ background:#1c2da6; }
+  .btn.primary.on{ background:var(--pink); }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Tuner">Tuner</span>
+      <div class="subtitle">chromatic · any instrument</div>
+    </header>
+
+    <div class="panel">
+      <div class="readout">
+        <div class="note" id="note">&mdash;</div>
+        <div class="cents" id="cents">&nbsp;</div>
+      </div>
+
+      <div class="meter" id="meter">
+        <div class="zone"></div>
+        <div class="tick"        style="left:0%"></div>
+        <div class="tick"        style="left:25%"></div>
+        <div class="tick major"  style="left:50%"></div>
+        <div class="tick"        style="left:75%"></div>
+        <div class="tick"        style="left:100%"></div>
+        <div class="ctr"></div>
+        <div class="needle" id="needle"></div>
+      </div>
+      <div class="meterlabels"><span>♭ &minus;50¢</span><span>in tune</span><span>+50¢ ♯</span></div>
+
+      <div class="hz" id="hz">&nbsp;</div>
+      <div class="status" id="status">Tap Start and allow the microphone. (Or try a Test tone.)</div>
+
+      <div class="controls">
+        <button class="btn primary" id="micBtn">🎤 Start</button>
+        <button class="btn" id="testBtn">🔊 Test tone</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   TUNER — chromatic pitch detection via the McLeod Pitch Method (MPM),
+   a normalized-autocorrelation method that is accurate and resistant to
+   the octave errors common on plucked strings. Parabolic interpolation
+   gives sub-sample (≈cent-level) precision.
+
+   Tunables: FFT (window — raise for lower instruments), CLARITY_MIN and
+   RMS_MIN (gates), IN_TUNE_CENTS, and the smoothing window.
+   ==================================================================== */
+
+  const FFT = 2048;              // analysis window (covers down to ~47 Hz @48k)
+  const CLARITY_MIN = 0.86;      // accept a pitch only above this NSDF clarity
+  const RMS_MIN = 0.008;         // ignore input quieter than this
+  const K = 0.9;                 // MPM peak-pick threshold (fraction of global max)
+  const IN_TUNE_CENTS = 5;       // |cents| within this reads "in tune"
+  const SMOOTH = 5;              // median window for the displayed frequency
+
+  const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const noteName = midi => NOTES[(midi%12+12)%12] + (Math.floor(midi/12) - 1);
+  function freqToNote(freq){
+    const midi = Math.round(69 + 12*Math.log2(freq/440));
+    const name = NOTES[(midi%12+12)%12];
+    const octave = Math.floor(midi/12) - 1;
+    const ref = 440 * Math.pow(2, (midi-69)/12);
+    const cents = 1200 * Math.log2(freq/ref);
+    return { midi, name, octave, ref, cents };
+  }
+
+  // ---- MPM pitch detection ----
+  function detectPitch(buf, sampleRate){
+    const SIZE = buf.length;
+    let rms = 0; for(let i=0;i<SIZE;i++) rms += buf[i]*buf[i];
+    rms = Math.sqrt(rms/SIZE);
+    if(rms < RMS_MIN) return { freq:-1, clarity:0, rms };
+
+    const maxLag = SIZE >> 1;
+    const nsdf = new Float32Array(maxLag);
+    for(let tau=0; tau<maxLag; tau++){
+      let acf = 0, m = 0;
+      for(let i=0; i<SIZE-tau; i++){
+        const a = buf[i], b = buf[i+tau];
+        acf += a*b; m += a*a + b*b;
+      }
+      nsdf[tau] = m > 0 ? (2*acf)/m : 0;
+    }
+
+    // collect the highest peak within each positive region after the first
+    // zero-crossing (skips the lag-0 lobe)
+    let tau = 0;
+    while(tau < maxLag-1 && nsdf[tau] > 0) tau++;     // past initial positive lobe
+    const peaks = [];
+    while(tau < maxLag-1){
+      if(nsdf[tau] > 0){
+        let maxTau = tau, maxVal = nsdf[tau];
+        while(tau < maxLag-1 && nsdf[tau] > 0){ if(nsdf[tau] > maxVal){ maxVal = nsdf[tau]; maxTau = tau; } tau++; }
+        peaks.push([maxTau, maxVal]);
+      } else tau++;
+    }
+    if(!peaks.length) return { freq:-1, clarity:0, rms };
+
+    let globalMax = 0; for(const p of peaks) if(p[1] > globalMax) globalMax = p[1];
+    const threshold = K * globalMax;
+    let chosen = peaks[0];
+    for(const p of peaks){ if(p[1] >= threshold){ chosen = p; break; } }   // first strong peak = fundamental
+    let [pt, pv] = chosen;
+
+    // parabolic interpolation around the chosen peak
+    let betterTau = pt;
+    if(pt > 0 && pt < maxLag-1){
+      const a = nsdf[pt-1], b = nsdf[pt], c = nsdf[pt+1];
+      const denom = a - 2*b + c;
+      if(denom !== 0) betterTau = pt + 0.5*(a - c)/denom;
+    }
+    return { freq: sampleRate/betterTau, clarity: pv, rms };
+  }
+
+  // ---- audio plumbing ----
+  let ctx = null, analyser = null, buf = null, micStream = null, micSrc = null;
+  let running = false, rafId = null, lastDetect = 0;
+  let ring = [], hasReading = false, lastGood = 0;
+  let needleCents = 0, targetCents = 0;
+
+  const el = id => document.getElementById(id);
+  function ensureCtx(){ if(!ctx){ const AC = window.AudioContext||window.webkitAudioContext; ctx = new AC(); } if(ctx.state==='suspended') ctx.resume(); return ctx; }
+  function ensureRunning(){
+    ensureCtx();
+    if(!analyser){ analyser = ctx.createAnalyser(); analyser.fftSize = FFT; buf = new Float32Array(FFT); }
+    if(!running){ running = true; rafId = requestAnimationFrame(loop); }
+  }
+
+  async function startMic(){
+    ensureRunning();
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      status('This browser/context blocks mic access. Host the page over https and open it directly.'); return;
+    }
+    try{
+      micStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+      micSrc = ctx.createMediaStreamSource(micStream);
+      micSrc.connect(analyser);
+      el('micBtn').classList.add('on'); el('micBtn').textContent = '● Listening';
+      status('Listening — play a note.');
+    } catch(err){
+      const m = err && err.name === 'NotAllowedError' ? 'Microphone blocked. Allow it in the address bar, or run this on your own site.'
+              : err && err.name === 'NotFoundError' ? 'No microphone found.'
+              : 'Mic error: ' + (err && err.name || err);
+      status(m);
+    }
+  }
+
+  function testTone(){
+    ensureRunning();
+    const midi = 48 + Math.floor(Math.random()*25);          // C3..C5
+    const cents = Math.round(Math.random()*60 - 30);         // ±30¢
+    const freq = 440 * Math.pow(2, (midi-69)/12) * Math.pow(2, cents/1200);
+    const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = freq;
+    const g = ctx.createGain(); g.gain.value = 0.0001;
+    o.connect(g); g.connect(analyser); g.connect(ctx.destination);
+    const t = ctx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.18, t+0.02);
+    g.gain.setValueAtTime(0.18, t+1.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+1.9);
+    o.start(t); o.stop(t+1.95);
+    status('Test tone: playing ' + noteName(midi) + ' ' + (cents>=0?'+':'') + cents + '¢  →  the reading should match');
+  }
+
+  function status(msg){ el('status').textContent = msg; }
+
+  function median(arr){ const a = arr.slice().sort((x,y)=>x-y); const n = a.length; return n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2; }
+
+  // ---- loop ----
+  function loop(t){
+    rafId = requestAnimationFrame(loop);
+    if(analyser){
+      const now = performance.now();
+      if(now - lastDetect >= 33){                 // detect ~30×/sec
+        lastDetect = now;
+        analyser.getFloatTimeDomainData(buf);
+        const { freq, clarity } = detectPitch(buf, ctx.sampleRate);
+        if(freq > 0 && clarity >= CLARITY_MIN && freq > 30 && freq < 2000){
+          ring.push(freq); if(ring.length > SMOOTH) ring.shift();
+          hasReading = true; lastGood = now;
+        } else if(now - lastGood > 320){
+          hasReading = false; ring = [];
+        }
+      }
+    }
+    render();
+  }
+
+  function render(){
+    const noteEl = el('note'), centsEl = el('cents'), hzEl = el('hz'), meterEl = el('meter');
+    if(hasReading && ring.length){
+      const f = median(ring);
+      const n = freqToNote(f);
+      const inTune = Math.abs(n.cents) <= IN_TUNE_CENTS;
+      noteEl.innerHTML = n.name + '<span class="oct">' + n.octave + '</span>';
+      noteEl.className = 'note ' + (inTune ? 'intune' : 'lit');
+      const c = Math.round(n.cents);
+      centsEl.textContent = (c>0?'+':'') + c + '¢';
+      centsEl.className = 'cents' + (inTune ? ' intune' : '');
+      hzEl.textContent = f.toFixed(1) + ' Hz   ·   ' + n.name + n.octave + ' = ' + n.ref.toFixed(1) + ' Hz';
+      targetCents = Math.max(-50, Math.min(50, n.cents));
+      meterEl.classList.toggle('intune', inTune);
+    } else {
+      noteEl.innerHTML = '&mdash;'; noteEl.className = 'note';
+      centsEl.textContent = ''; centsEl.className = 'cents';
+      hzEl.textContent = '';
+      targetCents = 0; meterEl.classList.remove('intune');
+    }
+    needleCents += (targetCents - needleCents) * 0.25;
+    el('needle').style.left = (50 + needleCents) + '%';
+  }
+
+  // ---- wiring ----
+  el('micBtn').addEventListener('click', () => { if(!micSrc) startMic(); });
+  el('testBtn').addEventListener('click', testTone);
+
+  // idle needle render so the meter isn't blank before starting
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open \"/Users/williamtroy/Desktop/MARCUS/Theory/gradus-shell.html\")",
+      "Bash(node -e ' *)",
+      "Bash(node --check /tmp/_gradus_check.js)",
+      "Bash(node --check /tmp/_gradus_check2.js)",
+      "Bash(node -e \"console.log\\(require\\('puppeteer'\\)\\)\")",
+      "Bash(npx --yes playwright --version)",
+      "Bash(npm ls *)",
+      "Bash(npx playwright *)",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(npm init *)",
+      "Bash(npm install *)"
+    ]
+  }
+}

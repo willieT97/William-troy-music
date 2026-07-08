@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Counterpoint Dojo — Steps to Parnassus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --amber:#E0922A; --green:#1F9D55; --muted:#6F6757;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--body);
+    line-height:1.55; -webkit-font-smoothing:antialiased; position:relative; min-height:100vh;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:9; opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+  }
+  .mark{ position:fixed; width:16px; height:16px; z-index:8; opacity:.6; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--ink); }
+  .mark::before{ left:7px; top:0; width:2px; height:16px; }
+  .mark::after{ top:7px; left:0; height:2px; width:16px; }
+  .mark.tl{ left:12px; top:12px; } .mark.tr{ right:12px; top:12px; }
+  .mark.bl{ left:12px; bottom:12px; } .mark.br{ right:12px; bottom:12px; }
+
+  .wrap{ max-width:740px; margin:0 auto; padding:26px 20px 90px; position:relative; z-index:1; }
+
+  header.top{ text-align:center; margin-bottom:4px; }
+  .title{ position:relative; display:inline-block; font-family:var(--disp); font-weight:800;
+    font-size:clamp(1.5rem,5.5vw,2.4rem); letter-spacing:-.01em; line-height:1; }
+  .title::after{ content:attr(data-text); position:absolute; left:2.5px; top:2.5px; color:var(--pink);
+    mix-blend-mode:multiply; z-index:-1; }
+  .belt{ font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin-top:9px; }
+  .belt .dot{ display:inline-block; width:9px; height:9px; border:1.5px solid var(--ink); border-radius:50%;
+    vertical-align:-1px; margin-right:5px; background:#fff; }
+
+  .bar{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin:18px 0 16px; border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); padding:8px 0; }
+  .pos{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .tocbtn{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase;
+    padding:7px 14px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink); }
+  .tocbtn:active{ transform:translate(3px,3px); box-shadow:none; }
+
+  .toc{ position:relative; z-index:30; border:2.5px solid var(--ink); background:#FBF7EE; padding:14px 16px; margin-bottom:20px; box-shadow:8px 8px 0 var(--ink); }
+  .toc.hidden{ display:none; }
+  .toc h4{ font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:14px 0 6px; }
+  .toc h4:first-child{ margin-top:0; }
+  .toc a{ display:block; font-size:.9rem; padding:5px 8px; color:var(--ink); text-decoration:none; cursor:pointer; border-left:3px solid transparent; }
+  .toc a:hover{ background:rgba(36,56,200,.06); }
+  .toc a.cur{ border-left-color:var(--pink); font-weight:600; background:rgba(255,78,134,.07); }
+  .toc a.soon{ color:var(--muted); cursor:default; }
+  .toc a.soon:hover{ background:none; }
+  .toc .tag{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--amber); border:1px solid var(--amber); padding:1px 5px; margin-left:6px; vertical-align:1px; }
+
+  /* ---------- STAGE (dojo) ---------- */
+  .stage{ position:relative; border:3px solid var(--ink); background:#F2ECDD; box-shadow:9px 9px 0 var(--ink); overflow:hidden; }
+  .stage::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:4; opacity:.10;
+    background:repeating-linear-gradient(0deg, var(--ink) 0 1px, transparent 1px 4px); }
+  .banner{ position:relative; z-index:5; background:var(--ink); color:var(--paper); padding:9px 14px;
+    font-family:var(--disp); font-weight:800; font-size:.92rem; letter-spacing:.01em; display:flex; gap:10px; align-items:baseline; }
+  .banner .bk{ font-family:var(--mono); font-weight:700; font-size:.6rem; letter-spacing:.14em; color:var(--amber); }
+
+  .scene{ position:relative; z-index:3; display:flex; gap:0; align-items:stretch; min-height:230px; }
+  .scene .floor{ position:absolute; left:0; right:0; bottom:0; height:64px; background:rgba(36,56,200,.05);
+    border-top:2px solid rgba(23,20,14,.25); z-index:0; }
+  .portrait{ position:relative; z-index:2; width:172px; flex:0 0 172px; display:flex; align-items:flex-end; justify-content:center;
+    padding:14px 6px 0; transition:opacity .2s, filter .2s; }
+  .portrait svg{ width:100%; height:auto; display:block; filter:drop-shadow(4px 4px 0 rgba(23,20,14,.18)); }
+  .scene.student .portrait{ opacity:.55; filter:grayscale(.3); }
+
+  .speech{ position:relative; z-index:2; flex:1; margin:14px 14px 16px 4px; align-self:center;
+    border:2.5px solid var(--ink); background:var(--paper); box-shadow:5px 5px 0 var(--ink); padding:13px 15px 12px; cursor:pointer; }
+  .speech::before{ content:""; position:absolute; left:-12px; top:30px; width:0; height:0;
+    border-top:9px solid transparent; border-bottom:9px solid transparent; border-right:12px solid var(--ink); }
+  .who{ font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; margin-bottom:7px; color:var(--blue); }
+  .scene.student .who{ color:var(--pink); }
+  .line{ font-size:1.04rem; min-height:3.2em; }
+  .line .cursor{ display:inline-block; width:.55em; opacity:.7; }
+  .cont{ font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    margin-top:10px; text-align:right; min-height:1em; }
+  .cont.go{ color:var(--pink); }
+  .cont.blink{ animation:bl 1s steps(2) infinite; }
+  @keyframes bl{ 50%{ opacity:.25; } }
+
+  /* ---------- EXERCISE ---------- */
+  .exwrap{ margin-top:22px; position:relative; z-index:20; }
+  .exwrap[hidden]{ display:none; }
+  .ex{ position:relative; z-index:21; }
+  .ex{ border:2.5px solid var(--ink); background:#FBF7EE; box-shadow:8px 8px 0 var(--ink); padding:18px 18px 20px; }
+  .ex .exh{ font-family:var(--mono); font-size:.6rem; letter-spacing:.18em; text-transform:uppercase; color:var(--pink); margin-bottom:4px; }
+  .ex .exttl{ font-family:var(--disp); font-weight:700; font-size:1.18rem; margin:0 0 6px; }
+  .ex .exd{ font-size:.95rem; color:#3a352a; margin:0 0 16px; }
+  .ph{ font-family:var(--mono); font-size:.7rem; letter-spacing:.04em; color:var(--muted); border:2px dotted var(--muted);
+    padding:14px; text-align:center; text-transform:uppercase; }
+  .popup-overlay{ position:fixed; inset:0; background:rgba(23,20,14,.55); display:flex; align-items:center; justify-content:center; padding:20px; z-index:20; }
+  .popup{ background:var(--paper); border:2px solid var(--ink); box-shadow:8px 8px 0 var(--ink); padding:18px; max-width:420px; width:100%; }
+  .popup-title{ font-family:var(--mono); font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
+  .popup-body{ font-size:.95rem; margin-bottom:14px; }
+  .popup-options{ display:grid; gap:10px; margin-bottom:14px; }
+  .popup-feedback{ min-height:18px; margin-top:10px; font-size:.94rem; }
+  .reason-option{ display:block; width:100%; text-align:left; padding:18px 20px; border:2px solid var(--ink); border-radius:4px; background:var(--paper); color:var(--ink); font-family:var(--mono); font-size:.82rem; letter-spacing:.06em; cursor:pointer; box-shadow:3px 3px 0 rgba(23,20,14,.08); transition:background .2s, transform .1s; }
+  .reason-option:hover{ background:rgba(36,56,200,.05); }
+  .reason-option.selected{ background:rgba(255,78,134,.08); border-color:var(--pink); transform:translateY(-1px); }
+  .reason-option:focus{ outline:none; box-shadow:0 0 0 3px rgba(36,56,200,.18); }
+
+  .btn{ font-family:var(--mono); font-size:.74rem; letter-spacing:.06em; text-transform:uppercase; cursor:pointer;
+    padding:11px 18px; border:2.5px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:3px 3px 0 var(--ink); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:none; }
+  .btn:disabled{ opacity:.5; cursor:default; box-shadow:none; transform:none; }
+  .btn.big{ font-size:.82rem; padding:13px 22px; }
+  .btn.ink{ background:var(--ink); color:var(--paper); }
+  .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .lab2{ font-family:var(--mono); font-size:.64rem; letter-spacing:.05em; color:var(--muted); margin-top:11px; }
+
+  /* judge */
+  .jchoices{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0 6px; }
+  .jc{ font-size:.86rem; padding:16px 8px; }
+  .jc.true{ border-color:var(--green); box-shadow:4px 4px 0 var(--green); color:var(--green); }
+  .jc.false{ border-color:var(--pink); box-shadow:4px 4px 0 var(--pink); color:var(--pink); }
+  .jc.wrongpick{ outline:3px solid var(--amber); outline-offset:3px; }
+  .fb{ min-height:24px; font-size:.98rem; margin:10px 0 12px; }
+  .fb.ok{ color:var(--green); } .fb.no{ color:var(--pink); }
+  .streak{ font-family:var(--mono); font-size:.64rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:12px; }
+
+  .nav{ display:flex; justify-content:space-between; gap:12px; margin-top:28px; padding-top:18px; border-top:2px solid var(--ink); }
+  .nav .endnote{ font-family:var(--mono); font-size:.62rem; letter-spacing:.04em; color:var(--muted); text-align:right; max-width:300px; align-self:center; }
+
+  @media (max-width:560px){
+    .scene{ flex-direction:column; align-items:center; }
+    .portrait{ width:128px; flex-basis:auto; padding-top:16px; }
+    .speech{ margin:6px 14px 16px; align-self:stretch; }
+    .speech::before{ display:none; }
+    .jchoices{ grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .btn:active,.tocbtn:active{ transform:none; }
+    .cont.blink{ animation:none; }
+  }
+</style>
+</head>
+<body>
+  <span class="mark tl"></span><span class="mark tr"></span><span class="mark bl"></span><span class="mark br"></span>
+
+  <div class="wrap">
+    <header class="top">
+      <span class="title" data-text="The Counterpoint Dojo">The Counterpoint Dojo</span>
+      <div class="belt" id="belt"></div>
+    </header>
+
+    <div class="bar">
+      <button class="tocbtn" id="tocBtn">☰ Scrolls</button>
+      <span class="pos" id="pos"></span>
+    </div>
+
+    <nav class="toc hidden" id="toc"></nav>
+
+    <div class="stage">
+      <div class="banner"><span class="bk" id="bk"></span><span id="btitle"></span></div>
+      <div class="scene" id="scene">
+        <div class="floor"></div>
+        <div class="portrait" id="portrait"></div>
+        <div class="speech" id="speech">
+          <div class="who" id="who">THE MASTER</div>
+          <div class="line" id="line"></div>
+          <div class="cont blink" id="cont">▼ tap to continue</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exwrap" id="exwrap" hidden></div>
+
+    <div class="nav">
+      <button class="btn" id="prev">← Previous</button>
+      <div id="nextslot"></div>
+    </div>
+  </div>
+
+<script>
+"use strict";
+const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = id => document.getElementById(id);
+const rand = n => Math.floor(Math.random() * n);
+
+/* ===================== AUDIO ===================== */
+let actx = null;
+function audio(){
+  if(!actx || actx.state === 'closed') actx = new (window.AudioContext || window.webkitAudioContext)();
+  if(actx.state === 'suspended') actx.resume().catch(() => {});
+  return actx;
+}
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+function voice(midi, t, dur, peak){          // sine (1.0) + triangle (0.22)
+  const ac = audio();
+  const o1 = ac.createOscillator(), o2 = ac.createOscillator();
+  const g = ac.createGain(), gt = ac.createGain();
+  o1.type = 'sine'; o2.type = 'triangle';
+  o1.frequency.value = mtof(midi); o2.frequency.value = mtof(midi);
+  gt.gain.value = 0.22;
+  o1.connect(g); o2.connect(gt); gt.connect(g);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(peak, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(ac.destination);
+  o1.start(t); o2.start(t); o1.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+}
+function playDyad(low, interval, dur){
+  const ac = audio();
+  const start = () => {
+    const t = ac.currentTime + 0.03;
+    voice(low, t, dur || 1.3, 0.3); voice(low + interval, t, dur || 1.3, 0.3);
+  };
+  if(ac.state === 'suspended'){
+    ac.resume().then(start).catch(start);
+  } else {
+    start();
+  }
+}
+function playMelody(notes, step){
+  const ac = audio();
+  const start = () => {
+    let t = ac.currentTime + 0.05; step = step || 0.6;
+    for(const n of notes){ voice(n, t, step * 0.95, 0.32); t += step; }
+  };
+  if(ac.state === 'suspended'){
+    ac.resume().then(start).catch(start);
+  } else {
+    start();
+  }
+}
+
+/* ===================== MASTER PORTRAIT ===================== */
+const MASTER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" preserveAspectRatio="xMidYMax meet">
+  <circle cx="100" cy="106" r="84" fill="#FF4E86"/>
+  <circle cx="103" cy="109" r="84" fill="none" stroke="#17140E" stroke-width="2.5" opacity="0.85"/>
+  <path d="M26,220 C26,162 58,146 100,146 C142,146 174,162 174,220 Z" fill="#2438C8" stroke="#17140E" stroke-width="3"/>
+  <path d="M100,150 L128,168 L120,210 L80,210 L72,168 Z" fill="#EDE7DA" stroke="#17140E" stroke-width="2.5"/>
+  <path d="M100,150 L72,168 L78,200" fill="none" stroke="#17140E" stroke-width="2.5"/>
+  <path d="M100,150 L128,168 L122,200" fill="none" stroke="#17140E" stroke-width="2.5"/>
+  <rect x="86" y="196" width="28" height="14" rx="2" fill="#17140E"/>
+  <rect x="96" y="198" width="8" height="22" rx="2" fill="#17140E"/>
+  <rect x="88" y="116" width="24" height="34" rx="8" fill="#E2B98F" stroke="#17140E" stroke-width="2.5"/>
+  <ellipse cx="58" cy="86" rx="8" ry="12" fill="#E2B98F" stroke="#17140E" stroke-width="2.5"/>
+  <ellipse cx="142" cy="86" rx="8" ry="12" fill="#E2B98F" stroke="#17140E" stroke-width="2.5"/>
+  <circle cx="100" cy="84" r="42" fill="#E2B98F" stroke="#17140E" stroke-width="3"/>
+  <path d="M60,76 C58,58 70,46 82,44 C74,52 70,64 70,76 Z" fill="#D8D2C4" stroke="#17140E" stroke-width="2"/>
+  <path d="M140,76 C142,58 130,46 118,44 C126,52 130,64 130,76 Z" fill="#D8D2C4" stroke="#17140E" stroke-width="2"/>
+  <rect x="92" y="40" width="16" height="10" rx="3" fill="#17140E"/>
+  <ellipse cx="100" cy="34" rx="15" ry="12" fill="#D8D2C4" stroke="#17140E" stroke-width="2.5"/>
+  <path d="M74,72 C80,66 90,66 96,70 C90,70 82,71 76,76 Z" fill="#EDE7DA" stroke="#17140E" stroke-width="2"/>
+  <path d="M126,72 C120,66 110,66 104,70 C110,70 118,71 124,76 Z" fill="#EDE7DA" stroke="#17140E" stroke-width="2"/>
+  <path d="M80,82 Q86,86 92,82" fill="none" stroke="#17140E" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M108,82 Q114,86 120,82" fill="none" stroke="#17140E" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M100,84 L97,96 Q100,99 103,96" fill="none" stroke="#17140E" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M98,100 C92,104 84,108 76,120 C84,112 92,108 98,106 Z" fill="#EDE7DA" stroke="#17140E" stroke-width="2"/>
+  <path d="M102,100 C108,104 116,108 124,120 C116,112 108,108 102,106 Z" fill="#EDE7DA" stroke="#17140E" stroke-width="2"/>
+  <path d="M72,104 C66,140 74,180 100,188 C126,180 134,140 128,104 C124,118 116,126 100,126 C84,126 76,118 72,104 Z" fill="#EDE7DA" stroke="#17140E" stroke-width="3"/>
+  <path d="M90,150 C92,165 95,178 100,184" fill="none" stroke="#C9C1B0" stroke-width="2"/>
+  <path d="M110,150 C108,165 105,178 100,184" fill="none" stroke="#C9C1B0" stroke-width="2"/>
+</svg>`;
+
+/* ===================== COURSE DATA ===================== */
+const P    = html => ({ t:'p', html });
+const QA   = (q, a) => ({ t:'qa', q, a });
+const NOTE = html => ({ t:'note', html });
+
+const COURSE = [
+  {
+    title: 'Module 0 — The Foundations', belt: 'White Belt — The Foundations',
+    lessons: [
+      {
+        num:'0.1', title:'Consonance & Dissonance',
+        teach:[
+          P(`Welcome, student. Before two melodies may move together, you must learn the one feeling all of this rests upon.`),
+          P(`When two notes sound at once they do one of two things. A <b>consonance</b> rests — it sits where it stands and asks for nothing. A <b>dissonance</b> leans — it sounds unfinished, pulled toward some note it has not yet reached.`),
+          P(`The whole craft is this: to place rest and restlessness so that every leaning is, in the end, answered.`),
+          QA(`Can you not simply tell me which is which, and let me learn the list?`,
+             `You will have the list soon enough. But learn the <i>sound</i> first. One who knows only the names of the intervals, yet cannot hear them, has memorised the map of a country he has never walked.`),
+          P(`So — I will sound notes for you, one at a time. Tell me only this: does it rest, or does it lean? Trust your ear.`)
+        ],
+        ex:{ type:'judge', exttl:'Rest, or lean?', desc:'A single sound plays. Decide by ear alone whether it is consonant or dissonant. There are no rules yet — only listen, answer, and learn how each one feels. Answer ten correctly in a row to move on.', goal:10 }
+      },
+      {
+        num:'0.2', title:'The Intervals, Named',
+        teach:[
+          P(`Rest and lean — your ear has that already. Now let us put a name to each, and a face as well: the mark it makes upon the staff.`),
+          P(`Here is how we shall proceed. I will sound a meeting of two notes. You judge it, as before — consonant, or dissonant. Then I will tell you its name, and show you where it sits on the staff. One at a time, from the closest neighbor to the octave above.`),
+          QA(`Why the staff now, when we have used only our ears?`,
+             `Because the ear alone forgets, and the eye alone is deaf. Together they hold what neither keeps alone.`),
+          P(`Begin when you are ready.`)
+        ],
+        ex:{ type:'intervalReveal', exttl:'Name each meeting', desc:'Hear the interval and guess by ear first. Then learn its name and see where it sits on the staff.',
+             root:60, list:[
+               { name:'Unison', semi:0, cons:true,  info:'Two voices on the very same note. It rests utterly still — the most perfect consonance there is, though it all but erases the two voices into one.' },
+               { name:'Second', semi:2, cons:false, info:'Neighbors on the scale, a single step apart. It leans hard on the ear — a dissonance, restless until it moves to a third or a unison.' },
+               { name:'Third',  semi:4, cons:true,  info:'Skip one step of the scale. Warm and full — an imperfect consonance, the sound counterpoint leans on most.' },
+               { name:'Fourth', semi:5, cons:false, info:'Four steps up. Alone above a bass it asks to fall, so we count it a dissonance here — though your ear may well call it calm.' },
+               { name:'Fifth',  semi:7, cons:true,  info:'The open, hollow perfect consonance — pure, a little cold, the interval a drone loves.' },
+               { name:'Sixth',  semi:9, cons:true,  info:'Like the third turned upside down — warm, and likewise an imperfect consonance.' },
+               { name:'Seventh',semi:11,cons:false, info:'One step short of the octave. It strains hard toward it — a clear dissonance.' },
+               { name:'Octave', semi:12,cons:true,  info:'The same note again, doubled in height. A perfect consonance — the sound of one voice, twice.' }
+             ] }
+      },
+      {
+        num:'0.3', title:'Which Intervals Are Which',
+        teach:[
+          P(`Now the names, which your ear has earned.`),
+          P(`The <b>consonances</b> are the unison, the third, the fifth, the sixth, and the octave — and the same widened by an octave, the tenth and beyond.`),
+          P(`Every other meeting — the second, the fourth, the diminished fifth and its twin the tritone, and the seventh — is a <b>dissonance</b>, and may not be used freely.`),
+          QA(`But the fourth sounded restful to my ear. Why is it counted among the harsh?`,
+             `A famous and difficult question — the one place where ear and rule seem to part. Alone above the lower voice, the fourth does not settle; it asks to fall to a third. So in two voices we count it a dissonance. Later, with other voices beneath it, it softens.`)
+        ],
+        ex:{ type:'nameInterval', exttl:'Name the meeting', desc:'A pair of notes is shown on the staff and sounded together. Name the interval — unison, second, third, fourth, fifth, sixth, seventh, or octave.',
+             root:60, list:[
+               { name:'Unison', semi:0 }, { name:'Second', semi:2 }, { name:'Third', semi:4 },
+               { name:'Fourth', semi:5 }, { name:'Fifth', semi:7 }, { name:'Sixth', semi:9 },
+               { name:'Seventh', semi:11 }, { name:'Octave', semi:12 }
+             ] }
+      },
+      {
+        num:'0.4', title:'Perfect & Imperfect',
+        teach:[
+          P(`Not all consonances are alike.`),
+          P(`The <b>unison, fifth, and octave</b> are the perfect consonances — pure, open, a little cold. The <b>third and sixth</b> are the imperfect consonances — warmer, fuller, kinder to the ear.`),
+          P(`Hold this close. Nearly every rule to come turns on whether a consonance is perfect or imperfect.`)
+        ],
+        ex:{ type:'ph', subtype:'perfectImperfect', exttl:'Sort them', desc:'Shown a consonance, you say whether it is perfect or imperfect.', phnote:'Sort the consonance by ear and decide whether it is perfect or imperfect.' }
+      },
+      {
+        num:'0.5', title:'The Three Motions',
+        teach:[
+          P(`When the two voices step from one pair of notes to the next, they travel in one of three ways.`),
+          P(`<b>Direct motion</b> — both move the same way. <b>Contrary motion</b> — they move apart, one up while the other goes down. <b>Oblique motion</b> — one moves while the other holds still.`),
+          P(`Contrary and oblique keep the voices their own. Direct motion is the one to watch.`)
+        ],
+        ex:{ type:'motion', exttl:'Name the motion', desc:'Shown two pairs of notes in succession, you say whether the voices moved by direct, contrary, or oblique motion.', motions:[
+          { first:[0,4], second:[1,5], motion:'direct', info:'Both voices move upward together from C–E to D–F.' },
+          { first:[1,5], second:[0,4], motion:'direct', info:'Both voices move downward together from D–A to C–E.' },
+          { first:[0,5], second:[1,4], motion:'contrary', info:'Lower voice moves up while the upper voice moves down.' },
+          { first:[1,4], second:[0,5], motion:'contrary', info:'Lower voice moves down while the upper voice moves up.' },
+          { first:[0,4], second:[0,5], motion:'oblique', info:'The lower voice stays on C while the upper voice rises from E to F.' },
+          { first:[2,6], second:[1,6], motion:'oblique', info:'The upper voice stays on B while the lower voice moves down from E to D.' }
+        ] }
+      },
+      {
+        num:'0.6', title:'The Four Rules',
+        teach:[
+          P(`Now the heart of it. Four rules govern how you move between intervals.`),
+          P(`Perfect to perfect — contrary or oblique only. Perfect to imperfect — any motion. Imperfect to perfect — contrary or oblique only. Imperfect to imperfect — any motion.`),
+          QA(`That is a great deal to hold in mind.`,
+             `Then hold it as one rule, and you will seldom err: <b>never walk into a perfect consonance by direct motion.</b> That single forbidden step is the cause of most beginners' faults.`),
+          NOTE(`This is the gate to the first species. When these answer themselves without thought, you are ready to set note against note.`)
+        ],
+        ex:{ type:'fourRules', exttl:'Allowed or forbidden?', desc:'Shown a move from one interval to the next, you judge whether the motion is permitted according to the four rules.', moves:[
+          { first:[0,4], second:[1,5], motion:'direct', permitted:false,
+            reasons:[
+              { id:'perfectDirect', label:'Entered a perfect consonance by direct motion', correct:true },
+              { id:'sameDir', label:'The voices moved in the same direction', correct:false },
+              { id:'sameNote', label:'One voice stayed on the same pitch', correct:false }
+            ],
+            info:'A perfect fifth followed by another perfect fifth using direct motion — forbidden.'
+          },
+          { first:[0,2], second:[1,5], motion:'direct', permitted:false,
+            reasons:[
+              { id:'perfectDirect', label:'Entered a perfect consonance by direct motion', correct:true },
+              { id:'voiceCross', label:'The voices crossed each other', correct:false },
+              { id:'unison', label:'The second interval was a unison', correct:false }
+            ],
+            info:'An imperfect third moving to a perfect fifth by direct motion — forbidden.'
+          },
+          { first:[0,4], second:[0,2], motion:'direct', permitted:true,
+            info:'A perfect fifth moving to an imperfect third by direct motion — allowed.'
+          },
+          { first:[0,4], second:[0,7], motion:'contrary', permitted:true,
+            info:'A perfect fifth moving to an octave by contrary motion — allowed.'
+          },
+          { first:[1,6], second:[2,6], motion:'oblique', permitted:true,
+            info:'An imperfect sixth moving to a perfect fifth with the upper voice staying still — allowed.'
+          }
+        ] }
+      },
+      {
+        num:'0.7', title:'The Cantus Firmus',
+        teach:[
+          P(`You have your materials. One thing remains before we truly begin.`),
+          P(`The <b>cantus firmus</b> — the "fixed song" — is a plain melody in whole notes that does not hurry and does not change. It is the ground you build upon, and against it you will write your second voice: sometimes above, sometimes below.`),
+          QA(`Why begin against a fixed melody, and not write both voices freely?`,
+             `Because one who must invent everything at once invents nothing well. Hold one voice still, and you may give all your art to joining a second to it.`),
+          P(`Here is such a melody. Hear it, sing it — and with it, our true work begins.`)
+        ],
+        ex:{ type:'listen', exttl:'Meet the melody', desc:'Play the cantus firmus through and sing it back. Learn its shape in your ear, for you cannot set a good voice against a melody you do not yet hear.',
+             melody:[62,65,64,62,67,65,64,62], melodyLabel:'A sample cantus firmus in D — yours to change.' }
+      }
+    ]
+  },
+  { title:'Module 1 — First Species', belt:'Yellow Belt', soon:true, blurb:'Note against note: one consonance against each note, up to the cadence.' },
+  { title:'Module 2 — Second Species', belt:'Orange Belt', soon:true, blurb:'Two against one: the passing tone, the first taste of dissonance.' },
+  { title:'Module 3 — Third Species', belt:'Green Belt', soon:true, blurb:'Four against one: the running line, the nota cambiata.' },
+  { title:'Module 4 — Fourth Species', belt:'Blue Belt', soon:true, blurb:'The suspension: dissonance prepared, then resolved.' },
+  { title:'Module 5 — Fifth Species', belt:'Brown Belt', soon:true, blurb:'Florid counterpoint: all the species woven into one singing line.' }
+];
+
+const LESSONS = [];
+COURSE.forEach(mod => { if(mod.lessons) mod.lessons.forEach(les => LESSONS.push(Object.assign({ module: mod.title, belt: mod.belt }, les))); });
+
+let idx = 0;
+
+/* ===================== DIALOGUE ENGINE ===================== */
+let pages = [], pageIdx = 0, dialogueDone = false;
+let typer = null, curToks = [], curTotal = 0, curShown = 0, lineDone = false;
+
+function buildPages(teach){
+  const out = [];
+  teach.forEach(b => {
+    if(b.t === 'qa'){ out.push({ who:'student', html:b.q }); out.push({ who:'master', html:b.a }); }
+    else out.push({ who:'master', html:b.html });
+  });
+  return out;
+}
+function tokenize(html){
+  const toks = []; let i = 0;
+  while(i < html.length){
+    if(html[i] === '<'){ const j = html.indexOf('>', i); toks.push({ tag: html.slice(i, j + 1) }); i = j + 1; }
+    else { toks.push({ ch: html[i] }); i++; }
+  }
+  return toks;
+}
+function renderType(){
+  let out = '', c = 0;
+  for(const t of curToks){
+    if('tag' in t) out += t.tag;
+    else { if(c < curShown) out += t.ch; c++; }
+  }
+  el('line').innerHTML = out + (lineDone ? '' : '<span class="cursor">▍</span>');
+}
+function startType(html){
+  clearInterval(typer);
+  curToks = tokenize(html); curTotal = curToks.filter(t => 'ch' in t).length; curShown = 0; lineDone = false;
+  el('cont').classList.remove('go'); el('cont').textContent = '';
+  renderType();
+  if(reduced){ finishLine(); return; }
+  typer = setInterval(() => { curShown += 1; renderType(); if(curShown >= curTotal) finishLine(); }, 20);
+}
+function finishLine(){
+  clearInterval(typer); curShown = curTotal; lineDone = true; renderType();
+  const last = (pageIdx >= pages.length - 1);
+  el('cont').classList.add('blink');
+  el('cont').classList.toggle('go', last);
+  el('cont').textContent = last ? '▼ begin the training' : '▼ tap to continue';
+}
+function showPage(){
+  const pg = pages[pageIdx];
+  el('scene').classList.toggle('student', pg.who === 'student');
+  el('who').textContent = pg.who === 'student' ? 'YOU' : 'THE MASTER';
+  startType(pg.html);
+}
+function advance(){
+  if(dialogueDone) return;
+  if(!lineDone){ finishLine(); return; }
+  if(pageIdx < pages.length - 1){ pageIdx += 1; showPage(); }
+  else endDialogue();
+}
+function endDialogue(){
+  dialogueDone = true;
+  el('cont').classList.remove('blink');
+  el('cont').textContent = '— your turn —';
+  // remove any leftover modal overlays that might block interaction
+  document.querySelectorAll('.popup-overlay').forEach(n => n.remove());
+  el('exwrap').hidden = false;
+  el('exwrap').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+}
+
+/* ===================== EXERCISES ===================== */
+function renderExercise(ex){
+  const head = `<div class="exh">Training</div><div class="exttl">${ex.exttl}</div><p class="exd">${ex.desc}</p>`;
+  if(ex.type === 'judge') return `<div class="ex">${head}<div id="judgeBox"></div></div>`;
+  if(ex.type === 'intervalReveal') return `<div class="ex">${head}<div id="irBox"></div></div>`;
+  if(ex.type === 'nameInterval') return `<div class="ex">${head}<div id="niBox"></div></div>`;
+  if(ex.type === 'motion') return `<div class="ex">${head}<div id="motionBox"></div></div>`;
+  if(ex.type === 'motionAllowed' || ex.type === 'fourRules') return `<div class="ex">${head}<div id="motionAllowedBox"></div></div>`;
+  if(ex.type === 'listen') return `<div class="ex">${head}
+      <div class="row"><button class="btn big" id="playMel">▶ Play the melody</button></div>
+      <div class="lab2">${ex.melodyLabel}</div></div>`;
+  if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') return `<div class="ex">${head}<div id="phBox"></div></div>`;
+  return `<div class="ex">${head}<div class="ph">${ex.phnote || 'Coming soon'}</div></div>`;
+}
+function wireExercise(ex){
+  if(ex.type === 'judge') mountJudge(ex);
+  else if(ex.type === 'intervalReveal') mountIntervalReveal(ex);
+  else if(ex.type === 'nameInterval') mountNameInterval(ex);
+  else if(ex.type === 'motion') mountMotion(ex);
+  else if(ex.type === 'motionAllowed' || ex.type === 'fourRules') mountMotionAllowed(ex);
+  else if(ex.type === 'listen') el('playMel').addEventListener('click', () => playMelody(ex.melody, 0.6));
+  else if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') mountPerfectImperfect(ex);
+}
+
+const PH_INTERVALS = [
+  { name:'Unison', semi:0, perfect:true, info:'Two voices on the same pitch. The unison is a perfect consonance.' },
+  { name:'Third', semi:4, perfect:false, info:'A third is an imperfect consonance — warm and stable, but not as pure as the perfects.' },
+  { name:'Fifth', semi:7, perfect:true, info:'The fifth is a perfect consonance — open, hollow, and strong.' },
+  { name:'Sixth', semi:9, perfect:false, info:'The sixth is an imperfect consonance — gentle and full, but not perfect.' },
+  { name:'Octave', semi:12, perfect:true, info:'The octave is a perfect consonance — the same note doubled in height, very stable.' }
+];
+const DIATONIC_MIDI = [60,62,64,65,67,69,71,72];
+const MOTION_EXAMPLES = [
+  { first:[0,2], second:[1,3], motion:'direct', info:'Both voices move upward together from C–E to D–F.' },
+  { first:[1,5], second:[0,2], motion:'direct', info:'Both voices move downward together from D–A to C–E.' },
+  { first:[0,5], second:[1,4], motion:'contrary', info:'Lower voice moves up while the upper voice moves down.' },
+  { first:[1,4], second:[0,5], motion:'contrary', info:'Lower voice moves down while the upper voice moves up.' },
+  { first:[0,2], second:[0,3], motion:'oblique', info:'The lower voice stays on C while the upper voice rises from E to F.' },
+  { first:[2,6], second:[1,6], motion:'oblique', info:'The upper voice stays on B while the lower voice moves down from E to D.' }
+];
+let phSound = null, phAnswered = false, phLastCorrect = false;
+let motionSound = null, motionAnswered = false;
+let motionAllowedSound = null, motionAllowedAnswered = false, motionAllowedFeedback = '';
+let motionAllowedReasonState = null, motionAllowedReasonFeedback = '';
+
+function mountPerfectImperfect(ex){
+  newPerfectImperfect(ex, false);
+}
+function newPerfectImperfect(ex, autoplay){
+  phSound = PH_INTERVALS[rand(PH_INTERVALS.length)];
+  phAnswered = false;
+  phLastCorrect = false;
+  drawPerfectImperfect(ex);
+  if(autoplay) playDyad(ex.root || 60, phSound.semi, 1.3);
+}
+function answerPerfectImperfect(ex, guessPerfect){
+  if(phAnswered || !phSound) return;
+  phAnswered = true;
+  phLastCorrect = (guessPerfect === phSound.perfect);
+  drawPerfectImperfect(ex);
+}
+function drawPerfectImperfect(ex){
+  const cur = phSound;
+  const resultText = phAnswered
+    ? phLastCorrect
+      ? `Correct — the ${cur.name.toLowerCase()} is ${cur.perfect ? 'perfect' : 'imperfect'}.`
+      : `Not quite — the ${cur.name.toLowerCase()} is ${cur.perfect ? 'perfect' : 'imperfect'}.`
+    : '';
+  const resultClass = phAnswered ? (phLastCorrect ? 'ok' : 'no') : '';
+  let html = `
+    <div class="row" style="margin-top:8px">
+      <button class="btn big" id="phPlay">▶ ${phAnswered ? 'Hear it again' : 'Hear the interval'}</button>
+    </div>
+    <div class="jchoices">
+      <button class="btn jc" id="phPerfect" ${phAnswered ? 'disabled' : ''}>Perfect</button>
+      <button class="btn jc" id="phImperfect" ${phAnswered ? 'disabled' : ''}>Imperfect</button>
+    </div>
+    ${phAnswered ? `<div style="max-width:260px;margin:14px auto">${svgStaff(0, cur.semi)}</div>
+    <div class="fb ${resultClass}">${resultText}</div>
+    <div class="exttl" style="margin-top:8px">${cur.name}</div>
+    <p class="exd" style="margin-top:6px">${cur.info}</p>
+    <button class="btn ink" id="phNext">Next interval →</button>` : ''}
+  `;
+  el('phBox').innerHTML = html;
+  const playBtn = el('phPlay');
+  if(playBtn){
+    playBtn.addEventListener('click', () => playDyad(ex.root || 60, cur.semi, 1.3));
+  }
+  if(!phAnswered){
+    const perfectBtn = el('phPerfect');
+    const imperfectBtn = el('phImperfect');
+    if(perfectBtn) perfectBtn.addEventListener('click', () => answerPerfectImperfect(ex, true));
+    if(imperfectBtn) imperfectBtn.addEventListener('click', () => answerPerfectImperfect(ex, false));
+  } else {
+    const nextBtn = el('phNext');
+    if(nextBtn) nextBtn.addEventListener('click', () => newPerfectImperfect(ex, true));
+  }
+}
+
+function midiFromStep(step){
+  return DIATONIC_MIDI[step] || 60;
+}
+function midiName(midi){
+  const names = {
+    60:'C4', 62:'D4', 64:'E4', 65:'F4', 67:'G4', 69:'A4', 71:'B4', 72:'C5'
+  };
+  return names[midi] || '??';
+}
+function midiToStep(midi){
+  const mapping = {60:0, 62:1, 64:2, 65:3, 67:4, 69:5, 71:6, 72:7};
+  return mapping[midi] ?? 0;
+}
+function svgMotion(firstPair, secondPair){
+  const lines = [86, 72, 58, 44, 30];
+  const y = s => 100 - 7 * s;
+  const buildNotes = (pair, baseX) => {
+    const lowStep = midiToStep(midiFromStep(pair[0]));
+    const highStep = midiToStep(midiFromStep(pair[1]));
+    const sameOrAdjacent = Math.abs(highStep - lowStep) <= 1;
+    const dx = sameOrAdjacent ? 7 : 0;
+    return [
+      { midi: midiFromStep(pair[0]), x: baseX - dx, step: lowStep, label: midiName(midiFromStep(pair[0])) },
+      { midi: midiFromStep(pair[1]), x: baseX + dx, step: highStep, label: midiName(midiFromStep(pair[1])) }
+    ];
+  };
+  const notes = [
+    ...buildNotes(firstPair, 110),
+    ...buildNotes(secondPair, 190)
+  ];
+  let out = `<svg viewBox="0 0 260 130" width="100%" height="auto" preserveAspectRatio="xMidYMid meet">`;
+  out += `<text x="34" y="82" font-size="64" font-family="Georgia,serif" fill="#17140E">\u{1D11E}</text>`;
+  lines.forEach(ly => out += `<line x1="30" y1="${ly}" x2="230" y2="${ly}" stroke="#17140E" stroke-width="1.6"/>`);
+  notes.forEach(n => {
+    if(n.step === 0) out += `<line x1="${n.x - 11}" y1="${y(0)}" x2="${n.x + 11}" y2="${y(0)}" stroke="#17140E" stroke-width="1.6"/>`;
+  });
+  notes.forEach(n => {
+    out += `<ellipse cx="${n.x}" cy="${y(n.step)}" rx="8" ry="5.6" fill="none" stroke="#17140E" stroke-width="2.4"/>`;
+    const labelY = y(n.step) + 20;
+    out += `<text x="${n.x}" y="${labelY}" font-family="Space Mono,monospace" font-size="9" text-anchor="middle" fill="#6F6757">${n.label}</text>`;
+  });
+  out += `</svg>`;
+  return out;
+}
+function playMotion(pair){
+  const ac = audio();
+  const start = () => {
+    let t = ac.currentTime + 0.03;
+    voice(midiFromStep(pair.first[0]), t, 1.1, 0.28);
+    voice(midiFromStep(pair.first[1]), t, 1.1, 0.28);
+    t += 1.1;
+    voice(midiFromStep(pair.second[0]), t, 1.1, 0.28);
+    voice(midiFromStep(pair.second[1]), t, 1.1, 0.28);
+  };
+  if(ac.state === 'suspended'){
+    ac.resume().then(start).catch(start);
+  } else {
+    start();
+  }
+}
+function mountMotionAllowed(ex){
+  newMotionAllowed(ex, false);
+}
+function newMotionAllowed(ex, autoplay){
+  motionAllowedSound = ex.moves[rand(ex.moves.length)];
+  motionAllowedAnswered = false;
+  motionAllowedFeedback = '';
+  motionAllowedReasonState = null;
+  motionAllowedReasonFeedback = '';
+  motionAllowedSelectedReasons = [];
+  drawMotionAllowed(ex);
+  if(autoplay) playMotion(motionAllowedSound);
+}
+function answerMotionAllowed(ex, allowed){
+  if(motionAllowedAnswered || !motionAllowedSound) return;
+  motionAllowedAnswered = true;
+  const correct = allowed === motionAllowedSound.permitted;
+  if(correct && !motionAllowedSound.permitted){
+    motionAllowedSelectedReasons = [];
+    motionAllowedReasonState = 'pending';
+    motionAllowedFeedback = 'Correct — this motion is forbidden. Select the reason below.';
+  } else {
+    motionAllowedReasonState = null;
+    motionAllowedReasonFeedback = '';
+    motionAllowedSelectedReasons = [];
+    motionAllowedFeedback = correct ? 'That judgement is correct.' : 'That judgement is not correct.';
+  }
+  drawMotionAllowed(ex, correct);
+}
+function submitMotionAllowedReason(ex){
+  const selected = motionAllowedSelectedReasons;
+  const correctIds = motionAllowedSound.reasons.filter(r => r.correct).map(r => r.id);
+  if(selected.length === 0){
+    motionAllowedReasonFeedback = 'Select at least one reason.';
+    drawMotionAllowed(ex, true);
+    return;
+  }
+  const allCorrect = correctIds.length === selected.length && correctIds.every(id => selected.includes(id));
+  if(allCorrect){
+    motionAllowedReasonState = 'done';
+    motionAllowedReasonFeedback = 'Good — you chose the right reason.';
+  } else {
+    motionAllowedReasonFeedback = 'Not quite. Try again.';
+  }
+  drawMotionAllowed(ex, true);
+}
+function drawMotionAllowed(ex, correct){
+  const cur = motionAllowedSound;
+  const resultClass = motionAllowedAnswered ? (correct ? 'ok' : 'no') : '';
+  const showReasonSection = motionAllowedReasonState === 'pending';
+  const showNext = motionAllowedAnswered && (motionAllowedSound.permitted || motionAllowedReasonState === 'done' || motionAllowedReasonState === null);
+  const reasonOptions = showReasonSection ? cur.reasons.map(r => `
+        <button type="button" class="reason-option${motionAllowedSelectedReasons.includes(r.id) ? ' selected' : ''}" data-id="${r.id}">${r.label}</button>
+      `).join('') : '';
+  const html = `
+    <div class="row" style="margin-top:8px">
+      <button class="btn big" id="motionAllowedPlay">▶ Hear the move</button>
+    </div>
+    <div class="row" style="margin-top:14px; justify-content:space-between;">
+      <div class="lab2">First interval</div>
+      <div class="lab2">Second interval</div>
+    </div>
+    <div style="max-width:310px;margin:10px auto">${svgMotion(cur.first, cur.second)}</div>
+    <div class="jchoices" style="margin-top:14px;">
+      <button class="btn jc" id="motionAllowedYes" ${motionAllowedAnswered ? 'disabled' : ''}>Allowed</button>
+      <button class="btn jc" id="motionAllowedNo" ${motionAllowedAnswered ? 'disabled' : ''}>Forbidden</button>
+    </div>
+    ${motionAllowedAnswered ? `<div class="fb ${resultClass}" style="margin-top:12px">${motionAllowedFeedback}</div>
+      ${showReasonSection ? `<div class="popup-options" style="margin-top:12px">${reasonOptions}</div>
+      <button class="btn ink" id="motionAllowedSubmit">Submit reason</button>
+      <div class="popup-feedback" id="motionAllowedReasonFeedback" style="margin-top:8px">${motionAllowedReasonFeedback}</div>` : ''}
+      <div class="exttl" style="margin-top:8px">${cur.info}</div>
+      ${showNext ? '<button class="btn ink" id="motionAllowedNext">Next move →</button>' : ''}` : ''}
+  `;
+  el('motionAllowedBox').innerHTML = html;
+  const playBtn = el('motionAllowedPlay');
+  if(playBtn) playBtn.addEventListener('click', () => playMotion(cur));
+  const yesBtn = el('motionAllowedYes');
+  const noBtn = el('motionAllowedNo');
+  if(yesBtn) yesBtn.addEventListener('click', () => answerMotionAllowed(ex, true));
+  if(noBtn) noBtn.addEventListener('click', () => answerMotionAllowed(ex, false));
+  const submitBtn = el('motionAllowedSubmit');
+  if(submitBtn) submitBtn.addEventListener('click', () => submitMotionAllowedReason(ex));
+  el('motionAllowedBox').querySelectorAll('.reason-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const idx = motionAllowedSelectedReasons.indexOf(id);
+      if(idx >= 0) motionAllowedSelectedReasons.splice(idx, 1);
+      else motionAllowedSelectedReasons.push(id);
+      drawMotionAllowed(ex, true);
+    });
+  });
+  const nextBtn = el('motionAllowedNext');
+  if(nextBtn) nextBtn.addEventListener('click', () => newMotionAllowed(ex, true));
+}
+function mountMotion(ex){
+  newMotion(ex, false);
+}
+function newMotion(ex, autoplay){
+  motionSound = MOTION_EXAMPLES[rand(MOTION_EXAMPLES.length)];
+  motionAnswered = false;
+  drawMotion(ex);
+  if(autoplay) playMotion(motionSound);
+}
+function answerMotion(ex, guess){
+  if(motionAnswered || !motionSound) return;
+  motionAnswered = true;
+  const correct = guess === motionSound.motion;
+  drawMotion(ex, correct);
+}
+function drawMotion(ex, correct){
+  const cur = motionSound;
+  const feedback = motionAnswered
+    ? correct
+      ? `Correct — this is ${cur.motion} motion.`
+      : `Not quite — this is ${cur.motion} motion.`
+    : '';
+  const feedbackClass = motionAnswered ? (correct ? 'ok' : 'no') : '';
+  const html = `
+    <div class="row" style="margin-top:8px">
+      <button class="btn big" id="motionPlay">▶ Hear the motion</button>
+    </div>
+    <div class="row" style="margin-top:14px; justify-content:space-between;">
+      <div class="lab2">First pair</div>
+      <div class="lab2">Second pair</div>
+    </div>
+    <div style="max-width:310px;margin:10px auto">${svgMotion(cur.first, cur.second)}</div>
+    <div class="jchoices" style="margin-top:14px;">
+      <button class="btn jc" id="motionDirect" ${motionAnswered ? 'disabled' : ''}>Direct</button>
+      <button class="btn jc" id="motionContrary" ${motionAnswered ? 'disabled' : ''}>Contrary</button>
+      <button class="btn jc" id="motionOblique" ${motionAnswered ? 'disabled' : ''}>Oblique</button>
+    </div>
+    ${motionAnswered ? `<div class="fb ${feedbackClass}">${feedback}</div>
+      <div class="exttl" style="margin-top:8px">${cur.motion.charAt(0).toUpperCase() + cur.motion.slice(1)} motion</div>
+      <p class="exd" style="margin-top:6px">${cur.info}</p>
+      <button class="btn ink" id="motionNext">Next motion →</button>` : ''}
+  `;
+  el('motionBox').innerHTML = html;
+  const playBtn = el('motionPlay');
+  if(playBtn) playBtn.addEventListener('click', () => playMotion(cur));
+  if(!motionAnswered){
+    const directBtn = el('motionDirect');
+    const contraryBtn = el('motionContrary');
+    const obliqueBtn = el('motionOblique');
+    if(directBtn) directBtn.addEventListener('click', () => answerMotion(ex, 'direct'));
+    if(contraryBtn) contraryBtn.addEventListener('click', () => answerMotion(ex, 'contrary'));
+    if(obliqueBtn) obliqueBtn.addEventListener('click', () => answerMotion(ex, 'oblique'));
+  } else {
+    const nextBtn = el('motionNext');
+    if(nextBtn) nextBtn.addEventListener('click', () => newMotion(ex, true));
+  }
+}
+
+/* ----- single-sound consonance / dissonance judge ----- */
+const CONS = [3, 4, 7, 8, 9, 12];   // m3 M3 P5 m6 M6 P8 — clearly restful
+const DISS = [1, 2, 6, 10, 11];     // m2 M2 tritone m7 M7 — clearly tense
+let jSound = null, jAnswered = false, jStreak = 0, jBest = 0, jGoal = 0;
+
+function newJudge(autoplay){
+  const cons = Math.random() < 0.5;
+  const pool = cons ? CONS : DISS;
+  jSound = { interval: pool[rand(pool.length)], root: 55 + rand(10), cons };
+  jAnswered = false;
+  drawJudge();
+  if(autoplay) playDyad(jSound.root, jSound.interval, 1.3);
+}
+function judge(ansCons){
+  if(jAnswered || !jSound) return;
+  jAnswered = true;
+  const correct = (ansCons === jSound.cons);
+  if(correct){ jStreak++; jBest = Math.max(jBest, jStreak); } else jStreak = 0;
+  drawJudge(ansCons, correct);
+  renderNav();
+}
+function drawJudge(picked, correct){
+  const consClass = jAnswered ? (jSound.cons ? 'true' : '') : '';
+  const dissClass = jAnswered ? (!jSound.cons ? 'false' : '') : '';
+  const consWrong = (jAnswered && picked === true && !correct) ? 'wrongpick' : '';
+  const dissWrong = (jAnswered && picked === false && !correct) ? 'wrongpick' : '';
+  let fb = '', fbc = '';
+  if(jAnswered){
+    if(correct){
+      fb = jSound.cons ? 'Yes — that one rested where it stood. A consonance.'
+                       : 'Just so — you felt it lean. That straining is dissonance.';
+      fbc = 'ok';
+    } else {
+      fb = jSound.cons ? 'Listen again — that one sat still and content. It was a consonance.'
+                       : 'Listen again — that one strained toward a note beyond it. It was a dissonance.';
+      fbc = 'no';
+    }
+  }
+  const goalNote = jGoal ? (jBest >= jGoal ? '   ·   Unlocked — you may move on.' : `   ·   Reach ${jGoal} in a row to move on.`) : '';
+  el('judgeBox').innerHTML = `
+    <div class="row"><button class="btn big" id="jPlay">▶ ${jAnswered ? 'Hear it again' : 'Hear the sound'}</button></div>
+    <div class="jchoices">
+      <button class="btn jc ${consClass} ${consWrong}" id="jCons" ${jAnswered ? 'disabled' : ''}>Consonant</button>
+      <button class="btn jc ${dissClass} ${dissWrong}" id="jDiss" ${jAnswered ? 'disabled' : ''}>Dissonant</button>
+    </div>
+    <div class="fb ${fbc}">${fb}</div>
+    ${jAnswered ? '<button class="btn ink" id="jNext">Next sound →</button>' : ''}
+    <div class="streak">Streak: ${jStreak}${jBest ? '   ·   Best: ' + jBest : ''}${goalNote}</div>`;
+  el('jPlay').addEventListener('click', () => playDyad(jSound.root, jSound.interval, 1.3));
+  if(!jAnswered){
+    el('jCons').addEventListener('click', () => judge(true));
+    el('jDiss').addEventListener('click', () => judge(false));
+  } else {
+    el('jNext').addEventListener('click', () => newJudge(true));
+  }
+}
+function mountJudge(ex){ jStreak = 0; jBest = 0; jGoal = (ex && ex.goal) || 0; newJudge(false); }   // wait for a tap before first sound
+
+/* ----- staff rendering (whole-note dyad, treble, root fixed at middle C) ----- */
+function svgStaff(rootStep, upperStep){
+  const lines = [86, 72, 58, 44, 30];             // E4 G4 B4 D5 F5, bottom to top
+  const y = s => 100 - 7 * s;
+  const semitoneToStep = { 0:0, 1:0, 2:1, 3:1, 4:2, 5:3, 6:3, 7:4, 8:4, 9:5, 10:5, 11:6, 12:7 };
+  const mappedUpperStep = semitoneToStep[upperStep] ?? upperStep;
+  const sameOrAdjacent = Math.abs(mappedUpperStep - rootStep) <= 1;
+  const dx = sameOrAdjacent ? 7 : 0;
+  const notes = [
+    { step: rootStep, x: 130 - dx, label: NOTE_NAMES[rootStep] },
+    { step: mappedUpperStep, x: 130 + dx, label: NOTE_NAMES[upperStep] }
+  ];
+  let out = `<svg viewBox="0 0 240 130" width="100%" height="auto" preserveAspectRatio="xMidYMid meet">`;
+  out += `<text x="34" y="82" font-size="64" font-family="Georgia,serif" fill="#17140E">\u{1D11E}</text>`;
+  lines.forEach(ly => out += `<line x1="30" y1="${ly}" x2="210" y2="${ly}" stroke="#17140E" stroke-width="1.6"/>`);
+  notes.forEach(n => {
+    if(n.step === 0) out += `<line x1="${n.x - 11}" y1="${y(0)}" x2="${n.x + 11}" y2="${y(0)}" stroke="#17140E" stroke-width="1.6"/>`;
+  });
+  const sameStep = upperStep === rootStep;
+  notes.forEach((n, i) => {
+    out += `<ellipse cx="${n.x}" cy="${y(n.step)}" rx="8" ry="5.6" fill="none" stroke="#17140E" stroke-width="2.4"/>`;
+    // root label sits below (nothing lower); upper note's label sits above so it never
+    // crowds the root note when the two are only a step or two apart
+    const labelY = (i === 0 || sameStep) ? y(n.step) + 20 : y(n.step) - 11;
+    out += `<text x="${n.x}" y="${labelY}" font-family="Space Mono,monospace" font-size="9" text-anchor="middle" fill="#6F6757">${n.label}</text>`;
+  });
+  out += `</svg>`;
+  return out;
+}
+const NOTE_NAMES = ['C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4','A4','A#4','B4','C5'];
+
+/* ----- interval quiz-then-reveal walkthrough ----- */
+let irIdx = 0, irPhase = 'guess', irLastCorrect = false;
+function mountIntervalReveal(ex){ irIdx = 0; irPhase = 'guess'; drawIntervalReveal(ex); }
+function drawIntervalReveal(ex){
+  const cur = ex.list[irIdx];
+  const total = ex.list.length;
+  let html = `<div class="lab2">Interval ${irIdx + 1} of ${total}</div>`;
+  if(irPhase === 'guess'){
+    html += `
+      <div class="row" style="margin-top:8px"><button class="btn big" id="irPlay">▶ Hear it</button></div>
+      <div class="jchoices">
+        <button class="btn jc" id="irCons">Consonant</button>
+        <button class="btn jc" id="irDiss">Dissonant</button>
+      </div>`;
+  } else {
+    const label = cur.cons ? 'consonant' : 'dissonant';
+    html += `
+      <div class="fb ${irLastCorrect ? 'ok' : 'no'}">${irLastCorrect ? 'Just as you heard' : 'Listen again next time'} — the ${cur.name.toLowerCase()} is ${label}.</div>
+      <div class="exttl" style="margin-top:2px">${cur.name}</div>
+      <div class="row" style="margin:10px 0"><button class="btn big" id="irPlay">▶ Hear it again</button></div>
+      <div style="max-width:260px;margin:4px auto 2px">${svgStaff(0, cur.semi)}</div>
+      <p class="exd" style="margin-top:8px">${cur.info}</p>
+      <button class="btn ink" id="irNext">${irIdx < total - 1 ? 'Next interval →' : 'Done'}</button>`;
+  }
+  el('irBox').innerHTML = html;
+  el('irPlay').addEventListener('click', () => playDyad(ex.root, cur.semi, 1.3));
+  if(irPhase === 'guess'){
+    el('irCons').addEventListener('click', () => answerIntervalReveal(ex, true));
+    el('irDiss').addEventListener('click', () => answerIntervalReveal(ex, false));
+  } else if(irIdx < total - 1){
+    el('irNext').addEventListener('click', () => { irIdx++; irPhase = 'guess'; drawIntervalReveal(ex); });
+  }
+}
+function answerIntervalReveal(ex, guessCons){
+  const cur = ex.list[irIdx];
+  irLastCorrect = (guessCons === cur.cons);
+  irPhase = 'reveal';
+  drawIntervalReveal(ex);
+}
+
+/* ----- name-the-interval drill (staff shown + played, pick the name) ----- */
+let niSound = null, niAnswered = false, niStreak = 0, niBest = 0;
+function mountNameInterval(ex){ niStreak = 0; niBest = 0; newNameInterval(ex, false); }   // wait for a tap before first sound
+function newNameInterval(ex, autoplay){
+  const i = rand(ex.list.length);
+  niSound = { idx: i, item: ex.list[i] };
+  niAnswered = false;
+  drawNameInterval(ex);
+  if(autoplay) playDyad(ex.root, niSound.item.semi, 1.3);
+}
+function answerNameInterval(ex, guessIdx){
+  if(niAnswered || !niSound) return;
+  niAnswered = true;
+  const correct = (guessIdx === niSound.idx);
+  if(correct){ niStreak++; niBest = Math.max(niBest, niStreak); } else niStreak = 0;
+  drawNameInterval(ex, guessIdx, correct);
+}
+function drawNameInterval(ex, picked, correct){
+  const cur = niSound.item;
+  const choices = ex.list.map((it, i) => {
+    let cls = '';
+    if(niAnswered){
+      if(i === niSound.idx) cls = 'true';
+      else if(i === picked && !correct) cls = 'false wrongpick';
+    }
+    return `<button class="btn jc ${cls}" data-i="${i}" ${niAnswered ? 'disabled' : ''}>${it.name}</button>`;
+  }).join('');
+  let fb = '', fbc = '';
+  if(niAnswered){
+    fb = correct ? `Yes — that was the ${cur.name.toLowerCase()}.` : `Not quite — that was the ${cur.name.toLowerCase()}.`;
+    fbc = correct ? 'ok' : 'no';
+  }
+  el('niBox').innerHTML = `
+    <div class="row"><button class="btn big" id="niPlay">▶ ${niAnswered ? 'Hear it again' : 'Hear the interval'}</button></div>
+    <div style="max-width:260px;margin:14px auto">${svgStaff(0, niSound.item.semi)}</div>
+    <div class="jchoices">${choices}</div>
+    <div class="fb ${fbc}">${fb}</div>
+    ${niAnswered ? '<button class="btn ink" id="niNext">Next →</button>' : ''}
+    <div class="streak">Streak: ${niStreak}${niBest ? '   ·   Best: ' + niBest : ''}</div>`;
+  el('niPlay').addEventListener('click', () => playDyad(ex.root, cur.semi, 1.3));
+  if(!niAnswered){
+    el('niBox').querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => answerNameInterval(ex, +b.dataset.i)));
+  } else {
+    el('niNext').addEventListener('click', () => newNameInterval(ex, true));
+  }
+}
+
+/* ===================== RENDER LESSON ===================== */
+function renderLesson(){
+  const L = LESSONS[idx];
+  el('bk').textContent = 'LESSON ' + L.num;
+  el('btitle').textContent = L.title;
+  el('belt').innerHTML = `<span class="dot"></span>${L.belt}`;
+  el('pos').textContent = `Lesson ${idx + 1} of ${LESSONS.length}`;
+
+  el('portrait').innerHTML = MASTER_SVG;
+
+  // defensive cleanup: ensure no stray modal overlay elements remain
+  document.querySelectorAll('.popup-overlay').forEach(n => n.remove());
+  pages = buildPages(L.teach); pageIdx = 0; dialogueDone = false;
+  el('scene').classList.remove('student');
+  el('exwrap').hidden = true;
+  el('exwrap').innerHTML = renderExercise(L.ex);
+  wireExercise(L.ex);
+  showPage();
+
+  renderNav();
+  buildToc();
+  window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+}
+function renderNav(){
+  const L = LESSONS[idx];
+  el('prev').disabled = (idx === 0);
+  const slot = el('nextslot');
+  if(idx < LESSONS.length - 1){
+    const gated = L.ex && L.ex.type === 'judge' && L.ex.goal && jBest < L.ex.goal;
+    if(gated){
+      slot.innerHTML = `<span class="lab2">Reach a streak of ${L.ex.goal} above to continue →</span>`;
+    } else {
+      slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`;
+      el('next').addEventListener('click', () => go(idx + 1));
+    }
+  } else {
+    slot.innerHTML = `<span class="endnote">End of the foundations. The five species await — wiring in next.</span>`;
+  }
+}
+function go(i){ idx = Math.max(0, Math.min(LESSONS.length - 1, i)); renderLesson(); }
+
+/* ===================== CONTENTS ===================== */
+function buildToc(){
+  let h = '';
+  COURSE.forEach(mod => {
+    h += `<h4>${mod.title}</h4>`;
+    if(mod.lessons){
+      mod.lessons.forEach(les => {
+        const li = LESSONS.findIndex(x => x.num === les.num);
+        h += `<a href="#" class="${li === idx ? 'cur' : ''}" data-go="${li}">${les.num} · ${les.title}</a>`;
+      });
+    } else if(mod.soon){
+      h += `<a class="soon">${mod.blurb} <span class="tag">soon</span></a>`;
+    }
+  });
+  const toc = el('toc'); toc.innerHTML = h;
+  toc.querySelectorAll('[data-go]').forEach(a =>
+    a.addEventListener('click', e => { e.preventDefault(); go(+a.dataset.go); el('toc').classList.add('hidden'); }));
+}
+
+/* ===================== INIT ===================== */
+el('speech').addEventListener('click', advance);
+el('tocBtn').addEventListener('click', () => el('toc').classList.toggle('hidden'));
+el('prev').addEventListener('click', () => go(idx - 1));
+renderLesson();
+</script>
+</body>
+</html>

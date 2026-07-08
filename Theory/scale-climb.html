@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scale Climb — ear training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(380px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:12px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(2rem,7vw,3rem); letter-spacing:-.02em;
+    line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted); margin-top:10px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:14px;
+  }
+  .hud{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; margin-bottom:8px;
+  }
+  .hud b{ color:var(--blue); }
+  .lives{ letter-spacing:2px; color:var(--pink); }
+  .mult{ font-weight:700; color:var(--muted); }
+  .mult.hot{ color:var(--pink); }
+
+  .roundscale{
+    font-family:var(--display); font-weight:800; text-transform:uppercase; text-align:center;
+    font-size:1.25rem; color:var(--blue); letter-spacing:-.01em; margin-bottom:8px; min-height:1.2em;
+  }
+
+  .screen{ position:relative; border:2.5px solid var(--ink); background:#FBF7EE; }
+  canvas{ display:block; width:100%; height:auto; }
+
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    background:rgba(244,238,226,.95); padding:16px; gap:9px; overflow-y:auto;
+  }
+  .overlay.hidden{ display:none; }
+  .overlay h2{ font-family:var(--display); font-weight:800; text-transform:uppercase; font-size:1.6rem; margin:0; color:var(--ink); }
+  .overlay p{ font-family:var(--mono); font-size:.68rem; color:var(--muted); letter-spacing:.02em; margin:0; max-width:32ch; line-height:1.6; }
+  .bigscore{ font-family:var(--mono); font-weight:700; font-size:1.05rem; color:var(--blue); }
+  .stars{ font-size:1.7rem; letter-spacing:4px; color:var(--amber); min-height:1.2em; }
+
+  .seglabel{ font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+  .seg{ display:flex; border:2px solid var(--ink); }
+  .seg button{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.04em; text-transform:uppercase;
+    padding:7px 12px; border:0; border-right:2px solid var(--ink); background:var(--paper); cursor:pointer; color:var(--ink);
+  }
+  .seg button:last-child{ border-right:0; }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+  .caption{ font-family:var(--mono); font-size:.62rem; color:var(--muted); max-width:30ch; line-height:1.5; min-height:1.5em; }
+
+  .start{
+    font-family:var(--body); font-weight:600; font-size:1.02rem; padding:12px 26px; margin-top:4px;
+    border:2.5px solid var(--ink); background:var(--blue); color:#fff; cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+  }
+  .start:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .start:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  .keyboard{ position:relative; display:flex; height:96px; margin-top:14px; }
+  .wkey{
+    flex:1; height:100%; border:2.5px solid var(--ink); background:#FBF7EE; cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px;
+    font-family:var(--mono); font-weight:700; font-size:.9rem; color:var(--ink);
+  }
+  .wkey.inscale{ background:#CFD7FF; }
+  .wkey:active{ background:#E9E3D4; }
+  .wkey:focus-visible{ outline:3px solid var(--blue); outline-offset:-3px; z-index:3; }
+  .bkey{
+    position:absolute; top:0; width:8.6%; height:60%; border:2.5px solid var(--ink);
+    background:var(--ink); color:var(--paper); cursor:pointer; z-index:2;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    font-family:var(--mono); font-weight:700; font-size:.52rem; line-height:1;
+  }
+  .bkey.inscale{ background:#2438C8; }
+  .bkey:active{ background:#332a1c; }
+  .bkey:focus-visible{ outline:3px solid var(--pink); outline-offset:1px; z-index:4; }
+
+  @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Scale Climb">Scale Climb</span>
+      <div class="subtitle">play the scale up · stay ahead of the barrels</div>
+    </header>
+
+    <div class="panel">
+      <div class="hud">
+        <div>stage <b id="stage">1</b></div>
+        <div class="mult" id="mult">×1</div>
+        <div>score <b id="score">0</b></div>
+        <div class="lives" id="lives">♥♥♥</div>
+      </div>
+
+      <div class="roundscale" id="roundScale">&nbsp;</div>
+
+      <div class="screen">
+        <canvas id="cv" width="320" height="448"></canvas>
+
+        <div class="overlay" id="startScreen">
+          <h2>Scale Climb</h2>
+          <p>A scale and key is named each stage — play its notes in order to climb. Each correct note rings out, so a clean climb plays the scale rising. Barrels roll down: keep climbing to slip past, freeze and one knocks you down. Three knock-downs and you're out.</p>
+          <div class="seglabel">Scales</div>
+          <div class="seg" id="levelSeg" role="group" aria-label="Scale level">
+            <button data-v="1" aria-pressed="true">Level 1</button>
+            <button data-v="2">Level 2</button>
+            <button data-v="3">Level 3</button>
+          </div>
+          <div class="caption" id="levelCaption"></div>
+          <div class="seglabel">Scale guide</div>
+          <div class="seg" id="guideSeg" role="group" aria-label="Scale guide">
+            <button data-v="on" aria-pressed="true">Lit keys</button>
+            <button data-v="off">Plain</button>
+          </div>
+          <button class="start" id="startBtn">▶ Start</button>
+        </div>
+
+        <div class="overlay banner hidden" id="bannerScreen"><h2 id="bannerText">Stage 2</h2></div>
+
+        <div class="overlay hidden" id="overScreen">
+          <h2>Game Over</h2>
+          <div class="stars" id="overStars"></div>
+          <div class="bigscore" id="finalScore">Score 0 · Stage 1</div>
+          <button class="start" id="againBtn">▶ Play again</button>
+        </div>
+      </div>
+
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   SCALE CLIMB — climb a tower by playing a named scale ascending while
+   barrels roll down. Keep climbing to slip past; freeze and one knocks
+   you down a rung (3 = out). New scale + key each stage, faster barrels.
+
+   Tunables: SCALE_TYPES (interval patterns), LEVELS (which types appear
+   per level), and the barrel pace in stageParams().
+   ==================================================================== */
+
+  const CHROMA = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const WHITE = ['C','D','E','F','G','A','B'];
+  const BLACK = [ {s:'C#',f:'Db',b:1}, {s:'D#',f:'Eb',b:2}, {s:'F#',f:'Gb',b:4}, {s:'G#',f:'Ab',b:5}, {s:'A#',f:'Bb',b:6} ];
+
+  // interval patterns in semitones from the root (octave added automatically)
+  const SCALE_TYPES = {
+    'major':          [0,2,4,5,7,9,11],
+    'natural minor':  [0,2,3,5,7,8,10],
+    'harmonic minor': [0,2,3,5,7,8,11],
+    'melodic minor':  [0,2,3,5,7,9,11],
+    'dorian':         [0,2,3,5,7,9,10],
+    'phrygian':       [0,1,3,5,7,8,10],
+    'lydian':         [0,2,4,6,7,9,11],
+    'mixolydian':     [0,2,4,5,7,9,10],
+    'locrian':        [0,1,3,5,6,8,10],
+    'whole tone':     [0,2,4,6,8,10],
+    'octatonic':      [0,2,3,5,6,8,9,11]
+  };
+  // cumulative difficulty tiers
+  const LEVELS = {
+    1: ['major','natural minor','harmonic minor'],
+    2: ['major','natural minor','harmonic minor','dorian','phrygian','lydian','mixolydian','locrian'],
+    3: ['major','natural minor','harmonic minor','melodic minor','dorian','phrygian','lydian','mixolydian','locrian','whole tone','octatonic']
+  };
+  const LEVEL_CAPTION = {
+    1: 'major · natural minor · harmonic minor',
+    2: 'level 1 + the seven modes',
+    3: 'level 2 + melodic minor, whole-tone & octatonic'
+  };
+
+  function makeScale(type, root){
+    const iv = SCALE_TYPES[type];
+    const classes = iv.map(s => CHROMA[(root + s) % 12]);
+    const midi    = iv.map(s => 60 + root + s);
+    classes.push(CHROMA[root]); midi.push(60 + root + 12);   // octave
+    return { name: CHROMA[root] + ' ' + type, classes, midi };
+  }
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const TX = W/2;
+  const GROUND = 408, TOP = 64;
+  let N = 8, GAP = (GROUND - TOP) / N;
+  const rungY = i => GROUND - i*GAP;
+
+  // ---- audio ----
+  let audioCtx = null;
+  function ensureAudio(){ if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx = new AC(); } if(audioCtx.state==='suspended') audioCtx.resume(); return audioCtx; }
+  const midiToFreq = m => 440 * Math.pow(2, (m-69)/12);
+  function note(m, dur=0.7){
+    const c = ensureAudio(), t = c.currentTime, f = midiToFreq(m);
+    const out = c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001,t); out.gain.exponentialRampToValueAtTime(0.28,t+0.01); out.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    [['sine',1.0],['triangle',0.25]].forEach(([ty,a])=>{ const o=c.createOscillator(); o.type=ty; o.frequency.value=f; const g=c.createGain(); g.gain.value=a; o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.04); });
+  }
+  function tone(type,f0,f1,dur,vol){ const c=ensureAudio(),t=c.currentTime; const o=c.createOscillator(),g=c.createGain(); o.type=type; o.frequency.setValueAtTime(f0,t); if(f1!==f0)o.frequency.exponentialRampToValueAtTime(f1,t+dur); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02); }
+  const sfxWrong = () => tone('sawtooth', 200, 110, 0.16, 0.12);
+  const sfxThud  = () => tone('square', 150, 70, 0.22, 0.16);
+  const sfxFan   = () => [0,4,7,12].forEach((s,i)=> setTimeout(()=>tone('square', 523*Math.pow(2,s/12), 523*Math.pow(2,s/12), 0.1, 0.1), i*70));
+
+  // ---- state ----
+  let state = 'start';
+  let level = 1, guideOn = true;
+  let scale = makeScale('major', 0);
+  let stage, score, lives, combo, stagesCleared;
+  let pos, climberY, targetY;
+  let barrels, barrelTimer, barrelInterval, barrelSpeed;
+  let hopUntil, stunUntil, stagePauseUntil, bannerShown, lastT;
+  let clean = true, jumpStart = -1;
+
+  const nowSec = () => performance.now()/1000;
+  const el = id => document.getElementById(id);
+  const comboMult = () => combo >= 1 ? Math.min(1 + Math.floor((combo-1)/4), 4) : 1;
+  const JUMP_DUR = 0.42, JUMP_H = 17;
+  function jumpOffset(now){ const p = (now - jumpStart)/JUMP_DUR; return (p >= 0 && p < 1) ? -JUMP_H*Math.sin(Math.PI*p) : 0; }
+  function stageParams(s){ barrelSpeed = 66 + (s-1)*13; barrelInterval = Math.max(1.15, 2.9 - (s-1)*0.17); }
+
+  function buildKeyboard(){
+    const kb = el('keyboard'); kb.innerHTML = '';
+    WHITE.forEach(name => {
+      const w = document.createElement('button');
+      w.className = 'wkey'; w.dataset.name = name; w.textContent = name;
+      w.addEventListener('click', () => playNote(name));
+      kb.appendChild(w);
+    });
+    BLACK.forEach(bk => {
+      const b = document.createElement('button');
+      b.className = 'bkey'; b.dataset.name = bk.s;
+      b.style.left = (bk.b/7*100 - 4.3) + '%';
+      b.innerHTML = '<span>' + bk.s + '</span><span>' + bk.f + '</span>';
+      b.addEventListener('click', () => playNote(bk.s));
+      kb.appendChild(b);
+    });
+  }
+  function updateHighlight(){
+    const inScale = new Set(scale.classes);
+    el('keyboard').querySelectorAll('.wkey,.bkey').forEach(k => k.classList.toggle('inscale', guideOn && inScale.has(k.dataset.name)));
+  }
+
+  function newScale(){
+    const pool = LEVELS[level];
+    const type = pool[Math.floor(Math.random()*pool.length)];
+    const root = Math.floor(Math.random()*12);
+    scale = makeScale(type, root);
+    N = scale.classes.length; GAP = (GROUND - TOP) / N;
+    pos = 0; targetY = rungY(0); climberY = rungY(0);
+    clean = true;
+    updateHighlight();
+    el('roundScale').textContent = scale.name;
+  }
+
+  function reset(){
+    stage = 1; score = 0; lives = 3; combo = 0; stagesCleared = 0;
+    barrels = []; barrelTimer = 0; stageParams(1);
+    hopUntil = 0; stunUntil = 0; stagePauseUntil = 0; bannerShown = false; lastT = 0;
+    newScale();
+    updateHUD();
+  }
+
+  function startGame(){
+    ensureAudio(); reset();
+    state = 'playing';
+    el('startScreen').classList.add('hidden');
+    el('overScreen').classList.add('hidden');
+  }
+
+  function playNote(name){
+    if(state !== 'playing') return;
+    const now = nowSec();
+    if(now < stunUntil || now < stagePauseUntil) return;
+    if(name === scale.classes[pos]){
+      note(scale.midi[pos]);
+      pos++; combo++; score += 25 * comboMult();
+      targetY = rungY(pos); hopUntil = now + 0.6;
+      updateHUD();
+      if(pos >= N) stageClear();
+    } else { combo = 0; clean = false; sfxWrong(); updateHUD(); }
+  }
+
+  function hit(b){
+    b.dead = true; lives--; combo = 0; sfxThud(); updateHUD();
+    if(lives <= 0){ gameOver(); return; }
+    pos = Math.max(0, pos - 1); targetY = rungY(pos); stunUntil = nowSec() + 0.9;
+  }
+
+  function stageClear(){
+    score += 150 + stage*50;
+    stagesCleared = stage; stage++;
+    stageParams(stage);
+    barrels = []; barrelTimer = 0;
+    newScale();
+    showBanner('Stage ' + stage + ' · ' + scale.name);
+    stagePauseUntil = nowSec() + 1.6;
+    sfxFan(); updateHUD();
+  }
+
+  function gameOver(){
+    state = 'over';
+    el('overStars').textContent = stagesCleared >= 5 ? '★★★' : stagesCleared >= 3 ? '★★' : stagesCleared >= 1 ? '★' : '';
+    el('finalScore').textContent = 'Score ' + score + ' · reached stage ' + stage;
+    el('overScreen').classList.remove('hidden');
+  }
+
+  function showBanner(txt){ el('bannerText').textContent = txt; el('bannerScreen').classList.remove('hidden'); bannerShown = true; }
+  function hideBanner(){ el('bannerScreen').classList.add('hidden'); bannerShown = false; }
+
+  function updateHUD(){
+    el('stage').textContent = stage; el('score').textContent = score;
+    el('lives').textContent = '♥'.repeat(Math.max(0,lives)) || '—';
+    const m = comboMult(); const me = el('mult'); me.textContent = '×' + m; me.classList.toggle('hot', m > 1);
+  }
+
+  // ---- barrel graphic ----
+  function barrelPath(){ ctx.beginPath(); ctx.moveTo(-11,-15); ctx.quadraticCurveTo(-17,0,-11,15); ctx.lineTo(11,15); ctx.quadraticCurveTo(17,0,11,-15); ctx.closePath(); }
+  function drawBarrel(x, y, spin){
+    ctx.save(); ctx.translate(x, y); ctx.rotate(spin);
+    barrelPath(); ctx.fillStyle = '#E0922A'; ctx.fill();
+    ctx.save(); barrelPath(); ctx.clip();
+    ctx.strokeStyle = 'rgba(23,20,14,0.35)'; ctx.lineWidth = 1.2;
+    [-5.5,0,5.5].forEach(sx => { ctx.beginPath(); ctx.moveTo(sx,-16); ctx.lineTo(sx,16); ctx.stroke(); });
+    ctx.fillStyle = 'rgba(23,20,14,0.12)'; ctx.fillRect(-17, 2, 34, 15);
+    ctx.restore();
+    ctx.strokeStyle = '#17140E'; ctx.lineWidth = 2.4;
+    const hoop = (yy, half) => { ctx.beginPath(); ctx.moveTo(-half, yy); ctx.quadraticCurveTo(0, yy-1.5, half, yy); ctx.stroke(); };
+    hoop(-8, 13.2); hoop(0, 15.6); hoop(8, 13.2);
+    barrelPath(); ctx.strokeStyle = '#17140E'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---- loop ----
+  function loop(t){
+    const now = t/1000;
+    const dt = Math.min(now - lastT, 0.05); lastT = now;
+    climberY += (targetY - climberY) * Math.min(1, dt*14);
+    if(state === 'playing' && now >= stagePauseUntil){
+      if(bannerShown) hideBanner();
+      barrelTimer += dt;
+      if(barrelTimer >= barrelInterval){ barrelTimer = 0; barrels.push({ y: TOP - 6, spin: Math.random()*6 }); }
+      for(const b of barrels){ b.y += barrelSpeed*dt; b.spin += dt*4.2; }
+      const cyc = climberY - 11;
+      if(clean){
+        // perfect run: invincible, and the climber hops over any nearby barrel
+        if(now >= jumpStart + JUMP_DUR){ for(const b of barrels){ if(Math.abs(b.y - cyc) < 26){ jumpStart = now; break; } } }
+      } else {
+        const immune = now < hopUntil || now < stunUntil;
+        if(!immune){ for(const b of barrels){ if(Math.abs(b.y - cyc) < 16){ hit(b); break; } } }
+      }
+      barrels = barrels.filter(b => !b.dead && b.y < GROUND + 30);
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle = '#17140E'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(TX-13, rungY(0)); ctx.lineTo(TX-13, rungY(N)); ctx.moveTo(TX+13, rungY(0)); ctx.lineTo(TX+13, rungY(N)); ctx.stroke();
+    ctx.lineWidth = 2.5;
+    for(let i=0;i<=N;i++){ ctx.beginPath(); ctx.moveTo(TX-15, rungY(i)); ctx.lineTo(TX+15, rungY(i)); ctx.stroke(); }
+    ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(TX-58, rungY(0)); ctx.lineTo(TX+58, rungY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(TX-38, rungY(N)); ctx.lineTo(TX+38, rungY(N)); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(TX+32, rungY(N)); ctx.lineTo(TX+32, rungY(N)-20); ctx.stroke();
+    ctx.fillStyle = '#FF4E86'; ctx.beginPath(); ctx.moveTo(TX+32, rungY(N)-20); ctx.lineTo(TX+47, rungY(N)-15); ctx.lineTo(TX+32, rungY(N)-10); ctx.fill();
+    ctx.fillStyle = '#17140E'; ctx.font = '700 12px "Space Mono", monospace'; ctx.textAlign = 'left';
+    for(let k=1;k<=pos && k<=N;k++){ ctx.fillText(scale.classes[k-1], TX+22, rungY(k)+4); }
+    ctx.textAlign = 'start';
+    for(const b of barrels) drawBarrel(TX, b.y, b.spin);
+    if(state !== 'start'){
+      const flash = nowSec() < stunUntil && Math.floor(nowSec()*12)%2===0;
+      ctx.fillStyle = flash ? '#FF4E86' : '#2438C8';
+      const y = climberY + jumpOffset(nowSec());
+      ctx.beginPath(); ctx.arc(TX, y-22, 5.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(TX-4, y-17, 8, 12);
+      ctx.fillRect(TX-4, y-5, 3, 7); ctx.fillRect(TX+1, y-5, 3, 7);
+      ctx.fillRect(TX-9, y-15, 5, 3); ctx.fillRect(TX+4, y-15, 5, 3);
+    }
+  }
+
+  // ---- wiring ----
+  function setLevelCaption(){ el('levelCaption').textContent = LEVEL_CAPTION[level]; }
+  el('levelSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    el('levelSeg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true'); level = +b.dataset.v; setLevelCaption();
+  }));
+  el('guideSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    el('guideSeg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true'); guideOn = b.dataset.v === 'on'; updateHighlight();
+  }));
+  el('startBtn').addEventListener('click', startGame);
+  el('againBtn').addEventListener('click', startGame);
+  window.addEventListener('keydown', e => {
+    if((state==='start' || state==='over') && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); startGame(); return; }
+    const k = e.key.toUpperCase();
+    if(['C','D','E','F','G','A','B'].includes(k)) playNote(k);
+  });
+
+  // ---- init ----
+  setLevelCaption();
+  buildKeyboard();
+  reset(); state = 'start';
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>

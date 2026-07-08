@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rollbook — teaching planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+  --amber:#E0922A; --green:#1F9D55;
+  --display:'Syne',system-ui,sans-serif;
+  --body:'Hanken Grotesk',system-ui,sans-serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --hour:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  background-image:radial-gradient(rgba(23,20,14,.055) 1px, transparent 1px);background-size:5px 5px;}
+button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:inherit;color:var(--ink)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:16px 22px;border-bottom:3px solid var(--ink);background:var(--paper);
+  position:sticky;top:0;z-index:40;}
+.brand{font-family:var(--display);font-weight:800;font-size:1.7rem;letter-spacing:-.02em;
+  position:relative;user-select:none;white-space:nowrap}
+.brand .ghost{position:absolute;left:2.5px;top:2px;color:var(--pink);z-index:-1}
+.brand .ghost2{position:absolute;left:-2px;top:-1.5px;color:var(--blue);z-index:-2;opacity:.85}
+.weeknav{display:flex;align-items:center;gap:8px}
+.btn{border:2px solid var(--ink);background:#fff;padding:7px 14px;font-weight:600;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .08s, box-shadow .08s}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.small{padding:4px 10px;font-size:.85rem;box-shadow:2px 2px 0 var(--ink)}
+.weeklabel{font-family:var(--mono);font-size:.9rem;font-weight:700;min-width:210px;text-align:center}
+.spacer{flex:1}
+#syncStatus{font-family:var(--mono);font-size:.78rem;border:2px solid var(--ink);padding:4px 10px;background:#fff}
+#syncStatus.dirty{background:var(--amber);color:#fff}
+#syncStatus.saving{background:var(--ink);color:var(--paper)}
+#syncStatus.saved{background:var(--green);color:#fff}
+#syncStatus.error{background:var(--pink);color:#fff}
+#syncStatus.demo{background:#fff;color:var(--ink);border-style:dashed}
+
+/* ---------- week grid ---------- */
+main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
+.grid{display:grid;grid-template-columns:52px repeat(7,1fr);border:3px solid var(--ink);
+  background:#fff;box-shadow:6px 6px 0 var(--ink)}
+.dayhead{border-bottom:3px solid var(--ink);border-left:2px solid var(--ink);
+  padding:8px 6px;text-align:center;font-family:var(--display);font-weight:700;font-size:.92rem}
+.dayhead .dnum{display:block;font-family:var(--mono);font-weight:400;font-size:.75rem}
+.dayhead.today{background:var(--ink);color:var(--paper)}
+.corner{border-bottom:3px solid var(--ink)}
+.gutter{position:relative;border-top:none}
+.gutter .hlabel{position:absolute;right:6px;transform:translateY(-55%);
+  font-family:var(--mono);font-size:.68rem;color:rgba(23,20,14,.65)}
+.daycol{position:relative;border-left:2px solid var(--ink);
+  background-image:repeating-linear-gradient(to bottom, transparent, transparent calc(var(--hour) - 1px), rgba(23,20,14,.16) calc(var(--hour) - 1px), rgba(23,20,14,.16) var(--hour));}
+.daycol.today{background-color:rgba(224,146,42,.07)}
+.slotcard{position:absolute;left:5px;right:5px;border:2px solid var(--ink);background:#fff;
+  padding:5px 7px;text-align:left;overflow:hidden;box-shadow:3px 3px 0 var(--ink);
+  transition:transform .08s;display:block;width:calc(100% - 10px)}
+.slotcard:hover{transform:translate(-1px,-1px)}
+.slotcard .who{font-weight:700;font-size:.86rem;line-height:1.2;display:block}
+.slotcard .meta{font-family:var(--mono);font-size:.66rem;display:block;margin-top:2px;color:rgba(23,20,14,.75)}
+.slotcard .logged{position:absolute;top:4px;right:5px;font-size:.7rem}
+.slotcard.cancelled{border-style:dashed;box-shadow:none;opacity:.45}
+.slotcard.cancelled .who{text-decoration:line-through}
+.slotcard.c-blue{border-top:6px solid var(--blue)}
+.slotcard.c-pink{border-top:6px solid var(--pink)}
+.slotcard.c-amber{border-top:6px solid var(--amber)}
+.slotcard.c-green{border-top:6px solid var(--green)}
+.emptyweek{grid-column:1 / -1;padding:60px 20px;text-align:center}
+.emptyweek h2{font-family:var(--display);font-size:1.4rem;margin-bottom:8px}
+
+/* ---------- drawer ---------- */
+#overlay{position:fixed;inset:0;background:rgba(23,20,14,.35);z-index:60;display:none}
+#overlay.open{display:block}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--paper);
+  border-left:3px solid var(--ink);z-index:70;transform:translateX(102%);transition:transform .18s ease-out;
+  overflow-y:auto;box-shadow:-6px 0 0 rgba(23,20,14,.15)}
+#drawer.open{transform:translateX(0)}
+.dhead{padding:18px 20px 14px;border-bottom:3px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:5}
+.dhead h2{font-family:var(--display);font-size:1.45rem;line-height:1.1;padding-right:40px}
+.chip{display:inline-block;font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);
+  padding:1px 8px;margin-right:6px;margin-top:8px;background:#fff}
+.chip.kind-class{background:var(--pink);color:#fff}
+.chip.kind-student{background:var(--blue);color:#fff}
+.closex{position:absolute;top:14px;right:14px;font-family:var(--mono);font-weight:700;font-size:1.1rem;
+  border:2px solid var(--ink);background:#fff;width:34px;height:34px;box-shadow:2px 2px 0 var(--ink)}
+.dbody{padding:16px 20px 80px}
+.section{margin-bottom:22px}
+.sectitle{font-family:var(--display);font-weight:700;font-size:.95rem;letter-spacing:.03em;
+  border-bottom:2px solid var(--ink);padding-bottom:4px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+.sectitle .mono{font-family:var(--mono);font-size:.7rem;font-weight:400}
+.plannote{border:2px solid var(--ink);border-left:8px solid var(--amber);background:#fff;
+  padding:10px 12px;font-size:.92rem;margin-bottom:16px}
+.plannote b{display:block;font-family:var(--mono);font-size:.68rem;margin-bottom:3px;letter-spacing:.04em}
+.glance{border-top:1px dashed rgba(23,20,14,.3);padding:7px 0 4px;margin-top:6px}
+.glance:first-of-type{border-top:none;margin-top:2px}
+.glance .gdate{font-family:var(--mono);font-size:.68rem;font-weight:700;margin-right:8px}
+.glance .gnote{font-size:.88rem;margin-top:3px}
+label.f{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.03em;margin:10px 0 3px}
+.field{width:100%;border:2px solid var(--ink);background:#fff;padding:8px 10px}
+textarea.field{resize:vertical;min-height:56px}
+.logentry{border:2px solid var(--ink);background:#fff;padding:10px 12px;margin-bottom:10px;position:relative}
+.logentry .ldate{font-family:var(--mono);font-size:.7rem;font-weight:700;margin-bottom:4px}
+.logentry .lrow{font-size:.9rem;margin-top:4px}
+.logentry .lrow b{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;display:block;color:rgba(23,20,14,.7)}
+.lactions{position:absolute;top:8px;right:8px;display:flex;gap:6px}
+.lactions button{font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);background:#fff;padding:1px 7px}
+.reschip{display:inline-block;border:2px solid var(--ink);background:var(--paper);
+  font-size:.78rem;padding:1px 8px;margin:3px 4px 0 0}
+.repitem{display:flex;align-items:center;gap:9px;border:2px solid var(--ink);background:#fff;
+  padding:7px 10px;margin-bottom:7px}
+.repitem input[type=checkbox]{width:18px;height:18px;accent-color:var(--green)}
+.repitem .rt{flex:1}
+.repitem.done .rt{text-decoration:line-through;opacity:.55}
+.repitem .del{font-family:var(--mono);border:2px solid var(--ink);padding:0 7px;background:#fff}
+.countdown{font-family:var(--mono);font-size:.85rem;border:2px solid var(--ink);border-left:8px solid var(--pink);
+  background:#fff;padding:9px 12px;margin-bottom:12px}
+.inline{display:flex;gap:8px}
+.inline .field{flex:1}
+.muted{color:rgba(23,20,14,.6);font-size:.88rem}
+
+/* ---------- manage ---------- */
+#manage{position:fixed;inset:0;background:var(--paper);z-index:80;display:none;overflow-y:auto}
+#manage.open{display:block}
+.mwrap{max-width:860px;margin:0 auto;padding:26px 22px 100px}
+.mwrap h1{font-family:var(--display);font-size:1.8rem;margin-bottom:4px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px}
+@media(max-width:760px){.mgrid{grid-template-columns:1fr}}
+.mcard{border:3px solid var(--ink);background:#fff;box-shadow:5px 5px 0 var(--ink);padding:16px 18px}
+.mcard h2{font-family:var(--display);font-size:1.15rem;margin-bottom:10px}
+.mlist{margin-top:14px}
+.mrow{display:flex;align-items:center;gap:8px;border:2px solid var(--ink);padding:7px 10px;margin-bottom:7px;background:var(--paper)}
+.mrow .grow{flex:1;min-width:0}
+.mrow .nm{font-weight:700;font-size:.92rem}
+.mrow .sub{font-family:var(--mono);font-size:.68rem;color:rgba(23,20,14,.7)}
+.mrow button{font-family:var(--mono);font-size:.7rem;border:2px solid var(--ink);background:#fff;padding:2px 8px}
+.dot{width:12px;height:12px;border:2px solid var(--ink);flex:none}
+.dot.c-blue{background:var(--blue)}.dot.c-pink{background:var(--pink)}
+.dot.c-amber{background:var(--amber)}.dot.c-green{background:var(--green)}
+.formrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.formrow .field{flex:1;min-width:110px}
+.hint{font-family:var(--mono);font-size:.68rem;color:rgba(23,20,14,.6);margin-top:6px}
+#demoBanner{display:none;margin:0 22px;max-width:1400px}
+#demoBanner.show{display:block}
+#demoBanner .inner{margin:14px auto 0;border:2px dashed var(--ink);background:#fff;padding:10px 14px;font-size:.9rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Rollbook<span class="ghost" aria-hidden="true">Rollbook</span><span class="ghost2" aria-hidden="true">Rollbook</span></div>
+  <div class="weeknav">
+    <button class="btn small" id="prevWk" aria-label="Previous week">‹</button>
+    <button class="btn small" id="todayWk">Today</button>
+    <button class="btn small" id="nextWk" aria-label="Next week">›</button>
+  </div>
+  <div class="weeklabel" id="weekLabel"></div>
+  <div class="spacer"></div>
+  <span id="syncStatus">loading…</span>
+  <button class="btn" id="openManage">Set up</button>
+</header>
+
+<div id="demoBanner"><div class="inner"><b>Demo mode.</b> No storage connected — changes live in this tab only. Paste your Apps Script URL into CONFIG at the top of this file to sync with your Google Sheet.</div></div>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div id="overlay"></div>
+<aside id="drawer" aria-label="Details"></aside>
+
+<div id="manage">
+  <div class="mwrap">
+    <button class="btn" id="closeManage" style="float:right">Back to week</button>
+    <h1>Set up</h1>
+    <p class="muted">Add your students and classes, then give each a weekly time.</p>
+    <div class="mgrid">
+      <div class="mcard">
+        <h2 id="pFormTitle">Add a student or class</h2>
+        <div class="formrow">
+          <input class="field" id="pName" placeholder="Name (e.g. Sarah, or 3rd Class Ukulele)">
+        </div>
+        <div class="formrow">
+          <select class="field" id="pKind">
+            <option value="student">One-on-one student</option>
+            <option value="class">Class / group</option>
+          </select>
+          <input class="field" id="pInstr" placeholder="Instrument">
+        </div>
+        <div class="formrow">
+          <input class="field" id="pNotes" placeholder="Notes (context, goals, anything)">
+        </div>
+        <div class="formrow" id="pPerfRow" style="display:none">
+          <label class="f" style="flex-basis:100%;margin:0 0 -4px">PERFORMANCE DATE</label>
+          <input class="field" type="date" id="pPerf">
+        </div>
+        <div class="formrow">
+          <button class="btn primary" id="pSave">Add</button>
+          <button class="btn" id="pCancel" style="display:none">Cancel</button>
+        </div>
+        <div class="mlist" id="peopleList"></div>
+      </div>
+      <div class="mcard">
+        <h2 id="sFormTitle">Add a weekly time</h2>
+        <div class="formrow">
+          <select class="field" id="sPerson"></select>
+        </div>
+        <div class="formrow">
+          <select class="field" id="sDay">
+            <option value="1">Monday</option><option value="2">Tuesday</option>
+            <option value="3">Wednesday</option><option value="4">Thursday</option>
+            <option value="5">Friday</option><option value="6">Saturday</option>
+            <option value="7">Sunday</option>
+          </select>
+          <input class="field" type="time" id="sStart" value="16:00">
+          <select class="field" id="sDur">
+            <option value="30">30 min</option><option value="45">45 min</option>
+            <option value="60" selected>60 min</option><option value="90">90 min</option>
+          </select>
+        </div>
+        <div class="formrow">
+          <button class="btn primary" id="sSave">Add time</button>
+          <button class="btn" id="sCancel" style="display:none">Cancel</button>
+        </div>
+        <div class="hint">One person can have several weekly times.</div>
+        <div class="mlist" id="slotList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= CONFIG =================
+   Paste your Google Apps Script web-app URL between the quotes.
+   Leave empty to run in demo mode (nothing is saved).            */
+const CONFIG = { SCRIPT_URL: "" };
+/* ========================================== */
+
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const COLOURS=['c-blue','c-pink','c-amber','c-green'];
+let state={people:[],slots:[],lessons:[],exceptions:[]};
+let weekStart=mondayOf(new Date());
+let drawerCtx=null;           // {personId, dateISO, slotId}
+let editingLessonId=null;
+let editingPersonId=null, editingSlotId=null;
+let dirty=false, saveTimer=null;
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const uid=()=> 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function mondayOf(d){const x=new Date(d);x.setHours(0,0,0,0);const wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtTime(m){const h=Math.floor(m/60),mm=m%60;return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');}
+function timeToMin(t){const[a,b]=t.split(':');return +a*60+(+b);}
+function niceDate(isoStr){const d=new Date(isoStr+'T12:00:00');return d.toLocaleDateString('en-IE',{weekday:'long',day:'numeric',month:'short'});}
+function shortDate(isoStr){const d=new Date(isoStr+'T12:00:00');return d.toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'});}
+const person=id=>state.people.find(p=>p.id===id);
+const colourOf=p=>p.colour||COLOURS[Math.max(0,state.people.indexOf(p))%COLOURS.length];
+
+/* ---------- sync ---------- */
+function setStatus(cls,txt){const el=$('#syncStatus');el.className=cls;el.textContent=txt;}
+function markDirty(){
+  dirty=true;
+  if(!CONFIG.SCRIPT_URL){render();return;}
+  setStatus('dirty','unsaved');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveRemote,2000);
+  render();
+}
+async function saveRemote(){
+  if(!CONFIG.SCRIPT_URL)return;
+  setStatus('saving','saving…');
+  try{
+    const r=await fetch(CONFIG.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'save',state})});
+    const j=await r.json();
+    if(!j.ok)throw new Error('bad response');
+    dirty=false;setStatus('saved','saved');
+  }catch(e){setStatus('error','save failed — retrying');clearTimeout(saveTimer);saveTimer=setTimeout(saveRemote,6000);}
+}
+async function loadRemote(){
+  if(!CONFIG.SCRIPT_URL){
+    demoData();setStatus('demo','demo mode');$('#demoBanner').classList.add('show');render();return;
+  }
+  setStatus('saving','loading…');
+  try{
+    const r=await fetch(CONFIG.SCRIPT_URL);
+    const j=await r.json();
+    state={people:j.people||[],slots:j.slots||[],lessons:j.lessons||[],exceptions:j.exceptions||[]};
+    setStatus('saved','saved');
+  }catch(e){setStatus('error','couldn\u2019t load — check CONFIG url');}
+  render();
+}
+
+/* ---------- week grid ---------- */
+function weekRange(){
+  const starts=state.slots.map(s=>s.start), ends=state.slots.map(s=>s.start+s.duration);
+  let a=starts.length?Math.min(...starts):9*60, b=ends.length?Math.max(...ends):18*60;
+  a=Math.floor(a/60)*60; b=Math.ceil(b/60)*60;
+  a=Math.max(6*60,Math.min(a,9*60)); b=Math.min(23*60,Math.max(b,17*60));
+  return[a,b];
+}
+function exceptionFor(slotId,wkISO){return state.exceptions.find(e=>e.slotId===slotId&&e.week===wkISO);}
+function lessonFor(personId,dateISO){return state.lessons.find(l=>l.personId===personId&&l.date===dateISO);}
+
+function render(){
+  const g=$('#grid');g.innerHTML='';
+  const wkISO=iso(weekStart), todayISO=iso(new Date());
+  const end=addDays(weekStart,6);
+  $('#weekLabel').textContent=weekStart.toLocaleDateString('en-IE',{day:'numeric',month:'short'})+' \u2013 '+
+    end.toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'});
+
+  if(!state.slots.length){
+    g.innerHTML='<div class="emptyweek"><h2>Nothing on the timetable yet</h2><p class="muted">Open <b>Set up</b> to add your students and their weekly times.</p></div>';
+    return;
+  }
+  const[rs,re]=weekRange(); const hours=(re-rs)/60;
+  // headers
+  g.appendChild(el('<div class="corner"></div>'));
+  for(let d=0;d<7;d++){
+    const dt=addDays(weekStart,d);
+    const h=el('<div class="dayhead'+(iso(dt)===todayISO?' today':'')+'">'+DAYS[d]+'<span class="dnum">'+dt.getDate()+'/'+(dt.getMonth()+1)+'</span></div>');
+    g.appendChild(h);
+  }
+  // gutter
+  const gut=el('<div class="gutter"></div>');gut.style.height=(hours*60)+'px';
+  for(let h=rs;h<=re;h+=60){
+    gut.appendChild(el('<span class="hlabel" style="top:'+((h-rs))+'px">'+fmtTime(h)+'</span>'));
+  }
+  g.appendChild(gut);
+  // day columns
+  for(let d=0;d<7;d++){
+    const dt=addDays(weekStart,d), dISO=iso(dt);
+    const col=el('<div class="daycol'+(dISO===todayISO?' today':'')+'"></div>');
+    col.style.height=(hours*60)+'px';
+    state.slots.filter(s=>s.day===d+1).sort((a,b)=>a.start-b.start).forEach(s=>{
+      const p=person(s.personId);if(!p)return;
+      const exc=exceptionFor(s.id,wkISO);
+      const logged=!!lessonFor(p.id,dISO);
+      const last=state.lessons.filter(l=>l.personId===p.id&&l.date<=dISO).sort((a,b)=>b.date.localeCompare(a.date))[0];
+      const hover=last?('Last ('+shortDate(last.date)+'): '+(last.notes||last.rep||'')):'';
+      const card=el('<button class="slotcard '+colourOf(p)+(exc?' cancelled':'')+'" title="'+esc(hover)+'" style="top:'+(s.start-rs)+'px;height:'+Math.max(30,s.duration-4)+'px">'+
+        '<span class="who">'+esc(p.name)+'</span>'+
+        '<span class="meta">'+fmtTime(s.start)+' \u00b7 '+esc(p.instrument||'')+'</span>'+
+        (logged?'<span class="logged" title="Lesson logged">\u270e</span>':'')+'</button>');
+      card.addEventListener('click',()=>openDrawer(p.id,dISO,s.id));
+      col.appendChild(card);
+    });
+    g.appendChild(col);
+  }
+}
+function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
+
+/* ---------- drawer ---------- */
+function openDrawer(personId,dateISO,slotId){
+  drawerCtx={personId,dateISO,slotId};editingLessonId=null;
+  renderDrawer();
+  $('#overlay').classList.add('open');$('#drawer').classList.add('open');
+}
+function closeDrawer(){
+  $('#overlay').classList.remove('open');$('#drawer').classList.remove('open');
+  drawerCtx=null;
+}
+function renderDrawer(){
+  if(!drawerCtx)return;
+  const p=person(drawerCtx.personId);if(!p){closeDrawer();return;}
+  const{dateISO,slotId}=drawerCtx;
+  const wkISO=iso(mondayOf(new Date(dateISO+'T12:00:00')));
+  const exc=slotId?exceptionFor(slotId,wkISO):null;
+  const existing=lessonFor(p.id,dateISO);
+  const hist=state.lessons.filter(l=>l.personId===p.id).sort((a,b)=>b.date.localeCompare(a.date));
+  const editing=editingLessonId?state.lessons.find(l=>l.id===editingLessonId):existing;
+  const resAll=[...new Set(hist.flatMap(l=>(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean)))];
+  const recent=hist.filter(l=>l.date<=dateISO).slice(0,3);
+  const glance=recent.length?'<div class="plannote"><b>AT A GLANCE \u2014 LAST '+(recent.length>1?recent.length+' LESSONS':'LESSON')+'</b>'+
+    recent.map(l=>'<div class="glance"><span class="gdate">'+shortDate(l.date)+'</span>'+
+      (l.rep?l.rep.split(',').map(r=>'<span class="reschip">'+esc(r.trim())+'</span>').join(''):'')+
+      (l.notes?'<div class="gnote">'+esc(l.notes)+'</div>':'')+'</div>').join('')+'</div>':'';
+
+  let classBits='';
+  if(p.kind==='class'){
+    let cd='';
+    if(p.performanceDate){
+      const wks=Math.round((new Date(p.performanceDate)-new Date(dateISO))/(7*864e5));
+      cd='<div class="countdown">\u2691 Performance '+shortDate(p.performanceDate)+' \u2014 <b>'+(wks>=0?wks+' weeks away':'done!')+'</b></div>';
+    }
+    const rep=(p.repertoire||[]).map(r=>
+      '<div class="repitem'+(r.done?' done':'')+'"><input type="checkbox" '+(r.done?'checked':'')+' data-rep="'+r.id+'" aria-label="done">'+
+      '<span class="rt">'+esc(r.title)+'</span><button class="del" data-repdel="'+r.id+'" aria-label="remove">\u00d7</button></div>').join('');
+    classBits='<div class="section">'+cd+
+      '<div class="sectitle">Repertoire<span class="mono">'+(p.repertoire||[]).filter(r=>r.done).length+'/'+(p.repertoire||[]).length+'</span></div>'+
+      rep+
+      '<div class="inline" style="margin-top:8px"><input class="field" id="repNew" placeholder="Add a piece\u2026">'+
+      '<button class="btn small" id="repAdd">Add</button></div></div>';
+  }
+
+  const d=$('#drawer');
+  d.innerHTML=
+  '<div class="dhead"><h2>'+esc(p.name)+'</h2>'+
+  '<span class="chip kind-'+p.kind+'">'+(p.kind==='class'?'CLASS':'STUDENT')+'</span>'+
+  (p.instrument?'<span class="chip">'+esc(p.instrument)+'</span>':'')+
+  '<span class="chip">'+esc(niceDate(dateISO))+'</span>'+
+  '<button class="closex" id="dClose" aria-label="Close">\u00d7</button></div>'+
+  '<div class="dbody">'+
+  (p.notes?'<p class="muted" style="margin-bottom:14px">'+esc(p.notes)+'</p>':'')+
+  glance+
+  classBits+
+  (slotId?'<div class="section"><button class="btn small" id="excBtn">'+(exc?'Restore this week\u2019s lesson':'Cancel this week\u2019s lesson')+'</button></div>':'')+
+  '<div class="section"><div class="sectitle">'+(editing?'Edit log \u2014 '+shortDate(editing.date):'Log this lesson')+'</div>'+
+  '<label class="f" for="lgRep">REP / RESOURCES <span style="text-transform:none">(comma-separated)</span></label>'+
+  '<input class="field" id="lgRep" value="'+esc(editing?editing.rep:'')+'" placeholder="e.g. Kesh Jig, D chord sheet">'+
+  '<label class="f" for="lgNotes">NOTES</label><textarea class="field" id="lgNotes" placeholder="What happened, how it went, what\u2019s next\u2026">'+esc(editing?editing.notes:'')+'</textarea>'+
+  '<div class="inline" style="margin-top:12px"><button class="btn primary" id="lgSave">'+(editing?'Save changes':'Save log')+'</button>'+
+  (editingLessonId?'<button class="btn" id="lgCancel">Cancel</button>':'')+'</div></div>'+
+  '<div class="section"><div class="sectitle">Story so far<span class="mono">'+hist.length+' lessons</span></div>'+
+  (hist.length?hist.map(l=>
+    '<div class="logentry"><div class="ldate">'+shortDate(l.date)+'</div>'+
+    '<div class="lactions"><button data-edit="'+l.id+'">edit</button><button data-del="'+l.id+'">\u00d7</button></div>'+
+    (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>'<span class="reschip">'+esc(r.trim())+'</span>').join('')+'</div>':'')+
+    (l.notes?'<div class="lrow"><b>NOTES</b>'+esc(l.notes)+'</div>':'')+
+    '</div>').join('')
+  :'<p class="muted">No lessons logged yet. The first entry starts the story.</p>')+'</div>'+
+  (resAll.length?'<div class="section"><div class="sectitle">All rep &amp; resources given</div>'+resAll.map(r=>'<span class="reschip">'+esc(r)+'</span>').join('')+'</div>':'')+
+  '</div>';
+
+  $('#dClose').onclick=closeDrawer;
+  const excBtn=$('#excBtn');
+  if(excBtn)excBtn.onclick=()=>{
+    if(exc)state.exceptions=state.exceptions.filter(e=>e.id!==exc.id);
+    else state.exceptions.push({id:uid(),slotId,week:wkISO,status:'cancelled',note:''});
+    markDirty();renderDrawer();
+  };
+  $('#lgSave').onclick=()=>{
+    const rep=$('#lgRep').value.trim(),nts=$('#lgNotes').value.trim();
+    if(!rep&&!nts)return;
+    if(editing){Object.assign(editing,{rep,notes:nts});}
+    else state.lessons.push({id:uid(),personId:p.id,date:dateISO,rep,notes:nts});
+    editingLessonId=null;markDirty();renderDrawer();
+  };
+  const lgc=$('#lgCancel');if(lgc)lgc.onclick=()=>{editingLessonId=null;renderDrawer();};
+  d.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editingLessonId=b.dataset.edit;renderDrawer();});
+  d.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    if(confirm('Delete this log entry?')){state.lessons=state.lessons.filter(l=>l.id!==b.dataset.del);markDirty();renderDrawer();}
+  });
+  d.querySelectorAll('[data-rep]').forEach(c=>c.onchange=()=>{
+    const r=(p.repertoire||[]).find(x=>x.id===c.dataset.rep);if(r){r.done=c.checked;markDirty();renderDrawer();}
+  });
+  d.querySelectorAll('[data-repdel]').forEach(b=>b.onclick=()=>{
+    p.repertoire=(p.repertoire||[]).filter(x=>x.id!==b.dataset.repdel);markDirty();renderDrawer();
+  });
+  const ra=$('#repAdd');
+  if(ra)ra.onclick=()=>{
+    const v=$('#repNew').value.trim();if(!v)return;
+    p.repertoire=p.repertoire||[];p.repertoire.push({id:uid(),title:v,done:false});
+    markDirty();renderDrawer();
+  };
+}
+$('#overlay').addEventListener('click',closeDrawer);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();$('#manage').classList.remove('open');}});
+
+/* ---------- manage ---------- */
+function renderManage(){
+  const pl=$('#peopleList');
+  pl.innerHTML=state.people.map(p=>
+    '<div class="mrow"><span class="dot '+colourOf(p)+'"></span><div class="grow">'+
+    '<div class="nm">'+esc(p.name)+'</div><div class="sub">'+(p.kind==='class'?'class':'student')+
+    (p.instrument?' \u00b7 '+esc(p.instrument):'')+'</div></div>'+
+    '<button data-pedit="'+p.id+'">edit</button><button data-pdel="'+p.id+'">\u00d7</button></div>').join('')
+    ||'<p class="muted">No one yet.</p>';
+  pl.querySelectorAll('[data-pedit]').forEach(b=>b.onclick=()=>{
+    const p=person(b.dataset.pedit);editingPersonId=p.id;
+    $('#pFormTitle').textContent='Edit '+p.name;
+    $('#pName').value=p.name;$('#pKind').value=p.kind;$('#pInstr').value=p.instrument||'';
+    $('#pNotes').value=p.notes||'';$('#pPerf').value=p.performanceDate||'';
+    $('#pPerfRow').style.display=p.kind==='class'?'flex':'none';
+    $('#pSave').textContent='Save changes';$('#pCancel').style.display='';
+  });
+  pl.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{
+    const p=person(b.dataset.pdel);
+    if(confirm('Delete '+p.name+'? Their weekly times and all lesson logs go too.')){
+      state.people=state.people.filter(x=>x.id!==p.id);
+      state.slots=state.slots.filter(s=>s.personId!==p.id);
+      state.lessons=state.lessons.filter(l=>l.personId!==p.id);
+      markDirty();renderManage();
+    }
+  });
+  const sel=$('#sPerson');
+  sel.innerHTML=state.people.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')
+    ||'<option value="">\u2014 add someone first \u2014</option>';
+  const sl=$('#slotList');
+  sl.innerHTML=state.slots.slice().sort((a,b)=>a.day-b.day||a.start-b.start).map(s=>{
+    const p=person(s.personId);
+    return '<div class="mrow"><div class="grow"><div class="nm">'+esc(p?p.name:'?')+'</div>'+
+    '<div class="sub">'+DAYS[s.day-1]+' '+fmtTime(s.start)+' \u00b7 '+s.duration+' min</div></div>'+
+    '<button data-sedit="'+s.id+'">edit</button><button data-sdel="'+s.id+'">\u00d7</button></div>';
+  }).join('')||'<p class="muted">No weekly times yet.</p>';
+  sl.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{
+    state.slots=state.slots.filter(s=>s.id!==b.dataset.sdel);markDirty();renderManage();
+  });
+  sl.querySelectorAll('[data-sedit]').forEach(b=>b.onclick=()=>{
+    const s=state.slots.find(x=>x.id===b.dataset.sedit);editingSlotId=s.id;
+    $('#sFormTitle').textContent='Edit weekly time';
+    $('#sPerson').value=s.personId;$('#sDay').value=s.day;
+    $('#sStart').value=fmtTime(s.start);$('#sDur').value=s.duration;
+    $('#sSave').textContent='Save changes';$('#sCancel').style.display='';
+  });
+}
+function resetPForm(){
+  editingPersonId=null;$('#pFormTitle').textContent='Add a student or class';
+  $('#pName').value='';$('#pInstr').value='';$('#pNotes').value='';$('#pPerf').value='';
+  $('#pKind').value='student';$('#pPerfRow').style.display='none';
+  $('#pSave').textContent='Add';$('#pCancel').style.display='none';
+}
+function resetSForm(){
+  editingSlotId=null;$('#sFormTitle').textContent='Add a weekly time';
+  $('#sSave').textContent='Add time';$('#sCancel').style.display='none';
+}
+$('#pKind').addEventListener('change',e=>{$('#pPerfRow').style.display=e.target.value==='class'?'flex':'none';});
+$('#pSave').onclick=()=>{
+  const name=$('#pName').value.trim();if(!name)return;
+  const data={name,kind:$('#pKind').value,instrument:$('#pInstr').value.trim(),
+    notes:$('#pNotes').value.trim(),performanceDate:$('#pPerf').value||''};
+  if(editingPersonId){Object.assign(person(editingPersonId),data);}
+  else state.people.push({id:uid(),repertoire:[],colour:COLOURS[state.people.length%COLOURS.length],...data});
+  markDirty();resetPForm();renderManage();
+};
+$('#pCancel').onclick=()=>{resetPForm();};
+$('#sSave').onclick=()=>{
+  const pid=$('#sPerson').value;if(!pid)return;
+  const data={personId:pid,day:+$('#sDay').value,start:timeToMin($('#sStart').value),duration:+$('#sDur').value};
+  if(editingSlotId){Object.assign(state.slots.find(s=>s.id===editingSlotId),data);}
+  else state.slots.push({id:uid(),...data});
+  markDirty();resetSForm();renderManage();
+};
+$('#sCancel').onclick=()=>{resetSForm();};
+$('#openManage').onclick=()=>{resetPForm();resetSForm();renderManage();$('#manage').classList.add('open');};
+$('#closeManage').onclick=()=>{$('#manage').classList.remove('open');render();};
+
+/* ---------- week nav ---------- */
+$('#prevWk').onclick=()=>{weekStart=addDays(weekStart,-7);render();};
+$('#nextWk').onclick=()=>{weekStart=addDays(weekStart,7);render();};
+$('#todayWk').onclick=()=>{weekStart=mondayOf(new Date());render();};
+
+/* ---------- demo data ---------- */
+function demoData(){
+  const mk=(name,kind,instrument,notes,perf)=>({id:uid(),name,kind,instrument,notes,performanceDate:perf||'',repertoire:[],colour:COLOURS[state.people.length%COLOURS.length]});
+  const sarah=mk('Sarah','student','Guitar','Beginner, loves pop songs');state.people.push(sarah);
+  const liam=mk('Liam','student','Banjo','Trad \u2014 building session repertoire');state.people.push(liam);
+  const aoife=mk('Aoife','student','Guitar','Grade 3 exam route');state.people.push(aoife);
+  const cls=mk('3rd Class Ukulele','class','Ukulele','25 kids, Scoil Bhr\u00edde','2027-06-18');state.people.push(cls);
+  cls.repertoire=[{id:uid(),title:'You Are My Sunshine',done:true},{id:uid(),title:'Riptide',done:false}];
+  state.slots.push({id:uid(),personId:cls.id,day:3,start:600,duration:60});
+  state.slots.push({id:uid(),personId:sarah.id,day:2,start:960,duration:30});
+  state.slots.push({id:uid(),personId:liam.id,day:4,start:1020,duration:45});
+  state.slots.push({id:uid(),personId:aoife.id,day:5,start:990,duration:30});
+  const lastTue=iso(addDays(mondayOf(new Date()),-6));
+  state.lessons.push({id:uid(),personId:sarah.id,date:lastTue,rep:'Em/Am chord sheet, Perfect',
+    notes:'Em and Am changes much smoother \u2014 still hesitating on Am. Next: introduce D chord.'});
+}
+
+/* ---------- boot ---------- */
+window.addEventListener('beforeunload',e=>{if(dirty&&CONFIG.SCRIPT_URL){e.preventDefault();e.returnValue='';}});
+loadRemote();
+</script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In Tune? — ukulele ear training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E; --wood:#EAC587;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(440px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:18px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(2rem,7vw,3.2rem); letter-spacing:-.02em;
+    line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:clamp(16px,4vw,26px);
+  }
+
+  .ukewrap{ display:flex; justify-content:center; }
+  svg.uke{ width:100%; max-width:280px; height:auto; display:block; touch-action:manipulation; }
+
+  .string{ transition:stroke .1s ease, stroke-width .1s ease; }
+  .string.active{ stroke:var(--blue); stroke-width:4; }
+  .string.correct{ stroke:var(--blue); stroke-width:4.5; }
+  .string.wrong{ stroke:var(--pink); stroke-width:4; }
+  @keyframes vibe{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-1.3px);} 75%{ transform:translateX(1.3px);} }
+  .string.active{ animation:vibe .09s linear infinite; }
+
+  .feedback{
+    min-height:1.5em; font-family:var(--display); font-weight:700;
+    font-size:1.1rem; text-align:center; color:var(--muted); margin:6px 0 14px;
+  }
+  .feedback.good{ color:var(--blue); } .feedback.bad{ color:var(--pink); }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:.98rem; padding:12px 14px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; flex:1 1 auto; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .05s ease, box-shadow .05s ease, background .12s ease;
+  }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.primary:hover{ background:#1c2da6; }
+  .btn:disabled{ opacity:.4; box-shadow:none; cursor:default; }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  .diffrow{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .seg{ display:flex; border:2px solid var(--ink); }
+  .seg button{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em;
+    text-transform:uppercase; padding:7px 14px; border:0;
+    background:var(--paper); cursor:pointer; color:var(--ink);
+  }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+  .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .askbox{
+    border:2.5px solid var(--ink); background:#FBF7EE; padding:14px;
+    margin:0 0 14px; text-align:center; box-shadow:4px 4px 0 var(--ink);
+  }
+  .askbox.hidden{ display:none; }
+  .askq{ font-family:var(--display); font-weight:700; font-size:1.05rem; margin-bottom:12px; }
+  .askbtns{ display:flex; gap:10px; }
+  .ask{
+    flex:1; font-family:var(--mono); font-weight:700; font-size:1rem; padding:14px 8px;
+    border:2.5px solid var(--ink); cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+    background:var(--paper); color:var(--ink); transition:transform .05s ease, box-shadow .05s ease, background .12s;
+  }
+  .ask:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .ask.intune:hover{ background:var(--blue); color:#fff; }
+  .ask.outtune:hover{ background:var(--pink); color:#fff; }
+  .ask:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+
+  .score{
+    display:flex; justify-content:center; gap:clamp(16px,6vw,40px); margin-top:20px;
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .score b{ display:block; font-size:1.5rem; color:var(--ink); letter-spacing:0; }
+
+  @media (max-width:380px){ .controls{ flex-direction:column; } }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="In Tune?">In Tune?</span>
+      <div class="subtitle">ukulele · are all four strings in tune?</div>
+    </header>
+
+    <div class="panel">
+      <div class="ukewrap">
+        <svg class="uke" viewBox="0 0 260 500" role="img" aria-label="Ukulele. Four strings play in turn — decide if they are all in tune.">
+          <!-- body -->
+          <path d="M 96,238 C 74,242 60,270 60,300 C 60,330 76,330 76,356 C 76,388 42,402 42,430
+                   C 42,466 100,492 130,492 C 160,492 218,466 218,430 C 218,402 184,388 184,356
+                   C 184,330 200,330 200,300 C 200,270 186,242 164,238 Z"
+                fill="#EAC587" stroke="#17140E" stroke-width="3"/>
+          <circle cx="130" cy="342" r="33" fill="#EFE7D6" stroke="#17140E" stroke-width="3"/>
+          <rect x="104" y="416" width="52" height="11" rx="2" fill="#17140E"/>
+          <!-- neck -->
+          <rect x="94" y="80" width="72" height="160" fill="#F0E6D2" stroke="#17140E" stroke-width="3"/>
+          <line x1="94" y1="115" x2="166" y2="115" stroke="#B9AE97" stroke-width="2"/>
+          <line x1="94" y1="150" x2="166" y2="150" stroke="#B9AE97" stroke-width="2"/>
+          <line x1="94" y1="185" x2="166" y2="185" stroke="#B9AE97" stroke-width="2"/>
+          <line x1="94" y1="220" x2="166" y2="220" stroke="#B9AE97" stroke-width="2"/>
+          <!-- headstock -->
+          <rect x="90" y="34" width="80" height="48" rx="8" fill="#D8B576" stroke="#17140E" stroke-width="3"/>
+          <rect x="93" y="78" width="74" height="6" fill="#17140E"/>
+          <!-- pegs -->
+          <circle cx="100" cy="54" r="6" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+          <circle cx="120" cy="54" r="6" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+          <circle cx="140" cy="54" r="6" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+          <circle cx="160" cy="54" r="6" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+          <!-- strings -->
+          <line class="string" id="str0" x1="100" y1="54" x2="100" y2="421" stroke="#17140E" stroke-width="2"/>
+          <line class="string" id="str1" x1="120" y1="54" x2="120" y2="421" stroke="#17140E" stroke-width="2"/>
+          <line class="string" id="str2" x1="140" y1="54" x2="140" y2="421" stroke="#17140E" stroke-width="2"/>
+          <line class="string" id="str3" x1="160" y1="54" x2="160" y2="421" stroke="#17140E" stroke-width="2"/>
+          <!-- labels -->
+          <text x="100" y="22" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">G</text>
+          <text x="120" y="22" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">C</text>
+          <text x="140" y="22" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+          <text x="160" y="22" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">A</text>
+        </svg>
+      </div>
+
+      <div class="feedback" id="feedback" aria-live="polite">Press “New round” — all four strings play.</div>
+
+      <div class="askbox hidden" id="askbox">
+        <div class="askq" id="askq">Are all four strings in tune?</div>
+        <div class="askbtns">
+          <button class="ask intune" id="inBtn">✓ In tune</button>
+          <button class="ask outtune" id="outBtn">✗ Out of tune</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" id="newBtn">▶ New round</button>
+        <button class="btn" id="againBtn" disabled>↺ Hear again</button>
+        <button class="btn" id="strumBtn" disabled>♬ Strum</button>
+      </div>
+
+      <div class="diffrow">
+        <span>ears:</span>
+        <div class="seg" role="group" aria-label="Difficulty">
+          <button id="easyBtn" aria-pressed="true">Easy</button>
+          <button id="hardBtn" aria-pressed="false">Hard</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="score">
+      <div>correct<b id="sCorrect">0</b></div>
+      <div>streak<b id="sStreak">0</b></div>
+      <div>best<b id="sBest">0</b></div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   IN TUNE? — the four ukulele strings play in turn (G C E A). Decide:
+   is the whole set in tune, or out of tune? On an out-of-tune round,
+   anywhere from one to all four strings may be detuned.
+
+   Four notes played one-at-a-time are judged by RELATIVE PITCH — a
+   detuned string makes a sour interval against its neighbours. The
+   ♬ Strum button sounds all four together, so an out-of-tune string
+   clashes / beats against the others: that's the real ear-test used
+   when tuning a uke. Tunables up top:
+     BASE      open-string pitches (reentrant GCEA)
+     DETUNE    base cents off for easy / hard (bigger = easier)
+     STEP      gap between strings in the sequence
+   ==================================================================== */
+
+  const BASE   = [392.00, 261.63, 329.63, 440.00];   // G4 C4 E4 A4 (reentrant)
+  const NAMES  = ['G','C','E','A'];
+  const DETUNE = { easy: 50, hard: 20 };             // base cents off when a string is out
+  const STEP      = 0.68;   // gap between strings in the sequence (s)
+  const SEQ_DUR   = 1.05;   // each note length in the sequence (s)
+  const STRUM_DUR = 1.7;    // length of a strummed note (s)
+
+  // ---- audio ----
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx = new AC(); }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  // one soft plucked voice: sine fundamental + a little triangle, gentle
+  // attack so each string rings like a clear pitch
+  function voice(freq, when, dur, amp){
+    const c = ensureAudio(), t = c.currentTime + when;
+    const out = c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(amp, t+0.02);
+    out.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    [['sine',1.0],['triangle',0.22]].forEach(([type,a])=>{
+      const o=c.createOscillator(); o.type=type; o.frequency.value=freq;
+      const g=c.createGain(); g.gain.value=a;
+      o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.05);
+    });
+  }
+
+  // ---- state ----
+  const el = id => document.getElementById(id);
+  const strings = [0,1,2,3].map(i => el('str'+i));
+  function setActive(i,on){ strings[i].classList.toggle('active',on); }
+  function clearMarks(){ strings.forEach(s=>s.classList.remove('correct','wrong','active')); }
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  let offsets=[0,0,0,0], inTune=true, offList=[], diff='easy';
+  let phase='idle';                 // 'idle' | 'guess' | 'done'
+  let correct=0, streak=0, best=0;
+
+  const freqFor = i => BASE[i] * Math.pow(2, offsets[i]/1200);
+
+  // build a round: 50% all in tune; otherwise 1..4 strings knocked off
+  // pitch by (roughly) the difficulty amount, each a random direction
+  function makeRound(){
+    offsets=[0,0,0,0]; offList=[];
+    inTune = Math.random() < 0.5;
+    if(!inTune){
+      const k = 1 + Math.floor(Math.random()*4);              // how many strings are off
+      offList = shuffle([0,1,2,3]).slice(0,k).sort((a,b)=>a-b);
+      offList.forEach(i=>{
+        const sign = Math.random()<0.5 ? 1 : -1;
+        offsets[i] = sign * DETUNE[diff] * (1 + Math.random()*0.5);
+      });
+    }
+  }
+
+  function playSequence(){
+    for(let i=0;i<4;i++){
+      voice(freqFor(i), i*STEP, SEQ_DUR, 0.26);
+      setTimeout(()=>setActive(i,true),  i*STEP*1000);
+      setTimeout(()=>setActive(i,false), i*STEP*1000 + SEQ_DUR*760);
+    }
+  }
+  function strum(){
+    for(let i=0;i<4;i++){
+      voice(freqFor(i), i*0.035, STRUM_DUR, 0.12);
+      setTimeout(()=>setActive(i,true),  i*35);
+      setTimeout(()=>setActive(i,false), 420);
+    }
+  }
+
+  function newRound(){
+    ensureAudio();
+    clearMarks(); hideBox();
+    makeRound();
+    phase='guess';
+    el('againBtn').disabled=false;
+    el('strumBtn').disabled=false;
+    showBox();
+    setFeedback('All four played — in tune, or out?', '');
+    playSequence();
+  }
+
+  // "the C string was off"  /  "the C, E & A strings were off"
+  function offText(list){
+    const L = list.map(i=>NAMES[i]);
+    if(L.length===1) return 'the ' + L[0] + ' string was off';
+    const j = L.slice(0,-1).join(', ') + ' & ' + L[L.length-1];
+    return 'the ' + j + ' strings were off';
+  }
+
+  function answer(saysInTune){
+    if(phase !== 'guess') return;
+    phase='done'; hideBox();
+    const right = (saysInTune === inTune);
+    if(inTune) strings.forEach(s=>s.classList.add('correct'));   // all blue
+    else offList.forEach(i=>strings[i].classList.add('wrong'));  // off ones pink
+    if(right){
+      correct++; streak++; best=Math.max(best,streak);
+      setFeedback(inTune ? 'Right — all four were in tune. ✓'
+                         : 'Right — out of tune: ' + offText(offList) + '. ✓', 'good');
+      if(inTune) setTimeout(strum, 380);   // reward: hear the clean chord
+    } else {
+      streak=0;
+      setFeedback(inTune ? 'Not quite — all four were actually in tune.'
+                         : 'Not quite — out of tune: ' + offText(offList) + '.', 'bad');
+    }
+    updateScore();
+  }
+
+  function showBox(){ el('askbox').classList.remove('hidden'); }
+  function hideBox(){ el('askbox').classList.add('hidden'); }
+  function setFeedback(msg,cls){ const f=el('feedback'); f.textContent=msg; f.className='feedback'+(cls?' '+cls:''); }
+  function updateScore(){ el('sCorrect').textContent=correct; el('sStreak').textContent=streak; el('sBest').textContent=best; }
+  function setDiff(d){ diff=d; el('easyBtn').setAttribute('aria-pressed',d==='easy'); el('hardBtn').setAttribute('aria-pressed',d==='hard'); }
+
+  // ---- wiring ----
+  el('newBtn').addEventListener('click', newRound);
+  el('againBtn').addEventListener('click', () => { if(phase!=='idle') playSequence(); });
+  el('strumBtn').addEventListener('click', () => { if(phase!=='idle') strum(); });
+  el('inBtn').addEventListener('click', () => answer(true));
+  el('outBtn').addEventListener('click', () => answer(false));
+  el('easyBtn').addEventListener('click', () => setDiff('easy'));
+  el('hardBtn').addEventListener('click', () => setDiff('hard'));
+  // keyboard: I / ← = in tune, O / → = out of tune, R = hear again, S = strum, Enter = new round
+  window.addEventListener('keydown', e => {
+    const k = e.key.toUpperCase();
+    if(phase === 'guess'){
+      if(k==='I' || e.key==='ArrowLeft'){  e.preventDefault(); answer(true);  return; }
+      if(k==='O' || e.key==='ArrowRight'){ e.preventDefault(); answer(false); return; }
+    }
+    if(phase !== 'idle'){
+      if(k==='R'){ playSequence(); return; }
+      if(k==='S'){ strum(); return; }
+    }
+    if(e.key==='Enter' && (phase==='idle' || phase==='done')) newRound();
+  });
+</script>
+</body>
+</html>

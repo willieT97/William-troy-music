@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chord Countdown — ukulele</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(420px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:14px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.9rem,6.5vw,3rem); letter-spacing:-.02em;
+    line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:clamp(16px,4vw,26px);
+  }
+  .screen.hidden{ display:none; }
+
+  .screen-title{
+    font-family:var(--display); font-weight:800; text-transform:uppercase;
+    font-size:1.3rem; text-align:center; margin-bottom:16px; letter-spacing:-.01em;
+  }
+  .seclabel{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted); margin:14px 0 8px; text-align:center;
+  }
+
+  /* chips */
+  .picker-quick{ display:flex; gap:8px; justify-content:center; margin-bottom:10px; }
+  .qbtn{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+    padding:7px 14px; border:2px solid var(--ink); background:var(--paper); cursor:pointer; color:var(--ink);
+  }
+  .qbtn:active{ transform:translate(2px,2px); }
+  .qbtn:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+  .picker-chips{ display:flex; flex-wrap:wrap; gap:7px; justify-content:center; }
+  .tchip{
+    font-family:var(--mono); font-weight:700; font-size:.9rem; padding:9px 12px; min-width:46px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink); cursor:pointer;
+    box-shadow:2px 2px 0 var(--ink);
+  }
+  .tchip[aria-pressed="true"]{ background:var(--blue); color:#fff; }
+  .tchip:active{ transform:translate(2px,2px); box-shadow:0 0 0 var(--ink); }
+  .tchip:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  /* segmented */
+  .seg{ display:flex; border:2px solid var(--ink); width:fit-content; margin:0 auto; }
+  .seg button{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.06em; text-transform:uppercase;
+    padding:8px 16px; border:0; background:var(--paper); cursor:pointer; color:var(--ink);
+    border-right:2px solid var(--ink);
+  }
+  .seg button:last-child{ border-right:0; }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+  .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  /* buttons */
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:.98rem; padding:12px 14px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; flex:1 1 auto; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .05s ease, box-shadow .05s ease, background .12s ease;
+  }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.primary:hover{ background:#1c2da6; }
+  .btn:disabled{ opacity:.4; box-shadow:none; cursor:default; }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+  .btn.big{ font-size:1.1rem; padding:15px; width:100%; margin-top:20px; }
+  .controls{ display:flex; gap:8px; }
+
+  .bestline{ font-family:var(--mono); font-size:.74rem; text-align:center; color:var(--muted); margin-top:14px; }
+
+  /* game HUD */
+  .hud{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:.76rem; letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px;
+  }
+  .hud b{ color:var(--blue); }
+  .mult{ font-weight:700; color:var(--muted); transition:transform .08s ease; }
+  .mult.hot{ color:var(--pink); transform:scale(1.25); }
+
+  .timerbar{ height:14px; border:2.5px solid var(--ink); background:#FBF7EE; margin-bottom:14px; overflow:hidden; }
+  .timerfill{ height:100%; width:100%; background:var(--blue); }
+
+  .prompt-label{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--muted); text-align:center;
+  }
+  .prompt{
+    font-family:var(--display); font-weight:800; font-size:2.6rem; line-height:1;
+    text-align:center; color:var(--blue); text-transform:uppercase; letter-spacing:-.01em; margin:2px 0 12px;
+  }
+
+  .diagramwrap{ display:flex; justify-content:center; }
+  svg.diagram{ width:100%; max-width:230px; height:auto; display:block; touch-action:manipulation; }
+  .cell{ fill:transparent; cursor:pointer; }
+  .gstring{ transition:stroke .12s ease, stroke-width .12s ease; }
+  .gstring.bad{ stroke:var(--pink); stroke-width:4.5; }
+
+  .feedback{
+    min-height:1.5em; font-family:var(--display); font-weight:700;
+    font-size:1.05rem; text-align:center; color:var(--muted); margin:10px 0 12px;
+  }
+  .feedback.good{ color:var(--blue); } .feedback.bad{ color:var(--pink); }
+
+  /* results */
+  .bigscore{ font-family:var(--display); font-weight:800; font-size:3.4rem; text-align:center; color:var(--blue); line-height:1; }
+  .resultstats{ font-family:var(--mono); font-size:.8rem; text-align:center; color:var(--ink); margin:12px 0 6px; line-height:1.9; }
+  .bestbadge{
+    font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:.1em; text-transform:uppercase;
+    text-align:center; color:#fff; background:var(--pink); border:2.5px solid var(--ink);
+    padding:6px; margin:8px auto 14px; width:fit-content; box-shadow:3px 3px 0 var(--ink);
+  }
+  .bestbadge.hidden{ display:none; }
+
+  @media (max-width:380px){ .controls{ flex-wrap:wrap; } }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Chord Countdown">Chord Countdown</span>
+      <div class="subtitle">ukulele · build chords against the clock</div>
+    </header>
+
+    <!-- ============ SETUP ============ -->
+    <div class="panel screen" id="setup">
+      <div class="screen-title">Set up your game</div>
+
+      <div class="seclabel">Chords in play</div>
+      <div class="picker-quick">
+        <button class="qbtn" id="allBtn">All</button>
+        <button class="qbtn" id="noneBtn">None</button>
+      </div>
+      <div class="picker-chips" id="pickerChips"></div>
+
+      <div class="seclabel">Rounds</div>
+      <div class="seg" id="roundsSeg" role="group" aria-label="Rounds">
+        <button data-v="5">5</button>
+        <button data-v="10" aria-pressed="true">10</button>
+        <button data-v="15">15</button>
+      </div>
+
+      <div class="seclabel">Speed</div>
+      <div class="seg" id="speedSeg" role="group" aria-label="Speed">
+        <button data-v="relaxed">Relaxed</button>
+        <button data-v="normal" aria-pressed="true">Normal</button>
+        <button data-v="fast">Fast</button>
+      </div>
+
+      <button class="btn primary big" id="startBtn">▶ Start</button>
+      <div class="bestline" id="setupBest"></div>
+    </div>
+
+    <!-- ============ GAME ============ -->
+    <div class="panel screen hidden" id="game">
+      <div class="hud">
+        <div>round <b id="roundLabel">1/10</b></div>
+        <div class="mult" id="mult">×1</div>
+        <div>score <b id="score">0</b></div>
+      </div>
+      <div class="timerbar"><div class="timerfill" id="timerfill"></div></div>
+
+      <div class="prompt-label">build this chord</div>
+      <div class="prompt" id="prompt">—</div>
+
+      <div class="diagramwrap">
+        <svg class="diagram" viewBox="0 0 220 268" role="img" aria-label="Ukulele chord diagram. Tap a fret to place a finger.">
+          <line x1="42" y1="52" x2="177" y2="52" stroke="#17140E" stroke-width="6"/>
+          <line x1="42" y1="96"  x2="177" y2="96"  stroke="#17140E" stroke-width="2"/>
+          <line x1="42" y1="140" x2="177" y2="140" stroke="#17140E" stroke-width="2"/>
+          <line x1="42" y1="184" x2="177" y2="184" stroke="#17140E" stroke-width="2"/>
+          <line x1="42" y1="228" x2="177" y2="228" stroke="#17140E" stroke-width="2"/>
+          <line class="gstring" id="gstr0" x1="42"  y1="52" x2="42"  y2="228" stroke="#17140E" stroke-width="2"/>
+          <line class="gstring" id="gstr1" x1="87"  y1="52" x2="87"  y2="228" stroke="#17140E" stroke-width="2"/>
+          <line class="gstring" id="gstr2" x1="132" y1="52" x2="132" y2="228" stroke="#17140E" stroke-width="2"/>
+          <line class="gstring" id="gstr3" x1="177" y1="52" x2="177" y2="228" stroke="#17140E" stroke-width="2"/>
+          <text x="42"  y="250" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">G</text>
+          <text x="87"  y="250" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">C</text>
+          <text x="132" y="250" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+          <text x="177" y="250" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">A</text>
+          <g id="marks"></g>
+          <g id="cells"></g>
+        </svg>
+      </div>
+
+      <div class="feedback" id="feedback">Tap frets, then Check.</div>
+      <button class="btn primary" id="checkBtn" style="width:100%">✓ Check</button>
+    </div>
+
+    <!-- ============ RESULTS ============ -->
+    <div class="panel screen hidden" id="results">
+      <div class="screen-title" id="resultTitle">Run complete!</div>
+      <div class="bigscore" id="finalScore">0</div>
+      <div class="bestbadge hidden" id="bestBadge">★ New best!</div>
+      <div class="resultstats" id="resultStats"></div>
+      <div class="controls">
+        <button class="btn primary" id="againBtn">↻ Play again</button>
+        <button class="btn" id="changeBtn">⚙ Change chords</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   CHORD COUNTDOWN (ukulele) — timed chord-building game.
+   Setup (pick chords / rounds / speed) -> timed rounds -> results.
+   Tunables: CHORDS (deck), SPEED (seconds per round), scoring in onCheck.
+   ==================================================================== */
+
+  const OPEN  = [392.00, 261.63, 329.63, 440.00];
+  const XS    = [42, 87, 132, 177];
+  const FRETY = [52, 96, 140, 184, 228];
+  const FRETS = 4;
+  const STR_NAMES = ['G','C','E','A'];
+  const dotY = f => (FRETY[f-1] + FRETY[f]) / 2;
+
+  const CHORDS = {
+    'C':  { frets:[0,0,0,3], fingers:[0,0,0,3] },
+    'Am': { frets:[2,0,0,0], fingers:[2,0,0,0] },
+    'F':  { frets:[2,0,1,0], fingers:[2,0,1,0] },
+    'G':  { frets:[0,2,3,2], fingers:[0,1,3,2] },
+    'G7': { frets:[0,2,1,2], fingers:[0,2,1,3] },
+    'Em': { frets:[0,4,3,2], fingers:[0,3,2,1] },
+    'Dm': { frets:[2,2,1,0], fingers:[2,3,1,0] },
+    'A':  { frets:[2,1,0,0], fingers:[2,1,0,0] },
+    'D':  { frets:[2,2,2,0], fingers:[1,2,3,0] },
+    'C7': { frets:[0,0,0,1], fingers:[0,0,0,1] }
+  };
+  const POOL = Object.keys(CHORDS);
+  const SPEED = { relaxed: 30, normal: 18, fast: 11 };   // seconds per round
+
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const el = id => document.getElementById(id);
+  const marks = el('marks'), cells = el('cells');
+
+  // ---- settings ----
+  let active = new Set(POOL);
+  let roundsChoice = 10;
+  let speed = 'normal';
+
+  // ---- run state ----
+  let state = 'setup';                 // 'setup' | 'playing' | 'results'
+  let target = null, chord = [null,null,null,null];
+  let roundNum = 0, score = 0, combo = 0, bestStreak = 0, correctCount = 0;
+  let roundActive = false, roundDuration = 18, roundEnd = 0, lastTickSec = null;
+  let best = 0;
+
+  // ---- diagram ----
+  function mk(tag, attrs){ const e = document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function redraw(){
+    marks.innerHTML = '';
+    for(let s=0;s<4;s++){
+      const d = chord[s];
+      if(d){
+        marks.appendChild(mk('circle', { cx:XS[s], cy:dotY(d.fret), r:15, fill:'#2438C8', stroke:'#17140E', 'stroke-width':2 }));
+        if(d.finger > 0){ const t = mk('text', { x:XS[s], y:dotY(d.fret)+5, 'font-family':'monospace','font-size':15,'font-weight':700, fill:'#F4EEE2','text-anchor':'middle' }); t.textContent = d.finger; marks.appendChild(t); }
+      } else {
+        const o = mk('text', { x:XS[s], y:42, 'font-family':'monospace','font-size':15,'font-weight':700, fill:'#17140E','text-anchor':'middle' }); o.textContent = 'O'; marks.appendChild(o);
+      }
+    }
+  }
+  function tapCell(s, f){
+    if(state !== 'playing' || !roundActive) return;
+    const cur = chord[s];
+    if(cur && cur.fret === f) chord[s] = null; else chord[s] = { fret:f, finger:0 };
+    redraw();
+  }
+  function buildCells(){
+    for(let s=0;s<4;s++) for(let f=1;f<=FRETS;f++){
+      const r = mk('rect', { class:'cell', x:XS[s]-21, y:dotY(f)-22, width:42, height:44 });
+      r.addEventListener('click', () => tapCell(s, f));
+      cells.appendChild(r);
+    }
+  }
+  function shapeOf(name){ const c = CHORDS[name]; return c.frets.map((fr,s)=> fr>0 ? {fret:fr,finger:c.fingers[s]} : null); }
+  function flashStrings(list){ list.forEach(s => { const e = el('gstr'+s); e.classList.add('bad'); setTimeout(()=>e.classList.remove('bad'), 600); }); }
+  function clearFlash(){ for(let s=0;s<4;s++) el('gstr'+s).classList.remove('bad'); }
+  function listStrings(list){
+    const names = list.map(s => STR_NAMES[s]); let j;
+    if(names.length===1) j=names[0]; else if(names.length===2) j=names[0]+' and '+names[1];
+    else j=names.slice(0,-1).join(', ')+' and '+names[names.length-1];
+    return 'the ' + j + (names.length>1?' strings':' string');
+  }
+
+  // ---- audio ----
+  let audioCtx = null;
+  function ensureAudio(){ if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx = new AC(); } if(audioCtx.state==='suspended') audioCtx.resume(); return audioCtx; }
+  function pluck(freq, when=0, dur=1.5){
+    const c = ensureAudio(), t = c.currentTime + when;
+    const out = c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(0.24, t+0.02);
+    out.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    [['sine',1.0],['triangle',0.22]].forEach(([type,a])=>{ const o=c.createOscillator(); o.type=type; o.frequency.value=freq; const g=c.createGain(); g.gain.value=a; o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.05); });
+  }
+  function strumCurrent(){ for(let s=0;s<4;s++){ const fr = chord[s]?chord[s].fret:0; pluck(OPEN[s]*Math.pow(2, fr/12), s*0.05); } }
+  function tone(type, f0, f1, dur, vol){
+    const c = ensureAudio(), t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type=type; o.frequency.setValueAtTime(f0,t); if(f1!==f0) o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  }
+  const sfxTick    = () => tone('square', 1320, 1320, 0.05, 0.05);
+  const sfxWrong   = () => tone('sawtooth', 200, 110, 0.18, 0.12);
+  const sfxTimeout = () => { tone('square', 300, 300, 0.12, 0.12); setTimeout(()=>tone('square', 200, 150, 0.24, 0.12), 120); };
+  const sfxStart   = () => [0,4,7].forEach((s,i)=> setTimeout(()=>tone('square', 440*Math.pow(2,s/12), 440*Math.pow(2,s/12), 0.1, 0.1), i*80));
+
+  // ---- screens ----
+  function showScreen(name){ ['setup','game','results'].forEach(s => el(s).classList.toggle('hidden', s!==name)); }
+
+  // ---- picker ----
+  function buildChips(){
+    POOL.forEach(name => { const b = document.createElement('button'); b.className='tchip'; b.textContent=name; b.dataset.name=name;
+      b.setAttribute('aria-pressed', String(active.has(name))); b.addEventListener('click', () => toggleChord(name)); el('pickerChips').appendChild(b); });
+  }
+  function updateChips(){ el('pickerChips').querySelectorAll('.tchip').forEach(c => c.setAttribute('aria-pressed', String(active.has(c.dataset.name)))); }
+  function toggleChord(name){ active.has(name) ? active.delete(name) : active.add(name); updateChips(); refreshStart(); }
+  function refreshStart(){ el('startBtn').disabled = active.size === 0; }
+
+  // ---- segmented controls ----
+  function wireSeg(segId, onPick){
+    el(segId).querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      el(segId).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed','false'));
+      b.setAttribute('aria-pressed','true'); onPick(b.dataset.v);
+    }));
+  }
+
+  // ---- HUD ----
+  function updateHUD(){
+    el('roundLabel').textContent = roundNum + '/' + roundsChoice;
+    el('score').textContent = score;
+    const m = combo >= 1 ? Math.min(1 + Math.floor((combo-1)/3), 5) : 1;
+    const me = el('mult'); me.textContent = '×' + m; me.classList.toggle('hot', m > 1);
+  }
+  function setFeedback(msg, cls){ const f = el('feedback'); f.textContent = msg; f.className = 'feedback' + (cls ? ' ' + cls : ''); }
+  function setBar(frac){
+    const fill = el('timerfill');
+    fill.style.width = (frac*100) + '%';
+    fill.style.background = frac > 0.5 ? 'var(--blue)' : (frac > 0.22 ? 'var(--amber)' : 'var(--pink)');
+  }
+
+  // ---- run flow ----
+  function startRun(){
+    ensureAudio(); sfxStart();
+    score = 0; combo = 0; bestStreak = 0; correctCount = 0; roundNum = 0;
+    roundDuration = SPEED[speed];
+    state = 'playing'; showScreen('game');
+    nextRound();
+  }
+  function nextRound(){
+    roundNum++;
+    if(roundNum > roundsChoice){ endRun(); return; }
+    const list = [...active];
+    target = list[Math.floor(Math.random()*list.length)];
+    chord = [null,null,null,null]; roundCleanSoFar = true;
+    clearFlash(); redraw();
+    el('prompt').textContent = target;
+    setFeedback('Tap frets, then Check.', '');
+    updateHUD();
+    roundEnd = performance.now() + roundDuration*1000;
+    lastTickSec = null; roundActive = true;
+    setBar(1);
+  }
+  let roundCleanSoFar = true;
+
+  function onCheck(){
+    if(state !== 'playing' || !roundActive) return;
+    const tf = CHORDS[target].frets;
+    const sf = [0,1,2,3].map(s => chord[s] ? chord[s].fret : 0);
+    const wrong = [0,1,2,3].filter(s => sf[s] !== tf[s]);
+    if(wrong.length === 0){
+      roundActive = false;
+      const remain = Math.max(0, (roundEnd - performance.now())/1000);
+      if(roundCleanSoFar){ combo++; bestStreak = Math.max(bestStreak, combo); } else { combo = 0; }
+      const mult = combo >= 1 ? Math.min(1 + Math.floor((combo-1)/3), 5) : 1;
+      const pts = Math.round((100 + remain*5) * mult);
+      score += pts; correctCount++;
+      chord = shapeOf(target); redraw();
+      strumCurrent();
+      setFeedback('Correct!  +' + pts + (mult>1?'  ×'+mult:''), 'good');
+      updateHUD();
+      setTimeout(nextRound, 1100);
+    } else {
+      roundCleanSoFar = false; combo = 0;
+      flashStrings(wrong); sfxWrong();
+      setFeedback('Not quite — check ' + listStrings(wrong) + '.', 'bad');
+      updateHUD();
+    }
+  }
+  function onTimeout(){
+    combo = 0; roundCleanSoFar = false;
+    chord = shapeOf(target); redraw();
+    sfxTimeout();
+    setFeedback('Time! That was ' + target + '.', 'bad');
+    updateHUD();
+    setTimeout(nextRound, 1500);
+  }
+  function endRun(){
+    state = 'results'; roundActive = false;
+    const isBest = score > best; if(isBest) best = score;
+    el('finalScore').textContent = score;
+    const acc = Math.round((correctCount / roundsChoice) * 100);
+    el('resultStats').textContent = correctCount + ' / ' + roundsChoice + ' correct  ·  best streak ' + bestStreak + '  ·  ' + acc + '% accuracy';
+    el('bestBadge').classList.toggle('hidden', !isBest);
+    el('resultTitle').textContent = "Time's up!";
+    showScreen('results');
+  }
+
+  // ---- timer loop ----
+  function tick(now){
+    if(state === 'playing' && roundActive){
+      const remain = (roundEnd - now) / 1000;
+      setBar(Math.max(0, remain / roundDuration));
+      const sec = Math.ceil(remain);
+      if(sec <= 3 && sec > 0 && sec !== lastTickSec){ lastTickSec = sec; sfxTick(); }
+      if(remain <= 0){ roundActive = false; onTimeout(); }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ---- wiring ----
+  el('allBtn').addEventListener('click', () => { active = new Set(POOL); updateChips(); refreshStart(); });
+  el('noneBtn').addEventListener('click', () => { active = new Set(); updateChips(); refreshStart(); });
+  wireSeg('roundsSeg', v => roundsChoice = +v);
+  wireSeg('speedSeg', v => speed = v);
+  el('startBtn').addEventListener('click', () => { if(active.size) startRun(); });
+  el('checkBtn').addEventListener('click', onCheck);
+  el('againBtn').addEventListener('click', startRun);
+  el('changeBtn').addEventListener('click', () => { state='setup'; showScreen('setup'); el('setupBest').textContent = best>0 ? ('Best score: ' + best) : ''; });
+  window.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      if(state === 'setup' && active.size) startRun();
+      else if(state === 'playing' && roundActive) onCheck();
+      else if(state === 'results') startRun();
+    }
+  });
+
+  // ---- init ----
+  buildCells();
+  buildChips();
+  refreshStart();
+  showScreen('setup');
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

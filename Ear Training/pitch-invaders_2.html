@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pitch Invaders — arcade ear training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(420px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:18px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(2rem,7vw,3rem); letter-spacing:-.02em;
+    line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:14px;
+  }
+
+  .hud{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .hud b{ color:var(--blue); }
+  .mult{ font-weight:700; color:var(--muted); transition:transform .08s ease; }
+  .mult.hot{ color:var(--pink); transform:scale(1.25); }
+  .lives{ letter-spacing:2px; color:var(--pink); }
+
+  .screen{ position:relative; border:2.5px solid var(--ink); background:#FBF7EE; }
+  canvas{ display:block; width:100%; height:auto; }
+
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    background:rgba(244,238,226,.93); padding:20px; gap:14px;
+  }
+  .overlay.hidden{ display:none; }
+  .overlay h2{ font-family:var(--display); font-weight:800; text-transform:uppercase;
+    font-size:1.8rem; margin:0; color:var(--ink); letter-spacing:-.01em; }
+  .overlay p{ font-family:var(--mono); font-size:.74rem; color:var(--muted);
+    letter-spacing:.04em; margin:0; max-width:30ch; line-height:1.6; }
+  .bigscore{ font-family:var(--mono); font-weight:700; font-size:1.1rem; color:var(--blue); }
+
+  /* level banner = lighter flash, no buttons */
+  .banner{ background:rgba(244,238,226,.55); pointer-events:none; }
+  .banner h2{ font-size:2.4rem; color:var(--blue); }
+
+  .start{
+    font-family:var(--body); font-weight:600; font-size:1.05rem; padding:13px 26px;
+    border:2.5px solid var(--ink); background:var(--blue); color:#fff; cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);
+  }
+  .start:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .start:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  .controls{ display:flex; gap:8px; margin:12px 0 10px; }
+  .ctl{
+    flex:1; font-family:var(--mono); font-size:.72rem; letter-spacing:.06em;
+    text-transform:uppercase; padding:10px; border:2.5px solid var(--ink);
+    background:var(--paper); cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+  }
+  .ctl:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .ctl:disabled{ opacity:.4; box-shadow:none; cursor:default; }
+  .ctl:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .pad{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .key{
+    font-family:var(--mono); font-weight:700; font-size:clamp(.95rem,4vw,1.25rem);
+    aspect-ratio:1/1; border:2.5px solid var(--ink); background:var(--paper);
+    color:var(--ink); cursor:pointer; display:flex; align-items:center;
+    justify-content:center; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .04s ease, box-shadow .04s ease;
+  }
+  .key:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .key:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; z-index:2; }
+
+  @media (max-width:380px){ .pad{ gap:4px; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Pitch Invaders">Pitch Invaders</span>
+      <div class="subtitle">hear the note · shoot it down</div>
+    </header>
+
+    <div class="panel">
+      <div class="hud">
+        <div>lv <b id="level">1</b> · <b id="score">0</b></div>
+        <div class="mult" id="mult">x1</div>
+        <div class="lives" id="lives">♥♥♥</div>
+      </div>
+
+      <div class="screen">
+        <canvas id="cv" width="360" height="460"></canvas>
+
+        <div class="overlay" id="startScreen">
+          <h2>Pitch Invaders</h2>
+          <p>The reference pitch plays at each level — that's your anchor. Then a note drops as an invader. Tap the matching note name to fire on it. Chain hits for a higher multiplier. Three misses and it's over.</p>
+          <button class="start" id="startBtn">▶ Start</button>
+        </div>
+
+        <div class="overlay banner hidden" id="levelScreen">
+          <h2 id="levelText">Level 1</h2>
+        </div>
+
+        <div class="overlay hidden" id="overScreen">
+          <h2>Game Over</h2>
+          <div class="bigscore" id="finalScore">Score 0 · Level 1</div>
+          <button class="start" id="againBtn">▶ Play again</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="ctl" id="refBtn" disabled>♪ Reference (C)</button>
+        <button class="ctl" id="replayBtn" disabled>↺ Replay note</button>
+      </div>
+
+      <div class="pad" id="pad" aria-label="Note name keys"></div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   PITCH INVADERS — arcade ear training (prototype v2)
+
+   New since v1: a cannon that fires shots (hit on a correct guess,
+   veers off on a wrong one), synthesized sound effects, a combo
+   multiplier, and a level intro that auto-plays the reference pitch.
+
+   Tunable knobs near the top:
+     POOL · speedForLevel · START_LIVES · LEVEL_EVERY · multiplier()
+   ==================================================================== */
+
+  // ---- tunables -----------------------------------------------------
+  const POOL = ['c/4','d/4','e/4','f/4','g/4','a/4','b/4'];
+  const REF_KEY = 'c/4';
+  const START_LIVES = 3;
+  const LEVEL_EVERY = 8;
+  const speedForLevel = lvl => 42 + (lvl - 1) * 16;        // px / second
+  const multiplier = () => Math.min(1 + Math.floor((combo - 1) / 3), 5);
+  // -------------------------------------------------------------------
+
+  const SEMI = { c:0, d:2, e:4, f:5, g:7, a:9, b:11 };
+  const A4 = 440;
+  const PAD = ['C','D','E','F','G','A','B'];
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const GROUND = H - 30;
+  const BARREL_Y = H - 22;
+
+  // ---- audio ----
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx = new AC(); }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  const keyToMidi = k => { const [l,o] = k.split('/'); return (parseInt(o,10)+1)*12 + SEMI[l]; };
+
+  // musical note tone (clean triangle) — this is the thing you identify
+  function playKey(k, dur=0.8){
+    const freq = A4 * Math.pow(2,(keyToMidi(k)-69)/12);
+    const c = ensureAudio(), t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type='triangle'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.26,t+0.015);
+    g.gain.setValueAtTime(0.26,t+dur-0.16);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  }
+  // sound EFFECTS use square / saw / noise so they read as "game", not "note"
+  function sfxShoot(){
+    const c = ensureAudio(), t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type='square';
+    o.frequency.setValueAtTime(900,t);
+    o.frequency.exponentialRampToValueAtTime(220,t+0.12);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.09,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.14);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.16);
+  }
+  function sfxHit(){
+    const c = ensureAudio(), t = c.currentTime, dur = 0.32;
+    const buf = c.createBuffer(1, Math.floor(c.sampleRate*dur), c.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 2);
+    const src = c.createBufferSource(); src.buffer = buf;
+    const lp = c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1900;
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.28,t+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    src.connect(lp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
+  }
+  function sfxMiss(){
+    const c = ensureAudio(), t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(170,t);
+    o.frequency.exponentialRampToValueAtTime(80,t+0.18);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.10,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.22);
+  }
+  function sfxLevel(){
+    const c = ensureAudio();
+    [0,4,7,12].forEach((semi,i)=>{
+      const t = c.currentTime + i*0.10;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type='square'; o.frequency.value = 440*Math.pow(2,semi/12);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.11,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+      o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.15);
+    });
+  }
+
+  // ---- state ----
+  let state = 'start';              // 'start' | 'intro' | 'playing' | 'over'
+  let score, level, lives, cleared, combo, invader, shots, particles, floats, last, cannonX;
+
+  const stars = Array.from({length:36}, () => ({ x:Math.random()*W, y:Math.random()*H, v:8+Math.random()*22, r:Math.random()<.3?2:1 }));
+  const SPRITE = ["00100000100","00010001000","00111111100","01101110110","11111111111","10111111101","10100000101","00011011000"];
+  const CELL = 4, SW = 11*CELL, SH = 8*CELL;
+
+  function reset(){
+    score=0; level=1; lives=START_LIVES; cleared=0; combo=0;
+    invader=null; shots=[]; particles=[]; floats=[]; last=0; cannonX=W/2;
+    updateHUD();
+  }
+
+  function spawnInvader(){
+    const key = POOL[Math.floor(Math.random()*POOL.length)];
+    invader = { x: SW + Math.random()*(W - SW*2), y:-SH, key, name:key[0].toUpperCase(), speed:speedForLevel(level), doomed:false };
+    playKey(key);
+  }
+
+  function fire(hit){
+    shots.push({ x:cannonX, y:BARREL_Y, vx: hit ? 0 : (Math.random()<.5?-260:260), vy:-1100, hit });
+    sfxShoot();
+  }
+
+  function explode(x,y,color){
+    for(let i=0;i<20;i++){
+      const a=Math.random()*Math.PI*2, sp=40+Math.random()*160;
+      particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-40, life:.5+Math.random()*.4, color });
+    }
+  }
+
+  function guess(name){
+    if(state!=='playing' || !invader || invader.doomed) return;
+    if(name === invader.name){
+      invader.doomed = true;      // answered — keep falling; the shot will intercept it mid-descent
+      fire(true);
+    } else {
+      combo = 0; updateHUD();
+      fire(false);
+      sfxMiss();
+    }
+  }
+
+  function onHit(){
+    explode(invader.x, invader.y, '#FF4E86');
+    sfxHit();
+    combo++;
+    const m = multiplier();
+    score += 10 * m;
+    floats.push({ x:invader.x, y:invader.y, text:'+'+(10*m), life:.9 });
+    cleared++;
+    invader = null;
+    updateHUD();
+    if(cleared % LEVEL_EVERY === 0){ level++; enterLevel(); }
+    else spawnInvader();
+  }
+
+  function loseLife(){
+    explode(invader.x, GROUND, '#17140E');
+    invader = null; lives--; combo = 0; updateHUD();
+    if(lives <= 0) gameOver(); else spawnInvader();
+  }
+
+  function enterLevel(){
+    state = 'intro';
+    document.getElementById('levelText').textContent = 'Level ' + level;
+    document.getElementById('levelScreen').classList.remove('hidden');
+    playKey(REF_KEY, 0.7);          // <-- reference auto-plays as the level comes up
+    sfxLevel();
+    setTimeout(() => {
+      document.getElementById('levelScreen').classList.add('hidden');
+      state = 'playing';
+      spawnInvader();
+    }, 1400);
+  }
+
+  function startGame(){
+    ensureAudio();
+    reset();
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('overScreen').classList.add('hidden');
+    document.getElementById('refBtn').disabled = false;
+    document.getElementById('replayBtn').disabled = false;
+    enterLevel();                   // Level 1 intro (plays reference)
+  }
+
+  function gameOver(){
+    state = 'over';
+    document.getElementById('finalScore').textContent = 'Score ' + score + ' · Level ' + level;
+    document.getElementById('overScreen').classList.remove('hidden');
+    document.getElementById('refBtn').disabled = true;
+    document.getElementById('replayBtn').disabled = true;
+  }
+
+  // ---- update ----
+  function updateVisual(dt){
+    for(const s of stars){ s.y += s.v*dt; if(s.y > H){ s.y = 0; s.x = Math.random()*W; } }
+    // cannon eases under the invader (reads as "aiming")
+    const tx = invader ? invader.x : W/2;
+    cannonX += (tx - cannonX) * Math.min(1, dt*9);
+    // shots
+    for(const sh of shots){ sh.x += sh.vx*dt; sh.y += sh.vy*dt; }
+    // resolve a hit shot reaching the (frozen) invader
+    if(invader && invader.doomed){
+      const hs = shots.find(sh => sh.hit && sh.y <= invader.y);
+      if(hs){ hs.dead = true; onHit(); }
+    }
+    shots = shots.filter(sh => !sh.dead && sh.y > -16);
+    // particles + floats
+    for(const p of particles){ p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 320*dt; p.life -= dt; }
+    particles = particles.filter(p => p.life > 0);
+    for(const f of floats){ f.y -= 34*dt; f.life -= dt; }
+    floats = floats.filter(f => f.life > 0);
+  }
+  function updatePlay(dt){
+    if(!invader) return;
+    invader.y += invader.speed*dt;            // keep descending even after being hit-marked
+    if(invader.y >= GROUND){
+      if(invader.doomed) invader.y = GROUND;  // already answered — wait at the line for the shot, no penalty
+      else loseLife();
+    }
+  }
+
+  // ---- draw ----
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = 'rgba(23,20,14,0.28)';
+    for(const s of stars) ctx.fillRect(s.x, s.y, s.r, s.r);
+    // ground
+    ctx.fillStyle = '#17140E';
+    ctx.fillRect(0, GROUND, W, 2.5);
+    // cannon
+    ctx.fillRect(cannonX-12, H-12, 24, 8);
+    ctx.fillRect(cannonX-3, H-20, 6, 10);
+    // shots
+    for(const sh of shots){ ctx.fillStyle = sh.hit ? '#2438C8' : '#FF4E86'; ctx.fillRect(sh.x-1.5, sh.y, 3, 11); }
+    // invader
+    if(invader){
+      ctx.fillStyle = '#2438C8';
+      const ox = invader.x - SW/2, oy = invader.y - SH/2;
+      for(let r=0;r<8;r++) for(let c=0;c<11;c++)
+        if(SPRITE[r][c]==='1') ctx.fillRect(ox + c*CELL, oy + r*CELL, CELL, CELL);
+    }
+    // particles
+    for(const p of particles){ ctx.globalAlpha = Math.max(0, p.life*1.6); ctx.fillStyle = p.color; ctx.fillRect(p.x-2, p.y-2, 4, 4); }
+    ctx.globalAlpha = 1;
+    // floating score
+    ctx.font = '700 15px "Space Mono", monospace'; ctx.textAlign = 'center';
+    for(const f of floats){ ctx.globalAlpha = Math.min(1, f.life*1.5); ctx.fillStyle = '#FF4E86'; ctx.fillText(f.text, f.x, f.y); }
+    ctx.globalAlpha = 1; ctx.textAlign = 'start';
+  }
+
+  function loop(t){
+    const dt = Math.min((t - last)/1000, 0.05); last = t;
+    updateVisual(dt);
+    if(state === 'playing') updatePlay(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ---- HUD ----
+  function updateHUD(){
+    document.getElementById('score').textContent = score;
+    document.getElementById('level').textContent = level;
+    document.getElementById('lives').textContent = '♥'.repeat(Math.max(0,lives)) || '—';
+    const m = combo >= 1 ? multiplier() : 1;
+    const me = document.getElementById('mult');
+    me.textContent = 'x' + m; me.classList.toggle('hot', m > 1);
+  }
+
+  // ---- pad + input ----
+  const pad = document.getElementById('pad');
+  PAD.forEach(name => {
+    const b = document.createElement('button');
+    b.className = 'key'; b.textContent = name;
+    b.addEventListener('click', () => guess(name));
+    pad.appendChild(b);
+  });
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('againBtn').addEventListener('click', startGame);
+  document.getElementById('refBtn').addEventListener('click', () => playKey(REF_KEY, 0.6));
+  document.getElementById('replayBtn').addEventListener('click', () => { if(invader) playKey(invader.key); });
+  window.addEventListener('keydown', e => {
+    const k = e.key.toUpperCase();
+    if((state==='start' || state==='over') && (e.key==='Enter' || e.key===' ')){ startGame(); return; }
+    if(PAD.includes(k)) guess(k);
+    else if(k === 'R'){ if(invader) playKey(invader.key); }
+    else if(e.key === ' '){ e.preventDefault(); playKey(REF_KEY, 0.6); }
+  });
+
+  // go
+  reset();
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
