@@ -87,6 +87,7 @@
 
   .grid{ display:grid; grid-template-columns:1fr; gap:1.5rem; }
   @media(min-width:620px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:920px){ .grid{ grid-template-columns:repeat(3,1fr); } }
 
   .game{
     display:flex; flex-direction:column; text-decoration:none;
@@ -153,7 +154,7 @@
     </div>
     <h1>Music Arcade</h1>
     <p class="hero-sub">Little browser games for training your musical ear. Pick an instrument and press play.</p>
-    <a class="hero-back" href="../">← Back to williamtroymusic</a>
+    <a class="hero-back" href="index.html">← Back to williamtroymusic</a>
   </div>
 </header>
 
@@ -233,6 +234,48 @@
             <span class="tag">Out of tune</span>
             <h3>Out of Tune?</h3>
             <p>One string is out. Listen, then pick the string that's off. Trains you to pin down exactly where the sour note is coming from.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Ukulele/chord-quiz.html" style="--accent:var(--gold);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 360" role="img" aria-label="Chord Quiz: prompt shows a chord name above a blank fretboard to build">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700"
+                    letter-spacing="3" fill="#6F6757" text-anchor="middle">MAKE THIS CHORD</text>
+
+              <text x="150" y="88" font-family="'Syne',sans-serif" font-weight="800" font-size="52"
+                    fill="#2438C8" text-anchor="middle" transform="translate(3,3)" opacity="0.55">C7</text>
+              <text x="150" y="88" font-family="'Syne',sans-serif" font-weight="800" font-size="52"
+                    fill="#2438C8" text-anchor="middle">C7</text>
+
+              <g transform="translate(38,118)">
+                <text x="0"  y="0" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">0</text>
+                <text x="63" y="0" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">0</text>
+                <text x="126" y="0" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">0</text>
+                <text x="189" y="0" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">0</text>
+
+                <line x1="0" y1="18" x2="189" y2="18" stroke="#17140E" stroke-width="7"/>
+                <line x1="0" y1="66"  x2="189" y2="66"  stroke="#17140E" stroke-width="2"/>
+                <line x1="0" y1="114" x2="189" y2="114" stroke="#17140E" stroke-width="2"/>
+                <line x1="0" y1="162" x2="189" y2="162" stroke="#17140E" stroke-width="2"/>
+                <line x1="0" y1="210" x2="189" y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="0"   y1="18" x2="0"   y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="63"  y1="18" x2="63"  y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="126" y1="18" x2="126" y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="189" y1="18" x2="189" y2="210" stroke="#17140E" stroke-width="2"/>
+
+                <text x="0"   y="234" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">G</text>
+                <text x="63"  y="234" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">C</text>
+                <text x="126" y="234" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+                <text x="189" y="234" font-family="monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">A</text>
+              </g>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Chord quiz</span>
+            <h3>Chord Quiz</h3>
+            <p>A chord name pops up — tap the frets to build the shape from memory, then check your work. Graded on the shape, not the fingering.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -329,6 +372,49 @@
           </div>
         </a>
 
+        <a class="game" href="Guitar/chord-quiz-guitar.html" style="--accent:var(--gold);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 360" role="img" aria-label="Guitar chord quiz: a chord name above a blank fretboard to build">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700"
+                    letter-spacing="3" fill="#6F6757" text-anchor="middle">MAKE THIS CHORD</text>
+              <text x="150" y="88" font-family="'Syne',sans-serif" font-weight="800" font-size="52"
+                    fill="#2438C8" text-anchor="middle" transform="translate(3,3)" opacity="0.55">Em</text>
+              <text x="150" y="88" font-family="'Syne',sans-serif" font-weight="800" font-size="52"
+                    fill="#2438C8" text-anchor="middle">Em</text>
+              <g transform="translate(30,118)">
+                <line x1="0" y1="18" x2="240" y2="18" stroke="#17140E" stroke-width="7"/>
+                <line x1="0" y1="66"  x2="240" y2="66"  stroke="#17140E" stroke-width="2"/>
+                <line x1="0" y1="114" x2="240" y2="114" stroke="#17140E" stroke-width="2"/>
+                <line x1="0" y1="162" x2="240" y2="162" stroke="#17140E" stroke-width="2"/>
+                <line x1="0" y1="210" x2="240" y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="0"   y1="18" x2="0"   y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="48"  y1="18" x2="48"  y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="96"  y1="18" x2="96"  y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="144" y1="18" x2="144" y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="192" y1="18" x2="192" y2="210" stroke="#17140E" stroke-width="2"/>
+                <line x1="240" y1="18" x2="240" y2="210" stroke="#17140E" stroke-width="2"/>
+                <circle cx="0"   cy="8" r="6" fill="none" stroke="#17140E" stroke-width="2"/>
+                <circle cx="192" cy="8" r="6" fill="none" stroke="#17140E" stroke-width="2"/>
+                <circle cx="240" cy="8" r="6" fill="none" stroke="#17140E" stroke-width="2"/>
+                <circle cx="48" cy="42" r="13" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+                <circle cx="96" cy="42" r="13" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+                <text x="0"   y="234" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+                <text x="48"  y="234" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">A</text>
+                <text x="96"  y="234" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">D</text>
+                <text x="144" y="234" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">G</text>
+                <text x="192" y="234" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">B</text>
+                <text x="240" y="234" font-family="monospace" font-size="15" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+              </g>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Chord quiz</span>
+            <h3>Chord Quiz</h3>
+            <p>A chord name pops up — build the shape by tapping frets and muting strings, then check it. Easy, medium and hard chord sets.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
       </div>
     </div>
   </section>
@@ -338,7 +424,7 @@
 <footer>
   <div class="wrap foot">
     <span>Music Arcade · built by William Troy</span>
-    <span><a href="../">williamtroymusic</a></span>
+    <span><a href="index.html">williamtroymusic</a></span>
   </div>
 </footer>
 
