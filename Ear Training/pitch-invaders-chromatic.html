@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pitch Invaders — arcade ear training</title>
+<title>Pitch Invaders — Chromatic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
     opacity:.5; mix-blend-mode:multiply;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
   }
-  .stage{ position:relative; z-index:1; width:min(420px,100%); }
+  .stage{ position:relative; z-index:1; width:min(440px,100%); }
 
   .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
   .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
@@ -39,7 +39,7 @@
   header{ text-align:center; margin-bottom:18px; }
   .title{
     position:relative; display:inline-block; font-family:var(--display);
-    font-weight:800; font-size:clamp(2rem,7vw,3rem); letter-spacing:-.02em;
+    font-weight:800; font-size:clamp(1.8rem,6.5vw,2.8rem); letter-spacing:-.02em;
     line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
   }
   .title::after{
@@ -78,14 +78,13 @@
   .overlay.hidden{ display:none; }
   .overlay h2{ font-family:var(--display); font-weight:800; text-transform:uppercase;
     font-size:1.8rem; margin:0; color:var(--ink); letter-spacing:-.01em; }
-  .overlay p{ font-family:var(--mono); font-size:.74rem; color:var(--muted);
-    letter-spacing:.04em; margin:0; max-width:32ch; line-height:1.6; }
+  .overlay p{ font-family:var(--mono); font-size:.72rem; color:var(--muted);
+    letter-spacing:.04em; margin:0; max-width:34ch; line-height:1.6; }
   .bigscore{ font-family:var(--mono); font-weight:700; font-size:1.1rem; color:var(--blue); }
 
-  /* level banner = lighter flash, no buttons */
   .banner{ background:rgba(244,238,226,.55); pointer-events:none; }
-  .banner h2{ font-size:2.4rem; color:var(--blue); }
-  .banner .sub{ font-family:var(--mono); font-size:.8rem; letter-spacing:.14em;
+  .banner h2{ font-size:2.2rem; color:var(--blue); }
+  .banner .sub{ font-family:var(--mono); font-size:.78rem; letter-spacing:.12em;
     text-transform:uppercase; color:var(--pink); margin-top:6px; }
 
   .start{
@@ -116,19 +115,36 @@
   .pu:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--pink); }
   .pu:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
 
-  .pad{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-  .key{
-    font-family:var(--mono); font-weight:700; font-size:clamp(.95rem,4vw,1.25rem);
-    aspect-ratio:1/1; border:2.5px solid var(--ink); background:var(--paper);
-    color:var(--ink); cursor:pointer; display:flex; align-items:center;
-    justify-content:center; box-shadow:3px 3px 0 var(--ink);
-    transition:transform .04s ease, box-shadow .04s ease, opacity .15s ease;
+  /* ---- piano keyboard ---- */
+  .piano{ position:relative; height:150px; user-select:none; }
+  .whites{ display:grid; grid-template-columns:repeat(7,1fr); height:100%; }
+  .wkey{
+    position:relative; font-family:var(--mono); font-weight:700;
+    font-size:clamp(.9rem,3.6vw,1.15rem); border:2.5px solid var(--ink);
+    margin-left:-2.5px; background:var(--paper); color:var(--ink); cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:10px;
+    box-shadow:inset 0 -4px 0 rgba(23,20,14,.08);
   }
-  .key:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
-  .key:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; z-index:2; }
-  .key.inactive{ opacity:.28; box-shadow:none; cursor:default; }
+  .wkey:first-child{ margin-left:0; }
+  .wkey:active{ background:#ECE4D3; }
+  .wkey:focus-visible{ outline:3px solid var(--blue); outline-offset:-3px; z-index:5; }
+  .wkey.inactive{ opacity:.3; cursor:default; }
 
-  @media (max-width:380px){ .pad{ gap:4px; } }
+  .bkey{
+    position:absolute; top:0; transform:translateX(-50%);
+    width:calc(100%/7*0.62); height:62%;
+    border:2.5px solid var(--ink); background:var(--ink); color:var(--paper);
+    cursor:pointer; z-index:3; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-end; gap:1px; padding-bottom:6px;
+    box-shadow:0 4px 0 rgba(0,0,0,.35);
+  }
+  .bkey span{ font-family:var(--mono); font-weight:700; font-size:.62rem; line-height:1; }
+  .bkey span.flat{ opacity:.55; }
+  .bkey:active{ background:#2a2620; transform:translateX(-50%) translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.35); }
+  .bkey:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; z-index:6; }
+  .bkey.inactive{ opacity:.28; cursor:default; }
+
+  @media (max-width:400px){ .piano{ height:132px; } .bkey span{ font-size:.56rem; } }
 </style>
 </head>
 <body>
@@ -138,7 +154,7 @@
 
     <header>
       <span class="title" data-text="Pitch Invaders">Pitch Invaders</span>
-      <div class="subtitle">hear the note · shoot it down</div>
+      <div class="subtitle">chromatic · all twelve notes</div>
     </header>
 
     <div class="panel">
@@ -149,17 +165,17 @@
       </div>
 
       <div class="screen">
-        <canvas id="cv" width="360" height="480"></canvas>
+        <canvas id="cv" width="380" height="440"></canvas>
 
         <div class="overlay" id="startScreen">
-          <h2>Pitch Invaders</h2>
-          <p>Each alien falls down the lane of its note — watch where C, D, E land. Tap the matching note to fire. As you climb, aliens cloak into a sonar blip and you go by ear — by level 10 it's ear only. Grab gift aliens for power-ups, clear a level clean for a bonus star. Boss waves play a run of notes — listen, then play it back one by one. Three misses ends it.</p>
+          <h2>Chromatic</h2>
+          <p>All twelve notes, laid out like a piano — each alien falls down its own key's lane, black notes between the whites. Tap the matching key to fire. The first levels use the white keys; then a new sharp/flat joins every few levels — G♯, F♯, A♯, D♯, C♯ — spaced out to let your ear settle before the next. Aliens cloak into sonar blips as you climb, so you go by ear. Reference C plays before each level.</p>
           <button class="start" id="startBtn">▶ Start</button>
         </div>
 
         <div class="overlay banner hidden" id="levelScreen">
           <h2 id="levelText">Level 1</h2>
-          <div class="sub" id="levelSub">C D E</div>
+          <div class="sub" id="levelSub">white keys</div>
         </div>
 
         <div class="overlay hidden" id="overScreen">
@@ -176,60 +192,82 @@
 
       <div class="powerups" id="powerups"></div>
 
-      <div class="pad" id="pad" aria-label="Note name keys"></div>
+      <div class="piano" id="pad" aria-label="Piano keys"></div>
     </div>
   </div>
 
 <script>
 /* ====================================================================
-   PITCH INVADERS — arcade ear training (v3)
+   PITCH INVADERS — CHROMATIC (12 notes)
 
-   Graduated ear training:
-     - Aliens fall down fixed keyboard lanes (C..B), so position teaches
-       the note. Pool grows: CDE -> CDEFG -> CDEFGAB.
-     - Invisible aliens (higher levels) show only a centred timing "?" —
-       no position cue, no cannon tracking — so you must use your ear.
-     - Gift aliens grant power-ups (slow / reveal / +life).
-     - No-miss level -> star + bonus. Every 4th level is a boss: a
-       centred multi-note sequence identified purely by ear.
+   Same arcade ear-training loop as the diatonic game, but the full
+   chromatic scale on a piano-style keyboard:
+     - Aliens fall down real piano lanes (blacks between whites).
+     - White keys in play for L1-5; one accidental added per level
+       from L6 until all 12 are live.
+     - Black-key aliens are drawn dark to tell them apart at a glance.
+     - Accidentals carry both spellings (C#/Db); either key is accepted.
 
-   Tunable knobs are grouped just below.
+   Tunables are grouped just below.
    ==================================================================== */
 
   // ---- tunables -----------------------------------------------------
-  const ALL_NOTES = ['c','d','e','f','g','a','b'];   // fixed keyboard order
-  const OCT = 4;
-  const REF_LETTER = 'c';
+  const OCT = 4;                       // reference octave (C4 = MIDI 60)
+  const REF_SEMI = 0;                  // C
   const START_LIVES = 3;
   const MAX_LIVES = 5;
-  const LEVEL_EVERY = 6;              // aliens per normal level
+  const LEVEL_EVERY = 6;               // aliens per normal level
   const PERFECT_BONUS = 100;
   const GIFT_CHANCE = 0.12;
+  const EAR_ONLY_LEVEL = 24;           // every note hidden from here on
+  const WHITE_LEVELS   = 5;            // levels of white keys before accidentals
+  const ADD_SPACING    = 4;            // levels between each new accidental
 
-  const speedForLevel = lvl => 30 + (lvl - 1) * 8;    // px/s — gentle ramp
-  const bossSpeed     = lvl => 20 + (lvl - 1) * 3;
+  const speedForLevel = lvl => 28 + (lvl - 1) * 7;    // px/s — gentle ramp
+  const bossSpeed     = lvl => 18 + (lvl - 1) * 3;
   const multiplier    = () => Math.min(1 + Math.floor((combo - 1) / 3), 5);
+  const bossLevel     = lvl => lvl > 0 && lvl % 4 === 0;
+  const bossSeqLen    = lvl => Math.min(3 + Math.floor((lvl/4 - 1)/2), 5);
 
-  const poolForLevel = lvl =>
-    lvl <= 2 ? ['c','d','e'] :
-    lvl <= 4 ? ['c','d','e','f','g'] :
-               ['c','d','e','f','g','a','b'];
+  // note model — index = semitone within the octave (0..11)
+  const CHROMA = [
+    { sharp:'C',  flat:'C',  black:false },
+    { sharp:'C#', flat:'Db', black:true  },
+    { sharp:'D',  flat:'D',  black:false },
+    { sharp:'D#', flat:'Eb', black:true  },
+    { sharp:'E',  flat:'E',  black:false },
+    { sharp:'F',  flat:'F',  black:false },
+    { sharp:'F#', flat:'Gb', black:true  },
+    { sharp:'G',  flat:'G',  black:false },
+    { sharp:'G#', flat:'Ab', black:true  },
+    { sharp:'A',  flat:'A',  black:false },
+    { sharp:'A#', flat:'Bb', black:true  },
+    { sharp:'B',  flat:'B',  black:false },
+  ];
+  const WHITE_SEMIS  = [0,2,4,5,7,9,11];
+  const BLACK_SEMIS  = [1,3,6,8,10];              // C# D# F# G# A#
+  const ADD_ORDER    = [8,6,10,3,1];              // G# → F# → A# → D# → C#
+  const isBlack = s => CHROMA[s].black;
 
-  const bossLevel = lvl => lvl > 0 && lvl % 4 === 0;
-
-  // how many of a level's aliens are hidden — a smooth ramp:
-  // L1 none, ~1-2 from L2, climbing to all-ear by L10.
-  function hiddenCount(lvl){
-    if(lvl <= 1) return 0;
-    if(lvl >= 10) return LEVEL_EVERY;
-    return Math.min(LEVEL_EVERY, Math.round(LEVEL_EVERY * (lvl - 1) / 9));
+  // how many accidentals are live at a given level — whites for the first
+  // WHITE_LEVELS, then one new accidental every ADD_SPACING levels
+  function accidentalsActive(lvl){
+    if(lvl <= WHITE_LEVELS) return 0;
+    return Math.min(ADD_ORDER.length, 1 + Math.floor((lvl - WHITE_LEVELS - 1) / ADD_SPACING));
+  }
+  function poolForLevel(lvl){
+    const n = accidentalsActive(lvl);
+    return WHITE_SEMIS.concat(ADD_ORDER.slice(0, n)).sort((a,b)=>a-b);
   }
 
-  // boss = play a short sequence, player echoes it back note by note
-  const bossSeqLen = lvl => Math.min(3 + Math.floor((lvl/4 - 1)/2), 5);
+  // how many of a level's aliens are hidden — smooth ramp to all-ear
+  function hiddenCount(lvl){
+    if(lvl <= 1) return 0;
+    if(lvl >= EAR_ONLY_LEVEL) return LEVEL_EVERY;
+    return Math.min(LEVEL_EVERY, Math.max(1, Math.round(LEVEL_EVERY * (lvl-1) / (EAR_ONLY_LEVEL-1))));
+  }
   // -------------------------------------------------------------------
 
-  const SEMI = { c:0, d:2, e:4, f:5, g:7, a:9, b:11 };
   const A4 = 440;
   const PU_META = {
     slow:   { icon:'🐌', label:'Slow',   desc:'Slow the descent (5s)' },
@@ -240,14 +278,22 @@
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
   const W = cv.width, H = cv.height;
-  const MARGIN = 26;
-  const GROUND = H - 46;
+  const GROUND = H - 26;
   const BARREL_Y = GROUND - 20;
 
-  const fullKey = letter => letter + '/' + OCT;
-  const colX = col => MARGIN + (col + 0.5) * (W - 2 * MARGIN) / 7;
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const now = () => performance.now();
+
+  // lane x for a note, aligned to the piano below (blacks sit on the
+  // boundary between their two neighbouring white keys)
+  function laneX(semi){
+    if(!isBlack(semi)){
+      const wi = WHITE_SEMIS.indexOf(semi);
+      return (wi + 0.5) * W / 7;
+    }
+    const wi = WHITE_SEMIS.indexOf(semi - 1);   // C#->C, D#->D, F#->F, G#->G, A#->A
+    return (wi + 1) * W / 7;
+  }
 
   // ---- audio --------------------------------------------------------
   let audioCtx = null;
@@ -256,18 +302,20 @@
     if(audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
   }
-  const keyToMidi = k => { const [l,o] = k.split('/'); return (parseInt(o,10)+1)*12 + SEMI[l]; };
+  const semiToFreq = semi => A4 * Math.pow(2, ((60 + semi) - 69) / 12);   // C4-based
 
-  function playKey(k, dur=0.8){
-    const freq = A4 * Math.pow(2,(keyToMidi(k)-69)/12);
+  function playSemi(semi, dur=0.8){
     const c = ensureAudio(), t = c.currentTime;
     const o = c.createOscillator(), g = c.createGain();
-    o.type='triangle'; o.frequency.value=freq;
+    o.type='triangle'; o.frequency.value=semiToFreq(semi);
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(0.26,t+0.015);
     g.gain.setValueAtTime(0.26,t+dur-0.16);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  }
+  function playSequence(seq, gap=380){
+    seq.forEach((semi,i) => setTimeout(() => playSemi(semi, 0.45), i*gap));
   }
   function sfxShoot(){
     const c = ensureAudio(), t = c.currentTime;
@@ -319,17 +367,11 @@
   const sfxLevel = () => sfxChime([0,4,7,12]);
   const sfxPower = () => sfxChime([7,12,16]);
 
-  // play a run of notes in quick succession (used by boss waves)
-  function playSequence(seq, gap=380){
-    seq.forEach((letter,i) => setTimeout(() => playKey(fullKey(letter), 0.45), i*gap));
-  }
-
   // ---- state --------------------------------------------------------
-  let state = 'start';   // 'start' | 'intro' | 'playing' | 'over'
-  let score, level, lives, combo, stars, invader, shots, particles, floats, last, cannonX;
+  let state = 'start';
+  let score, level, lives, combo, stars, invader, shots, particles, floats, reveals, last, cannonX;
   let levelKills, levelTarget, levelMisses, lastPerfect;
   let hiddenPlan = [], spawnIx = 0;
-  let reveals = [];
   let inventory = [];
   let slowUntil = 0, revealUntil = 0;
 
@@ -344,33 +386,31 @@
     score=0; level=1; lives=START_LIVES; combo=0; stars=0;
     invader=null; shots=[]; particles=[]; floats=[]; reveals=[]; last=0; cannonX=W/2;
     levelKills=0; levelTarget=LEVEL_EVERY; levelMisses=0; lastPerfect=false;
-    inventory=[]; slowUntil=0; revealUntil=0;
+    hiddenPlan=[]; spawnIx=0; inventory=[]; slowUntil=0; revealUntil=0;
     renderPowerups(); updatePad(poolForLevel(1)); updateHUD();
   }
 
+  const spriteColor = semi => isBlack(semi) ? '#17140E' : '#2438C8';
+
   function spawnInvader(){
     const pool = poolForLevel(level);
-    const letter = pick(pool);
-    const col = ALL_NOTES.indexOf(letter);
+    const semi = pick(pool);
     const gift = inventory.length < 3 && Math.random() < GIFT_CHANCE;
-    // pull the next hidden slot from this level's plan; extra spawns (after
-    // misses) fall back to the level's baseline
-    const planned = spawnIx < hiddenPlan.length ? hiddenPlan[spawnIx] : (level >= 10);
+    const planned = spawnIx < hiddenPlan.length ? hiddenPlan[spawnIx] : (level >= EAR_ONLY_LEVEL);
     spawnIx++;
     const invisible = !gift && planned;
     invader = {
-      letter, key:fullKey(letter), name:letter.toUpperCase(), col,
-      x:colX(col), y:-SH, speed:speedForLevel(level),
-      doomed:false, invisible, gift, boss:false, hp:1
+      semi, x:laneX(semi), y:-SH, speed:speedForLevel(level),
+      doomed:false, invisible, gift, boss:false
     };
-    playKey(invader.key);
+    playSemi(semi);
   }
 
   function spawnBoss(){
     const pool = poolForLevel(level);
     const seq = Array.from({length:bossSeqLen(level)}, () => pick(pool));
     invader = {
-      seq, idx:0, col:3, x:W/2, y:-SH, speed:bossSpeed(level),
+      seq, idx:0, semi:seq[0], x:W/2, y:-SH, speed:bossSpeed(level),
       doomed:false, invisible:false, gift:false, boss:true
     };
     playSequence(seq);
@@ -378,7 +418,7 @@
 
   function fire(hit){
     let fx = cannonX;
-    if(hit && invader){ cannonX = invader.x; fx = invader.x; }  // lock on to reveal
+    if(hit && invader){ cannonX = invader.x; fx = invader.x; }   // lock on
     shots.push({ x:fx, y:BARREL_Y, vx: hit ? 0 : (Math.random()<.5?-260:260), vy:-1100, hit });
     sfxShoot();
   }
@@ -390,14 +430,12 @@
     }
   }
 
-  function guess(name){
+  function guess(semi){
     if(state!=='playing' || !invader || invader.doomed) return;
-    const letter = name.toLowerCase();
-    if(!poolForLevel(level).includes(letter)) return;   // inactive key
-    const target = invader.boss ? invader.seq[invader.idx].toUpperCase() : invader.name;
-    if(name === target){
-      invader.doomed = true;      // keep falling; the shot intercepts it
-      if(invader.boss) playKey(fullKey(letter), 0.4);   // echo the note back
+    if(!poolForLevel(level).includes(semi)) return;      // inactive key
+    if(semi === invader.semi){
+      invader.doomed = true;
+      if(invader.boss) playSemi(semi, 0.4);              // echo the note back
       fire(true);
     } else {
       combo = 0; levelMisses++; updateHUD();
@@ -408,7 +446,7 @@
   function onHit(){
     const wasBoss = invader.boss, wasGift = invader.gift;
     const wasHidden = invader.invisible && !revealActive();
-    if(wasHidden) reveals.push({ x:invader.x, y:invader.y, life:0.5 });  // shown only now, on interception
+    if(wasHidden) reveals.push({ x:invader.x, y:invader.y, life:0.5, color:spriteColor(invader.semi) });
     explode(invader.x, invader.y, wasGift ? '#2438C8' : '#FF4E86');
     sfxHit();
     combo++;
@@ -420,7 +458,7 @@
 
     if(wasBoss){
       invader.idx++;
-      if(invader.idx < invader.seq.length){ invader.doomed = false; return; }  // next note
+      if(invader.idx < invader.seq.length){ invader.semi = invader.seq[invader.idx]; invader.doomed = false; return; }
     }
     if(wasGift) grantPowerup();
 
@@ -436,7 +474,7 @@
     sfxMiss();
     lives--; combo = 0; levelMisses++; updateHUD();
     if(lives <= 0){ gameOver(); return; }
-    if(bossRetry){ invader.y = -SH; invader.idx = 0; invader.doomed = false; playSequence(invader.seq); }
+    if(bossRetry){ invader.y = -SH; invader.idx = 0; invader.semi = invader.seq[0]; invader.doomed = false; playSequence(invader.seq); }
     else { invader = null; spawnInvader(); }
   }
 
@@ -445,10 +483,8 @@
     const p = pick(['slow','reveal','life']);
     inventory.push(p);
     floats.push({ x:invader.x, y:invader.y-14, text:PU_META[p].icon, life:1.1 });
-    sfxPower();
-    renderPowerups();
+    sfxPower(); renderPowerups();
   }
-
   function usePowerup(idx){
     const p = inventory[idx];
     if(!p) return;
@@ -466,25 +502,32 @@
     enterLevel();
   }
 
+  function poolLabel(pool, boss){
+    if(boss) return 'listen · then play it back';
+    const n = accidentalsActive(level);
+    const justAdded = n > accidentalsActive(level - 1);
+    if(justAdded){ const s = ADD_ORDER[n-1]; return 'new note · ' + CHROMA[s].sharp + '/' + CHROMA[s].flat; }
+    return n === 0 ? 'white keys · 7 notes' : pool.length + ' notes';
+  }
+
   function enterLevel(){
     state = 'intro';
     const boss = bossLevel(level);
     const pool = poolForLevel(level);
     levelTarget = boss ? 1 : LEVEL_EVERY;
     levelKills = 0; levelMisses = 0;
-    // build this level's hidden/visible schedule and shuffle it
     const nHidden = boss ? 0 : hiddenCount(level);
     hiddenPlan = Array.from({length:LEVEL_EVERY}, (_,i) => i < nHidden);
     for(let i=hiddenPlan.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [hiddenPlan[i],hiddenPlan[j]]=[hiddenPlan[j],hiddenPlan[i]]; }
     spawnIx = 0;
+
     document.getElementById('levelText').textContent = boss ? 'Boss Wave' : 'Level ' + level;
     document.getElementById('levelSub').textContent =
-      (lastPerfect ? 'PERFECT +' + PERFECT_BONUS + ' · ' : '') +
-      (boss ? 'listen · then play it back' : pool.map(x=>x.toUpperCase()).join(' '));
+      (lastPerfect ? 'PERFECT +' + PERFECT_BONUS + ' · ' : '') + poolLabel(pool, boss);
     lastPerfect = false;
     updatePad(pool);
     document.getElementById('levelScreen').classList.remove('hidden');
-    playKey(fullKey(REF_LETTER), 0.7);      // reference anchor auto-plays
+    playSemi(REF_SEMI, 0.7);            // reference anchor
     sfxLevel();
     setTimeout(() => {
       document.getElementById('levelScreen').classList.add('hidden');
@@ -516,7 +559,6 @@
   // ---- update -------------------------------------------------------
   function updateVisual(dt){
     for(const s of stars_bg){ s.y += s.v*dt; if(s.y > H){ s.y = 0; s.x = Math.random()*W; } }
-    // cannon eases under the invader — but NOT under a hidden one (no cue)
     const track = invader && (!invader.invisible || invader.doomed || revealActive());
     const tx = track ? invader.x : W/2;
     cannonX += (tx - cannonX) * Math.min(1, dt*9);
@@ -540,7 +582,7 @@
     invader.y += invader.speed*dt*sc;
     if(invader.boss) invader.x = W/2 + Math.sin(now()/400)*22;
     if(invader.y >= GROUND){
-      if(invader.doomed) invader.y = GROUND;         // answered — wait for the shot
+      if(invader.doomed) invader.y = GROUND;
       else loseLife(invader.boss);
     }
   }
@@ -553,24 +595,20 @@
       if(SPRITE[r][c]==='1') ctx.fillRect(ox + c*cell, oy + r*cell, cell, cell);
   }
 
-  function drawKeyboard(){
+  function drawLanes(){
     const pool = poolForLevel(state==='start' ? 1 : level);
-    ctx.textAlign = 'center';
-    ctx.font = '700 13px "Space Mono", monospace';
-    for(let i=0;i<7;i++){
-      const active = pool.includes(ALL_NOTES[i]);
-      const x = colX(i);
-      if(active){
-        ctx.strokeStyle = 'rgba(36,56,200,0.10)';
-        ctx.lineWidth = 1;
+    for(const s of pool){
+      const x = laneX(s);
+      if(isBlack(s)){
+        ctx.strokeStyle = 'rgba(23,20,14,0.14)';
+        ctx.setLineDash([4,5]); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, GROUND); ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        ctx.strokeStyle = 'rgba(36,56,200,0.09)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, GROUND); ctx.stroke();
       }
-      ctx.fillStyle = 'rgba(23,20,14,0.35)';
-      ctx.fillRect(x-0.5, GROUND, 1, 5);
-      ctx.fillStyle = active ? '#2438C8' : 'rgba(23,20,14,0.16)';
-      ctx.fillText(ALL_NOTES[i].toUpperCase(), x, H-14);
     }
-    ctx.textAlign = 'start';
   }
 
   function draw(){
@@ -578,26 +616,20 @@
     ctx.fillStyle = 'rgba(23,20,14,0.28)';
     for(const s of stars_bg) ctx.fillRect(s.x, s.y, s.r, s.r);
 
-    drawKeyboard();
+    drawLanes();
 
-    // ground
     ctx.fillStyle = '#17140E';
     ctx.fillRect(0, GROUND, W, 2.5);
-    // cannon (sits on the ground)
     ctx.fillRect(cannonX-12, GROUND-8, 24, 8);
     ctx.fillRect(cannonX-3, GROUND-20, 6, 12);
-    // shots
+
     for(const sh of shots){ ctx.fillStyle = sh.hit ? '#2438C8' : '#FF4E86'; ctx.fillRect(sh.x-1.5, sh.y, 3, 11); }
 
-    // invader
     if(invader){
       const cloaked = invader.invisible && !revealActive();
-      // a cloaked alien stays a blip the whole way down — even after a correct
-      // guess — and is only unmasked by the reveal flash at interception
       if(cloaked && invader.doomed){
-        // in transit toward interception: draw nothing here
+        // in transit toward interception — draw nothing
       } else if(cloaked){
-        // sonar contact: centred blip with expanding "listen" rings (no pitch cue)
         const cx = W/2, cy = invader.y;
         for(let i=0;i<2;i++){
           const ph = ((now()/900) + i*0.5) % 1;
@@ -609,7 +641,7 @@
         ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI*2); ctx.fill();
       } else {
         const cell = invader.boss ? CELL*1.7 : CELL;
-        const color = invader.gift ? '#FF4E86' : '#2438C8';
+        const color = invader.gift ? '#FF4E86' : spriteColor(invader.semi);
         drawSprite(invader.x, invader.y, cell, color);
         if(invader.gift){
           ctx.strokeStyle = '#FF4E86'; ctx.lineWidth = 2;
@@ -626,18 +658,14 @@
       }
     }
 
-    // reveal flashes — the cloaked alien becoming briefly visible as it's hit
-    for(const r of reveals){ ctx.globalAlpha = Math.min(1, r.life*2.4); drawSprite(r.x, r.y, CELL, '#2438C8'); }
+    for(const r of reveals){ ctx.globalAlpha = Math.min(1, r.life*2.4); drawSprite(r.x, r.y, CELL, r.color); }
     ctx.globalAlpha = 1;
-    // particles
     for(const p of particles){ ctx.globalAlpha = Math.max(0, p.life*1.6); ctx.fillStyle = p.color; ctx.fillRect(p.x-2, p.y-2, 4, 4); }
     ctx.globalAlpha = 1;
-    // floating score / icons
     ctx.font = '700 15px "Space Mono", monospace'; ctx.textAlign = 'center';
     for(const f of floats){ ctx.globalAlpha = Math.min(1, f.life*1.5); ctx.fillStyle = '#FF4E86'; ctx.fillText(f.text, f.x, f.y); }
     ctx.globalAlpha = 1; ctx.textAlign = 'start';
 
-    // power-up status pills
     ctx.font = '700 10px "Space Mono", monospace'; ctx.textAlign = 'left';
     let sy = 14;
     if(slowActive()){ ctx.fillStyle='#2438C8'; ctx.fillText('◐ SLOW', 8, sy); sy += 14; }
@@ -665,8 +693,8 @@
   }
 
   function updatePad(pool){
-    [...pad.children].forEach(btn => {
-      const active = pool.includes(btn.textContent.toLowerCase());
+    [...pad.querySelectorAll('.wkey,.bkey')].forEach(btn => {
+      const active = pool.includes(+btn.dataset.semi);
       btn.classList.toggle('inactive', !active);
       btn.disabled = !active;
     });
@@ -686,29 +714,44 @@
     el.style.display = inventory.length ? 'flex' : 'none';
   }
 
-  // ---- pad + input --------------------------------------------------
+  // ---- build piano --------------------------------------------------
   const pad = document.getElementById('pad');
-  ALL_NOTES.forEach(letter => {
+  const whites = document.createElement('div'); whites.className = 'whites';
+  WHITE_SEMIS.forEach(s => {
     const b = document.createElement('button');
-    b.className = 'key'; b.textContent = letter.toUpperCase();
-    b.addEventListener('click', () => guess(letter.toUpperCase()));
+    b.className = 'wkey'; b.dataset.semi = s; b.textContent = CHROMA[s].sharp;
+    b.addEventListener('click', () => guess(s));
+    whites.appendChild(b);
+  });
+  pad.appendChild(whites);
+  const BLACK_BOUNDARY = {1:1, 3:2, 6:4, 8:5, 10:6};
+  BLACK_SEMIS.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'bkey'; b.dataset.semi = s;
+    b.style.left = (BLACK_BOUNDARY[s] / 7 * 100) + '%';
+    b.innerHTML = '<span class="sharp">'+CHROMA[s].sharp+'</span><span class="flat">'+CHROMA[s].flat+'</span>';
+    b.addEventListener('click', (e) => { e.stopPropagation(); guess(s); });
     pad.appendChild(b);
   });
+
+  // ---- input --------------------------------------------------------
   document.getElementById('startBtn').addEventListener('click', startGame);
   document.getElementById('againBtn').addEventListener('click', startGame);
-  document.getElementById('refBtn').addEventListener('click', () => playKey(fullKey(REF_LETTER), 0.6));
+  document.getElementById('refBtn').addEventListener('click', () => playSemi(REF_SEMI, 0.6));
   document.getElementById('replayBtn').addEventListener('click', () => {
     if(!invader) return;
-    if(invader.boss) playSequence(invader.seq); else playKey(invader.key);
+    if(invader.boss) playSequence(invader.seq); else playSemi(invader.semi);
   });
 
+  const LETTER_SEMI = { c:0, d:2, e:4, f:5, g:7, a:9, b:11 };   // naturals
+  const DIGIT_SEMI  = { '1':1, '2':3, '3':6, '4':8, '5':10 };   // sharps C# D# F# G# A#
   window.addEventListener('keydown', e => {
     if((state==='start' || state==='over') && (e.key==='Enter' || e.key===' ')){ startGame(); return; }
-    const k = e.key.toUpperCase();
-    if(ALL_NOTES.includes(e.key.toLowerCase())) guess(k);
-    else if(k === 'R'){ if(invader){ invader.boss ? playSequence(invader.seq) : playKey(invader.key); } }
-    else if(e.key >= '1' && e.key <= '3'){ usePowerup(parseInt(e.key,10)-1); }
-    else if(e.key === ' '){ e.preventDefault(); playKey(fullKey(REF_LETTER), 0.6); }
+    const low = e.key.toLowerCase();
+    if(low in LETTER_SEMI) guess(LETTER_SEMI[low]);
+    else if(e.key in DIGIT_SEMI) guess(DIGIT_SEMI[e.key]);
+    else if(low === 'r'){ if(invader){ invader.boss ? playSequence(invader.seq) : playSemi(invader.semi); } }
+    else if(e.key === ' '){ e.preventDefault(); playSemi(REF_SEMI, 0.6); }
   });
 
   // go

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chord Progress — chord ear training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(460px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:18px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.9rem,7vw,2.9rem); letter-spacing:-.02em;
+    line-height:.9; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:14px;
+  }
+
+  .hud{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.05em;
+    text-transform:uppercase; margin-bottom:12px; gap:8px;
+  }
+  .hud b{ color:var(--blue); }
+  .hud .stars{ color:var(--muted); }
+  .mult{ font-weight:700; color:var(--muted); transition:transform .08s ease; }
+  .mult.hot{ color:var(--pink); transform:scale(1.2); }
+  .lives{ letter-spacing:2px; color:var(--pink); }
+  .keybadge{
+    font-family:var(--mono); font-weight:700; font-size:.7rem; letter-spacing:.06em;
+    border:2px solid var(--blue); color:var(--blue); padding:2px 9px; white-space:nowrap;
+  }
+
+  .screen{
+    position:relative; border:2.5px solid var(--ink); background:#FBF7EE;
+    min-height:330px; padding:18px 14px; display:flex; flex-direction:column;
+  }
+
+  .prompt{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--muted); text-align:center; min-height:1.2em; margin-bottom:14px;
+  }
+
+  .progression{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:6px; }
+  .card{
+    position:relative; flex:0 0 auto; width:clamp(58px,17vw,74px); height:86px;
+    border:2.5px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    transition:transform .12s ease, box-shadow .12s ease, background .2s ease;
+  }
+  .card .deg{ font-family:var(--mono); font-size:.6rem; letter-spacing:.05em; color:var(--muted); }
+  .card .name{ font-family:var(--display); font-weight:800; font-size:1.35rem; color:var(--ink); line-height:1; }
+  .card.blank .name{ color:var(--muted); }
+  .card.playing{ transform:translate(-2px,-6px); box-shadow:5px 9px 0 var(--pink); border-color:var(--pink); }
+  .card.playing::before{
+    content:"♪"; position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+    color:var(--pink); font-size:.9rem;
+  }
+  .card.correct{ background:var(--blue); border-color:var(--blue); }
+  .card.correct .name, .card.correct .deg{ color:#fff; }
+
+  .controls{ display:flex; gap:8px; margin:16px 0 12px; }
+  .ctl{
+    flex:1; font-family:var(--mono); font-size:.72rem; letter-spacing:.06em;
+    text-transform:uppercase; padding:10px; border:2.5px solid var(--ink);
+    background:var(--paper); cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+  }
+  .ctl:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .ctl:disabled{ opacity:.4; box-shadow:none; cursor:default; }
+  .ctl:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .options{ display:grid; grid-template-columns:repeat(auto-fit,minmax(84px,1fr)); gap:8px; margin-top:auto; }
+  .options.locked{ opacity:.5; pointer-events:none; }
+  .opt{
+    font-family:var(--mono); font-weight:700; font-size:.95rem; letter-spacing:.02em;
+    padding:14px 8px; border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+  }
+  .opt:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .opt:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+  .opt.off{ opacity:.28; box-shadow:none; cursor:default; }
+  .opt.wrong{ opacity:.35; text-decoration:line-through; box-shadow:none; cursor:default; }
+  .opt.right{ background:var(--blue); color:#fff; border-color:var(--blue); }
+  .opt.shake{ animation:shake .3s ease; }
+  @keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+  .inversions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+  .inversions.locked{ opacity:.5; pointer-events:none; }
+  .opt.inv{ font-size:.82rem; padding:11px 6px; border-color:var(--pink); box-shadow:3px 3px 0 var(--pink); }
+  .opt.inv:active{ box-shadow:0 0 0 var(--pink); }
+  .opt.inv.right{ background:var(--pink); color:#fff; border-color:var(--pink); }
+
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    background:rgba(244,238,226,.94); padding:20px; gap:14px; z-index:10;
+  }
+  .overlay.hidden{ display:none; }
+  .overlay h2{ font-family:var(--display); font-weight:800; text-transform:uppercase;
+    font-size:1.7rem; margin:0; color:var(--ink); letter-spacing:-.01em; }
+  .overlay p{ font-family:var(--mono); font-size:.72rem; color:var(--muted);
+    letter-spacing:.04em; margin:0; max-width:34ch; line-height:1.6; }
+  .bigscore{ font-family:var(--mono); font-weight:700; font-size:1.1rem; color:var(--blue); }
+  .banner{ background:rgba(244,238,226,.6); pointer-events:none; }
+  .banner h2{ font-size:2rem; color:var(--blue); }
+  .banner .sub{ font-family:var(--mono); font-size:.76rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--pink); margin-top:6px; }
+
+  .start{
+    font-family:var(--body); font-weight:600; font-size:1.05rem; padding:13px 26px;
+    border:2.5px solid var(--ink); background:var(--blue); color:#fff; cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);
+  }
+  .start:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .start:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Chord Progress">Chord Progress</span>
+      <div class="subtitle">hear the progression · name the chord</div>
+    </header>
+
+    <div class="panel">
+      <div class="hud">
+        <div>lv <b id="level">1</b> · <b id="score">0</b> · <span class="stars" id="stars">★0</span> <span class="mult" id="mult">x1</span></div>
+        <div class="keybadge"><b id="keyName">C</b> maj</div>
+        <div class="lives" id="lives">♥♥♥</div>
+      </div>
+
+      <div class="screen">
+        <div class="prompt" id="prompt">&nbsp;</div>
+        <div class="progression" id="progression"></div>
+        <div class="controls">
+          <button class="ctl" id="replayBtn" disabled>↺ Replay</button>
+          <button class="ctl" id="tonicBtn" disabled>♪ Tonic chord</button>
+        </div>
+        <div class="options locked" id="options"></div>
+        <div class="inversions locked" id="inversions" style="display:none"></div>
+
+        <div class="overlay" id="startScreen">
+          <h2>Chord Progress</h2>
+          <p>A short chord progression plays, with a marker hovering over each chord. The last card stays blank — listen to the chord that plays there and pick it from the key's chords, laid out in order (C Dm Em F G Am B°). You start with I, IV and V; each level unlocks one more chord until the whole key is in play, and progressions grow longer. Later on the target chord comes voiced in inversions — you'll name the chord, then say whether it's root position, 1st, or 2nd inversion.</p>
+          <button class="start" id="startBtn">▶ Start</button>
+        </div>
+
+        <div class="overlay banner hidden" id="levelScreen">
+          <h2 id="levelText">Level 1</h2>
+          <div class="sub" id="levelSub">key of C major</div>
+        </div>
+
+        <div class="overlay hidden" id="overScreen">
+          <h2>Game Over</h2>
+          <div class="bigscore" id="finalScore">Score 0 · Level 1</div>
+          <button class="start" id="againBtn">▶ Play again</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   CHORD PROGRESS — chord-progression ear training
+
+   A progression plays with a hover marker sweeping across chord cards.
+   The final card is blank; its chord still sounds, and the player names
+   it. The game stays in C major; difficulty grows the chord vocabulary,
+   the progression length, and (later) chord inversions.
+
+   Tunables are grouped just below.
+   ==================================================================== */
+
+  // ---- tunables -----------------------------------------------------
+  const START_LIVES = 3;
+  const MAX_LIVES = 5;
+  const ROUNDS_PER_LEVEL = 4;
+  const PERFECT_BONUS = 100;
+  const multiplier = () => Math.min(1 + Math.floor((streak - 1) / 3), 5);
+
+  const progLenForLevel = lvl => lvl <= 2 ? 3 : lvl <= 6 ? 4 : 5;
+  const chordDurForLevel = lvl => Math.max(650, 1000 - lvl*30);   // ms per chord
+
+  // buttons are laid out in scale-degree order; chords come into play one
+  // per level (in UNLOCK_ORDER) until the whole key is available
+  const DEGREE_LAYOUT = ['I','ii','iii','IV','V','vi','vii°'];    // fixed button positions
+  const UNLOCK_ORDER  = ['I','IV','V','vi','ii','iii','vii°'];    // order they activate
+  const DEG_SPEC = { I:[0,'maj'], ii:[1,'min'], iii:[2,'min'], IV:[3,'maj'], V:[4,'maj'], vi:[5,'min'], 'vii°':[6,'dim'] };
+  const activeCount   = lvl => Math.min(7, 3 + (lvl - 1));        // I IV V at L1, +1 each level
+  const activeDegrees = lvl => UNLOCK_ORDER.slice(0, activeCount(lvl));
+
+  // inversions in play at a level: 0 none, 1 adds 1st, 2 adds 2nd
+  const maxInversion = lvl => lvl < 7 ? 0 : lvl < 10 ? 1 : 2;
+  const INV_LABELS = ['Root', '1st', '2nd'];
+  // -------------------------------------------------------------------
+
+  const MAJOR = [0,2,4,5,7,9,11];
+  const NAMES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const NAMES_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+  const KEY_DISPLAY = {0:'C',7:'G',2:'D',9:'A',4:'E',11:'B',6:'F#',5:'F',10:'Bb',3:'Eb',8:'Ab',1:'Db'};
+  const FLAT_KEYS = [5,10,3,8,1];
+
+  const QUAL = {
+    maj:  { ivals:[0,4,7],    suffix:'' },
+    min:  { ivals:[0,3,7],    suffix:'m' },
+    dom7: { ivals:[0,4,7,10], suffix:'7' },
+    dim:  { ivals:[0,3,6],    suffix:'°' },
+  };
+
+  const A4 = 440;
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const now = () => performance.now();
+  const keyScale = tonic => MAJOR.map(iv => (tonic+iv)%12);
+
+  const isFlatKey = pc => FLAT_KEYS.includes(pc);
+  const rootName  = pc => (isFlatKey(currentKey) ? NAMES_FLAT : NAMES_SHARP)[pc % 12];
+
+  function chordOf(rootPc, quality, degree){
+    const q = QUAL[quality];
+    const base = 60 + rootPc;                       // root in octave 4
+    return {
+      root: rootPc, quality, degree,
+      label: rootName(rootPc) + q.suffix,
+      tones: q.ivals.map(iv => base + iv),
+    };
+  }
+
+  // re-voice a chord into an inversion by lifting the lowest note(s) an octave
+  function voiceInversion(tones, inv){
+    const t = tones.slice().sort((a,b)=>a-b);
+    for(let i=0;i<inv;i++){ t[0]+=12; t.sort((a,b)=>a-b); }
+    return t;
+  }
+  // slash-chord label showing the bass note, e.g. C, C/E (1st), C/G (2nd)
+  function slashLabel(ch, inv){
+    if(inv === 0) return ch.label;
+    return ch.label + '/' + rootName(voiceInversion(ch.tones, inv)[0] % 12);
+  }
+
+  function chordForDegree(deg, tonic){
+    const s = keyScale(tonic);
+    const [idx, q] = DEG_SPEC[deg];
+    return chordOf(s[idx], q, deg);
+  }
+
+  // the chords in play at a level, in the current key
+  function vocabulary(lvl, tonic){
+    return activeDegrees(lvl).map(d => chordForDegree(d, tonic));
+  }
+
+  function unlockNote(lvl){
+    if(lvl === 1) return 'chords: I  IV  V';
+    if(activeCount(lvl) > activeCount(lvl-1)){
+      const deg = UNLOCK_ORDER[activeCount(lvl)-1];
+      return 'new chord: ' + chordForDegree(deg, currentKey).label + '  (' + deg + ')';
+    }
+    if(maxInversion(lvl) > maxInversion(lvl-1)){
+      return maxInversion(lvl) === 1 ? 'new: 1st inversions' : 'new: 2nd inversions';
+    }
+    return null;
+  }
+
+  // ---- audio --------------------------------------------------------
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx = new AC(); }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  const midiToFreq = m => A4 * Math.pow(2, (m-69)/12);
+
+  function playMidi(midi, dur=0.75, gain=0.15){
+    const c = ensureAudio(), t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type='triangle'; o.frequency.value=midiToFreq(midi);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(gain,t+0.02);
+    g.gain.setValueAtTime(gain,t+dur-0.14);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  }
+  // play a set of tones with the lowest (bass) note loudest so the
+  // inversion reads clearly; upper voices sit softer beneath it
+  const VOICE_GAINS = [0.33, 0.10, 0.078, 0.06];
+  function playTones(midis, dur){
+    midis.slice().sort((a,b)=>a-b).forEach((m,i) => playMidi(m, dur, VOICE_GAINS[Math.min(i, VOICE_GAINS.length-1)]));
+  }
+  function playChord(ch, dur=0.75){ playTones(ch.tones, dur); }
+  function playChordVoiced(ch, inv, dur=0.75){ playTones(voiceInversion(ch.tones, inv), dur); }
+
+  // I – V – I cadence to establish the key
+  function playCadence(tonic){
+    const s = keyScale(tonic);
+    const I = chordOf(s[0],'maj','I'), V = chordOf(s[4],'maj','V');
+    playChord(I, 0.6);
+    setTimeout(() => playChord(V, 0.6), 620);
+    setTimeout(() => playChord(I, 0.8), 1240);
+  }
+
+  function sfxRight(){
+    const c = ensureAudio();
+    [0,4,7,12].forEach((semi,i)=>{
+      const t = c.currentTime + i*0.07;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type='square'; o.frequency.value = 523.25*Math.pow(2,semi/12);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.10,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.10);
+      o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.12);
+    });
+  }
+  function sfxWrong(){
+    const c = ensureAudio(), t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(180,t);
+    o.frequency.exponentialRampToValueAtTime(80,t+0.2);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.10,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.24);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.26);
+  }
+
+  // ---- state --------------------------------------------------------
+  let state = 'start';   // 'start'|'intro'|'listen'|'answerChord'|'answerInv'|'reveal'|'over'
+  let score, level, lives, streak, stars, levelMisses, roundInLevel;
+  let currentKey = 0;
+  let vocab = [], progression = [], target = null, targetInv = 0;
+  let progLen, chordDurMs;
+  let playTimers = [];
+
+  const progEl    = document.getElementById('progression');
+  const optionsEl = document.getElementById('options');
+  const invEl     = document.getElementById('inversions');
+  const promptEl  = document.getElementById('prompt');
+
+  function reset(){
+    score=0; level=1; lives=START_LIVES; streak=0; stars=0;
+    levelMisses=0; roundInLevel=0; currentKey=0;
+    clearTimers();
+    updateHUD();
+  }
+  function clearTimers(){ playTimers.forEach(clearTimeout); playTimers = []; }
+
+  // ---- level / round flow ------------------------------------------
+  function enterLevel(){
+    vocab = vocabulary(level, currentKey);
+    progLen = progLenForLevel(level);
+    chordDurMs = chordDurForLevel(level);
+    levelMisses = 0; roundInLevel = 0;
+
+    state = 'intro';
+    document.getElementById('levelText').textContent = 'Level ' + level;
+    document.getElementById('levelSub').textContent = unlockNote(level) || 'key of C major';
+    updateHUD();
+    document.getElementById('levelScreen').classList.remove('hidden');
+    playCadence(currentKey);
+    playTimers.push(setTimeout(() => {
+      document.getElementById('levelScreen').classList.add('hidden');
+      startRound();
+    }, 2300));
+  }
+
+  function makeProgression(){
+    // always open on I to ground the key, then wander the vocabulary
+    const I = vocab.find(c => c.degree === 'I');
+    const prog = [I];
+    for(let i=1; i<progLen-1; i++) prog.push(pick(vocab));
+    target = pick(vocab);                    // the blank chord to identify
+    const maxInv = maxInversion(level);
+    targetInv = maxInv ? Math.floor(Math.random() * (maxInv + 1)) : 0;   // voicing to identify
+    prog.push(target);
+    progression = prog;
+  }
+
+  function startRound(){
+    makeProgression();
+    renderCards();
+    renderOptions();
+    renderInversions();
+    optionsEl.classList.add('locked');
+    invEl.classList.add('locked');
+    invEl.style.display = maxInversion(level) >= 1 ? 'grid' : 'none';
+    promptEl.textContent = 'Listen…';
+    state = 'listen';
+    document.getElementById('replayBtn').disabled = false;
+    document.getElementById('tonicBtn').disabled = false;
+    playProgression(toAnswerChord);
+  }
+
+  function toAnswerChord(){
+    state = 'answerChord';
+    optionsEl.classList.remove('locked');
+    promptEl.textContent = maxInversion(level) >= 1 ? 'Which chord?' : 'Which chord filled the blank?';
+  }
+
+  function playProgression(onDone){
+    clearTimers();
+    const cards = [...progEl.children];
+    cards.forEach(c => c.classList.remove('playing'));
+    const dur = chordDurMs;
+    progression.forEach((ch, i) => {
+      playTimers.push(setTimeout(() => {
+        cards.forEach(c => c.classList.remove('playing'));
+        cards[i].classList.add('playing');
+        const isTarget = (i === progression.length - 1);
+        playChordVoiced(ch, isTarget ? targetInv : 0, Math.min(0.9, dur/1000 - 0.05));
+        if(isTarget){
+          playTimers.push(setTimeout(() => {
+            cards[i].classList.remove('playing');
+            onDone && onDone();
+          }, dur));
+        }
+      }, i * dur));
+    });
+  }
+
+  function wrongAnswer(btn, msg){
+    streak = 0; lives--; levelMisses++;
+    btn.classList.add('wrong','shake'); btn.disabled = true;
+    setTimeout(() => btn.classList.remove('shake'), 300);
+    sfxWrong(); updateHUD();
+    if(lives <= 0) gameOver();
+    else promptEl.textContent = msg;
+  }
+
+  function success(){
+    state = 'reveal';
+    streak++;
+    score += 10 * multiplier();
+    const blank = progEl.lastElementChild;
+    blank.classList.add('correct');
+    blank.querySelector('.name').textContent = slashLabel(target, targetInv);
+    promptEl.textContent = 'Correct — ' + slashLabel(target, targetInv);
+    optionsEl.classList.add('locked'); invEl.classList.add('locked');
+    sfxRight(); updateHUD();
+    playTimers.push(setTimeout(nextRound, 1300));
+  }
+
+  function answerChord(choice, btn){
+    if(state !== 'answerChord') return;
+    if(choice.degree !== target.degree){ wrongAnswer(btn, 'Not that chord — listen again'); return; }
+    btn.classList.add('right');
+    optionsEl.classList.add('locked');
+    const blank = progEl.lastElementChild;
+    blank.classList.remove('blank');
+    blank.querySelector('.name').textContent = target.label;
+    blank.querySelector('.deg').textContent = target.degree;
+    if(maxInversion(level) >= 1){
+      state = 'answerInv';
+      invEl.classList.remove('locked');
+      promptEl.textContent = 'Which inversion?';
+    } else {
+      success();
+    }
+  }
+
+  function answerInv(inv, btn){
+    if(state !== 'answerInv') return;
+    if(inv !== targetInv){ wrongAnswer(btn, 'Not that inversion — listen again'); return; }
+    btn.classList.add('right');
+    success();
+  }
+
+  function nextRound(){
+    roundInLevel++;
+    if(roundInLevel >= ROUNDS_PER_LEVEL) completeLevel();
+    else startRound();
+  }
+
+  function completeLevel(){
+    if(levelMisses === 0){ score += PERFECT_BONUS; stars++; }
+    level++;
+    updateHUD();
+    enterLevel();
+  }
+
+  function startGame(){
+    ensureAudio();
+    reset();
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('overScreen').classList.add('hidden');
+    enterLevel();
+  }
+
+  function gameOver(){
+    state = 'over';
+    clearTimers();
+    document.getElementById('replayBtn').disabled = true;
+    document.getElementById('tonicBtn').disabled = true;
+    document.getElementById('finalScore').textContent =
+      'Score ' + score + ' · Level ' + level + ' · ★' + stars;
+    document.getElementById('overScreen').classList.remove('hidden');
+  }
+
+  // ---- render -------------------------------------------------------
+  function renderCards(){
+    progEl.innerHTML = '';
+    progression.forEach((ch, i) => {
+      const blank = (i === progression.length - 1);
+      const card = document.createElement('div');
+      card.className = 'card' + (blank ? ' blank' : '');
+      const deg = document.createElement('div'); deg.className = 'deg';
+      deg.textContent = blank ? '?' : ch.degree;
+      const name = document.createElement('div'); name.className = 'name';
+      name.textContent = blank ? '?' : ch.label;
+      card.appendChild(deg); card.appendChild(name);
+      progEl.appendChild(card);
+    });
+  }
+
+  function renderOptions(){
+    optionsEl.innerHTML = '';
+    const active = activeDegrees(level);
+    DEGREE_LAYOUT.forEach(deg => {
+      const ch = chordForDegree(deg, currentKey);
+      const b = document.createElement('button');
+      b.className = 'opt'; b.textContent = ch.label; b.dataset.deg = deg;
+      if(active.includes(deg)){
+        b.addEventListener('click', () => answerChord(ch, b));
+      } else {
+        b.classList.add('off'); b.disabled = true;
+      }
+      optionsEl.appendChild(b);
+    });
+  }
+
+  function renderInversions(){
+    invEl.innerHTML = '';
+    const maxInv = maxInversion(level);
+    for(let k=0; k<3; k++){
+      const b = document.createElement('button');
+      b.className = 'opt inv'; b.textContent = INV_LABELS[k]; b.dataset.inv = k;
+      if(k <= maxInv){ b.addEventListener('click', () => answerInv(k, b)); }
+      else { b.classList.add('off'); b.disabled = true; }
+      invEl.appendChild(b);
+    }
+  }
+
+  function updateHUD(){
+    document.getElementById('score').textContent = score;
+    document.getElementById('level').textContent = level;
+    document.getElementById('stars').textContent = '★' + stars;
+    document.getElementById('keyName').textContent = KEY_DISPLAY[currentKey];
+    document.getElementById('lives').textContent = '♥'.repeat(Math.max(0,lives)) || '—';
+    const m = streak >= 1 ? multiplier() : 1;
+    const me = document.getElementById('mult');
+    me.textContent = 'x' + m; me.classList.toggle('hot', m > 1);
+  }
+
+  // ---- input --------------------------------------------------------
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('againBtn').addEventListener('click', startGame);
+  document.getElementById('replayBtn').addEventListener('click', () => {
+    if(['listen','answerChord','answerInv'].includes(state))
+      playProgression(state === 'listen' ? toAnswerChord : null);
+  });
+  document.getElementById('tonicBtn').addEventListener('click', () => {
+    const I = vocab.find(c => c.degree === 'I') || chordOf(currentKey,'maj','I');
+    playChord(I, 0.8);
+  });
+  window.addEventListener('keydown', e => {
+    if((state==='start' || state==='over') && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); startGame(); return; }
+    if(e.key === 'r' || e.key === 'R'){ document.getElementById('replayBtn').click(); }
+    else if(e.key === ' '){ e.preventDefault(); document.getElementById('tonicBtn').click(); }
+    else if(e.key >= '1' && e.key <= '9'){
+      const idx = parseInt(e.key,10) - 1;
+      if(state === 'answerChord'){ const b = optionsEl.children[idx]; if(b) b.click(); }
+      else if(state === 'answerInv'){ const b = invEl.children[idx]; if(b) b.click(); }
+    }
+  });
+
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  reset();
+</script>
+</body>
+</html>
