@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rhythm Runner — jump the holes in the road</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E; --gold:#FFC53D; --green:#1E9E6A;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(14px,3vw,40px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(680px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:14px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.8rem,6.4vw,3rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{ content:attr(data-text); position:absolute; left:3px; top:3px; color:var(--pink); mix-blend-mode:multiply; z-index:-1; }
+  .subtitle{ font-family:var(--mono); font-size:.72rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-top:12px; }
+
+  .panel{ position:relative; background:var(--paper); border:2.5px solid var(--line); box-shadow:8px 8px 0 var(--ink); padding:clamp(14px,3vw,20px); }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .topbar b{ color:var(--ink); }
+  .lives{ letter-spacing:2px; font-size:.95rem; color:var(--pink); }
+  .lives .gone{ color:#C4B79B; }
+
+  .fbwrap{ display:flex; justify-content:center; }
+  svg.field{ width:100%; height:auto; display:block; touch-action:none; cursor:pointer; user-select:none; }
+
+  .feedback{ min-height:1.4em; font-family:var(--display); font-weight:700; font-size:1rem; text-align:center; color:var(--muted); margin:10px 0 8px; }
+  .feedback.good{ color:var(--green); } .feedback.bad{ color:var(--pink); }
+
+  .btn{ font-family:var(--body); font-weight:600; font-size:.96rem; padding:11px 20px; border:2.5px solid var(--ink);
+    background:var(--blue); color:#fff; cursor:pointer; box-shadow:3px 3px 0 var(--ink); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .controls{ display:flex; justify-content:center; }
+
+  .hint{ text-align:center; font-family:var(--mono); font-size:.66rem; letter-spacing:.05em; color:var(--muted); margin-top:10px; opacity:.85; }
+
+  .overlay{ position:absolute; inset:0; background:rgba(23,20,14,.86); display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; z-index:5; }
+  .overlay[hidden]{ display:none; }
+  .overlay h3{ font-family:var(--display); font-weight:800; font-size:2rem; color:var(--gold); margin:0 0 8px; text-transform:uppercase; }
+  .overlay p{ font-family:var(--mono); font-size:.82rem; color:var(--paper); margin:0 0 16px; letter-spacing:.04em; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Rhythm Runner">Rhythm Runner</span>
+      <div class="subtitle">theory · jump the holes in the road</div>
+    </header>
+
+    <div class="panel">
+      <div class="overlay" id="overlay" hidden>
+        <div>
+          <h3 id="ovTitle">Game Over</h3>
+          <p id="ovText">—</p>
+          <button class="btn" id="againBtn">Play again</button>
+        </div>
+      </div>
+
+      <div class="topbar">
+        <span><b id="levelName">Stage 1 · 60 BPM</b></span>
+        <span class="lives" id="lives"></span>
+        <span><b>Combo </b><b id="sCombo">0</b>&nbsp;·&nbsp;<b>Score </b><b id="sScore">0</b></span>
+      </div>
+
+      <div class="fbwrap">
+        <svg class="field" id="field" viewBox="0 0 640 380" role="img"
+             aria-label="A runner reads a bar of rhythm, then the road opens into holes shaped like the notes. Hold to stay airborne over notes, land on the road for rests. Rests have a low ceiling, so jumping on a rest costs a life.">
+          <rect x="0" y="0" width="640" height="380" fill="#EAF0FB"/>
+          <rect x="34" y="16" width="572" height="100" rx="6" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+          <path d="M120 116 L150 138 L100 138 Z" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+          <g id="notation"></g>
+          <rect x="0" y="310" width="640" height="70" fill="#4A3B24"/>
+          <g id="road"></g>
+          <g id="runner"></g>
+          <g id="fx"></g>
+          <g id="count"></g>
+        </svg>
+      </div>
+
+      <div class="feedback" id="feedback">Press Start.</div>
+      <div class="controls"><button class="btn" id="startBtn">▶ Start</button></div>
+      <div class="hint">Hold to stay up over notes (longer note = longer hold), land on the rests — don't jump on a rest or you hit the ceiling. Space or tap.</div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   RHYTHM RUNNER (theory) — one bar at a time. A 4-beat count lets you read
+   the rhythm, then the road opens into holes shaped like the notes: a note
+   is a gap to be airborne over (hold for its length); a rest is solid road
+   with a LOW CEILING — jump on a rest and you crack your head. Lose a life
+   and you retry the same rhythm. Each new bar is a new rhythm; tempo climbs.
+   ==================================================================== */
+
+  const DUR={h:2,dq:1.5,q:1,de:0.75,e:0.5,s:0.25,qr:1,er:0.5};
+  const isRest=c=>c.endsWith('r');
+  const beamable=c=>c==='e'||c==='s';
+
+  // 1-bar (4-beat) rhythms tagged by difficulty tier
+  const PATS=[
+    {t:1,p:['q','q','q','q']},{t:1,p:['h','q','q']},{t:1,p:['q','q','h']},{t:1,p:['h','h']},
+    {t:1,p:['q','qr','q','q']},{t:1,p:['q','q','qr','q']},{t:1,p:['h','q','qr']},{t:1,p:['q','qr','h']},
+    {t:2,p:['e','e','q','q','q']},{t:2,p:['q','e','e','q','q']},{t:2,p:['e','e','e','e','q','q']},
+    {t:2,p:['q','q','e','e','q']},{t:2,p:['e','e','q','qr','q']},
+    {t:3,p:['dq','e','q','q']},{t:3,p:['q','dq','e','q']},{t:3,p:['dq','e','h']},{t:3,p:['q','q','dq','e']},
+    {t:4,p:['e','q','q','q','e']},{t:4,p:['e','q','e','q','q']},{t:4,p:['q','e','q','e','q']},{t:4,p:['e','q','q','e','q']},
+    {t:5,p:['s','s','s','s','q','q','q']},{t:5,p:['s','s','e','q','q','q']},{t:5,p:['e','s','s','q','q','q']},{t:5,p:['s','s','s','s','e','e','q','q']},
+  ];
+  const STAGES=[
+    {bpm:60, maxT:1, bars:5}, {bpm:66, maxT:2, bars:5}, {bpm:72, maxT:3, bars:5},
+    {bpm:78, maxT:4, bars:5}, {bpm:86, maxT:5, bars:5}, {bpm:96, maxT:5, bars:6},
+  ];
+  const PREP=4;   // beats to read each new rhythm before its holes arrive
+
+  // geometry
+  const RUN_X=150, GROUND=310, PIT=380, SPEED=165, JUMPH=80, CLEAR=26, RISE_T=0.08, HOVER_MAX=3.1;
+  const CEIL_TOP=150, CEIL_BOT=214;
+  const NX0=72, NX1=576, STAFF_Y=70;
+
+  const svg=document.getElementById('field'), el=id=>document.getElementById(id);
+  const NS='http://www.w3.org/2000/svg';
+  const mk=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]); if(txt!=null)e.textContent=txt; return e;};
+
+  // ---- audio ----
+  let ac=null; const ensureAudio=()=>{if(!ac){const AC=window.AudioContext||window.webkitAudioContext;ac=new AC();}if(ac.state==='suspended')ac.resume();return ac;};
+  function click(accent){ const c=ensureAudio(),t=c.currentTime; const o=c.createOscillator(),g=c.createGain();
+    o.type='square'; o.frequency.value=accent?1500:1000; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(accent?0.13:0.07,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.07); }
+  function boing(){ const c=ensureAudio(),t=c.currentTime; const o=c.createOscillator(),g=c.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(320,t); o.frequency.exponentialRampToValueAtTime(680,t+0.12); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.16,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.2); o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.22); }
+  function thud(){ const c=ensureAudio(),t=c.currentTime; const o=c.createOscillator(),g=c.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(200,t); o.frequency.exponentialRampToValueAtTime(50,t+0.3); g.gain.setValueAtTime(0.22,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.34); o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.36); }
+
+  // ---- notation (with beaming) ----
+  function noteXFor(beat,beats){ return NX0 + beat*((NX1-NX0)/beats); }
+  function drawRest(g,x,type){
+    if(type==='qr'){
+      g.appendChild(mk('path',{d:'M'+(x-3)+','+(STAFF_Y-16)+' l6,7 l-5,6 l6,7',fill:'none',stroke:'#6F6757','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'}));
+      g.appendChild(mk('path',{d:'M'+(x+4)+','+(STAFF_Y+4)+' q-7,-1 -3,-8',fill:'none',stroke:'#6F6757','stroke-width':3,'stroke-linecap':'round'}));
+    } else {
+      g.appendChild(mk('line',{x1:x+4,y1:STAFF_Y-12,x2:x-4,y2:STAFF_Y+6,stroke:'#6F6757','stroke-width':2.6,'stroke-linecap':'round'}));
+      g.appendChild(mk('circle',{cx:x-2,cy:STAFF_Y-11,r:2.8,fill:'#6F6757'}));
+    }
+  }
+  function drawNotation(pat){
+    const g=el('notation'); g.innerHTML='';
+    const beats=pat.reduce((s,c)=>s+DUR[c],0), beamY=STAFF_Y-34;
+    g.appendChild(mk('line',{x1:NX0-8,y1:STAFF_Y,x2:NX1+8,y2:STAFF_Y,stroke:'#B9AE97','stroke-width':2}));
+    for(let b=0;b<=beats;b+=4){ const x=noteXFor(b,beats); g.appendChild(mk('line',{x1:x,y1:STAFF_Y-30,x2:x,y2:STAFF_Y+14,stroke:'#17140E','stroke-width':(b===0||b===beats)?2.5:1.5})); }
+    for(let b=0;b<beats;b++){ const x=noteXFor(b,beats); g.appendChild(mk('text',{x:x,y:STAFF_Y+30,'font-family':"'Space Mono',monospace",'font-size':11,'font-weight':700,fill:'#B9AE97','text-anchor':'middle'}, (b%4)+1)); }
+    // tokens
+    let t=0; const toks=[]; for(const code of pat){ toks.push({code,rest:isRest(code),beat:t,x:noteXFor(t,beats)}); t+=DUR[code]; }
+    // heads + dots + rests
+    for(const tk of toks){ if(tk.rest){ drawRest(g,tk.x,tk.code); continue; }
+      const filled=tk.code!=='h', dotted=(tk.code==='dq'||tk.code==='de');
+      g.appendChild(mk('ellipse',{cx:tk.x,cy:STAFF_Y,rx:7,ry:5.2,transform:'rotate(-20 '+tk.x+' '+STAFF_Y+')',fill:filled?'#17140E':'none',stroke:'#17140E','stroke-width':2}));
+      if(dotted) g.appendChild(mk('circle',{cx:tk.x+13,cy:STAFF_Y-1,r:2,fill:'#17140E'}));
+    }
+    // stems for non-beamable notes (crotchet, minim, dotted)
+    for(const tk of toks){ if(tk.rest||beamable(tk.code)) continue;
+      g.appendChild(mk('line',{x1:tk.x+6.4,y1:STAFF_Y-2,x2:tk.x+6.4,y2:beamY,stroke:'#17140E','stroke-width':2})); }
+    // beam groups: consecutive beamable notes within the same beat
+    const groups=[]; let cur=[];
+    for(const tk of toks){ const isB=!tk.rest&&beamable(tk.code);
+      if(isB && (cur.length===0 || Math.floor(tk.beat)===Math.floor(cur[0].beat))) cur.push(tk);
+      else { if(cur.length) groups.push(cur); cur = isB?[tk]:[]; } }
+    if(cur.length) groups.push(cur);
+    const stem=tk=>g.appendChild(mk('line',{x1:tk.x+6.4,y1:STAFF_Y-2,x2:tk.x+6.4,y2:beamY,stroke:'#17140E','stroke-width':2}));
+    for(const grp of groups){
+      if(grp.length===1){ const tk=grp[0]; stem(tk);
+        const flags=tk.code==='e'?1:2; for(let f=0;f<flags;f++){ const y=beamY+f*8; g.appendChild(mk('path',{d:'M'+(tk.x+6.4)+','+y+' q 9,3 8,13',fill:'none',stroke:'#17140E','stroke-width':2.4,'stroke-linecap':'round'})); }
+        continue; }
+      grp.forEach(stem);
+      const x0=grp[0].x+6.4, x1=grp[grp.length-1].x+6.4;
+      g.appendChild(mk('line',{x1:x0,y1:beamY,x2:x1,y2:beamY,stroke:'#17140E','stroke-width':4.5}));   // primary beam
+      for(let i=0;i<grp.length;i++){ if(grp[i].code!=='s') continue;                                    // secondary beam (semiquavers)
+        const nextS=i<grp.length-1&&grp[i+1].code==='s', prevS=i>0&&grp[i-1].code==='s';
+        if(nextS) g.appendChild(mk('line',{x1:grp[i].x+6.4,y1:beamY+7,x2:grp[i+1].x+6.4,y2:beamY+7,stroke:'#17140E','stroke-width':4}));
+        else if(!prevS) g.appendChild(mk('line',{x1:grp[i].x+6.4,y1:beamY+7,x2:grp[i].x+6.4+9,y2:beamY+7,stroke:'#17140E','stroke-width':4})); }
+    }
+  }
+
+  // ---- state ----
+  let stageIdx=0, barIdx=0, curPat=null, lastPat=null, segs=[], segIdx=0;
+  let t0=0, lastClickBeat=-1, phase='idle', bd=1, patBeats=4, barEndSec=0;
+  let lives=3, score=0, combo=0, bestCombo=0;
+  let yOff=0, held=false, pressStart=-10;
+  let failing=false, failKind='', failStart=0, pendingOver=false;
+  let flashUntil=0, goSaid=false, showCount=true;
+  const LIVES_MAX=3;
+  function renderLives(){ let s=''; for(let i=0;i<LIVES_MAX;i++) s+= i<lives?'♥':'<span class="gone">♡</span>'; el('lives').innerHTML=s; }
+  const nowSec=()=> performance.now()/1000 - t0;
+  const airborne=()=> yOff < -CLEAR;
+  const rnd=n=>Math.floor(Math.random()*n);
+  function pickPat(maxT){ const opts=PATS.filter(o=>o.t<=maxT && o.p!==lastPat); const o=opts[rnd(opts.length)]; lastPat=o.p; return o.p; }
+
+  function mkSeg(code, startBeat){
+    const dur=DUR[code], startSec=(PREP+startBeat)*bd, durSec=dur*bd, endSec=startSec+durSec;
+    const s={code, rest:isRest(code), dur, startSec, endSec, durSec, hit:false, stumble:false, done:false};
+    if(!s.rest){ const bridge=Math.min(0.2,durSec*0.3); const holeDur=Math.max(0.08,durSec-bridge);
+      s.holeEndSec=startSec+holeDur;
+      const epsS=Math.min(0.13,holeDur*0.4), epsE=Math.min(0.09,holeDur*0.28);   // slightly less forgiving, esp. on longer notes
+      s.dgStart=startSec+epsS; s.dgEnd=Math.max(s.dgStart+0.02, s.holeEndSec-epsE); }
+    else { const eps=Math.min(0.16,durSec*0.36); s.dgStart=startSec+eps; s.dgEnd=endSec-eps; }
+    return s;
+  }
+
+  function startBar(countIn, t0opt){
+    const stage=STAGES[stageIdx]; bd=60/stage.bpm;
+    patBeats=curPat.reduce((s,c)=>s+DUR[c],0);
+    segs=[]; let b=0; for(const code of curPat){ segs.push(mkSeg(code,b)); b+=DUR[code]; }
+    barEndSec=(PREP+patBeats)*bd;
+    segIdx=0; lastClickBeat=-1; goSaid=false; yOff=0; held=false; failing=false;
+    flashUntil=0; fxs=[]; showCount=!!countIn;                 // clear the hurt-flash from the old clock; count-in only when asked
+    t0=(t0opt!=null? t0opt : performance.now()/1000); phase='run';   // t0opt keeps the pulse continuous across a cleared bar
+    el('levelName').textContent='Stage '+(stageIdx+1)+' · '+stage.bpm+' BPM';
+    drawNotation(curPat); updateHud(); setFeedback(countIn?'Read the rhythm…':'','');
+  }
+  function advance(){
+    const nextT0 = t0 + barEndSec;                            // the beat the runner lands on becomes count-in beat 1 of the next bar
+    barIdx++;
+    if(barIdx>=STAGES[stageIdx].bars){ stageIdx++; barIdx=0; if(stageIdx>=STAGES.length){ return win(); }
+      setFeedback('Stage clear! Speeding up → '+STAGES[stageIdx].bpm+' BPM','good'); }
+    curPat=pickPat(STAGES[stageIdx].maxT);
+    startBar(false, nextT0);                                   // keep the pulse going — no re-triggered metronome
+  }
+
+  // ---- input ----
+  function press(){ if(phase!=='run'||failing) return; ensureAudio(); if(!held){ held=true; pressStart=nowSec(); if(yOff>-4) boing(); } }
+  function release(){ held=false; }
+  svg.addEventListener('pointerdown', e=>{ press(); e.preventDefault(); });
+  window.addEventListener('pointerup', release);
+  window.addEventListener('pointercancel', release);
+  let spaceDown=false;
+  window.addEventListener('keydown', e=>{ if(e.key===' '){ e.preventDefault(); if(!spaceDown){ spaceDown=true; press(); } } });
+  window.addEventListener('keyup', e=>{ if(e.key===' '){ spaceDown=false; release(); } });
+
+  // ---- judging ----
+  function finalizeSeg(s){ if(s.done) return; s.done=true; if(s.rest) return;
+    if(!s.hit){ combo++; if(combo>bestCombo) bestCombo=combo; score+=Math.round(40*(1+s.dur)); spark(RUN_X,GROUND-10,'#1E9E6A'); updateHud(); } }
+  function failLife(kind, s){
+    failing=true; failKind=kind; failStart=nowSec(); if(s) s.hit=true; held=false;
+    lives--; combo=0; thud(); flashUntil=nowSec()+0.45; renderLives(); updateHud();
+    setFeedback(kind==='hole'?'Fell in the hole!':'Ceiling! Don’t jump on a rest.','bad');
+    if(lives<=0) pendingOver=true;
+  }
+  function judge(now){
+    while(segIdx<segs.length && now>=segs[segIdx].endSec){ finalizeSeg(segs[segIdx]); segIdx++; }
+    const s=segs[segIdx]; if(!s) return;
+    if(now<s.dgStart || now>s.dgEnd) return;
+    if(!s.rest){ if(!airborne()) failLife('hole', s); }
+    else { if(airborne()) failLife('ceiling', s); }
+  }
+
+  function spark(x,y,col){ fxs.push({x,y,col,born:nowSec(),life:0.3}); }
+  let fxs=[];
+
+  // ---- physics + render ----
+  function stepJump(dt){
+    if(failing){ if(failKind==='hole') yOff=yOff+dt*360; else yOff=Math.min(0,yOff+dt*400); return; }   // hole: keep falling through and off-screen
+    const target=(held && nowSec()-pressStart<HOVER_MAX)?-JUMPH:0;
+    const step=dt*JUMPH/RISE_T;
+    if(yOff<target) yOff=Math.min(target,yOff+step); else if(yOff>target) yOff=Math.max(target,yOff-step);
+  }
+  function drawRoad(now){
+    const g=el('road'); g.innerHTML='';
+    g.appendChild(mk('rect',{x:0,y:GROUND,width:640,height:PIT-GROUND,fill:'#E4D8BE'}));
+    g.appendChild(mk('line',{x1:0,y1:GROUND,x2:640,y2:GROUND,stroke:'#17140E','stroke-width':2.5}));
+    for(const s of segs){
+      const a=RUN_X+(s.startSec-now)*SPEED, b=RUN_X+(s.endSec-now)*SPEED;
+      if(b<-30||a>680) continue;
+      if(!s.rest){ const xr=RUN_X+(s.holeEndSec-now)*SPEED;
+        g.appendChild(mk('rect',{x:a,y:GROUND,width:Math.max(6,xr-a),height:PIT-GROUND,fill:'#4A3B24'}));
+        g.appendChild(mk('line',{x1:a,y1:GROUND,x2:a,y2:PIT,stroke:'#2E2415','stroke-width':2}));
+        g.appendChild(mk('line',{x1:xr,y1:GROUND,x2:xr,y2:PIT,stroke:'#2E2415','stroke-width':2}));
+      } else { // rest = low ceiling (hazard beam) you must run under
+        g.appendChild(mk('rect',{x:a,y:CEIL_TOP,width:Math.max(8,b-a),height:CEIL_BOT-CEIL_TOP,fill:'#3A2E1C',stroke:'#17140E','stroke-width':2}));
+        for(let sx=a; sx<b; sx+=14) g.appendChild(mk('line',{x1:sx,y1:CEIL_TOP,x2:Math.min(b,sx+8),y2:CEIL_BOT,stroke:'#FFC53D','stroke-width':3,opacity:.85}));
+      }
+    }
+  }
+  function drawRunner(){
+    const g=el('runner'); g.innerHTML='';
+    const now=nowSec(), feet=GROUND+yOff, up=yOff<-6;
+    const cad=now*10, sw=(up||failing)?0:Math.sin(cad)*13, sw2=(up||failing)?0:Math.sin(cad+Math.PI)*13;
+    const col = now<flashUntil ? '#FF4E86' : '#17140E';
+    const hipY=feet-34, shY=feet-66, headY=feet-82;
+    g.appendChild(mk('circle',{cx:RUN_X,cy:headY,r:11,fill:'#F4EEE2',stroke:col,'stroke-width':3}));
+    g.appendChild(mk('line',{x1:RUN_X,y1:shY,x2:RUN_X,y2:hipY,stroke:col,'stroke-width':4,'stroke-linecap':'round'}));
+    g.appendChild(mk('line',{x1:RUN_X,y1:shY+4,x2:RUN_X+(up?16:sw2*0.8),y2:shY+(up?-8:16),stroke:col,'stroke-width':3.5,'stroke-linecap':'round'}));
+    g.appendChild(mk('line',{x1:RUN_X,y1:shY+4,x2:RUN_X+(up?-14:sw*0.8),y2:shY+(up?-6:16),stroke:col,'stroke-width':3.5,'stroke-linecap':'round'}));
+    if(up){
+      g.appendChild(mk('line',{x1:RUN_X,y1:hipY,x2:RUN_X-12,y2:hipY+15,stroke:col,'stroke-width':4,'stroke-linecap':'round'}));
+      g.appendChild(mk('line',{x1:RUN_X,y1:hipY,x2:RUN_X+14,y2:hipY+11,stroke:col,'stroke-width':4,'stroke-linecap':'round'}));
+    } else {
+      g.appendChild(mk('line',{x1:RUN_X,y1:hipY,x2:RUN_X+sw,y2:feet,stroke:col,'stroke-width':4,'stroke-linecap':'round'}));
+      g.appendChild(mk('line',{x1:RUN_X,y1:hipY,x2:RUN_X+sw2,y2:feet,stroke:col,'stroke-width':4,'stroke-linecap':'round'}));
+    }
+  }
+  function drawFx(){ const g=el('fx'); g.innerHTML=''; const now=nowSec(); fxs=fxs.filter(p=>now-p.born<p.life);
+    for(const p of fxs){ const k=(now-p.born)/p.life; g.appendChild(mk('circle',{cx:p.x,cy:p.y,r:6+k*16,fill:'none',stroke:p.col,'stroke-width':3,opacity:1-k})); } }
+  function drawCount(){ const g=el('count'); g.innerHTML=''; if(phase!=='run'||!showCount) return;
+    const nb=nowSec()/bd;
+    if(nb<PREP && nb>=0){ const n=Math.floor(nb)+1; g.appendChild(mk('text',{x:340,y:210,'font-family':"'Syne',sans-serif",'font-size':82,'font-weight':800,fill:'#2438C8',opacity:0.28,'text-anchor':'middle'}, n)); } }
+
+  // ---- loop ----
+  let lastT=0;
+  function loop(t){
+    requestAnimationFrame(loop);
+    const dt=lastT?Math.min(0.05,(t-lastT)/1000):0; lastT=t;
+    stepJump(dt);
+    if(phase==='run'){
+      const now=nowSec(), nb=now/bd;
+      while(lastClickBeat<Math.floor(nb) && lastClickBeat<PREP+patBeats){ lastClickBeat++; click(lastClickBeat%4===0); }
+      if(!goSaid && now>=PREP*bd){ setFeedback('Go!','good'); goSaid=true; }
+      if(failing){ if(now>failStart+0.85){ if(pendingOver){ phase='over'; gameOver(); } else startBar(true); } }
+      else { judge(now); if(now>=barEndSec){ advance(); } }
+    }
+    drawRoad(nowSec()); drawRunner(); drawFx(); drawCount();
+  }
+  requestAnimationFrame(loop);
+
+  function win(){ phase='win'; el('ovTitle').textContent='Encore!'; el('ovText').textContent='You ran every rhythm — score '+score+', best combo '+bestCombo+'.'; el('overlay').hidden=false; }
+  function gameOver(){ el('ovTitle').textContent='Game Over'; el('ovText').textContent='You reached Stage '+(stageIdx+1)+' ('+STAGES[stageIdx].bpm+' BPM) · score '+score+'.'; el('overlay').hidden=false; }
+
+  function startGame(){ stageIdx=0; barIdx=0; lives=LIVES_MAX; score=0; combo=0; bestCombo=0; pendingOver=false; lastPat=null; flashUntil=0; renderLives(); updateHud(); curPat=pickPat(STAGES[0].maxT); startBar(true); }
+  el('startBtn').addEventListener('click', ()=>{ ensureAudio(); el('startBtn').style.display='none'; startGame(); });
+  el('againBtn').addEventListener('click', ()=>{ el('overlay').hidden=true; startGame(); });
+
+  function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
+  function updateHud(){ el('sScore').textContent=score; el('sCombo').textContent=combo; }
+
+  renderLives(); updateHud();
+</script>
+</body>
+</html>

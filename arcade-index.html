@@ -161,6 +161,51 @@
 
 <main>
 
+  <!-- ═══════════ TUNER ═══════════ -->
+  <section class="cat">
+    <div class="wrap">
+      <div class="cat-head">
+        <h2>Tuner</h2>
+        <span class="cat-note">Chromatic — any instrument</span>
+      </div>
+      <div class="cat-rule"></div>
+      <div class="grid">
+
+        <a class="game" href="tuner.html" style="--accent:var(--gold); --art-bg:#17140E;">
+          <div class="game-art">
+            <svg viewBox="0 0 300 200" role="img" aria-label="Chromatic tuner: a needle dial centred on a note">
+              <!-- dial arc -->
+              <path d="M40,150 A110,110 0 0 1 260,150" fill="none" stroke="#FBF7EE" stroke-width="3"/>
+              <!-- tick marks -->
+              <g stroke="#FBF7EE" stroke-width="2" opacity="0.55">
+                <line x1="150" y1="44" x2="150" y2="60"/>
+                <line x1="97"  y1="55" x2="105" y2="69"/>
+                <line x1="203" y1="55" x2="195" y2="69"/>
+                <line x1="60"  y1="92" x2="73"  y2="101"/>
+                <line x1="240" y1="92" x2="227" y2="101"/>
+              </g>
+              <!-- in-tune zone -->
+              <line x1="150" y1="40" x2="150" y2="150" stroke="#1E9E6A" stroke-width="2" stroke-dasharray="4 5" opacity="0.8"/>
+              <!-- needle (slightly sharp) -->
+              <line x1="150" y1="150" x2="176" y2="66" stroke="#FF4E86" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="150" cy="150" r="8" fill="#FFC53D" stroke="#FBF7EE" stroke-width="2"/>
+              <!-- note readout -->
+              <text x="150" y="128" font-family="'Syne',sans-serif" font-size="46" font-weight="800" fill="#FBF7EE" text-anchor="middle">A</text>
+              <text x="150" y="178" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#FFC53D" text-anchor="middle">440 Hz</text>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Tool</span>
+            <h3>Tuner</h3>
+            <p>A chromatic tuner for any instrument — play a note and the needle shows how sharp or flat you are, with the nearest pitch named. Handy before any of the games below.</p>
+            <span class="play">Open</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ═══════════ UKULELE ═══════════ -->
   <section class="cat">
     <div class="wrap">
@@ -277,6 +322,38 @@
             <span class="tag">Chord quiz</span>
             <h3>Chord Quiz</h3>
             <p>A chord name pops up — tap the frets to build the shape from memory, then check your work. Graded on the shape, not the fingering.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Ukulele/what-note-ukulele-3frets.html" style="--accent:var(--blue);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 300" role="img" aria-label="What Note?: a ukulele fretboard with a mystery marker to name">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">NAME THIS NOTE</text>
+              <rect x="78" y="70" width="144" height="196" fill="#F0E6D2" stroke="#17140E" stroke-width="3"/>
+              <rect x="78" y="64" width="144" height="8" fill="#17140E"/>
+              <line x1="78" y1="135" x2="222" y2="135" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="78" y1="200" x2="222" y2="200" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="102" y1="52" x2="102" y2="266" stroke="#17140E" stroke-width="2.6"/>
+              <line x1="134" y1="52" x2="134" y2="266" stroke="#17140E" stroke-width="2.6"/>
+              <line x1="166" y1="52" x2="166" y2="266" stroke="#17140E" stroke-width="2.6"/>
+              <line x1="198" y1="52" x2="198" y2="266" stroke="#17140E" stroke-width="2.6"/>
+              <text x="102" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">G</text>
+              <text x="134" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">C</text>
+              <text x="166" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+              <text x="198" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">A</text>
+              <text x="62" y="76"  font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">0</text>
+              <text x="62" y="107" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">1</text>
+              <text x="62" y="170" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">2</text>
+              <text x="62" y="236" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">3</text>
+              <circle cx="134" cy="168" r="16" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <text x="134" y="173" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#F4EEE2" text-anchor="middle">?</text>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">What note?</span>
+            <h3>What Note?</h3>
+            <p>A marker lands on an open string or the first three frets — name the note on the piano. Naturals to start, full chromatic when you're ready.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -412,6 +489,199 @@
             <span class="tag">Chord quiz</span>
             <h3>Chord Quiz</h3>
             <p>A chord name pops up — build the shape by tapping frets and muting strings, then check it. Easy, medium and hard chord sets.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Guitar/what-note-guitar.html" style="--accent:var(--blue);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 300" role="img" aria-label="What Note?: a guitar fretboard with a mystery marker to name">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">NAME THIS NOTE</text>
+              <rect x="78" y="70" width="144" height="196" fill="#F0E6D2" stroke="#17140E" stroke-width="3"/>
+              <rect x="78" y="64" width="144" height="8" fill="#17140E"/>
+              <line x1="78" y1="135" x2="222" y2="135" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="78" y1="200" x2="222" y2="200" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="96"  y1="52" x2="96"  y2="266" stroke="#17140E" stroke-width="3.4"/>
+              <line x1="118" y1="52" x2="118" y2="266" stroke="#17140E" stroke-width="3.0"/>
+              <line x1="140" y1="52" x2="140" y2="266" stroke="#17140E" stroke-width="2.6"/>
+              <line x1="162" y1="52" x2="162" y2="266" stroke="#17140E" stroke-width="2.2"/>
+              <line x1="184" y1="52" x2="184" y2="266" stroke="#17140E" stroke-width="1.9"/>
+              <line x1="206" y1="52" x2="206" y2="266" stroke="#17140E" stroke-width="1.6"/>
+              <text x="96"  y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">E</text>
+              <text x="118" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">A</text>
+              <text x="140" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">D</text>
+              <text x="162" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">G</text>
+              <text x="184" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">B</text>
+              <text x="206" y="46" font-family="monospace" font-size="14" font-weight="700" fill="#17140E" text-anchor="middle">e</text>
+              <text x="62" y="76"  font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">0</text>
+              <text x="62" y="107" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">1</text>
+              <text x="62" y="170" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">2</text>
+              <text x="62" y="236" font-family="monospace" font-size="12" font-weight="700" fill="#6F6757" text-anchor="middle">3</text>
+              <circle cx="162" cy="168" r="16" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <text x="162" y="173" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#F4EEE2" text-anchor="middle">?</text>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">What note?</span>
+            <h3>What Note?</h3>
+            <p>A marker lands on an open string or the first three frets — name the note on the piano. Naturals to start, full chromatic when you're ready.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Guitar/triad-drop.html" style="--accent:var(--pink);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 300" role="img" aria-label="Triad Drop: a guitar fretboard with a three-note triad grip to slide into place">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">PLACE THE TRIAD</text>
+              <rect x="78" y="70" width="144" height="196" fill="#F0E6D2" stroke="#17140E" stroke-width="3"/>
+              <rect x="78" y="64" width="144" height="8" fill="#17140E"/>
+              <line x1="78" y1="135" x2="222" y2="135" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="78" y1="200" x2="222" y2="200" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="96"  y1="52" x2="96"  y2="266" stroke="#17140E" stroke-width="3.4"/>
+              <line x1="118" y1="52" x2="118" y2="266" stroke="#17140E" stroke-width="3.0"/>
+              <line x1="140" y1="52" x2="140" y2="266" stroke="#17140E" stroke-width="2.6"/>
+              <line x1="162" y1="52" x2="162" y2="266" stroke="#17140E" stroke-width="2.2"/>
+              <line x1="184" y1="52" x2="184" y2="266" stroke="#17140E" stroke-width="1.9"/>
+              <line x1="206" y1="52" x2="206" y2="266" stroke="#17140E" stroke-width="1.6"/>
+              <circle cx="162" cy="168" r="15" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <circle cx="184" cy="168" r="15" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <circle cx="206" cy="107" r="15" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <path d="M250 116 L250 220 M250 116 L244 128 M250 116 L256 128 M250 220 L244 208 M250 220 L256 208" fill="none" stroke="#FF4E86" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Triads</span>
+            <h3>Triad Drop</h3>
+            <p>You're handed a triad grip and a chord name — slide it up or down the neck to the one fret where the shape spells that chord. Majors, minors and all three inversions.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Guitar/triad-slingshot.html" style="--accent:var(--gold);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 300" role="img" aria-label="Triad Launch: a triad grip charged to fire up the fretboard">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">CHARGE &amp; FIRE</text>
+              <rect x="78" y="70" width="144" height="196" fill="#F0E6D2" stroke="#17140E" stroke-width="3"/>
+              <rect x="78" y="64" width="144" height="8" fill="#17140E"/>
+              <line x1="78" y1="135" x2="222" y2="135" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="78" y1="200" x2="222" y2="200" stroke="#B9AE97" stroke-width="2"/>
+              <line x1="96"  y1="52" x2="96"  y2="266" stroke="#17140E" stroke-width="3.4"/>
+              <line x1="118" y1="52" x2="118" y2="266" stroke="#17140E" stroke-width="3.0"/>
+              <line x1="140" y1="52" x2="140" y2="266" stroke="#17140E" stroke-width="2.6"/>
+              <line x1="162" y1="52" x2="162" y2="266" stroke="#17140E" stroke-width="2.2"/>
+              <line x1="184" y1="52" x2="184" y2="266" stroke="#17140E" stroke-width="1.9"/>
+              <line x1="206" y1="52" x2="206" y2="266" stroke="#17140E" stroke-width="1.6"/>
+              <circle cx="140" cy="168" r="15" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <circle cx="162" cy="168" r="15" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <circle cx="184" cy="107" r="15" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <path d="M242 150 L250 138 L258 150 M242 172 L250 160 L258 172 M242 194 L250 182 L258 194" fill="none" stroke="#FFC53D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Triads</span>
+            <h3>Triad Launch</h3>
+            <p>Same puzzle, launched. Charge a power meter and fire the grip up the neck — it slides, bounces and settles. Land it on the fret that spells the chord: 3 points spot-on, 1 within a fret.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ PIANO ═══════════ -->
+  <section class="cat">
+    <div class="wrap">
+      <div class="cat-head">
+        <h2>Piano</h2>
+        <span class="cat-note">One octave — build the chord</span>
+      </div>
+      <div class="cat-rule"></div>
+      <div class="grid">
+
+        <a class="game" href="Piano/chord-catapult.html" style="--accent:var(--blue); --art-bg:#E4ECFF;">
+          <div class="game-art">
+            <svg viewBox="0 0 300 212" role="img" aria-label="Chord Catapult: a catapult flings a note in an arc onto a piano keyboard">
+              <!-- ground -->
+              <rect x="0" y="182" width="300" height="30" fill="#E4D8BE"/>
+              <line x1="0" y1="182" x2="300" y2="182" stroke="#17140E" stroke-width="2.5"/>
+              <!-- catapult -->
+              <line x1="42" y1="182" x2="42" y2="120" stroke="#8A5A2B" stroke-width="6" stroke-linecap="round"/>
+              <line x1="42" y1="124" x2="30" y2="108" stroke="#8A5A2B" stroke-width="5" stroke-linecap="round"/>
+              <line x1="42" y1="124" x2="54" y2="108" stroke="#8A5A2B" stroke-width="5" stroke-linecap="round"/>
+              <!-- tree -->
+              <rect x="104" y="150" width="8" height="32" fill="#8A5A2B" stroke="#17140E" stroke-width="1.5"/>
+              <circle cx="108" cy="146" r="17" fill="#3E8E5A" stroke="#17140E" stroke-width="2"/>
+              <!-- arc -->
+              <circle cx="60"  cy="116" r="3" fill="#17140E" opacity="0.3"/>
+              <circle cx="86"  cy="90"  r="3" fill="#17140E" opacity="0.3"/>
+              <circle cx="116" cy="74"  r="3" fill="#17140E" opacity="0.3"/>
+              <circle cx="150" cy="76"  r="3" fill="#17140E" opacity="0.3"/>
+              <circle cx="182" cy="96"  r="3" fill="#17140E" opacity="0.3"/>
+              <circle cx="208" cy="124" r="3" fill="#17140E" opacity="0.3"/>
+              <!-- note ball -->
+              <circle cx="48" cy="112" r="11" fill="#2438C8" stroke="#17140E" stroke-width="2"/>
+              <text x="48" y="117" font-family="'Space Mono',monospace" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">♪</text>
+              <!-- keyboard (top-down) -->
+              <g>
+                <rect x="150" y="140" width="20" height="42" fill="#1E9E6A" stroke="#17140E" stroke-width="2"/>
+                <rect x="170" y="140" width="20" height="42" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="190" y="140" width="20" height="42" fill="#1E9E6A" stroke="#17140E" stroke-width="2"/>
+                <rect x="210" y="140" width="20" height="42" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="230" y="140" width="20" height="42" fill="#1E9E6A" stroke="#17140E" stroke-width="2"/>
+                <rect x="250" y="140" width="20" height="42" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="270" y="140" width="20" height="42" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="164" y="140" width="12" height="26" fill="#17140E"/>
+                <rect x="184" y="140" width="12" height="26" fill="#17140E"/>
+                <rect x="224" y="140" width="12" height="26" fill="#17140E"/>
+                <rect x="244" y="140" width="12" height="26" fill="#17140E"/>
+                <rect x="264" y="140" width="12" height="26" fill="#17140E"/>
+              </g>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Arcade</span>
+            <h3>Chord Catapult</h3>
+            <p>Fling a note in an arc onto the keyboard and strike the keys that spell the chord — C, E, G. Fifteen levels climb from triads through inversions, 7ths, 9ths and diminished chords, with trees, clouds and crosswind in the way.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Piano/chord-cascade.html" style="--accent:var(--pink); --art-bg:#EEF2FB;">
+          <div class="game-art">
+            <svg viewBox="0 0 300 212" role="img" aria-label="Chord Cascade: a chord shape falling onto a scrollable piano keyboard">
+              <text x="150" y="26" font-family="'Space Mono',monospace" font-size="12" font-weight="700" letter-spacing="2" fill="#6F6757" text-anchor="middle">CATCH THE CHORD</text>
+              <!-- falling chord shape (C E G tokens) -->
+              <rect x="96"  y="60" width="26" height="26" rx="3" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="140" y="60" width="26" height="26" rx="3" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="184" y="60" width="26" height="26" rx="3" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <line x1="109" y1="86" x2="109" y2="150" stroke="#B9AE97" stroke-width="2" stroke-dasharray="4 4"/>
+              <line x1="153" y1="86" x2="153" y2="150" stroke="#B9AE97" stroke-width="2" stroke-dasharray="4 4"/>
+              <line x1="197" y1="86" x2="197" y2="150" stroke="#B9AE97" stroke-width="2" stroke-dasharray="4 4"/>
+              <!-- keyboard (top-down) -->
+              <g>
+                <rect x="20"  y="150" width="26" height="52" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="46"  y="150" width="26" height="52" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="72"  y="150" width="26" height="52" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="98"  y="150" width="26" height="52" fill="#1E9E6A" stroke="#17140E" stroke-width="2"/>
+                <rect x="124" y="150" width="26" height="52" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="150" y="150" width="26" height="52" fill="#1E9E6A" stroke="#17140E" stroke-width="2"/>
+                <rect x="176" y="150" width="26" height="52" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="202" y="150" width="26" height="52" fill="#1E9E6A" stroke="#17140E" stroke-width="2"/>
+                <rect x="228" y="150" width="26" height="52" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="254" y="150" width="26" height="52" fill="#FBF7EE" stroke="#17140E" stroke-width="2"/>
+                <rect x="40"  y="150" width="14" height="32" fill="#17140E"/>
+                <rect x="66"  y="150" width="14" height="32" fill="#17140E"/>
+                <rect x="118" y="150" width="14" height="32" fill="#17140E"/>
+                <rect x="170" y="150" width="14" height="32" fill="#17140E"/>
+                <rect x="222" y="150" width="14" height="32" fill="#17140E"/>
+              </g>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Falling</span>
+            <h3>Chord Cascade</h3>
+            <p>A chord's key-shape drops from the sky — scroll the piano roll so it lands on the keys that actually spell it. Since every chord's black-and-white pattern is unique, it only clicks in one place. Ramps through minors, inversions, 7ths and 9ths.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -570,6 +840,105 @@
             <span class="tag">Circle of fifths</span>
             <h3>Pitch Invaders — Circle of Fifths</h3>
             <p>Only the seven notes of the current key drop as aliens, with the in-key keys lit up. Clear a boss wave and the wheel spins to a new key — a tonic–fifth–tonic cue re-anchors your ear each time.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Ear%20Training/chord-progress.html" style="--accent:var(--blue); --art-bg:#E4ECFF;">
+          <div class="game-art">
+            <svg viewBox="0 0 300 240" role="img" aria-label="Chord Progress: a row of chord cards ending in a blank card to identify">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700"
+                    letter-spacing="3" fill="#6F6757" text-anchor="middle">NAME THE CHORD</text>
+
+              <!-- card 1: I / C -->
+              <rect x="30" y="70" width="54" height="96" rx="2" fill="#F4EEE2" stroke="#17140E" stroke-width="2.5"/>
+              <text x="57" y="98"  font-family="'Space Mono',monospace" font-size="11" font-weight="700" fill="#6F6757" text-anchor="middle">I</text>
+              <text x="57" y="132" font-family="'Syne',sans-serif" font-size="26" font-weight="800" fill="#17140E" text-anchor="middle">C</text>
+
+              <!-- card 2: IV / F -->
+              <rect x="92" y="70" width="54" height="96" rx="2" fill="#F4EEE2" stroke="#17140E" stroke-width="2.5"/>
+              <text x="119" y="98"  font-family="'Space Mono',monospace" font-size="11" font-weight="700" fill="#6F6757" text-anchor="middle">IV</text>
+              <text x="119" y="132" font-family="'Syne',sans-serif" font-size="26" font-weight="800" fill="#17140E" text-anchor="middle">F</text>
+
+              <!-- card 3: V / G — currently playing (pink, lifted) -->
+              <text x="181" y="52" font-family="'Space Mono',monospace" font-size="14" font-weight="700" fill="#FF4E86" text-anchor="middle">♪</text>
+              <rect x="154" y="64" width="54" height="96" rx="2" fill="#F4EEE2" stroke="#FF4E86" stroke-width="3"/>
+              <text x="181" y="92"  font-family="'Space Mono',monospace" font-size="11" font-weight="700" fill="#6F6757" text-anchor="middle">V</text>
+              <text x="181" y="126" font-family="'Syne',sans-serif" font-size="26" font-weight="800" fill="#17140E" text-anchor="middle">G</text>
+
+              <!-- card 4: blank target -->
+              <rect x="216" y="70" width="54" height="96" rx="2" fill="#F4EEE2" stroke="#17140E" stroke-width="2.5" stroke-dasharray="5 4"/>
+              <text x="243" y="98"  font-family="'Space Mono',monospace" font-size="11" font-weight="700" fill="#B9AE97" text-anchor="middle">?</text>
+              <text x="243" y="132" font-family="'Syne',sans-serif" font-size="26" font-weight="800" fill="#B9AE97" text-anchor="middle">?</text>
+
+              <!-- option chips -->
+              <g font-family="'Space Mono',monospace" font-size="13" font-weight="700" text-anchor="middle">
+                <rect x="66"  y="192" width="46" height="26" rx="2" fill="#2438C8"/>
+                <text x="89"  y="209" fill="#F4EEE2">G</text>
+                <rect x="126" y="192" width="46" height="26" rx="2" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/>
+                <text x="149" y="209" fill="#17140E">Am</text>
+                <rect x="186" y="192" width="46" height="26" rx="2" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/>
+                <text x="209" y="209" fill="#17140E">Dm</text>
+              </g>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Progressions</span>
+            <h3>Chord Progress</h3>
+            <p>A chord progression plays with a marker sweeping across it — the last card stays blank. Name the chord you heard from the key's chords. Later levels add more chords, longer progressions, and inversions to spot.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ THEORY ═══════════ -->
+  <section class="cat">
+    <div class="wrap">
+      <div class="cat-head">
+        <h2>Theory</h2>
+        <span class="cat-note">Read it — play it</span>
+      </div>
+      <div class="cat-rule"></div>
+      <div class="grid">
+
+        <a class="game" href="Theory/rhythm-runner.html" style="--accent:var(--pink); --art-bg:#EAF0FB;">
+          <div class="game-art">
+            <svg viewBox="0 0 300 212" role="img" aria-label="Rhythm Runner: a runner leaping a hole in the road under a bar of rhythm">
+              <!-- rhythm above -->
+              <line x1="52" y1="44" x2="248" y2="44" stroke="#B9AE97" stroke-width="2"/>
+              <ellipse cx="78" cy="44" rx="6.5" ry="5" transform="rotate(-20 78 44)" fill="#17140E"/>
+              <line x1="84" y1="42" x2="84" y2="16" stroke="#17140E" stroke-width="2"/>
+              <ellipse cx="120" cy="44" rx="6.5" ry="5" transform="rotate(-20 120 44)" fill="#17140E"/>
+              <ellipse cx="144" cy="44" rx="6.5" ry="5" transform="rotate(-20 144 44)" fill="#17140E"/>
+              <line x1="126" y1="42" x2="126" y2="14" stroke="#17140E" stroke-width="2"/>
+              <line x1="150" y1="42" x2="150" y2="14" stroke="#17140E" stroke-width="2"/>
+              <line x1="125" y1="14" x2="151" y2="14" stroke="#17140E" stroke-width="4.5"/>
+              <ellipse cx="196" cy="44" rx="6.5" ry="5" transform="rotate(-20 196 44)" fill="none" stroke="#17140E" stroke-width="2"/>
+              <line x1="202" y1="42" x2="202" y2="16" stroke="#17140E" stroke-width="2"/>
+              <!-- ground + hole -->
+              <rect x="0" y="170" width="300" height="42" fill="#E4D8BE"/>
+              <line x1="0" y1="170" x2="300" y2="170" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="150" y="170" width="56" height="42" fill="#4A3B24"/>
+              <line x1="150" y1="170" x2="150" y2="212" stroke="#2E2415" stroke-width="2"/>
+              <line x1="206" y1="170" x2="206" y2="212" stroke="#2E2415" stroke-width="2"/>
+              <!-- runner mid-leap over the hole -->
+              <g stroke="#17140E" stroke-width="4" stroke-linecap="round" fill="none">
+                <circle cx="178" cy="86" r="10" fill="#F4EEE2"/>
+                <line x1="178" y1="96" x2="178" y2="126"/>
+                <line x1="178" y1="102" x2="194" y2="92"/>
+                <line x1="178" y1="102" x2="163" y2="94"/>
+                <line x1="178" y1="126" x2="166" y2="140"/>
+                <line x1="178" y1="126" x2="192" y2="137"/>
+              </g>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Rhythm</span>
+            <h3>Rhythm Runner</h3>
+            <p>Read the bar of rhythm, then the road opens into holes shaped like the notes. Hold to stay airborne for long notes, land on the rests — don't fall in or hit the ceiling. Beamed quavers, dotted notes and syncopation as the tempo climbs.</p>
             <span class="play">Play</span>
           </div>
         </a>

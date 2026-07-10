@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chord Catapult — sling notes to build the chord (piano)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E; --gold:#FFC53D; --green:#1E9E6A;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(14px,3vw,40px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(720px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:14px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.8rem,6.4vw,3rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.15em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:clamp(14px,3vw,22px);
+  }
+
+  .levelbar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:10px; border-bottom:2px solid #E4D8BE; padding-bottom:8px;
+  }
+  .levelbar b{ color:var(--ink); }
+  .barright{ display:inline-flex; gap:14px; align-items:center; }
+  .dots{ display:inline-flex; gap:5px; align-items:center; }
+  .dots i{ width:11px; height:11px; border:2px solid var(--ink); display:inline-block; background:var(--paper); }
+  .dots i.on{ background:var(--green); }
+  .lives{ letter-spacing:2px; font-size:.95rem; color:var(--pink); }
+  .lives .gone{ color:#C4B79B; }
+
+  .prompt{ display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
+  .prompt .chord{
+    font-family:var(--display); font-weight:800; font-size:clamp(1.5rem,6vw,2.3rem);
+    line-height:1; color:var(--ink);
+  }
+  .chips{ display:flex; gap:7px; align-items:center; }
+  .chip{
+    font-family:var(--mono); font-weight:700; font-size:.9rem; min-width:34px; text-align:center;
+    padding:6px 8px; border:2.5px solid var(--ink); background:#FBF7EE; color:var(--ink);
+    transition:background .15s ease, color .15s ease, transform .15s ease;
+  }
+  .chip.hit{ background:var(--green); color:#fff; transform:translateY(-2px); }
+  .chip.mystery{ color:#B9AE97; }
+  .chips .arrow{ color:var(--muted); font-family:var(--mono); font-size:.8rem; }
+
+  .fbwrap{ display:flex; justify-content:center; }
+  svg.field{ width:100%; height:auto; display:block; touch-action:none; cursor:crosshair; }
+
+  .power{ height:12px; margin:12px 2px 2px; border:2px solid var(--ink); background:#EFE7D6; position:relative; overflow:hidden; }
+  .power > i{ position:absolute; inset:0 100% 0 0; background:var(--gold); }
+  .power.hot > i{ background:var(--pink); }
+  .powerlbl{ font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); text-align:center; margin-top:5px; }
+
+  .feedback{
+    min-height:1.4em; font-family:var(--display); font-weight:700;
+    font-size:1rem; text-align:center; color:var(--muted); margin:12px 0 12px;
+  }
+  .feedback.good{ color:var(--green); } .feedback.bad{ color:var(--pink); }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:2px; }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:.96rem; padding:11px 14px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; flex:1 1 auto; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .05s ease, box-shadow .05s ease, background .12s ease;
+  }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.ghost{ flex:0 0 auto; }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  .score{
+    display:flex; justify-content:center; gap:clamp(16px,6vw,40px); margin-top:18px;
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .score b{ display:block; font-size:1.5rem; color:var(--ink); letter-spacing:0; }
+
+  .hint{
+    text-align:center; font-family:var(--mono); font-size:.66rem; letter-spacing:.05em;
+    color:var(--muted); margin-top:10px; opacity:.85;
+  }
+
+  .overlay{
+    position:absolute; inset:0; background:rgba(23,20,14,.86); display:flex;
+    align-items:center; justify-content:center; text-align:center; padding:24px; z-index:5;
+  }
+  .overlay[hidden]{ display:none; }
+  .overlay h3{ font-family:var(--display); font-weight:800; font-size:2.2rem; color:var(--gold); margin:0 0 10px; text-transform:uppercase; }
+  .overlay p{ font-family:var(--mono); font-size:.82rem; color:var(--paper); margin:0 0 18px; letter-spacing:.04em; }
+
+  @media (max-width:420px){ .btn{ font-size:.88rem; padding:10px; } }
+  @media (prefers-reduced-motion:reduce){ .chip{ transition:none; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Chord Catapult">Chord Catapult</span>
+      <div class="subtitle">piano · sling notes to build the chord</div>
+    </header>
+
+    <div class="panel">
+      <div class="overlay" id="winOverlay" hidden>
+        <div>
+          <h3>Maestro!</h3>
+          <p id="winText">You cleared every level.</p>
+          <button class="btn primary" id="againBtn">Play again</button>
+        </div>
+      </div>
+
+      <div class="levelbar">
+        <span id="levelName"><b>Level 1</b> · Warm-up</span>
+        <span class="barright">
+          <span class="lives" id="lives" title="lives (reset each level)"></span>
+          <span class="dots" id="cleanDots" title="clean chords this level"></span>
+        </span>
+      </div>
+
+      <div class="prompt">
+        <div class="chord" id="chordName">—</div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div class="fbwrap">
+        <svg class="field" id="field" viewBox="0 0 820 470" role="img"
+             aria-label="A catapult on the left and a piano keyboard on the right. Pull back and release to launch a note in an arc and strike the keys that spell the chord.">
+          <g id="scene"></g>
+          <g id="keys"></g>
+          <g id="obstacles"></g>
+          <g id="hud"></g>
+          <g id="aim"></g>
+          <g id="sling"></g>
+          <g id="ball"></g>
+        </svg>
+      </div>
+
+      <div class="power" id="powerBar"><i id="powerFill"></i></div>
+      <div class="powerlbl" id="powerLbl">power — pull the ball back to set it</div>
+
+      <div class="feedback" id="feedback" aria-live="polite">Loading…</div>
+
+      <div class="hint">Pull the ball down &amp; back, release to fire (further = stronger). Arrow keys aim · Space fires.</div>
+    </div>
+
+    <div class="score">
+      <div>built<b id="sBuilt">0</b></div>
+      <div>clean run<b id="sStreak">0</b></div>
+      <div>best<b id="sBest">0</b></div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   CHORD CATAPULT (piano) — launch a note in a gravity arc and strike the
+   keys that spell the named chord. Ten fixed levels; clear each by building
+   3 chords cleanly (no wrong notes). Twists: tree obstacle, hidden spelling,
+   ordered / inversion hits, fading aim guide, crosswind, 7th chords.
+   ==================================================================== */
+
+  const NOTE=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const FLATN=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+  const generic=pc=> NOTE[pc]===FLATN[pc] ? NOTE[pc] : NOTE[pc]+'/'+FLATN[pc];
+  // note-name -> pitch class (supports ♯ ♭ and doubles)
+  const LETTER_PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  function nameToPc(n){ let pc=LETTER_PC[n[0]]; for(let i=1;i<n.length;i++){ const c=n[i]; if(c==='♯'||c==='#')pc++; else if(c==='♭'||c==='b')pc--; } return ((pc%12)+12)%12; }
+
+  // ---- chord library (spelled correctly; pitch classes derived from the names) ----
+  const C=(name,names)=>({name, names, pcs:names.map(nameToPc)});
+  const WMAJ=[ C('C major',['C','E','G']), C('F major',['F','A','C']), C('G major',['G','B','D']) ];
+  const WMIN=[ C('A minor',['A','C','E']), C('D minor',['D','F','A']), C('E minor',['E','G','B']) ];
+  const ACC =[ C('D major',['D','F♯','A']), C('E major',['E','G♯','B']), C('A major',['A','C♯','E']),
+               C('G minor',['G','B♭','D']), C('C minor',['C','E♭','G']), C('F minor',['F','A♭','C']),
+               C('B minor',['B','D','F♯']), C('B♭ major',['B♭','D','F']) ];
+  const DIMAUG=[ C('C dim',['C','E♭','G♭']), C('D dim',['D','F','A♭']), C('E dim',['E','G','B♭']),
+                 C('G dim',['G','B♭','D♭']), C('B dim',['B','D','F']),
+                 C('C aug',['C','E','G♯']), C('F aug',['F','A','C♯']), C('G aug',['G','B','D♯']), C('A♭ aug',['A♭','C','E']) ];
+  const SEV =[ C('Cmaj7',['C','E','G','B']), C('G7',['G','B','D','F']), C('Dm7',['D','F','A','C']),
+               C('Am7',['A','C','E','G']), C('Fmaj7',['F','A','C','E']), C('Em7',['E','G','B','D']),
+               C('A7',['A','C♯','E','G']), C('D7',['D','F♯','A','C']) ];
+  const DIM7=[ C('Bm7♭5',['B','D','F','A']), C('Dm7♭5',['D','F','A♭','C']), C('Em7♭5',['E','G','B♭','D']), C('Am7♭5',['A','C','E♭','G']),
+               C('C°7',['C','E♭','G♭','B♭♭']), C('C♯°7',['C♯','E','G','B♭']), C('D°7',['D','F','A♭','C♭']) ];
+  const NINTH=[ C('Cmaj9',['C','E','G','B','D']), C('G9',['G','B','D','F','A']), C('Dm9',['D','F','A','C','E']),
+                C('Fmaj9',['F','A','C','E','G']), C('A9',['A','C♯','E','G','B']), C('Em9',['E','G','B','D','F♯']) ];
+  const WHITE=WMAJ.concat(WMIN), ALL=WHITE.concat(ACC);
+  const HARD=SEV.concat(DIM7,NINTH);
+  const POOLS={ wmaj:WMAJ, white:WHITE, all:ALL, dimaug:DIMAUG, sevenths:SEV, dim7:DIM7, ninth:NINTH, hard:HARD };
+
+  // ---- level ladder (twists accumulate; spelling stays hidden once dropped) ----
+  const LEVELS=[
+    {name:'Warm-up',             pool:'wmaj',   tree:false, cloud:false, wind:false, spell:true,  order:'none'},
+    {name:'Minor Key',           pool:'white',  tree:false, cloud:false, wind:false, spell:true,  order:'none'},
+    {name:'In the Trees',        pool:'white',  tree:true,  cloud:false, wind:false, spell:true,  order:'none'},
+    {name:'Accidentals',         pool:'all',    tree:true,  cloud:false, wind:false, spell:true,  order:'none'},
+    {name:'Dim &amp; Aug',       pool:'dimaug', tree:true,  cloud:false, wind:false, spell:true,  order:'none'},
+    {name:'In Order',            pool:'all',    tree:true,  cloud:false, wind:false, spell:true,  order:'ascending'},
+    {name:'Inversions',          pool:'all',    tree:true,  cloud:false, wind:false, spell:true,  order:'inversion'},
+    {name:'Name Only',           pool:'all',    tree:true,  cloud:false, wind:false, spell:false, order:'none'},
+    {name:'Clouds',              pool:'all',    tree:true,  cloud:true,  wind:false, spell:false, order:'none'},
+    {name:'Crosswind',           pool:'all',    tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
+    {name:'Sevenths',            pool:'sevenths',tree:true, cloud:true,  wind:true,  spell:false, order:'none'},
+    {name:'Diminished 7ths',     pool:'dim7',   tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
+    {name:'Ninth Chords',        pool:'ninth',  tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
+    {name:'Seventh Inversions',  pool:'sevenths',tree:true, cloud:true,  wind:true,  spell:false, order:'inversion'},
+    {name:"Maestro's Gauntlet",  pool:'hard',   tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
+  ];
+  const CLEAR_REQ=3;
+  const INV_LABEL=['root position','1st inversion','2nd inversion','3rd inversion'];
+
+  // ---- geometry / physics ----
+  const AX=110, AY=248, GROUND=400, KB0=380, KTOP=300, KH=100;
+  const WHITE_PC=[0,2,4,5,7,9,11], WHITE_W=60;
+  const BLACKS=[{pc:1,cx:440},{pc:3,cx:500},{pc:6,cx:620},{pc:8,cx:680},{pc:10,cx:740}], BLACK_W=34, BLACK_H=60;
+  const KB1=KB0+WHITE_PC.length*WHITE_W;
+  const VMAX=22, G=0.5, RMAX=120, R=14;
+
+  const svg=document.getElementById('field'), el=id=>document.getElementById(id);
+  const NS='http://www.w3.org/2000/svg';
+  const mk=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]); if(txt!=null)e.textContent=txt; return e;};
+
+  // ---- static scene + keyboard ----
+  const keyEl={};
+  (function build(){
+    const sc=el('scene');
+    sc.appendChild(mk('rect',{x:0,y:GROUND,width:820,height:70,fill:'#E4D8BE'}));
+    sc.appendChild(mk('line',{x1:0,y1:GROUND,x2:820,y2:GROUND,stroke:'#17140E','stroke-width':2.5}));
+    sc.appendChild(mk('line',{x1:AX,y1:GROUND,x2:AX,y2:AY,stroke:'#8A5A2B','stroke-width':8,'stroke-linecap':'round'}));
+    sc.appendChild(mk('line',{x1:AX,y1:AY+6,x2:AX-16,y2:AY-14,stroke:'#8A5A2B','stroke-width':7,'stroke-linecap':'round'}));
+    sc.appendChild(mk('line',{x1:AX,y1:AY+6,x2:AX+16,y2:AY-14,stroke:'#8A5A2B','stroke-width':7,'stroke-linecap':'round'}));
+    const ks=el('keys');
+    WHITE_PC.forEach((pc,i)=>{
+      const x=KB0+i*WHITE_W;
+      const r=mk('rect',{x,y:KTOP,width:WHITE_W,height:KH,rx:2,fill:'#FBF7EE',stroke:'#17140E','stroke-width':2.5});
+      r.dataset.base='#FBF7EE'; ks.appendChild(r); keyEl[pc]=r;
+      const t=mk('text',{x:x+WHITE_W/2,y:KTOP+KH-12,'font-family':"'Space Mono',monospace",'font-size':14,'font-weight':700,fill:'#6F6757','text-anchor':'middle'}, NOTE[pc]);
+      t.dataset.k='lbl'; ks.appendChild(t); keyEl['t'+pc]=t;
+    });
+    BLACKS.forEach(b=>{
+      const r=mk('rect',{x:b.cx-BLACK_W/2,y:KTOP,width:BLACK_W,height:BLACK_H,rx:2,fill:'#17140E',stroke:'#17140E','stroke-width':2.5});
+      r.dataset.base='#17140E'; ks.appendChild(r); keyEl[b.pc]=r;
+    });
+  })();
+
+  function keyByX(x){
+    for(const b of BLACKS){ if(x>=b.cx-BLACK_W/2 && x<=b.cx+BLACK_W/2) return b.pc; }
+    let i=Math.floor((x-KB0)/WHITE_W); i=Math.max(0,Math.min(WHITE_PC.length-1,i));
+    return WHITE_PC[i];
+  }
+
+  // ---- audio ----
+  let ac=null;
+  const ensureAudio=()=>{if(!ac){const AC=window.AudioContext||window.webkitAudioContext;ac=new AC();}if(ac.state==='suspended')ac.resume();return ac;};
+  function tone(pc,when=0,dur=0.9,amp=0.24){
+    const c=ensureAudio(),t=c.currentTime+when, freq=261.63*Math.pow(2,pc/12);
+    const out=c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001,t);
+    out.gain.exponentialRampToValueAtTime(amp,t+0.02);
+    out.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    [['sine',1],['triangle',0.3]].forEach(([type,a])=>{
+      const o=c.createOscillator();o.type=type;o.frequency.value=freq;
+      const g=c.createGain();g.gain.value=a;o.connect(g).connect(out);o.start(t);o.stop(t+dur+0.05);
+    });
+  }
+  function thud(){ const c=ensureAudio(),t=c.currentTime; const o=c.createOscillator(),g=c.createGain();
+    o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(60,t+0.15);
+    g.gain.setValueAtTime(0.2,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);o.connect(g).connect(c.destination);o.start(t);o.stop(t+0.22); }
+  // close, ascending voicing from the bass, so upper tones (incl. 7ths/9ths) ring
+  // higher even though the single-octave key physically sits lower.
+  const midiFreq=m=>440*Math.pow(2,(m-69)/12);
+  function computeVoicing(){
+    round.voiceFreq={};
+    let prev=48+round.display[0];              // bass note in the C3..B3 octave
+    round.voiceFreq[round.display[0]]=midiFreq(prev);
+    for(let i=1;i<round.display.length;i++){
+      const pc=round.display[i]; let nm=prev+1; while((((nm%12)+12)%12)!==pc) nm++;
+      prev=nm; round.voiceFreq[pc]=midiFreq(nm);
+    }
+  }
+  function playVoiced(pc,when=0,dur=0.9,amp=0.24){
+    const c=ensureAudio(),t=c.currentTime+when, freq=(round.voiceFreq&&round.voiceFreq[pc])||261.63*Math.pow(2,pc/12);
+    const out=c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001,t);
+    out.gain.exponentialRampToValueAtTime(amp,t+0.02);
+    out.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    [['sine',1],['triangle',0.3]].forEach(([type,a])=>{
+      const o=c.createOscillator();o.type=type;o.frequency.value=freq;
+      const g=c.createGain();g.gain.value=a;o.connect(g).connect(out);o.start(t);o.stop(t+dur+0.05);
+    });
+  }
+
+  // ---- state ----
+  let curLevel=0, cleanCount=0, round=null, state='aim';
+  let aim={ang:48, power:0.72};
+  let ball={x:AX,y:AY,vx:0,vy:0};
+  let built=0, cleanRun=0, best=0, lives=3;
+  const LIVES_MAX=3;
+  const rnd=n=>Math.floor(Math.random()*n);
+  function renderLives(){ let s=''; for(let i=0;i<LIVES_MAX;i++) s+= i<lives ? '♥' : '<span class="gone">♡</span>'; el('lives').innerHTML=s; }
+
+  function makeTree(){
+    const x=235+rnd(45), trunkH=120+rnd(55), r=46+rnd(16);
+    const trunkTopY=GROUND-trunkH, cx=x, cy=trunkTopY-2;
+    return {x,trunkTopY,cx,cy,r};
+  }
+  function makeCloud(){
+    const x=360+rnd(60), y=86+rnd(20), rx=66+rnd(14), ry=19+rnd(4);
+    return {x,y,rx,ry};
+  }
+  function drawObstacles(){
+    const g=el('obstacles'); g.innerHTML='';
+    const tr=round.tree;
+    if(tr){
+      g.appendChild(mk('rect',{x:tr.x-6,y:tr.trunkTopY,width:12,height:GROUND-tr.trunkTopY,fill:'#8A5A2B',stroke:'#17140E','stroke-width':2}));
+      g.appendChild(mk('circle',{cx:tr.cx,cy:tr.cy,r:tr.r,fill:'#3E8E5A',stroke:'#17140E','stroke-width':2.5}));
+      g.appendChild(mk('circle',{cx:tr.cx-tr.r*0.5,cy:tr.cy+4,r:tr.r*0.6,fill:'#4EA36A',stroke:'#17140E','stroke-width':2}));
+      g.appendChild(mk('circle',{cx:tr.cx+tr.r*0.5,cy:tr.cy+2,r:tr.r*0.55,fill:'#4EA36A',stroke:'#17140E','stroke-width':2}));
+    }
+    const cl=round.cloud;
+    if(cl){
+      const p=[[0,0,1],[-0.55,0.12,0.66],[0.55,0.12,0.66],[-0.28,-0.28,0.6],[0.3,-0.24,0.62]];
+      p.forEach(([dx,dy,s])=> g.appendChild(mk('ellipse',{cx:cl.x+dx*cl.rx,cy:cl.y+dy*cl.ry*2,rx:cl.rx*s,ry:cl.ry*s*1.2,fill:'#EEF2FB',stroke:'#17140E','stroke-width':2})));
+      g.appendChild(mk('ellipse',{cx:cl.x,cy:cl.y,rx:cl.rx*0.7,ry:cl.ry*0.7,fill:'#EEF2FB'}));
+    }
+  }
+
+  function drawHud(){
+    const h=el('hud'); h.innerHTML='';
+    if(round.wind){
+      const dir=round.wind>0?1:-1, strength=Math.max(1,Math.min(3,Math.round(Math.abs(round.wind)/0.028)));
+      const cx=470, cy=30;
+      h.appendChild(mk('text',{x:cx-58,y:cy+4,'font-family':"'Space Mono',monospace",'font-size':12,'font-weight':700,fill:'#6F6757','text-anchor':'end'},'WIND'));
+      for(let i=0;i<strength;i++){ const ax=cx-40+i*16;
+        h.appendChild(mk('path',{d:'M'+ax+','+(cy-6)+' L'+(ax+9*dir)+','+cy+' L'+ax+','+(cy+6),fill:'none',stroke:'#FF4E86','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'})); }
+    }
+  }
+
+  function resetKeys(){ for(const k in keyEl){ if(k[0]==='t')continue; const r=keyEl[k]; r.setAttribute('fill', r.dataset.base); } }
+  function pressKey(pc,cls){
+    const r=keyEl[pc]; if(!r) return;
+    const col = cls==='hit' ? '#1E9E6A' : cls==='wrong' ? '#FF4E86' : '#2438C8';
+    r.setAttribute('fill',col);
+    if(cls!=='hit'){ setTimeout(()=>{ if(!round.hit.has(+pc)) r.setAttribute('fill', r.dataset.base); }, 260); }
+  }
+  function showKeyLetters(show){ WHITE_PC.forEach(pc=>{ keyEl['t'+pc].setAttribute('opacity', show?1:0); }); }
+
+  function renderChips(){
+    const c=el('chips'); c.innerHTML='';
+    round.display.forEach((pc,i)=>{
+      if(round.order!=='none' && i>0){ c.appendChild(mk2('span','arrow','→')); }
+      const d=document.createElement('div');
+      const shown=round.revealed[i];
+      d.className='chip'+(shown?' hit':(round.spell?'':' mystery'));
+      d.textContent= shown ? round.nameOf[pc] : (round.spell? round.nameOf[pc] : '?');
+      if(shown) d.classList.add('hit');
+      d.id='chip'+i;
+      c.appendChild(d);
+    });
+  }
+  function mk2(tag,cls,txt){ const e=document.createElement(tag); e.className=cls; e.textContent=txt; return e; }
+
+  function drawBall(){
+    const g=el('ball'); g.innerHTML='';
+    g.appendChild(mk('circle',{cx:ball.x,cy:ball.y,r:R,fill:'#2438C8',stroke:'#17140E','stroke-width':2.5}));
+    g.appendChild(mk('text',{x:ball.x,y:ball.y+5,'font-family':"'Space Mono',monospace",'font-size':15,'font-weight':700,fill:'#fff','text-anchor':'middle'},'♪'));
+  }
+
+  function aimVec(){ const a=aim.ang*Math.PI/180; return {ux:Math.cos(a), uy:-Math.sin(a)}; }
+  function updatePower(){ el('powerFill').style.right=(100-aim.power*100)+'%'; el('powerBar').classList.toggle('hot',aim.power>0.78); }
+  function drawAim(){
+    updatePower();
+    const g=el('aim'); g.innerHTML='';
+    if(state!=='aim') return;
+    const {ux,uy}=aimVec();
+    const px=AX-ux*aim.power*RMAX, py=AY-uy*aim.power*RMAX;
+    el('sling').innerHTML='';
+    el('sling').appendChild(mk('line',{x1:AX-16,y1:AY-14,x2:px,y2:py,stroke:'#C99A5B','stroke-width':3}));
+    el('sling').appendChild(mk('line',{x1:AX+16,y1:AY-14,x2:px,y2:py,stroke:'#C99A5B','stroke-width':3}));
+    ball.x=px; ball.y=py; drawBall();
+    if(round && round.guide){
+      const w=round.wind||0;
+      let x=AX,y=AY, vx=VMAX*aim.power*ux, vy=VMAX*aim.power*uy;
+      for(let i=0;i<130;i++){
+        vy+=G; vx+=w; x+=vx; y+=vy;
+        if(x>860||y>GROUND+8) break;
+        if(i%3===0) g.appendChild(mk('circle',{cx:x,cy:y,r:2.4,fill:'#17140E',opacity:0.26}));
+      }
+    }
+  }
+
+  function updateLevelBar(){
+    const cfg=LEVELS[curLevel];
+    el('levelName').innerHTML='<b>Level '+(curLevel+1)+'</b> · '+cfg.name;
+    const dots=el('cleanDots'); dots.innerHTML='';
+    for(let i=0;i<CLEAR_REQ;i++){ const s=document.createElement('i'); if(i<cleanCount) s.className='on'; dots.appendChild(s); }
+  }
+
+  function orderName(){
+    if(round.order==='ascending') return '  · in order →';
+    if(round.order==='inversion') return '  · '+INV_LABEL[round.inv]+', bass first';
+    return '';
+  }
+
+  function newRound(){
+    const cfg=LEVELS[curLevel];
+    const pool=POOLS[cfg.pool];
+    const chord=pool[rnd(pool.length)];
+    let display=chord.pcs.slice();          // root position, low-to-high
+    let inv=0;
+    if(cfg.order==='inversion'){ inv=1+rnd(display.length-1); for(let k=0;k<inv;k++) display.push(display.shift()); }
+    round={
+      name:chord.name, pcs:chord.pcs.slice(), need:new Set(chord.pcs),
+      display, revealed:display.map(()=>false), next:0, guide:true,
+      order:cfg.order, inv, spell:cfg.spell,
+      tree: cfg.tree?makeTree():null,
+      cloud: cfg.cloud?makeCloud():null,
+      wind: cfg.wind? ((rnd(2)?1:-1)*(0.03+Math.random()*0.05)) : 0,
+      clean:true
+    };
+    round.hit=new Set();
+    round.nameOf={}; chord.names.forEach((nm,j)=> round.nameOf[chord.pcs[j]]=nm);
+    computeVoicing();
+    state='aim';
+    resetKeys(); showKeyLetters(true); drawObstacles(); drawHud(); renderChips(); updateLevelBar();
+    el('chordName').textContent=chord.name + (cfg.order==='inversion'? ' / '+INV_LABEL[inv] : '');
+    setFeedback('Build '+chord.name+orderName()+'.','');
+    ball={x:AX,y:AY,vx:0,vy:0};
+    drawAim(); drawBall();
+  }
+
+  function fire(){
+    if(state!=='aim') return;
+    const {ux,uy}=aimVec();
+    ball={x:AX,y:AY, vx:VMAX*aim.power*ux, vy:VMAX*aim.power*uy};
+    state='fly'; el('sling').innerHTML=''; el('aim').innerHTML=''; ensureAudio();
+  }
+
+  function revealChip(i,pc){ const d=el('chip'+i); if(d){ d.textContent=round.nameOf[pc]; d.classList.remove('mystery'); d.classList.add('hit'); } }
+
+  function strike(pc){
+    let correct=false, idx=-1, wrongOrder=false;
+    if(round.order!=='none'){
+      if(pc===round.display[round.next]){ correct=true; idx=round.next; round.next++; }
+      else if(round.need.has(pc)) wrongOrder=true;
+    } else {
+      idx=round.display.indexOf(pc);
+      if(idx>=0 && !round.revealed[idx]) correct=true;
+      else if(idx>=0 && round.revealed[idx]){ pressKey(pc,'hit'); playVoiced(pc); setFeedback(round.nameOf[pc]+' already lit.',''); endShot(); return; }
+    }
+    if(correct){
+      round.revealed[idx]=true; round.hit.add(pc); pressKey(pc,'hit'); playVoiced(pc); revealChip(idx,pc);
+      if(round.revealed.every(Boolean)){ completeChord(); return; }
+      const left=round.revealed.filter(v=>!v).length;
+      setFeedback('Yes — '+round.nameOf[pc]+'!  '+left+' to go.','good');
+    } else {
+      round.clean=false; pressKey(pc,'wrong'); tone(pc);
+      lives--; renderLives();
+      setFeedback((wrongOrder ? round.nameOf[pc]+' — right note, wrong order.' : generic(pc)+' is not in '+round.name+'.')+'  −1 life','bad');
+      if(lives<=0){ failLevel(); return; }
+    }
+    endShot();
+  }
+  function failLevel(){
+    state='done'; cleanRun=0; updateScore();
+    setFeedback('Out of lives — restarting '+LEVELS[curLevel].name+'.','bad');
+    setTimeout(()=>startLevel(curLevel), 1400);
+  }
+  function startLevel(idx){
+    curLevel=idx; cleanCount=0; lives=LIVES_MAX;
+    renderLives(); updateLevelBar(); newRound();
+  }
+  function endShot(){ state='done'; setTimeout(()=>{ if(state==='done'){ state='aim'; ball={x:AX,y:AY,vx:0,vy:0}; drawAim(); drawBall(); } }, 480); }
+
+  function completeChord(){
+    state='done';
+    round.display.forEach((pc,i)=>{ pressKey(pc,'hit'); playVoiced(pc, i*0.11); });
+    built++;
+    if(round.clean){
+      cleanRun++; best=Math.max(best,cleanRun); cleanCount++;
+      updateScore(); updateLevelBar();
+      if(cleanCount>=CLEAR_REQ){
+        if(curLevel>=LEVELS.length-1){ return win(); }
+        setFeedback(round.name+' built! ✓  Level up → '+LEVELS[curLevel+1].name,'good');
+        setTimeout(()=>startLevel(curLevel+1), 1300); return;
+      }
+      setFeedback(round.name+' built! ✓  clean '+cleanCount+'/'+CLEAR_REQ,'good');
+    } else {
+      cleanRun=0; cleanCount=0; updateScore(); updateLevelBar();
+      setFeedback(round.name+' built — but not clean, streak reset.','');
+    }
+    setTimeout(newRound, 1150);
+  }
+
+  function miss(kind){
+    thud();
+    const msg = kind==='tree' ? 'Thunk! Arc over the tree.'
+              : kind==='cloud' ? 'Into the cloud! Go under it.'
+              : 'Missed the keys.';
+    setFeedback(msg,'bad');
+    endShot();
+  }
+
+  function win(){
+    updateScore(); updateLevelBar();
+    el('winText').textContent='You cleared all '+LEVELS.length+' levels — built '+built+' chords.';
+    el('winOverlay').hidden=false; state='done';
+  }
+
+  // ---- physics loop ----
+  function loop(){
+    if(state==='fly'){
+      ball.vy+=G; if(round.wind) ball.vx+=round.wind; ball.x+=ball.vx; ball.y+=ball.vy;
+      const tr=round.tree;
+      if(tr){
+        if(ball.x>tr.x-6-R && ball.x<tr.x+6+R && ball.y>tr.trunkTopY-R && ball.y<GROUND){ drawBall(); miss('tree'); requestAnimationFrame(loop); return; }
+        const dx=ball.x-tr.cx, dy=ball.y-tr.cy; if(dx*dx+dy*dy < (tr.r+R)*(tr.r+R)){ drawBall(); miss('tree'); requestAnimationFrame(loop); return; }
+      }
+      const cl=round.cloud;
+      if(cl){ const dx=(ball.x-cl.x)/(cl.rx+R), dy=(ball.y-cl.y)/(cl.ry+R); if(dx*dx+dy*dy<1){ drawBall(); miss('cloud'); requestAnimationFrame(loop); return; } }
+      if(ball.vy>0 && ball.y>=KTOP && ball.x>=KB0 && ball.x<=KB1){ ball.y=KTOP; drawBall(); strike(keyByX(ball.x)); requestAnimationFrame(loop); return; }
+      if(ball.y>=GROUND || ball.x>860 || ball.x<-30 || ball.y>540){ drawBall(); miss('ground'); requestAnimationFrame(loop); return; }
+      drawBall();
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ---- aiming input ----
+  let dragging=false;
+  function toSvg(cx,cy){ const p=svg.createSVGPoint(); p.x=cx; p.y=cy; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+  function aimFromPoint(sx,sy){
+    // real slingshot: pull DOWN and BACK (below-left of the fork) to launch UP and forward
+    let fwd=AX-sx; if(fwd<0) fwd=0;      // pull left  -> forward launch
+    let up=sy-AY;  if(up<0)  up=0;       // pull down  -> upward launch
+    const mag=Math.hypot(fwd,up)||0.0001;
+    aim.power=Math.max(0.12, Math.min(1, mag/RMAX));
+    aim.ang=Math.max(6, Math.min(86, Math.atan2(up,fwd)*180/Math.PI));
+    drawAim();
+  }
+  function fieldDown(e){ if(state!=='aim') return; dragging=true; try{ svg.setPointerCapture&&svg.setPointerCapture(e.pointerId); }catch(_){}
+    const p=toSvg(e.clientX,e.clientY); aimFromPoint(p.x,p.y); e.preventDefault(); }
+  function fieldMove(e){ if(!dragging) return; const p=toSvg(e.clientX,e.clientY); aimFromPoint(p.x,p.y); e.preventDefault(); }
+  function fieldUp(){ if(!dragging) return; dragging=false; fire(); }
+  svg.addEventListener('pointerdown', fieldDown);
+  svg.addEventListener('pointermove', fieldMove);
+  window.addEventListener('pointerup', fieldUp);
+
+  el('againBtn').addEventListener('click', restart);
+  function restart(){ built=0; cleanRun=0; best=0; el('winOverlay').hidden=true; updateScore(); startLevel(0); }
+
+  window.addEventListener('keydown', e=>{
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
+    if(state==='aim'){
+      if(e.key==='ArrowUp') aim.ang=Math.min(86,aim.ang+3);
+      else if(e.key==='ArrowDown') aim.ang=Math.max(6,aim.ang-3);
+      else if(e.key==='ArrowRight') aim.power=Math.min(1,aim.power+0.04);
+      else if(e.key==='ArrowLeft') aim.power=Math.max(0.12,aim.power-0.04);
+      else if(e.key===' ') { fire(); return; }
+      drawAim();
+    }
+  });
+
+  function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
+  function updateScore(){ el('sBuilt').textContent=built; el('sStreak').textContent=cleanRun; el('sBest').textContent=best; }
+
+  startLevel(0);
+</script>
+</body>
+</html>

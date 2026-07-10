@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triad Launch — fire the triad onto the right fret</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E; --gold:#FFC53D;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(640px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:18px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.8rem,6.4vw,3rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.15em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:clamp(16px,4vw,26px);
+  }
+
+  .prompt{ text-align:center; margin-bottom:12px; }
+  .prompt .lead{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:4px;
+  }
+  .prompt .chord{
+    font-family:var(--display); font-weight:800; font-size:clamp(1.9rem,7.5vw,2.8rem);
+    line-height:1; color:var(--ink);
+  }
+  .prompt .meta{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); margin-top:7px;
+  }
+
+  .fbwrap{ display:flex; justify-content:center; }
+  svg.neck{ width:100%; height:auto; display:block; touch-action:none; }
+  #grip circle{ cursor:grab; }
+  svg.neck.aiming #grip circle{ cursor:grabbing; }
+
+  .power{
+    height:12px; margin:12px 2px 2px; border:2px solid var(--ink); background:#EFE7D6;
+    position:relative; overflow:hidden;
+  }
+  .power > i{ position:absolute; inset:0 100% 0 0; background:var(--gold); transition:right .04s linear; }
+  .power.hot > i{ background:var(--pink); }
+  .powerlbl{
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted); text-align:center; margin-top:5px;
+  }
+
+  .feedback{
+    min-height:1.5em; font-family:var(--display); font-weight:700;
+    font-size:1.02rem; text-align:center; color:var(--muted); margin:12px 0 12px;
+  }
+  .feedback.good{ color:var(--blue); } .feedback.bad{ color:var(--pink); }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:.98rem; padding:12px 14px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; flex:1 1 auto; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .05s ease, box-shadow .05s ease, background .12s ease;
+    touch-action:none;
+  }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.primary:hover{ background:#1c2da6; }
+  .btn:disabled{ opacity:.4; box-shadow:none; cursor:default; }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  .diffrow{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .seg{ display:flex; border:2px solid var(--ink); }
+  .seg button{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em;
+    text-transform:uppercase; padding:7px 13px; border:0;
+    background:var(--paper); cursor:pointer; color:var(--ink);
+  }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+  .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .score{
+    display:flex; justify-content:center; gap:clamp(16px,6vw,40px); margin-top:20px;
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .score b{ display:block; font-size:1.5rem; color:var(--ink); letter-spacing:0; }
+
+  .hint{
+    text-align:center; font-family:var(--mono); font-size:.66rem; letter-spacing:.05em;
+    color:var(--muted); margin-top:10px; opacity:.85;
+  }
+
+  @media (max-width:420px){ .btn{ font-size:.9rem; padding:11px 10px; } }
+  @media (prefers-reduced-motion:reduce){ .power > i{ transition:none; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Triad Launch">Triad Launch</span>
+      <div class="subtitle">guitar · charge up &amp; fire the grip home</div>
+    </header>
+
+    <div class="panel">
+      <div class="prompt">
+        <div class="lead">Land this triad</div>
+        <div class="chord" id="chordName">—</div>
+        <div class="meta" id="chordMeta">&nbsp;</div>
+      </div>
+
+      <div class="fbwrap">
+        <svg class="neck" id="neck" viewBox="-20 0 720 250" role="img"
+             aria-label="Guitar neck. Charge up the triad grip and release to fire it up the neck; land it on the fret where it spells the named chord.">
+          <g id="board"></g>
+          <g id="inlays"></g>
+          <g id="strings"></g>
+          <g id="labels"></g>
+          <g id="fretnums"></g>
+          <g id="ghost"></g>
+          <g id="fx"></g>
+          <g id="grip"></g>
+        </svg>
+      </div>
+
+      <div class="power" id="powerBar"><i id="powerFill"></i></div>
+      <div class="powerlbl" id="powerLbl">hold to charge</div>
+
+      <div class="feedback" id="feedback" aria-live="polite">Loading…</div>
+
+      <div class="controls">
+        <button class="btn primary" id="chargeBtn">Hold to charge · release to fire</button>
+        <button class="btn" id="newBtn">New</button>
+      </div>
+
+      <div class="diffrow">
+        <span>level:</span>
+        <div class="seg" role="group" aria-label="Difficulty">
+          <button id="d0" aria-pressed="true">Easy</button>
+          <button id="d1" aria-pressed="false">Medium</button>
+          <button id="d2" aria-pressed="false">Hard</button>
+        </div>
+      </div>
+      <div class="hint">Hold the grip, the button, or Space to charge — release to fire.</div>
+    </div>
+
+    <div class="score">
+      <div>score<b id="sScore">0</b></div>
+      <div>streak<b id="sStreak">0</b></div>
+      <div>best<b id="sBest">0</b></div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   TRIAD LAUNCH (guitar) — same puzzle as Triad Drop, but the grip is
+   fired with a charge-up power meter. Hold to build power, release to
+   launch; the grip slides up the neck, decelerating with friction,
+   bounces off the 12th-fret wall if over-powered, and settles into the
+   nearest fret. Land it where the shape spells the named chord.
+   ==================================================================== */
+
+  const OPEN = [4, 9, 2, 7, 11, 4];
+  const BASE = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
+  const STR  = ['E','A','D','G','B','e'];
+  const NOTE = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const VOICING = { maj:[[0,4,7],[0,3,8],[0,5,9]], min:[[0,3,7],[0,4,9],[0,5,8]] };
+  const INV_NAME = ['root position','1st inversion','2nd inversion'];
+  const SETS = [
+    {strings:[0,1,2], gaps:[5,5], label:'E–A–D'},
+    {strings:[1,2,3], gaps:[5,5], label:'A–D–G'},
+    {strings:[2,3,4], gaps:[5,4], label:'D–G–B'},
+    {strings:[3,4,5], gaps:[4,5], label:'G–B–e'},
+  ];
+  const DIFFS = [
+    {sets:[2,3],     q:['maj']},
+    {sets:[2,3],     q:['maj','min']},
+    {sets:[0,1,2,3], q:['maj','min']},
+  ];
+
+  // neck geometry (viewBox -60 0 760 250)
+  const NUT_X=60, FRET_W=52, N_FRETS=12;
+  const ROW_Y=[200,168,136,104,72,40];
+  const fretX = f => NUT_X + (f-0.5)*FRET_W;
+  const wireX = f => NUT_X + f*FRET_W;
+
+  // physics
+  const PULL_VIS = 0.5;     // small wind-up recoil while charging
+  const VMAX     = 0.83;    // launch velocity (fret/frame) at full power
+  const FRIC     = 0.94;    // per-frame velocity retention
+  const WALL_LOSS= 0.45;    // energy kept on a wall bounce
+  const CHARGE_RATE = 0.016;// charge fraction per frame
+
+  const svg=document.getElementById('neck'), el=id=>document.getElementById(id);
+  const NS='http://www.w3.org/2000/svg';
+  const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+  (function buildNeck(){
+    const b=el('board');
+    b.appendChild(mk('rect',{x:NUT_X,y:32,width:N_FRETS*FRET_W,height:176,fill:'#F0E6D2',stroke:'#17140E','stroke-width':2.5}));
+    b.appendChild(mk('rect',{x:NUT_X-6,y:30,width:6,height:180,fill:'#17140E'}));
+    for(let f=1;f<=N_FRETS;f++) b.appendChild(mk('line',{x1:wireX(f),y1:32,x2:wireX(f),y2:208,stroke:'#B9AE97','stroke-width':2}));
+    const inl=el('inlays');
+    [3,5,7,9].forEach(f=>inl.appendChild(mk('circle',{cx:fretX(f),cy:120,r:6,fill:'#CBBE9F'})));
+    inl.appendChild(mk('circle',{cx:fretX(12),cy:86,r:6,fill:'#CBBE9F'}));
+    inl.appendChild(mk('circle',{cx:fretX(12),cy:154,r:6,fill:'#CBBE9F'}));
+    const strs=el('strings'),labs=el('labels'),w=[3.4,3.0,2.6,2.2,1.9,1.6];
+    for(let s=0;s<6;s++){
+      strs.appendChild(mk('line',{id:'str'+s,x1:NUT_X-6,y1:ROW_Y[s],x2:wireX(N_FRETS),y2:ROW_Y[s],stroke:'#17140E','stroke-width':w[s]}));
+      const t=mk('text',{id:'lbl'+s,x:26,y:ROW_Y[s]+5,'font-family':'monospace','font-size':15,'font-weight':700,fill:'#17140E','text-anchor':'middle'});
+      t.textContent=STR[s]; labs.appendChild(t);
+    }
+    const fn=el('fretnums');
+    for(let f=1;f<=N_FRETS;f++){
+      const t=mk('text',{x:fretX(f),y:230,'font-family':'monospace','font-size':12,'font-weight':700,fill:'#6F6757','text-anchor':'middle'});
+      t.textContent=f; fn.appendChild(t);
+    }
+  })();
+
+  // audio
+  let ac=null;
+  const ensureAudio=()=>{if(!ac){const AC=window.AudioContext||window.webkitAudioContext;ac=new AC();}if(ac.state==='suspended')ac.resume();return ac;};
+  function pluck(freq,when=0,dur=1.1,amp=0.26){
+    const c=ensureAudio(),t=c.currentTime+when;
+    const out=c.createGain();out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001,t);
+    out.gain.exponentialRampToValueAtTime(amp,t+0.02);
+    out.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    [['sine',1.0],['triangle',0.2]].forEach(([type,a])=>{
+      const o=c.createOscillator();o.type=type;o.frequency.value=freq;
+      const g=c.createGain();g.gain.value=a;o.connect(g).connect(out);o.start(t);o.stop(t+dur+0.05);
+    });
+  }
+  function twang(p){ pluck(150+260*p,0,0.5,0.22); }   // release sound, pitch by power
+  function playGrip(){ round.set.strings.forEach((s,i)=>pluck(BASE[s]*Math.pow(2,(round.pos+round.shape[i])/12), i*0.11)); }
+
+  // state
+  let diff=0, round=null, state='idle';   // idle | load | aim | fly | done
+  let xpos=1, vel=0, power=0, charging=false;
+  let score=0, streak=0, best=0;
+  const rnd=n=>Math.floor(Math.random()*n);
+  const clampRange=x=>Math.max(round.lo,Math.min(round.hi,x));
+
+  function gen(){
+    const d=DIFFS[diff];
+    for(let tries=0;tries<300;tries++){
+      const set=SETS[d.sets[rnd(d.sets.length)]];
+      const q=d.q[rnd(d.q.length)], inv=rnd(3);
+      const off=VOICING[q][inv], g=set.gaps;
+      const shape=[0,off[1]-g[0],off[2]-g[0]-g[1]];
+      const lo=1-Math.min(...shape), hi=N_FRETS-Math.max(...shape);
+      if(hi-lo<3) continue;
+      const f0=lo+rnd(hi-lo+1);
+      const bassPc=(OPEN[set.strings[0]]+f0)%12;
+      const bassInt=inv===0?0:inv===1?(q==='maj'?4:3):7;
+      const root=((bassPc-bassInt)%12+12)%12;
+      const avgShape=(shape[0]+shape[1]+shape[2])/3;
+      const rows=set.strings.map(s=>ROW_Y[s]);
+      const cyMid=(rows[0]+rows[1]+rows[2])/3;
+      return {set,q,inv,shape,lo,hi,f0,root,avgShape,cyMid};
+    }
+    return null;
+  }
+
+  const colour=()=>round.q==='maj'?'#2438C8':'#FF4E86';
+
+  function drawGrip(reveal){
+    const g=el('grip'); g.innerHTML='';
+    round.set.strings.forEach((s,i)=>{
+      const cx=fretX(xpos+round.shape[i]), cy=ROW_Y[s];
+      g.appendChild(mk('circle',{cx,cy,r:13,fill:colour(),stroke:'#17140E','stroke-width':2.5}));
+      if(reveal){
+        const pc=(OPEN[s]+Math.round(xpos)+round.shape[i])%12;
+        const t=mk('text',{x:cx,y:cy+4,'font-family':"'Space Mono',monospace",'font-size':11,'font-weight':700,fill:'#fff','text-anchor':'middle'});
+        t.textContent=NOTE[((pc%12)+12)%12]; g.appendChild(t);
+      }
+    });
+  }
+
+  function drawFx(){
+    const s=el('fx'); s.innerHTML='';
+    if((state==='load'||state==='aim') && power>0.01){
+      const cx=fretX(xpos+round.avgShape), cy=round.cyMid;
+      const hot = power>0.66 ? '#FF4E86' : '#FFC53D';
+      // charge halo behind the grip
+      s.appendChild(mk('circle',{cx,cy,r:24+power*34,fill:hot,opacity:0.16}));
+      s.appendChild(mk('circle',{cx,cy,r:20+power*20,fill:'none',stroke:hot,'stroke-width':3,opacity:0.4}));
+      // forward chevrons showing launch power
+      const n=Math.max(1,Math.ceil(power*3));
+      for(let i=0;i<n;i++){
+        const ax=cx+36+i*15;
+        s.appendChild(mk('path',{d:'M'+ax+','+(cy-9)+' L'+(ax+8)+','+cy+' L'+ax+','+(cy+9),
+          fill:'none',stroke:hot,'stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round',opacity:0.6}));
+      }
+    }
+  }
+
+  function drawGhost(show){
+    const g=el('ghost'); g.innerHTML='';
+    if(!show) return;
+    round.set.strings.forEach((s,i)=>{
+      g.appendChild(mk('circle',{cx:fretX(round.f0+round.shape[i]),cy:ROW_Y[s],r:13,fill:'none',stroke:'#17140E','stroke-width':2,'stroke-dasharray':'4 3',opacity:.65}));
+    });
+  }
+
+  function setPower(p){
+    power=Math.max(0,Math.min(1,p));
+    el('powerFill').style.right=(100-power*100)+'%';
+    el('powerBar').classList.toggle('hot',power>0.66);
+    el('powerLbl').textContent = power>0 ? 'power '+Math.round(power*100)+'%' : 'pull back to load';
+  }
+
+  function dimStrings(){
+    const active=new Set(round.set.strings);
+    for(let s=0;s<6;s++){
+      const on=active.has(s);
+      el('str'+s).setAttribute('stroke',on?'#17140E':'#C4B79B');
+      el('lbl'+s).setAttribute('fill',on?'#17140E':'#C4B79B');
+      el('lbl'+s).setAttribute('font-weight',on?800:700);
+    }
+  }
+
+  function newRound(){
+    const r=gen(); if(!r) return;
+    round=r; state='load'; xpos=r.lo; vel=0; charging=false; setPower(0);
+    el('chordName').textContent=NOTE[r.root]+(r.q==='maj'?' major':' minor');
+    el('chordMeta').textContent=INV_NAME[r.inv]+'  ·  '+r.set.label+' strings';
+    dimStrings(); drawGhost(false); drawFx(); drawGrip(false);
+    setFeedback('Charge up and fire.','');
+    el('chargeBtn').disabled=false;
+    svg.classList.remove('aiming');
+  }
+
+  function fire(){
+    if(state!=='load'&&state!=='aim') return;
+    if(power<0.06){ state='load'; xpos=round.lo; setPower(0); drawFx(); drawGrip(false); return; }
+    twang(power);
+    vel=VMAX*power; state='fly'; setPower(0); charging=false;
+    el('powerLbl').textContent='firing…';
+    el('chargeBtn').disabled=true; svg.classList.remove('aiming');
+    el('fx').innerHTML='';
+  }
+
+  function settle(){
+    state='done';
+    round.pos=clampRange(Math.round(xpos)); xpos=round.pos;
+    drawGrip(true); playGrip();
+    const nm=NOTE[round.root]+(round.q==='maj'?' major':' minor');
+    const gap=Math.abs(round.pos-round.f0);
+    if(gap===0){
+      score+=3; streak++; best=Math.max(best,streak);
+      setFeedback(nm+' — dead on!  +3','good');
+    }else if(gap===1){
+      score+=1; streak++; best=Math.max(best,streak);
+      drawGhost(true);
+      setFeedback(nm+' — one fret off, close!  +1','');
+    }else{
+      streak=0; drawGhost(true);
+      setFeedback(nm+' lands at fret '+round.f0+' (dashed)','bad');
+    }
+    updateScore(); el('powerLbl').textContent='hold to charge';
+  }
+
+  // physics loop
+  function loop(t){
+    if(!loop.last) loop.last=t;
+    let dt=(t-loop.last)/16.67; loop.last=t;
+    if(dt>2) dt=2;
+    if(state==='fly'){
+      vel*=Math.pow(FRIC,dt);
+      xpos+=vel*dt;
+      if(xpos>N_FRETS){ xpos=N_FRETS-(xpos-N_FRETS); vel=-Math.abs(vel)*WALL_LOSS; }
+      if(xpos<0.5){ xpos=0.5+(0.5-xpos); vel=Math.abs(vel)*WALL_LOSS; }
+      if(Math.abs(vel)<0.06){
+        const tgt=Math.round(xpos);
+        vel+=0.28*(tgt-xpos); vel*=0.55;
+        if(Math.abs(vel)<0.004 && Math.abs(tgt-xpos)<0.02){ settle(); }
+      }
+      drawGrip(false);
+    } else if(state==='aim' && charging){
+      setPower(power+CHARGE_RATE*dt);
+      xpos=round.lo-power*PULL_VIS;
+      drawFx(); drawGrip(false);
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // hold-to-charge (grip, button, or Space)
+  function chargeStart(e){
+    if(state!=='load') return;
+    state='aim'; charging=true; setPower(0);
+    svg.classList.add('aiming');
+    try{ e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId); }catch(_){}
+    e.preventDefault();
+  }
+  function chargeEnd(e){ if(state==='aim'&&charging){ charging=false; fire(); } e&&e.preventDefault&&e.preventDefault(); }
+
+  el('grip').addEventListener('pointerdown', chargeStart);
+  el('chargeBtn').addEventListener('pointerdown', chargeStart);
+  window.addEventListener('pointerup', chargeEnd);
+  el('chargeBtn').addEventListener('pointerleave', e=>{ if(charging) chargeEnd(e); });
+  window.addEventListener('pointercancel', ()=>{ if(state==='aim'&&charging){ charging=false; state='load'; xpos=round.lo; setPower(0); drawFx(); drawGrip(false); svg.classList.remove('aiming'); } });
+
+  // buttons / keys
+  el('newBtn').addEventListener('click', newRound);
+  el('d0').addEventListener('click',()=>setDiff(0));
+  el('d1').addEventListener('click',()=>setDiff(1));
+  el('d2').addEventListener('click',()=>setDiff(2));
+  let spaceHeld=false;
+  window.addEventListener('keydown', e=>{
+    if(e.key===' '){
+      e.preventDefault();
+      if(!spaceHeld && state==='load'){ spaceHeld=true; state='aim'; charging=true; setPower(0); }
+    } else if(e.key==='Enter'){ if(state==='done'||state==='load') newRound(); }
+    else if(e.key.toLowerCase()==='n'){ newRound(); }
+  });
+  window.addEventListener('keyup', e=>{
+    if(e.key===' '){ spaceHeld=false; if(state==='aim'&&charging){ charging=false; fire(); } }
+  });
+  function setDiff(d){ diff=d; [0,1,2].forEach(i=>el('d'+i).setAttribute('aria-pressed',i===d)); newRound(); }
+  function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
+  function updateScore(){ el('sScore').textContent=score; el('sStreak').textContent=streak; el('sBest').textContent=best; }
+
+  newRound();
+</script>
+</body>
+</html>

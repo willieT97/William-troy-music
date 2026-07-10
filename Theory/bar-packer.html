@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bar Packer — fill the bar with the right notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E; --gold:#FFC53D; --green:#1E9E6A;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(14px,3vw,40px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(620px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:14px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.8rem,6.4vw,3rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{ content:attr(data-text); position:absolute; left:3px; top:3px; color:var(--pink); mix-blend-mode:multiply; z-index:-1; }
+  .subtitle{ font-family:var(--mono); font-size:.72rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-top:12px; }
+
+  .panel{ position:relative; background:var(--paper); border:2.5px solid var(--line); box-shadow:8px 8px 0 var(--ink); padding:clamp(14px,3vw,22px); }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+  .topbar b{ color:var(--ink); }
+
+  .prompt{ text-align:center; font-family:var(--mono); font-size:.8rem; letter-spacing:.06em; color:var(--muted); margin-bottom:10px; }
+  .prompt b{ color:var(--ink); font-size:1rem; }
+
+  /* suitcase */
+  .caseWrap{ display:flex; justify-content:center; }
+  .case{ position:relative; width:fit-content; margin-top:22px; background:#C79A5B; border:3px solid var(--ink);
+    border-radius:14px; padding:26px 18px 18px; box-shadow:6px 6px 0 var(--ink); }
+  .case::after{ content:""; position:absolute; inset:7px; border:2px dashed rgba(23,20,14,.28); border-radius:9px; pointer-events:none; }
+  .handle{ position:absolute; top:-20px; left:50%; transform:translateX(-50%); width:104px; height:24px;
+    border:6px solid var(--ink); border-bottom:0; border-radius:16px 16px 0 0; background:#B98A4B; }
+  .latch{ position:absolute; top:10px; width:30px; height:15px; background:var(--gold); border:2px solid var(--ink); border-radius:3px; z-index:2; }
+  .latch.l{ left:24px; } .latch.r{ right:24px; }
+  .tag{ position:absolute; top:-12px; right:22px; background:#F4EEE2; border:2px solid var(--ink); border-radius:4px;
+    padding:3px 9px; font-family:var(--display); font-weight:800; line-height:.86; font-size:1.3rem; color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; box-shadow:2px 2px 0 var(--ink); z-index:3; }
+  .caseinner{ position:relative; background:#EFE7D6; border:2.5px solid var(--ink); border-radius:6px; padding:10px; }
+  .bar{ position:relative; height:84px; border:2px solid var(--ink); display:flex; overflow:hidden; background:#FBF7EE; }
+  .bar.win{ box-shadow:0 0 0 3px var(--green) inset; }
+  .block.playing{ background:var(--gold); }
+  .rem{ flex:1 0 auto; background-image:repeating-linear-gradient(45deg, rgba(23,20,14,.10) 0 6px, transparent 6px 12px); }
+  .block{
+    height:100%; flex:0 0 auto; border-right:2px solid var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    background:#EAF0FB; cursor:pointer; user-select:none; overflow:hidden;
+  }
+  .block:last-of-type{ }
+  .block.rest{ background:#ECe7DA; }
+  .block .lab{ font-family:var(--mono); font-size:.56rem; font-weight:700; color:var(--muted); }
+  .block svg{ display:block; }
+  .block:hover{ filter:brightness(0.97); }
+
+  .hand{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:16px; min-height:70px;
+    padding:12px; border:2px dashed #C4B79B; }
+  .tile{
+    border:2.5px solid var(--ink); background:#EAF0FB; box-shadow:2px 2px 0 var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    height:64px; cursor:pointer; user-select:none; transition:transform .05s ease, box-shadow .05s ease;
+  }
+  .tile.rest{ background:#ECe7DA; }
+  .tile:active{ transform:translate(2px,2px); box-shadow:0 0 0 var(--ink); }
+  .tile .lab{ font-family:var(--mono); font-size:.6rem; font-weight:700; color:var(--muted); }
+
+  .feedback{ min-height:1.4em; font-family:var(--display); font-weight:700; font-size:1rem; text-align:center; color:var(--muted); margin:12px 0 4px; }
+  .feedback.good{ color:var(--green); } .feedback.bad{ color:var(--pink); }
+  @keyframes nudge{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  .bar.shake{ animation:nudge .18s; }
+
+  .controls{ display:flex; gap:8px; justify-content:center; margin-top:12px; }
+  .btn{ font-family:var(--body); font-weight:600; font-size:.94rem; padding:10px 18px; border:2.5px solid var(--ink);
+    background:var(--paper); color:var(--ink); cursor:pointer; box-shadow:3px 3px 0 var(--ink); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .hint{ text-align:center; font-family:var(--mono); font-size:.66rem; letter-spacing:.05em; color:var(--muted); margin-top:10px; opacity:.85; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Bar Packer">Bar Packer</span>
+      <div class="subtitle">theory · pack each bar with the right notes</div>
+    </header>
+
+    <div class="panel">
+      <div class="topbar">
+        <span><b id="levelName">Level 1 · Quarters</b></span>
+        <span><b>Packed </b><b id="sSolved">0</b></span>
+      </div>
+
+      <div class="prompt">Fill the bar exactly — <b id="usedReadout">0 / 4</b> beats</div>
+
+      <div class="barrow">
+        <div class="timesig" id="timesig"><span>4</span><span>4</span></div>
+        <div class="bar" id="bar"></div>
+      </div>
+
+      <div class="feedback" id="feedback">Tap a note to drop it in the bar.</div>
+
+      <div class="hand" id="hand"></div>
+
+      <div class="controls">
+        <button class="btn" id="clearBtn">Clear bar</button>
+        <button class="btn" id="newBtn">New bar</button>
+      </div>
+      <div class="hint">Tap notes from the hand to fill the bar; tap a placed note to take it back. Some spare notes won't be needed.</div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   BAR PACKER (theory) — fill one bar exactly with the right note-value
+   blocks. Each block's width is its duration; time signatures vary by
+   level. The hand holds a real solution plus a decoy or two, so you have
+   to work out which notes add up to a full bar.
+   ==================================================================== */
+
+  const BEAT_PX=112;                        // px per quarter-note beat
+  const LAB={4:'4',3:'3',2:'2',1.5:'1½',1:'1',0.75:'¾',0.5:'½',0.25:'¼'};
+  const EPS=1e-6;
+
+  const LEVELS=[
+    {name:'Quarters',   meters:['4/4'],            durs:[2,1,0.5],            rests:false, decoys:0, adv:3},
+    {name:'Three-Four', meters:['3/4','2/4'],      durs:[2,1,0.5],            rests:false, decoys:1, adv:3},
+    {name:'Dotted',     meters:['4/4','3/4'],      durs:[3,2,1.5,1,0.5],      rests:true,  decoys:1, adv:4},
+    {name:'Six-Eight',  meters:['6/8','3/4'],      durs:[1.5,1,0.75,0.5],     rests:true,  decoys:1, adv:4},
+    {name:'Sixteenths', meters:['4/4','3/4'],      durs:[2,1.5,1,0.5,0.25],   rests:true,  decoys:2, adv:4},
+    {name:'Odd Meters', meters:['5/8','7/8','6/8'],durs:[1.5,1,0.75,0.5,0.25],rests:true,  decoys:2, adv:5},
+  ];
+
+  const el=id=>document.getElementById(id);
+  const rnd=n=>Math.floor(Math.random()*n);
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  // ---- note / rest glyphs ----
+  function noteGlyph(dur){
+    const w=24,h=46, open=dur>=2, whole=dur>=4, dotted=(dur===3||dur===1.5||dur===0.75);
+    const flags = (dur===0.5||dur===0.75)?1 : dur===0.25?2 : 0;
+    let s='<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">';
+    s+='<ellipse cx="9" cy="32" rx="6" ry="4.6" transform="rotate(-20 9 32)" fill="'+(open?'none':'#17140E')+'" stroke="#17140E" stroke-width="2"/>';
+    if(!whole) s+='<line x1="14.6" y1="30" x2="14.6" y2="7" stroke="#17140E" stroke-width="2"/>';
+    if(dotted) s+='<circle cx="19" cy="31" r="1.7" fill="#17140E"/>';
+    for(let f=0;f<flags;f++){ const y=7+f*7; s+='<path d="M14.6,'+y+' q9,3 8,13" fill="none" stroke="#17140E" stroke-width="2.4" stroke-linecap="round"/>'; }
+    return s+'</svg>';
+  }
+  function restGlyph(dur){
+    const w=24,h=46, dotted=(dur===3||dur===1.5||dur===0.75);
+    let s='<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">';
+    if(dur>=2){ s+='<rect x="5" y="22" width="14" height="5" fill="#17140E"/><line x1="3" y1="27" x2="21" y2="27" stroke="#17140E" stroke-width="1.5"/>'; }
+    else if(dur>=1){ s+='<path d="M8,14 l7,8 l-6,7 l7,8" fill="none" stroke="#6F6757" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16,37 q-8,-1 -3,-9" fill="none" stroke="#6F6757" stroke-width="2.6" stroke-linecap="round"/>'; }
+    else if(dur>=0.5){ s+='<line x1="16" y1="16" x2="8" y2="34" stroke="#6F6757" stroke-width="2.6" stroke-linecap="round"/><circle cx="10" cy="17" r="3" fill="#6F6757"/>'; }
+    else { s+='<line x1="17" y1="14" x2="7" y2="36" stroke="#6F6757" stroke-width="2.4" stroke-linecap="round"/><circle cx="11" cy="16" r="2.6" fill="#6F6757"/><circle cx="8" cy="24" r="2.6" fill="#6F6757"/>'; }
+    if(dotted) s+='<circle cx="21" cy="22" r="1.7" fill="#6F6757"/>';
+    return s+'</svg>';
+  }
+  const glyph=b=> b.rest?restGlyph(b.dur):noteGlyph(b.dur);
+
+  // ---- state ----
+  let levelIdx=0, solved=0, bid=0, bar=null, hand=[], meterStr='4/4';
+
+  function trySolution(total, durs){
+    let rem=total, sol=[], g=0;
+    while(rem>EPS){ const fit=durs.filter(d=>d<=rem+EPS); if(!fit.length) return null;
+      const d = Math.random()<0.5 ? Math.max(...fit) : fit[rnd(fit.length)];
+      sol.push(d); rem=+(rem-d).toFixed(4); if(g++>40) return null; }
+    return sol;
+  }
+  function genPuzzle(){
+    const lv=LEVELS[Math.min(levelIdx,LEVELS.length-1)];
+    const meter=lv.meters[rnd(lv.meters.length)]; meterStr=meter;
+    const [N,D]=meter.split('/').map(Number); const total=+(N*4/D).toFixed(4);
+    let sol=null,g=0; while(!sol && g++<300) sol=trySolution(total,lv.durs);
+    if(!sol) sol=[total];
+    const blocks=sol.map(d=>({dur:d, rest: lv.rests && Math.random()<0.22}));
+    const decoyDurs=lv.durs.filter(d=>d<=total+EPS);
+    for(let i=0;i<lv.decoys;i++) blocks.push({dur:decoyDurs[rnd(decoyDurs.length)], rest: lv.rests && Math.random()<0.3});
+    blocks.forEach(b=>b.id='b'+(bid++));
+    shuffle(blocks);
+    bar={total, placed:[]}; hand=blocks;
+    el('timesig').innerHTML='<span>'+N+'</span><span>'+D+'</span>';
+    el('levelName').textContent='Level '+(Math.min(levelIdx,LEVELS.length-1)+1)+' · '+lv.name;
+    setFeedback('Fill the '+meter+' bar exactly.','');
+    render();
+  }
+
+  const used=()=> bar.placed.reduce((s,b)=>s+b.dur,0);
+  function render(){
+    const u=used(), total=bar.total, win=Math.abs(u-total)<EPS;
+    // bar
+    const barEl=el('bar'); barEl.style.width=(total*BEAT_PX)+'px'; barEl.classList.toggle('win',win);
+    barEl.innerHTML='';
+    for(const b of bar.placed){
+      const d=document.createElement('div'); d.className='block'+(b.rest?' rest':''); d.style.width=(b.dur*BEAT_PX)+'px'; d.dataset.id=b.id;
+      d.innerHTML=glyph(b)+'<div class="lab">'+LAB[b.dur]+'</div>';
+      barEl.appendChild(d);
+    }
+    const rem=document.createElement('div'); rem.className='rem'; barEl.appendChild(rem);
+    // hand
+    const handEl=el('hand'); handEl.innerHTML='';
+    for(const b of hand){
+      const t=document.createElement('div'); t.className='tile'+(b.rest?' rest':''); t.style.width=Math.max(40,b.dur*BEAT_PX)+'px'; t.dataset.id=b.id;
+      t.innerHTML=glyph(b)+'<div class="lab">'+LAB[b.dur]+(b.rest?' rest':'')+'</div>';
+      handEl.appendChild(t);
+    }
+    el('usedReadout').textContent=fmt(u)+' / '+fmt(total);
+    el('sSolved').textContent=solved;
+    if(win) onWin();
+  }
+  function fmt(x){ return Number.isInteger(x)? x : (Math.round(x*100)/100); }
+
+  function place(id){
+    const i=hand.findIndex(b=>b.id===id); if(i<0) return;
+    const b=hand[i];
+    if(used()+b.dur > bar.total+EPS){ shake(); setFeedback('That won’t fit — '+fmt(bar.total-used())+' beat(s) left.','bad'); return; }
+    hand.splice(i,1); bar.placed.push(b); render();
+    if(Math.abs(used()-bar.total)>=EPS) setFeedback(fmt(bar.total-used())+' beat(s) to go.','');
+  }
+  function unplace(id){
+    const i=bar.placed.findIndex(b=>b.id===id); if(i<0) return;
+    const b=bar.placed.splice(i,1)[0]; hand.push(b); render(); setFeedback('','');
+  }
+  function shake(){ const b=el('bar'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+
+  let winLock=false;
+  function onWin(){
+    if(winLock) return; winLock=true;
+    solved++; el('sSolved').textContent=solved;
+    const before=levelIdx;
+    // advance level by cumulative solves needed
+    let need=0; for(let i=0;i<LEVELS.length;i++){ need+=LEVELS[i].adv; if(solved<need){ levelIdx=i; break; } levelIdx=Math.min(i+1,LEVELS.length-1); }
+    setFeedback(levelIdx>before ? 'Bar packed! ✓  Level up → '+LEVELS[levelIdx].name : 'Bar packed! ✓','good');
+    setTimeout(()=>{ winLock=false; genPuzzle(); }, 1100);
+  }
+
+  el('hand').addEventListener('click', e=>{ const t=e.target.closest('.tile'); if(t) place(t.dataset.id); });
+  el('bar').addEventListener('click', e=>{ const t=e.target.closest('.block'); if(t) unplace(t.dataset.id); });
+  el('clearBtn').addEventListener('click', ()=>{ hand=hand.concat(bar.placed); bar.placed=[]; render(); setFeedback('','',''); });
+  el('newBtn').addEventListener('click', ()=>{ winLock=false; genPuzzle(); });
+
+  function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
+
+  genPuzzle();
+</script>
+</body>
+</html>
