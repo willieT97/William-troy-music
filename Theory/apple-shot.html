@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apple Shot — Music Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --good:#1FA84C;
+    --sky:#CFE6EE; --grass:#8FBF6A; --bark:#7A5230; --apple:#E23A3A;
+    --shadow:6px 6px 0 var(--ink); --shadow-sm:4px 4px 0 var(--ink);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);font-family:'Hanken Grotesk',sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 44px}
+  .title{font-family:'Press Start 2P',monospace;font-size:clamp(15px,4.5vw,26px);text-align:center;line-height:1.5}
+  .title .hi{color:var(--pink)}
+  .subtitle{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:.75;margin:5px 0 16px}
+
+  .hud{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .chip{background:#fff;border:3px solid var(--ink);box-shadow:var(--shadow-sm);padding:7px 12px;
+    font-family:'Space Mono',monospace;font-weight:700;font-size:13px;display:flex;gap:8px;align-items:center}
+  .chip b{font-size:18px}
+  .chip.streak b{color:var(--pink)}
+  .chip.best b{color:var(--blue)}
+
+  .stage{position:relative;width:100%;max-width:680px;border:4px solid var(--ink);box-shadow:var(--shadow);
+    background:var(--sky);overflow:hidden}
+  .scene{display:block;width:100%;height:auto}
+
+  .over{position:absolute;inset:0;background:rgba(23,20,14,.82);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px}
+  .over.show{display:flex}
+  .over h2{font-family:'Press Start 2P',monospace;color:#fff;font-size:clamp(16px,5vw,26px);line-height:1.5}
+  .over p{font-family:'Space Mono',monospace;color:#F4EEE2;font-size:14px}
+  .over b{color:var(--pink);font-size:20px}
+  .again{font-family:'Press Start 2P',monospace;font-size:13px;padding:14px 18px;border:4px solid var(--ink);
+    background:var(--pink);color:#fff;box-shadow:var(--shadow-sm);cursor:pointer}
+  .again:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+
+  /* gauge + draw */
+  .deck{width:100%;max-width:680px;display:flex;gap:16px;align-items:center;justify-content:center;
+    flex-wrap:wrap;margin-top:16px}
+  .gauge{flex:none}
+  .draw{font-family:'Press Start 2P',monospace;font-size:14px;line-height:1.6;padding:20px 22px;
+    border:4px solid var(--ink);background:#fff;box-shadow:var(--shadow);cursor:pointer;color:var(--ink);
+    user-select:none;-webkit-user-select:none;touch-action:none;text-align:center;min-width:150px}
+  .draw.charging{background:var(--pink);color:#fff;box-shadow:2px 2px 0 var(--ink);transform:translate(2px,2px)}
+  .draw:disabled{opacity:.45;cursor:not-allowed}
+
+  .controls{width:100%;max-width:680px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .seg{display:flex;border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;overflow:hidden}
+  .seg button{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;
+    padding:9px 12px;border:none;border-right:3px solid var(--ink);background:#fff;cursor:pointer;color:var(--ink)}
+  .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--blue);color:#fff}
+  .toggle{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;
+    padding:9px 12px;border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;cursor:pointer;
+    display:flex;align-items:center;gap:8px}
+  .toggle .dot{width:14px;height:14px;border:2px solid var(--ink);background:#fff}
+  .toggle.on .dot{background:var(--pink)}
+
+  .msg{width:100%;max-width:680px;text-align:center;margin-top:16px;min-height:26px;
+    font-family:'Space Mono',monospace;font-weight:700;font-size:15px}
+  .msg.good{color:var(--good)}
+  .msg.bad{color:#E23A3A}
+  .msg.warn{color:#C67A16}
+
+  .legend{max-width:680px;margin-top:20px;font-size:13px;line-height:1.6;opacity:.8;text-align:center}
+  .legend b{font-family:'Space Mono',monospace}
+</style>
+</head>
+<body>
+
+  <div class="title">APPLE <span class="hi">SHOT</span></div>
+  <div class="subtitle">Theory · Music Arcade</div>
+
+  <div class="hud">
+    <div class="chip">SCORE <b id="score">0</b></div>
+    <div class="chip streak">STREAK <b id="streak">0</b></div>
+    <div class="chip best">BEST <b id="best">0</b></div>
+  </div>
+
+  <div class="stage">
+    <svg class="scene" id="scene" viewBox="0 0 680 360" preserveAspectRatio="xMidYMid meet" aria-label="archery scene">
+      <defs>
+        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#B9DBEA"/><stop offset="1" stop-color="#E9F4EF"/></linearGradient>
+        <linearGradient id="gGrass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#93C26C"/><stop offset="1" stop-color="#79AC57"/></linearGradient>
+        <linearGradient id="gTrunk" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#8A6239"/><stop offset="1" stop-color="#654325"/></linearGradient>
+        <radialGradient id="gFol1" cx="0.4" cy="0.35" r="0.75">
+          <stop offset="0" stop-color="#74AE52"/><stop offset="1" stop-color="#4F8036"/></radialGradient>
+        <radialGradient id="gFol2" cx="0.4" cy="0.35" r="0.75">
+          <stop offset="0" stop-color="#649744"/><stop offset="1" stop-color="#47702F"/></radialGradient>
+        <radialGradient id="gApple" cx="0.36" cy="0.3" r="0.8">
+          <stop offset="0" stop-color="#FF7365"/><stop offset="0.55" stop-color="#E8433B"/><stop offset="1" stop-color="#BE2A2A"/></radialGradient>
+        <linearGradient id="gLeaf" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7CC050"/><stop offset="1" stop-color="#4E8A2E"/></linearGradient>
+        <radialGradient id="gSkin" cx="0.4" cy="0.35" r="0.8">
+          <stop offset="0" stop-color="#F5CBA1"/><stop offset="1" stop-color="#E0A878"/></radialGradient>
+        <linearGradient id="gGreen" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4E9A5E"/><stop offset="1" stop-color="#2E6440"/></linearGradient>
+        <linearGradient id="gTan" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#D6A85C"/><stop offset="1" stop-color="#A87C34"/></linearGradient>
+        <linearGradient id="gWood" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#8A6239"/><stop offset="1" stop-color="#5b3d22"/></linearGradient>
+      </defs>
+
+      <!-- sky, sun, clouds -->
+      <rect x="0" y="0" width="680" height="306" fill="url(#gSky)"/>
+      <circle cx="66" cy="58" r="28" fill="#FCE38A"/>
+      <circle cx="66" cy="58" r="28" fill="none" stroke="#FCE38A" stroke-width="9" opacity=".28"/>
+      <g fill="#ffffff" opacity=".92">
+        <ellipse cx="250" cy="66" rx="34" ry="17"/><ellipse cx="286" cy="62" rx="24" ry="15"/><ellipse cx="220" cy="72" rx="21" ry="12"/>
+        <ellipse cx="588" cy="44" rx="30" ry="15"/><ellipse cx="616" cy="41" rx="21" ry="12"/>
+      </g>
+
+      <!-- grass -->
+      <path d="M0 300 Q340 286 680 300 L680 360 L0 360 Z" fill="url(#gGrass)"/>
+      <path d="M0 300 Q340 286 680 300" fill="none" stroke="#6f9e50" stroke-width="4"/>
+
+      <!-- tree (tall trunk so the whole staff sits on bare bark) -->
+      <g stroke="#2E2016" stroke-width="2.5">
+        <path d="M438 300 Q430 190 442 78 L522 78 Q532 190 524 300 Z" fill="url(#gTrunk)"/>
+      </g>
+      <path d="M476 296 Q470 190 480 96" fill="none" stroke="#5b3d22" stroke-width="2" opacity=".5" stroke-linecap="round"/>
+      <path d="M492 296 Q498 200 494 120" fill="none" stroke="#5b3d22" stroke-width="1.6" opacity=".38" stroke-linecap="round"/>
+      <g stroke="#2E2016" stroke-width="2.5">
+        <ellipse cx="484" cy="42" rx="118" ry="48" fill="url(#gFol1)"/>
+        <ellipse cx="416" cy="54" rx="64" ry="34" fill="url(#gFol2)"/>
+        <ellipse cx="552" cy="54" rx="66" ry="34" fill="url(#gFol2)"/>
+        <ellipse cx="486" cy="24" rx="82" ry="42" fill="url(#gFol1)"/>
+      </g>
+      <g fill="#3f6b2c" opacity=".5" stroke="none">
+        <circle cx="442" cy="32" r="11"/><circle cx="522" cy="28" r="13"/><circle cx="486" cy="56" r="11"/>
+      </g>
+
+      <!-- the fellow with the apple on his head (positioned per round) -->
+      <g id="figure" transform="translate(450,150)">
+        <g id="figureInner">
+          <ellipse cx="0" cy="97" rx="19" ry="4.5" fill="rgba(0,0,0,.2)"/>
+          <g stroke="#4f8036" stroke-width="2.5" stroke-linecap="round" fill="none">
+            <path d="M-16 97 q-2 -7 -5 -10"/><path d="M-9 98 q0 -8 -2 -12"/>
+            <path d="M13 97 q2 -7 5 -10"/><path d="M8 98 q0 -8 2 -12"/>
+          </g>
+          <g stroke="#2E2016" stroke-width="2.2" stroke-linejoin="round">
+            <!-- legs -->
+            <path d="M-9 60 L-12 90 Q-12 94 -8 94 L-2 94 L-1 60 Z" fill="#5b4632"/>
+            <path d="M2 60 L1 94 L7 94 Q11 94 10 90 L8 60 Z" fill="#5b4632"/>
+            <!-- boots -->
+            <path d="M-14 90 L-1 90 L-1 98 L-18 98 Q-18 92 -14 90 Z" fill="#3a2c1e"/>
+            <path d="M2 90 L9 90 Q13 90 13 94 L15 98 L2 98 Z" fill="#3a2c1e"/>
+            <!-- tunic -->
+            <path d="M-14 36 Q0 30 14 36 L11 64 Q0 70 -11 64 Z" fill="url(#gTan)"/>
+          </g>
+          <path d="M-11 60 Q0 66 11 60" fill="none" stroke="#3a2c1e" stroke-width="4"/>
+          <!-- raised arms -->
+          <path d="M-11 40 Q-21 30 -17 17" fill="none" stroke="#b5863f" stroke-width="8" stroke-linecap="round"/>
+          <path d="M11 40 Q21 30 17 17" fill="none" stroke="#b5863f" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="-17" cy="14" r="4.6" fill="url(#gSkin)" stroke="#2E2016" stroke-width="2"/>
+          <circle cx="17" cy="14" r="4.6" fill="url(#gSkin)" stroke="#2E2016" stroke-width="2"/>
+          <!-- head -->
+          <circle cx="0" cy="23" r="14" fill="url(#gSkin)" stroke="#2E2016" stroke-width="2.4"/>
+          <path d="M-13 17 Q0 5 13 17 L13 21 Q0 15 -13 21 Z" fill="#6B4A2B" stroke="#2E2016" stroke-width="2"/>
+          <!-- worried face -->
+          <circle cx="-5" cy="24" r="2.5" fill="#fff" stroke="#2E2016" stroke-width="0.8"/>
+          <circle cx="-5" cy="24.6" r="1.2" fill="#2E2016"/>
+          <circle cx="5" cy="24" r="2.5" fill="#fff" stroke="#2E2016" stroke-width="0.8"/>
+          <circle cx="5" cy="24.6" r="1.2" fill="#2E2016"/>
+          <path d="M-9 18 q4 -2 7 -1" fill="none" stroke="#2E2016" stroke-width="1.4"/>
+          <path d="M2 17 q3 -1 7 1" fill="none" stroke="#2E2016" stroke-width="1.4"/>
+          <ellipse cx="0" cy="30" rx="2.4" ry="2" fill="#7a3b34" stroke="#2E2016" stroke-width="0.9"/>
+          <path d="M12 20 q3 4 0 6 q-3 -2 0 -6 Z" fill="#7ec8e3" stroke="#3a9ac0" stroke-width="0.8"/>
+          <!-- the apple (its centre is the note position) -->
+          <g id="apple">
+            <path d="M0 -6 C-3 -12 -14 -12 -14 -1 C-14 10 -6 14 0 11 C6 14 14 10 14 -1 C14 -12 3 -12 0 -6 Z"
+                  fill="url(#gApple)" stroke="#2E2016" stroke-width="2.4"/>
+            <path d="M0 11 C6 14 14 10 14 -1 C14 -7 11 -10 7 -11 C12 -5 11 6 0 11 Z" fill="#8f1c1c" opacity=".28"/>
+            <path d="M0 -7 C0 -13 1 -16 3 -18" fill="none" stroke="#5a3a22" stroke-width="3" stroke-linecap="round"/>
+            <path d="M3 -15 Q12 -21 16 -13 Q9 -12 3 -15 Z" fill="url(#gLeaf)" stroke="#3E6B24" stroke-width="1"/>
+            <path d="M5 -14 Q10 -15 14 -13" fill="none" stroke="#3E6B24" stroke-width="0.8"/>
+            <ellipse cx="-5" cy="-3" rx="3" ry="5.2" fill="#fff" opacity=".45" transform="rotate(-25 -5 -3)"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- the 5 staff lines, ruled ON TOP so the man never hides them -->
+      <g id="lines" stroke="#17140E" stroke-width="2.5"></g>
+
+      <!-- archer -->
+      <g id="archer">
+        <ellipse cx="100" cy="300" rx="34" ry="6" fill="rgba(0,0,0,.15)"/>
+        <!-- back (draw) arm -->
+        <path d="M90 233 L112 240" fill="none" stroke="#2E6440" stroke-width="9" stroke-linecap="round"/>
+        <circle cx="114" cy="241" r="4.8" fill="url(#gSkin)" stroke="#2E2016" stroke-width="2"/>
+        <g stroke="#2E2016" stroke-width="2.4" stroke-linejoin="round">
+          <!-- legs -->
+          <path d="M87 260 L84 293 Q84 297 88 297 L95 297 L96 260 Z" fill="#5b4632"/>
+          <path d="M99 260 L100 297 L107 297 Q111 297 111 293 L107 260 Z" fill="#5b4632"/>
+          <!-- boots -->
+          <path d="M80 293 L96 293 L96 301 L77 301 Q76 296 80 293 Z" fill="#3a2c1e"/>
+          <path d="M99 293 L107 293 Q111 293 111 297 L114 301 L99 301 Z" fill="#3a2c1e"/>
+          <!-- tunic -->
+          <path d="M82 230 Q96 224 110 230 L114 259 Q96 267 78 259 Z" fill="url(#gGreen)"/>
+        </g>
+        <path d="M79 258 Q96 265 113 258" fill="none" stroke="#3a2c1e" stroke-width="5"/>
+        <!-- head -->
+        <circle cx="96" cy="212" r="15" fill="url(#gSkin)" stroke="#2E2016" stroke-width="2.4"/>
+        <path d="M82 214 Q80 226 89 228 L91 214 Z" fill="#5A3A22"/>
+        <!-- cap -->
+        <path d="M79 207 Q96 189 114 206 Q104 201 96 202 Q86 201 79 207 Z" fill="url(#gGreen)" stroke="#2E2016" stroke-width="2.2"/>
+        <path d="M107 205 Q122 202 124 209 Q113 208 107 209 Z" fill="#2E6440" stroke="#2E2016" stroke-width="2"/>
+        <path d="M112 199 Q121 188 127 193 Q118 196 114 205 Z" fill="#C0392B" stroke="#2E2016" stroke-width="1.6"/>
+        <!-- face -->
+        <circle cx="105" cy="211" r="1.9" fill="#2E2016"/>
+        <path d="M101 207 q4 -1 7 1" fill="none" stroke="#2E2016" stroke-width="1.4"/>
+        <path d="M110 210 q3 3 0 5" fill="none" stroke="#c98f68" stroke-width="2"/>
+        <path d="M103 219 q4 1 7 -1" fill="none" stroke="#2E2016" stroke-width="1.3"/>
+        <!-- front (bow) arm -->
+        <path d="M107 234 L147 242" fill="none" stroke="#4E9A5E" stroke-width="9" stroke-linecap="round"/>
+        <circle cx="150" cy="242" r="5.4" fill="url(#gSkin)" stroke="#2E2016" stroke-width="2"/>
+        <!-- longbow + drawn string + nocked arrow -->
+        <path d="M150 208 Q174 242 150 276" fill="none" stroke="url(#gWood)" stroke-width="5" stroke-linecap="round"/>
+        <polyline points="150,208 114,241 150,276" fill="none" stroke="#efe8d6" stroke-width="1.6"/>
+        <line x1="112" y1="241" x2="160" y2="241" stroke="#4a3a2a" stroke-width="2.6"/>
+        <path d="M160 241 L153 237 L153 245 Z" fill="#2E2016"/>
+        <!-- quiver -->
+        <g transform="rotate(20 76 240)">
+          <rect x="70" y="224" width="11" height="32" rx="3.5" fill="#6b4526" stroke="#2E2016" stroke-width="2"/>
+          <line x1="73" y1="224" x2="73" y2="214" stroke="#4a3a2a" stroke-width="2"/>
+          <line x1="78" y1="224" x2="78" y2="216" stroke="#4a3a2a" stroke-width="2"/>
+        </g>
+      </g>
+
+      <!-- flying arrow -->
+      <g id="arrow" transform="translate(-100,-100)" style="display:none">
+        <line x1="-24" y1="0" x2="16" y2="0" stroke="#4a3a2a" stroke-width="3"/>
+        <path d="M16 0 L7 -5 L7 5 Z" fill="#2E2016"/>
+        <path d="M-24 0 L-30 -5 M-24 0 L-30 5 M-19 0 L-25 -5 M-19 0 L-25 5" stroke="#C0392B" stroke-width="2"/>
+      </g>
+    </svg>
+
+    <div class="over" id="over">
+      <h2 id="overTitle">GAME OVER</h2>
+      <p id="overText">You shot the poor fellow.</p>
+      <p>Apples split: <b id="overScore">0</b></p>
+      <button class="again" id="againBtn">Try again</button>
+    </div>
+  </div>
+
+  <div class="deck">
+    <svg class="gauge" id="gauge" width="300" height="180" viewBox="0 0 300 180" aria-label="power meter"></svg>
+    <button class="draw" id="drawBtn">HOLD<br>TO<br>DRAW</button>
+  </div>
+
+  <div class="controls">
+    <div class="seg" id="diffSeg">
+      <button data-diff="easy" class="on">Easy</button>
+      <button data-diff="med">Medium</button>
+      <button data-diff="hard">Hard</button>
+    </div>
+    <button class="toggle" id="hintBtn"><span class="dot"></span>Hint</button>
+    <button class="toggle on" id="soundBtn"><span class="dot"></span>Sound</button>
+  </div>
+
+  <div class="msg" id="msg">Read the apple's line or space. Hold DRAW, release on its note.</div>
+
+  <div class="legend">
+    The tree is ruled like a stave: <b>E</b> 1st line, <b>F</b> 1st space, <b>G</b> 2nd line, <b>A</b> 2nd space,
+    <b>B</b> 3rd line, <b>C</b> 3rd space, <b>D</b> 4th line. Aim high and you clip the tree — aim low and you won't miss the fellow.
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  const NOTES=['E','F','G','A','B','C','D'];              // low -> high
+  const Y={E:220,F:205,G:190,A:175,B:160,C:145,D:130};   // scene y for each note
+  const LINE_YS=[100,130,160,190,220];                   // 5 staff lines (top->bottom)
+  const FREQ={E:329.63,F:349.23,G:392.00,A:440.00,B:493.88,C:523.25,D:587.33};
+  const PERSON_X=444;
+  const BOW=[160,241];                                    // arrow launch point (bow front)
+
+  // gauge geometry
+  const GP={x:44,y:150}, RN=118, RL=136;
+  const ANG=[10,22,34,46,58,70,82];                       // E..D angles (deg)
+  const SPEED={easy:1.0, med:1.7, hard:2.5};
+
+  // ---- audio ----
+  let actx=null, soundOn=true;
+  function beep(freq,type,dur,vol){
+    if(!soundOn) return;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type=type;o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
+      const t=actx.currentTime;g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.start(t);o.stop(t+dur+.02);
+    }catch(e){}
+  }
+  const tone=f=>beep(f,'sine',.5,.25);
+  const thunk=()=>beep(90,'square',.18,.14);
+  const splat=()=>{beep(523,'triangle',.12,.2);beep(392,'triangle',.18,.18);};
+
+  // ---- dom ----
+  const SVGNS='http://www.w3.org/2000/svg';
+  const scene=document.getElementById('scene');
+  const linesG=document.getElementById('lines');
+  const figure=document.getElementById('figure');
+  const figureInner=document.getElementById('figureInner');
+  const appleG=document.getElementById('apple');
+  const arrow=document.getElementById('arrow');
+  const gauge=document.getElementById('gauge');
+  const drawBtn=document.getElementById('drawBtn');
+  const msg=document.getElementById('msg');
+  const over=document.getElementById('over');
+  const elScore=document.getElementById('score'),elStreak=document.getElementById('streak'),elBest=document.getElementById('best');
+
+  let diff='easy', soundState=true;
+  let score=0, streak=0, best=0, hints=false;
+  let appleIdx=2, state='ready';           // ready | charging | firing | over
+  let angle=ANG[0], dir=1, raf=0;
+  let needle, labelEls=[], hintText=null;
+
+  // draw the staff lines on the trunk
+  LINE_YS.forEach(y=>{
+    const l=document.createElementNS(SVGNS,'line');
+    l.setAttribute('x1',440);l.setAttribute('x2',524);
+    l.setAttribute('y1',y);l.setAttribute('y2',y);
+    linesG.appendChild(l);
+  });
+
+  // ---- build gauge ----
+  function pol(r,aDeg){const a=aDeg*Math.PI/180;return [GP.x+r*Math.cos(a), GP.y-r*Math.sin(a)];}
+  function buildGauge(){
+    gauge.innerHTML='';
+    // face arc
+    const [ax,ay]=pol(RN+10,ANG[0]), [bx,by]=pol(RN+10,ANG[6]);
+    const arc=document.createElementNS(SVGNS,'path');
+    arc.setAttribute('d',`M ${ax} ${ay} A ${RN+10} ${RN+10} 0 0 0 ${bx} ${by}`);
+    arc.setAttribute('fill','none');arc.setAttribute('stroke','#17140E');arc.setAttribute('stroke-width','3');
+    gauge.appendChild(arc);
+    // ticks + labels
+    labelEls=[];
+    ANG.forEach((a,i)=>{
+      const [tx,ty]=pol(RN,a),[ex,ey]=pol(RN+10,a);
+      const tick=document.createElementNS(SVGNS,'line');
+      tick.setAttribute('x1',tx);tick.setAttribute('y1',ty);tick.setAttribute('x2',ex);tick.setAttribute('y2',ey);
+      tick.setAttribute('stroke','#17140E');tick.setAttribute('stroke-width','2');gauge.appendChild(tick);
+      const [lx,ly]=pol(RL,a);
+      const t=document.createElementNS(SVGNS,'text');
+      t.setAttribute('x',lx);t.setAttribute('y',ly+4);t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-family',"'Space Mono',monospace");t.setAttribute('font-size','15');
+      t.setAttribute('font-weight','700');t.setAttribute('fill','#17140E');t.textContent=NOTES[i];
+      gauge.appendChild(t);labelEls.push(t);
+    });
+    // hub
+    const hub=document.createElementNS(SVGNS,'circle');
+    hub.setAttribute('cx',GP.x);hub.setAttribute('cy',GP.y);hub.setAttribute('r','7');
+    hub.setAttribute('fill','#17140E');
+    // needle
+    needle=document.createElementNS(SVGNS,'line');
+    needle.setAttribute('x1',GP.x);needle.setAttribute('y1',GP.y);
+    needle.setAttribute('stroke','#FF4E86');needle.setAttribute('stroke-width','5');needle.setAttribute('stroke-linecap','round');
+    gauge.appendChild(needle);gauge.appendChild(hub);
+    updateNeedle();
+  }
+  function nearestIdx(){let b=0,bd=1e9;ANG.forEach((a,i)=>{const d=Math.abs(a-angle);if(d<bd){bd=d;b=i;}});return b;}
+  function updateNeedle(){
+    const [nx,ny]=pol(RN,angle);
+    needle.setAttribute('x2',nx);needle.setAttribute('y2',ny);
+    const ni=nearestIdx();
+    labelEls.forEach((t,i)=>{t.setAttribute('fill',i===ni?'#2438C8':'#17140E');
+      t.setAttribute('font-size',i===ni?'18':'15');});
+  }
+
+  // ---- round ----
+  const GROUND_Y=299, FEET_LOCAL=98;        // ground line, and the feet's y in the figure's own coords
+  function placeFigure(){
+    const y=Y[NOTES[appleIdx]];
+    const s=(GROUND_Y-y)/FEET_LOCAL;        // grow/shrink so the boots always meet the ground
+    figure.setAttribute('transform',`translate(${PERSON_X},${y}) scale(${s.toFixed(4)})`);
+    appleG.setAttribute('transform',`scale(${(1/s).toFixed(4)})`);   // keep the apple one constant size
+  }
+  function newRound(){
+    state='ready';
+    appleIdx=Math.floor(Math.random()*7);
+    placeFigure();
+    // reset visuals
+    appleG.style.display='';
+    figureInner.style.transition='';
+    figureInner.setAttribute('transform','');
+    arrow.style.display='none';
+    if(hintText){hintText.remove();hintText=null;}
+    if(hints) showHint();
+    angle=ANG[0];dir=1;updateNeedle();
+    drawBtn.disabled=false;
+    msg.className='msg';msg.textContent='Read the apple, then hold DRAW and release on its note.';
+  }
+  function showHint(){
+    const y=Y[NOTES[appleIdx]];
+    hintText=document.createElementNS(SVGNS,'text');
+    hintText.setAttribute('x',PERSON_X+26);hintText.setAttribute('y',y+4);
+    hintText.setAttribute('font-family',"'Syne',sans-serif");hintText.setAttribute('font-size','22');
+    hintText.setAttribute('font-weight','800');hintText.setAttribute('fill','#2438C8');
+    hintText.textContent=NOTES[appleIdx];
+    scene.appendChild(hintText);
+  }
+
+  // ---- charging ----
+  function startCharge(){
+    if(state!=='ready') return;
+    state='charging';drawBtn.classList.add('charging');
+    dir=1;
+    const loop=()=>{
+      if(state!=='charging') return;
+      angle+=dir*SPEED[diff];
+      if(angle>=ANG[6]){angle=ANG[6];dir=-1;}
+      if(angle<=ANG[0]){angle=ANG[0];dir=1;}
+      updateNeedle();
+      raf=requestAnimationFrame(loop);
+    };
+    raf=requestAnimationFrame(loop);
+  }
+  function release(){
+    if(state!=='charging') return;
+    cancelAnimationFrame(raf);
+    drawBtn.classList.remove('charging');drawBtn.disabled=true;
+    state='firing';
+    const chosen=nearestIdx();
+    fire(chosen);
+  }
+
+  // ---- firing ----
+  function fire(chosenIdx){
+    const chosen=NOTES[chosenIdx];
+    const endX=PERSON_X, endY=Y[chosen];
+    // draw string back briefly then loose (visual flair skipped for brevity)
+    arrow.style.display='';
+    const sx=BOW[0], sy=BOW[1], dur=620, t0=performance.now();
+    function step(now){
+      let t=(now-t0)/dur; if(t>1) t=1;
+      const x=sx+(endX-sx)*t;
+      const arc=70*Math.sin(Math.PI*t);
+      const y=(sy+(endY-sy)*t)-arc;
+      const vx=(endX-sx);
+      const vy=(endY-sy)-70*Math.PI*Math.cos(Math.PI*t);
+      const ang=Math.atan2(vy,vx)*180/Math.PI;
+      arrow.setAttribute('transform',`translate(${x},${y}) rotate(${ang})`);
+      if(t<1) requestAnimationFrame(step); else resolve(chosenIdx);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function resolve(chosenIdx){
+    if(chosenIdx===appleIdx){                 // SPLIT
+      splat();appleG.style.display='none';arrow.style.display='none';
+      burst(PERSON_X,Y[NOTES[appleIdx]]);
+      score++;streak++;best=Math.max(best,streak);sync();
+      msg.className='msg good';msg.textContent='Split! Dead centre on '+NOTES[appleIdx]+'.';
+      setTimeout(newRound,1250);
+    }else if(chosenIdx>appleIdx){             // too HIGH -> tree, go again
+      thunk();streak=0;sync();
+      msg.className='msg warn';msg.textContent='Too high — into the tree. That was '+NOTES[appleIdx]+'. Go again.';
+      setTimeout(newRound,1600);
+    }else{                                    // too LOW -> hits the fellow, game over
+      thunk();
+      figureInner.style.transition='transform .7s cubic-bezier(.5,.05,.5,1)';
+      figureInner.setAttribute('transform','rotate(84 0 98)');
+      streak=0;sync();
+      msg.className='msg bad';msg.textContent='You hit them! It was '+NOTES[appleIdx]+'.';
+      setTimeout(gameOver,900);
+    }
+  }
+
+  function burst(cx,cy){
+    for(let i=0;i<7;i++){
+      const p=document.createElementNS(SVGNS,'circle');
+      p.setAttribute('cx',cx);p.setAttribute('cy',cy);p.setAttribute('r',3+Math.random()*3);
+      p.setAttribute('fill','#E23A3A');scene.appendChild(p);
+      const a=Math.random()*Math.PI*2, sp=30+Math.random()*40, t0=performance.now();
+      (function(px,py,vx,vy,el){
+        function st(now){const t=(now-t0)/600;if(t>=1){el.remove();return;}
+          el.setAttribute('cx',px+vx*t);el.setAttribute('cy',py+vy*t+40*t*t);
+          el.setAttribute('opacity',1-t);requestAnimationFrame(st);}
+        requestAnimationFrame(st);
+      })(cx,cy,Math.cos(a)*sp,Math.sin(a)*sp-20,p);
+    }
+  }
+
+  function gameOver(){
+    state='over';
+    document.getElementById('overScore').textContent=score;
+    over.classList.add('show');
+  }
+  function restart(){
+    over.classList.remove('show');
+    figureInner.style.transition='';
+    score=0;streak=0;sync();
+    newRound();
+  }
+
+  function sync(){elScore.textContent=score;elStreak.textContent=streak;elBest.textContent=best;}
+
+  // ---- input ----
+  drawBtn.addEventListener('pointerdown',e=>{e.preventDefault();startCharge();});
+  window.addEventListener('pointerup',()=>{ if(state==='charging') release(); });
+  drawBtn.addEventListener('pointercancel',()=>{ if(state==='charging') release(); });
+  window.addEventListener('keydown',e=>{ if(e.code==='Space'){e.preventDefault(); if(state==='ready') startCharge();} });
+  window.addEventListener('keyup',e=>{ if(e.code==='Space'){ if(state==='charging') release(); } });
+
+  document.getElementById('diffSeg').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#diffSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');diff=b.dataset.diff;
+  });
+  const hintBtn=document.getElementById('hintBtn');
+  hintBtn.addEventListener('click',()=>{hints=!hints;hintBtn.classList.toggle('on',hints);
+    if(hints && state==='ready'){ if(!hintText) showHint(); } else if(hintText){hintText.remove();hintText=null;}});
+  const soundBtn=document.getElementById('soundBtn');
+  soundBtn.addEventListener('click',()=>{soundOn=!soundOn;soundBtn.classList.toggle('on',soundOn);});
+  document.getElementById('againBtn').addEventListener('click',restart);
+
+  buildGauge();newRound();
+})();
+</script>
+</body>
+</html>

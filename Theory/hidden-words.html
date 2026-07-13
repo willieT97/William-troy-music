@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hidden Words — Music Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --good:#1FA84C;
+    --shadow:6px 6px 0 var(--ink); --shadow-sm:4px 4px 0 var(--ink);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);font-family:'Hanken Grotesk',sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 44px}
+
+  .title{font-family:'Press Start 2P',monospace;font-size:clamp(15px,4.5vw,26px);text-align:center;line-height:1.5}
+  .title .hi{color:var(--pink)}
+  .subtitle{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:.75;margin:5px 0 16px}
+
+  .hud{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .chip{background:#fff;border:3px solid var(--ink);box-shadow:var(--shadow-sm);padding:7px 12px;
+    font-family:'Space Mono',monospace;font-weight:700;font-size:13px;display:flex;gap:8px;align-items:center}
+  .chip b{font-size:18px}
+  .chip.streak b{color:var(--pink)}
+  .chip.best b{color:var(--blue)}
+
+  /* ===== staff ===== */
+  .stafframe{width:100%;max-width:660px;background:#fff;border:4px solid var(--ink);box-shadow:var(--shadow);padding:10px 8px 6px}
+  .staff{position:relative;height:210px}
+  .clef{position:absolute;left:12px;top:24px;height:118px;pointer-events:none}
+  .clef svg{height:100%}
+  .sline{position:absolute;left:64px;right:14px;height:3px;background:var(--ink)}
+  .notehead{position:absolute;width:26px;height:19px;background:var(--ink);border:3px solid var(--ink);
+    border-radius:50%;transform:translate(-50%,-50%) rotate(-18deg);transition:background .15s,transform .15s;z-index:3}
+  .notehead.done{background:var(--blue);border-color:var(--blue)}
+  .notehead.cur{background:var(--pink);border-color:var(--pink);transform:translate(-50%,-50%) rotate(-18deg) scale(1.28);
+    box-shadow:0 0 0 4px rgba(255,78,134,.25)}
+  .slot{position:absolute;top:158px;width:32px;height:38px;border:3px solid var(--ink);background:var(--paper);
+    transform:translateX(-50%);display:flex;align-items:center;justify-content:center;
+    font-family:'Syne',sans-serif;font-weight:800;font-size:22px;z-index:2}
+  .slot.cur{border-color:var(--pink);box-shadow:4px 4px 0 var(--pink);background:#fff}
+  .slot.filled{background:#e7f7ec;border-color:var(--good)}
+  .slot .ghost{opacity:.28}
+  .slot.shake{animation:shake .3s}
+  @keyframes shake{0%,100%{transform:translateX(-50%)}20%,60%{transform:translate(calc(-50% - 5px),0)}40%,80%{transform:translate(calc(-50% + 5px),0)}}
+
+  /* ===== letter pad ===== */
+  .pad{width:100%;max-width:660px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+  .key{width:60px;height:58px;border:4px solid var(--ink);background:#fff;box-shadow:var(--shadow-sm);
+    font-family:'Press Start 2P',monospace;font-size:18px;cursor:pointer;color:var(--ink);
+    transition:transform .05s,box-shadow .05s}
+  .key:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+  .key:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+  .key:disabled{opacity:.4;cursor:not-allowed}
+  .key.flashgood{background:var(--good);color:#fff}
+  .key.flashbad{background:#E23A3A;color:#fff}
+
+  /* ===== controls ===== */
+  .controls{width:100%;max-width:660px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .seg{display:flex;border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;overflow:hidden}
+  .seg button{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;
+    padding:9px 12px;border:none;border-right:3px solid var(--ink);background:#fff;cursor:pointer;color:var(--ink)}
+  .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--blue);color:#fff}
+  .toggle,.skip{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;
+    padding:9px 12px;border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;cursor:pointer;
+    display:flex;align-items:center;gap:8px}
+  .toggle .dot{width:14px;height:14px;border:2px solid var(--ink);background:#fff}
+  .toggle.on .dot{background:var(--pink)}
+
+  .msg{width:100%;max-width:660px;text-align:center;margin-top:16px;min-height:28px;
+    font-family:'Space Mono',monospace;font-weight:700;font-size:15px}
+  .msg.good{color:var(--good)}
+  .msg.good b{font-family:'Syne',sans-serif;font-size:22px;letter-spacing:3px}
+  .msg.bad{color:#E23A3A}
+
+  .legend{max-width:660px;margin-top:22px;font-size:13px;line-height:1.6;opacity:.8;text-align:center}
+  .legend b{font-family:'Space Mono',monospace}
+
+  @media(max-width:520px){
+    .key{width:44px;height:52px;font-size:15px}
+    .notehead{width:22px;height:16px}
+  }
+</style>
+</head>
+<body>
+
+  <div class="title">HIDDEN <span class="hi">WORDS</span></div>
+  <div class="subtitle">Theory · Music Arcade</div>
+
+  <div class="hud">
+    <div class="chip">SCORE <b id="score">0</b></div>
+    <div class="chip streak">STREAK <b id="streak">0</b></div>
+    <div class="chip best">BEST <b id="best">0</b></div>
+  </div>
+
+  <div class="stafframe">
+    <div class="staff" id="staff">
+      <div class="clef" aria-hidden="true">
+        <svg viewBox="0 0 40 100" fill="none" stroke="#17140E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 8 C10 18 10 34 20 44 C34 57 34 78 22 86 C13 92 6 86 8 78 C10 72 18 71 20 77
+                   M20 44 C26 40 30 34 26 26 C23 20 17 22 18 30 L24 92"/>
+        </svg>
+      </div>
+      <!-- lines, noteheads and slots injected -->
+    </div>
+  </div>
+
+  <div class="pad" id="pad"><!-- A-G keys --></div>
+
+  <div class="controls">
+    <div class="seg" id="tierSeg">
+      <button data-tier="short" class="on">Short · 3</button>
+      <button data-tier="medium">Medium · 4</button>
+      <button data-tier="long">Long · 5+</button>
+    </div>
+    <button class="toggle" id="hintBtn"><span class="dot"></span>Hint</button>
+    <button class="toggle on" id="soundBtn"><span class="dot"></span>Sound</button>
+    <button class="skip" id="skipBtn">New word</button>
+  </div>
+
+  <div class="msg" id="msg">Read each note and press its letter to spell the hidden word.</div>
+
+  <div class="legend">
+    Every note sits on its own line or space: <b>E</b> 1st line, <b>F</b> 1st space, <b>G</b> 2nd line,
+    <b>A</b> 2nd space, <b>B</b> 3rd line, <b>C</b> 3rd space, <b>D</b> 4th line. Spell the word and it plays back to you.
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // letter -> its single staff position (top px within .staff) and pitch
+  const L={
+    E:{top:120,freq:329.63},
+    F:{top:110,freq:349.23},
+    G:{top:100,freq:392.00},
+    A:{top:90, freq:440.00},
+    B:{top:80, freq:493.88},
+    C:{top:70, freq:523.25},
+    D:{top:60, freq:587.33}
+  };
+  const LINES=[40,60,80,100,120];   // 5 staff lines (top px)
+
+  const TIERS={
+    short:['BED','EGG','BAG','ACE','CAB','ADD','AGE','BEE','DAD','BAD','BEG','FED','FAD','DAB','GAB','CAD'],
+    medium:['FACE','CAGE','FADE','BEAD','BEEF','EDGE','CAFE','DEAF','FEED','DEED','DEAD','AGED','ACED','BABE','GAGE','DACE'],
+    long:['BADGE','DECAF','FACADE','DECADE','CABBAGE','BAGGAGE','ADAGE','EFFACE','DEFACE','FACED','CAGED','FADED','BEDDED']
+  };
+
+  // ---- audio ----
+  let actx=null, soundOn=true;
+  function beep(freq,dur,vol){
+    if(!soundOn) return;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type='sine';o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
+      const t=actx.currentTime;g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.start(t);o.stop(t+dur+.02);
+    }catch(e){}
+  }
+  const tone=f=>beep(f,.5,.25);
+  function buzz(){
+    if(!soundOn)return;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type='square';o.frequency.value=120;o.connect(g);g.connect(actx.destination);
+      const t=actx.currentTime;g.gain.setValueAtTime(.13,t);g.gain.exponentialRampToValueAtTime(.0001,t+.2);
+      o.start(t);o.stop(t+.22);
+    }catch(e){}
+  }
+
+  // ---- dom ----
+  const staff=document.getElementById('staff');
+  const pad=document.getElementById('pad');
+  const msg=document.getElementById('msg');
+  const elScore=document.getElementById('score'),elStreak=document.getElementById('streak'),elBest=document.getElementById('best');
+
+  let tier='short', word='', letters=[], idx=0, locked=false;
+  let score=0, streak=0, best=0, hints=false;
+  let noteEls=[], slotEls=[];
+
+  function drawLines(){
+    staff.querySelectorAll('.sline').forEach(e=>e.remove());
+    LINES.forEach(top=>{
+      const l=document.createElement('div');l.className='sline';l.style.top=(top-1.5)+'px';staff.appendChild(l);
+    });
+  }
+  function noteX(i,n){                 // percent across the staff
+    if(n===1) return 54;
+    const a=20,b=86; return a + i*(b-a)/(n-1);
+  }
+
+  // ---- letter pad ----
+  function buildPad(){
+    pad.innerHTML='';
+    'ABCDEFG'.split('').forEach(ch=>{
+      const b=document.createElement('button');b.className='key';b.textContent=ch;b.dataset.ch=ch;
+      b.addEventListener('click',()=>press(ch,b));
+      pad.appendChild(b);
+    });
+  }
+  const keyEl=ch=>pad.querySelector('.key[data-ch="'+ch+'"]');
+
+  function newWord(){
+    locked=false;idx=0;
+    const list=TIERS[tier];
+    word=list[Math.floor(Math.random()*list.length)];
+    letters=word.split('');
+    staff.querySelectorAll('.notehead,.slot').forEach(e=>e.remove());
+    noteEls=[];slotEls=[];
+    const n=letters.length;
+    letters.forEach((ch,i)=>{
+      const x=noteX(i,n);
+      const nh=document.createElement('div');nh.className='notehead';
+      nh.style.left=x+'%';nh.style.top=L[ch].top+'px';
+      staff.appendChild(nh);noteEls.push(nh);
+      const s=document.createElement('div');s.className='slot';
+      s.style.left=x+'%';
+      staff.appendChild(s);slotEls.push(s);
+    });
+    highlight();
+    msg.className='msg';msg.textContent='Read each note and press its letter.';
+  }
+
+  function highlight(){
+    noteEls.forEach((nh,i)=>nh.classList.toggle('cur',i===idx));
+    slotEls.forEach((s,i)=>{
+      s.classList.toggle('cur',i===idx);
+      if(i===idx && hints && !s.classList.contains('filled'))
+        s.innerHTML='<span class="ghost">'+letters[i]+'</span>';
+      else if(!s.classList.contains('filled')) s.innerHTML='';
+    });
+  }
+
+  function press(ch,btn){
+    if(locked||idx>=letters.length) return;
+    if(ch===letters[idx]){
+      const s=slotEls[idx];s.textContent=ch;s.classList.add('filled');s.classList.remove('cur');
+      noteEls[idx].classList.remove('cur');noteEls[idx].classList.add('done');
+      tone(L[ch].freq);
+      if(btn){btn.classList.add('flashgood');setTimeout(()=>btn.classList.remove('flashgood'),160);}
+      score++;streak++;best=Math.max(best,streak);sync();
+      idx++;
+      if(idx>=letters.length) wordComplete();
+      else highlight();
+    }else{
+      const s=slotEls[idx];s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake');
+      buzz();streak=0;sync();
+      if(btn){btn.classList.add('flashbad');setTimeout(()=>btn.classList.remove('flashbad'),160);}
+    }
+  }
+
+  function wordComplete(){
+    locked=true;
+    msg.className='msg good';msg.innerHTML='<b>'+word+'</b> \u2713';
+    // play it back as a little tune
+    if(soundOn) letters.forEach((ch,i)=>setTimeout(()=>beep(L[ch].freq,.34,.24), 250+i*300));
+    const wait=250+letters.length*300+700;
+    setTimeout(newWord,Math.max(1500,wait));
+  }
+
+  function sync(){elScore.textContent=score;elStreak.textContent=streak;elBest.textContent=best;}
+
+  // ---- controls ----
+  document.getElementById('tierSeg').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#tierSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');tier=b.dataset.tier;streak=0;sync();newWord();
+  });
+  const hintBtn=document.getElementById('hintBtn');
+  hintBtn.addEventListener('click',()=>{hints=!hints;hintBtn.classList.toggle('on',hints);highlight();});
+  const soundBtn=document.getElementById('soundBtn');
+  soundBtn.addEventListener('click',()=>{soundOn=!soundOn;soundBtn.classList.toggle('on',soundOn);});
+  document.getElementById('skipBtn').addEventListener('click',()=>{ if(!locked) newWord(); });
+
+  // physical keyboard A-G
+  window.addEventListener('keydown',e=>{
+    const ch=e.key.toUpperCase();
+    if('ABCDEFG'.indexOf(ch)>-1) press(ch,keyEl(ch));
+  });
+
+  window.addEventListener('resize',()=>{
+    const n=letters.length;
+    noteEls.forEach((nh,i)=>nh.style.left=noteX(i,n)+'%');
+    slotEls.forEach((s,i)=>s.style.left=noteX(i,n)+'%');
+  });
+
+  drawLines();buildPad();newWord();
+})();
+</script>
+</body>
+</html>

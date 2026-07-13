@@ -147,7 +147,7 @@
 
         <div class="overlay" id="startScreen">
           <h2>Scale Climb</h2>
-          <p>A scale and key is named each stage — play its notes in order to climb. Each correct note rings out, so a clean climb plays the scale rising. Barrels roll down: keep climbing to slip past, freeze and one knocks you down. Three knock-downs and you're out.</p>
+          <p>A scale and key is named each stage — play its notes in order to climb. Keys start with no sharps or flats and gain one more every couple of stages, so it ramps up gently. Each correct note rings out; a clean climb plays the scale rising. Barrels roll down: keep climbing to slip past, freeze and one knocks you down. Three knock-downs and you're out.</p>
           <div class="seglabel">Scales</div>
           <div class="seg" id="levelSeg" role="group" aria-label="Scale level">
             <button data-v="1" aria-pressed="true">Level 1</button>
@@ -224,6 +224,10 @@
     classes.push(CHROMA[root]); midi.push(60 + root + 12);   // octave
     return { name: CHROMA[root] + ' ' + type, classes, midi };
   }
+  // number of black-key notes in a scale — a proxy for how many sharps/flats the key has
+  function accidentals(classes){ const seen = new Set(); let c = 0; for(const n of classes){ if(seen.has(n)) continue; seen.add(n); if(n.length > 1) c++; } return c; }
+  // how many accidentals are allowed at a given stage: none at first, +1 every couple of stages
+  function accidentalBudget(s){ return Math.min(7, Math.floor((s - 1) / 2)); }
 
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
@@ -263,7 +267,7 @@
   const comboMult = () => combo >= 1 ? Math.min(1 + Math.floor((combo-1)/4), 4) : 1;
   const JUMP_DUR = 0.42, JUMP_H = 17;
   function jumpOffset(now){ const p = (now - jumpStart)/JUMP_DUR; return (p >= 0 && p < 1) ? -JUMP_H*Math.sin(Math.PI*p) : 0; }
-  function stageParams(s){ barrelSpeed = 66 + (s-1)*13; barrelInterval = Math.max(1.15, 2.9 - (s-1)*0.17); }
+  function stageParams(s){ barrelSpeed = 50 + (s-1)*8; barrelInterval = Math.max(1.3, 3.3 - (s-1)*0.12); }
 
   function buildKeyboard(){
     const kb = el('keyboard'); kb.innerHTML = '';
@@ -289,9 +293,23 @@
 
   function newScale(){
     const pool = LEVELS[level];
-    const type = pool[Math.floor(Math.random()*pool.length)];
-    const root = Math.floor(Math.random()*12);
-    scale = makeScale(type, root);
+    const budget = accidentalBudget(stage);
+    // every (type, root) whose scale has no more than the allowed number of sharps/flats
+    const cands = [];
+    for(const type of pool){
+      for(let root=0; root<12; root++){
+        const cls = SCALE_TYPES[type].map(s => CHROMA[(root + s) % 12]);
+        const acc = accidentals(cls);
+        if(acc <= budget) cands.push({ type, root, acc });
+      }
+    }
+    // once past the plain keys, mostly feature the newest accidental level so it ramps
+    const atMax = cands.filter(c => c.acc === budget);
+    const prev  = cands.filter(c => c.acc !== (scale ? accidentals(scale.classes) : -1) || cands.length === 1);
+    let pick;
+    if(budget > 0 && atMax.length && Math.random() < 0.68) pick = atMax[Math.floor(Math.random()*atMax.length)];
+    else { const pool2 = prev.length ? prev : cands; pick = pool2[Math.floor(Math.random()*pool2.length)]; }
+    scale = makeScale(pick.type, pick.root);
     N = scale.classes.length; GAP = (GROUND - TOP) / N;
     pos = 0; targetY = rungY(0); climberY = rungY(0);
     clean = true;

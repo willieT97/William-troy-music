@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Note Elevator — Music Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2;
+    --ink:#17140E;
+    --blue:#2438C8;
+    --pink:#FF4E86;
+    --good:#1FA84C;
+    --wall:#E7DFCD;
+    --shadow:6px 6px 0 var(--ink);
+    --shadow-sm:4px 4px 0 var(--ink);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);font-family:'Hanken Grotesk',sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 40px}
+
+  .title{font-family:'Press Start 2P',monospace;font-size:clamp(15px,4.5vw,26px);text-align:center;line-height:1.5}
+  .title .hi{color:var(--pink)}
+  .subtitle{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:.75;margin:5px 0 16px}
+
+  .hud{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .chip{background:#fff;border:3px solid var(--ink);box-shadow:var(--shadow-sm);padding:7px 12px;
+    font-family:'Space Mono',monospace;font-weight:700;font-size:13px;display:flex;gap:8px;align-items:center}
+  .chip b{font-size:18px}
+  .chip.streak b{color:var(--pink)}
+  .chip.best b{color:var(--blue)}
+
+  /* ===== the cabin ===== */
+  .cabin{
+    width:100%;max-width:640px;background:var(--wall);
+    border:5px solid var(--ink);box-shadow:var(--shadow);
+    padding:16px;position:relative;
+    background-image:linear-gradient(var(--wall) 0 0);
+  }
+  /* ceiling light strip */
+  .ceiling{height:12px;margin:-4px -4px 14px;border:3px solid var(--ink);background:var(--paper);
+    background-image:repeating-linear-gradient(90deg,var(--paper) 0 16px,#d9d0bd 16px 20px)}
+
+  /* floor readout */
+  .readout{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
+  .dial{border:4px solid var(--ink);background:var(--ink);color:var(--paper);
+    font-family:'Press Start 2P',monospace;font-size:22px;padding:8px 16px;min-width:70px;text-align:center;
+    box-shadow:var(--shadow-sm)}
+  .arrows{display:flex;flex-direction:column;gap:6px}
+  .arrow{width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;opacity:.18}
+  .arrow.up{border-bottom:15px solid var(--ink)}
+  .arrow.down{border-top:15px solid var(--ink)}
+  .arrow.on{opacity:1}
+  .arrow.up.on{border-bottom-color:var(--good)}
+  .arrow.down.on{border-top-color:var(--good)}
+
+  /* main row: doorway + button panel */
+  .row{display:flex;gap:16px;align-items:stretch}
+
+  .doorframe{
+    position:relative;flex:1;min-width:0;border:5px solid var(--ink);background:var(--ink);
+    box-shadow:inset 3px 3px 0 rgba(0,0,0,.4);height:320px;overflow:hidden;
+  }
+  /* the shaft view behind the doors */
+  .shaftview{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#e2e7ee 0%,#c7d0da 100%)}
+  .staff{position:absolute;left:0;right:0;bottom:0;height:900px;transition:transform .6s cubic-bezier(.5,.05,.3,1)}
+  .sline{position:absolute;left:0;right:0;height:3px;background:#443d33}
+  .notehead{position:absolute;left:50%;width:30px;height:22px;background:#17140E;border:3px solid #17140E;
+    border-radius:50%;transform:translate(-50%,50%) rotate(-20deg);box-shadow:0 0 0 2px rgba(255,255,255,.65)}
+  .notehead.ghost{background:transparent;border-color:var(--pink);box-shadow:none}
+  .notehead.pop{animation:pop .32s cubic-bezier(.3,1.4,.5,1)}
+  @keyframes pop{
+    0%{transform:translate(-50%,50%) rotate(-20deg) scale(.45)}
+    100%{transform:translate(-50%,50%) rotate(-20deg) scale(1)}}
+  .floortag{position:absolute;left:8px;transform:translateY(50%);font-family:'Space Mono',monospace;
+    font-size:11px;font-weight:700;color:#a99;opacity:0;transition:opacity .2s}
+  .shaftview.reveal .floortag{opacity:.7}
+
+  /* sliding doors */
+  .door{position:absolute;top:0;bottom:0;width:52%;background:var(--paper);z-index:4;
+    transition:transform .38s ease;
+    background-image:repeating-linear-gradient(0deg,var(--paper) 0 26px,#e4dcc9 26px 29px)}
+  .door.left{left:0;border-right:3px solid var(--ink)}
+  .door.right{right:0;border-left:3px solid var(--ink)}
+  .doorframe.open .door.left{transform:translateX(-101%)}
+  .doorframe.open .door.right{transform:translateX(101%)}
+  .door:after{content:"";position:absolute;top:50%;width:14px;height:56px;border:3px solid var(--ink);
+    transform:translateY(-50%);background:#d9d0bd}
+  .door.left:after{right:10px}
+  .door.right:after{left:10px}
+
+  /* passengers stand in the cabin; each is one note */
+  .paxlayer{position:absolute;inset:0;z-index:6;pointer-events:none}
+  .pax{position:absolute;bottom:0;width:64px;height:96px;opacity:0;
+    transition:transform .8s cubic-bezier(.42,.02,.3,1),left .35s ease,opacity .3s}
+  .pax.in{opacity:1}
+  .pax.gone{opacity:0}
+  .pax .paxbody{width:100%;height:100%;transform-origin:50% 92%}
+  .pax.walking .paxbody{animation:walkbob .3s ease-in-out infinite}
+  .pax svg{width:64px;height:96px;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.22))}
+  @keyframes walkbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+
+  /* the thought bubble, above the front passenger */
+  .prompt{position:absolute;bottom:130px;z-index:25;background:#fff;border:3px solid #17140E;
+    border-radius:24px;padding:5px 16px;font-family:'Syne',sans-serif;font-weight:800;
+    font-size:22px;letter-spacing:4px;white-space:nowrap;transition:left .35s ease;
+    box-shadow:0 3px 0 rgba(0,0,0,.12)}
+  .prompt .cur{color:var(--pink);text-decoration:underline;text-underline-offset:4px}
+  .prompt .done{opacity:.3}
+  .prompt:before{content:"";position:absolute;left:30px;bottom:-19px;width:13px;height:13px;
+    border-radius:50%;background:#fff;border:3px solid #17140E}
+  .prompt:after{content:"";position:absolute;left:24px;bottom:-33px;width:8px;height:8px;
+    border-radius:50%;background:#fff;border:3px solid #17140E}
+
+  /* ===== call-button panel ===== */
+  .callpanel{flex:none;border:4px solid var(--ink);background:var(--paper);box-shadow:var(--shadow-sm);
+    padding:12px 14px;display:flex;flex-direction:column;justify-content:center}
+  .heads{display:flex;gap:10px;justify-content:center;margin-bottom:6px}
+  .heads span{width:60px;text-align:center;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;
+    letter-spacing:1px;text-transform:uppercase;opacity:.55}
+  .cols{display:flex;gap:10px;align-items:flex-end}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .col.spaces{transform:translateY(-35px)}   /* raise spaces half a row, into the gaps */
+  .rbtn{position:relative;width:60px;height:60px;border-radius:50%;border:4px solid var(--ink);
+    background:#fff;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;box-shadow:3px 3px 0 var(--ink);transition:transform .05s,box-shadow .05s}
+  .rbtn:before{content:"";position:absolute;inset:6px;border:2px solid var(--ink);border-radius:50%;opacity:.35}
+  .rbtn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+  .rbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  .rbtn.lit{background:var(--pink);color:#fff}
+  .rbtn.lit:before{border-color:#fff;opacity:.6}
+  .rbtn:disabled{opacity:.45;cursor:not-allowed}
+  .rnum{font-family:'Press Start 2P',monospace;font-size:15px;line-height:1;z-index:2}
+  .rmini{display:none;margin-top:3px}
+  .callpanel.hints .rmini{display:block}
+
+  /* ===== controls ===== */
+  .controls{width:100%;max-width:640px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .seg{display:flex;border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;overflow:hidden}
+  .seg button{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;
+    padding:9px 12px;border:none;border-right:3px solid var(--ink);background:#fff;cursor:pointer;color:var(--ink)}
+  .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--blue);color:#fff}
+  .toggle{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;
+    padding:9px 12px;border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;cursor:pointer;
+    display:flex;align-items:center;gap:8px}
+  .toggle .dot{width:14px;height:14px;border:2px solid var(--ink);background:#fff}
+  .toggle.on .dot{background:var(--pink)}
+
+  .msg{width:100%;max-width:640px;text-align:center;margin-top:14px;min-height:24px;
+    font-family:'Space Mono',monospace;font-weight:700;font-size:14px}
+  .msg.good{color:var(--good)}
+  .msg.bad{color:#E23A3A}
+
+  @media(max-width:560px){
+    .row{flex-direction:column}
+    .col{gap:8px}
+    .col.spaces{transform:translateY(-30px)}
+    .rbtn{width:52px;height:52px}
+    .heads span{width:52px}
+    .doorframe{height:280px}
+    .man{width:80px}
+  }
+</style>
+</head>
+<body>
+
+  <div class="title">NOTE <span class="hi">ELEVATOR</span></div>
+  <div class="subtitle">Theory · Music Arcade</div>
+
+  <div class="hud">
+    <div class="chip">SCORE <b id="score">0</b></div>
+    <div class="chip streak">STREAK <b id="streak">0</b></div>
+    <div class="chip best">BEST <b id="best">0</b></div>
+  </div>
+
+  <div class="cabin">
+    <div class="ceiling"></div>
+
+    <div class="readout">
+      <div class="arrows">
+        <div class="arrow up" id="arrUp"></div>
+        <div class="arrow down" id="arrDn"></div>
+      </div>
+      <div class="dial" id="dial">–</div>
+    </div>
+
+    <div class="row">
+      <div class="doorframe" id="doorframe">
+        <div class="shaftview" id="shaftview">
+          <div class="staff" id="staff"></div>
+        </div>
+        <div class="door left"></div>
+        <div class="door right"></div>
+        <div class="prompt" id="bubble">C</div>
+        <div class="paxlayer" id="paxLayer"></div>
+      </div>
+
+      <div class="callpanel" id="callpanel"><!-- buttons injected --></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="seg" id="modeSeg">
+      <button data-mode="beg" class="on">Beginner · G–D</button>
+      <button data-mode="all">All notes · E–F</button>
+      <button data-mode="seq">Sequences</button>
+    </div>
+    <button class="toggle" id="hintBtn"><span class="dot"></span>Hints</button>
+    <button class="toggle on" id="soundBtn"><span class="dot"></span>Sound</button>
+  </div>
+
+  <div class="msg" id="msg">Read the note, then press its floor.</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const FLOORS = [
+    {n:1, kind:'line',  ord:'1st line',  note:'E', freq:329.63},
+    {n:2, kind:'space', ord:'1st space', note:'F', freq:349.23},
+    {n:3, kind:'line',  ord:'2nd line',  note:'G', freq:392.00},
+    {n:4, kind:'space', ord:'2nd space', note:'A', freq:440.00},
+    {n:5, kind:'line',  ord:'3rd line',  note:'B', freq:493.88},
+    {n:6, kind:'space', ord:'3rd space', note:'C', freq:523.25},
+    {n:7, kind:'line',  ord:'4th line',  note:'D', freq:587.33},
+    {n:8, kind:'space', ord:'4th space', note:'E', freq:659.25},
+    {n:9, kind:'line',  ord:'5th line',  note:'F', freq:698.46},
+  ];
+  const HOMES={}; FLOORS.forEach((f,i)=>{(HOMES[f.note]=HOMES[f.note]||[]).push(i);});
+  const BEGINNER=['G','A','B','C','D'];
+  const ALLNOTES=['E','F','G','A','B','C','D'];
+
+  // ---- geometry inside the staff strip ----
+  const STEP=42, PADB=180, HEAD_H=82;           // px per half-step; bottom padding; passenger head height
+  function floorBottom(i){ return PADB + i*STEP; }
+  const staff=document.getElementById('staff');
+  const shaftview=document.getElementById('shaftview');
+
+  function buildStaff(){
+    staff.innerHTML='';
+    [0,2,4,6,8].forEach(idx=>{
+      const l=document.createElement('div');l.className='sline';
+      l.style.bottom=(floorBottom(idx)-1.5)+'px';staff.appendChild(l);
+    });
+  }
+  function scrollTo(idx){
+    const dy=HEAD_H-floorBottom(idx);           // bring floor idx down to the passenger's head height
+    staff.style.transform='translateY('+(-dy)+'px)';
+  }
+  function addNotehead(idx,ghost,pop){
+    const nh=document.createElement('div');nh.className='notehead'+(ghost?' ghost':'')+(pop?' pop':'');
+    nh.style.bottom=floorBottom(idx)+'px';staff.appendChild(nh);
+  }
+  function clearNoteheads(){ staff.querySelectorAll('.notehead').forEach(e=>e.remove()); }
+
+  // ---- mini-staff glyph for hint mode ----
+  function miniGlyph(f){
+    // 5 lines; dot placed on the floor's line/space
+    const yLine=[34,27,20,13,6];                // bottom->top line y
+    const bottomLineIdx = (f.n-1)>>1;           // which line (0..4) at/below this floor
+    let dy;
+    if(f.kind==='line'){ dy=yLine[bottomLineIdx]; }
+    else{ dy=(yLine[bottomLineIdx]+yLine[bottomLineIdx+1])/2; }
+    let lines=yLine.map(y=>`<line x1="2" y1="${y}" x2="22" y2="${y}" stroke="#17140E" stroke-width="2"/>`).join('');
+    return `<svg class="rmini" width="24" height="40" viewBox="0 0 24 40">${lines}
+      <ellipse cx="12" cy="${dy}" rx="4.4" ry="3.4" fill="#2438C8"/></svg>`;
+  }
+
+  // ---- build round call buttons (9 at top -> 1 at bottom) ----
+  const callpanel=document.getElementById('callpanel');
+  // left column = lines numbered 1-5, right column = spaces numbered 1-4 (raised half a row via CSS)
+  function makeBtn(floorNum,label){
+    const idx=floorNum-1, f=FLOORS[idx];
+    const b=document.createElement('button');b.className='rbtn';b.dataset.idx=idx;
+    b.innerHTML=`<span class="rnum">${label}</span>${miniGlyph(f)}`;
+    b.addEventListener('click',()=>choose(idx,b));
+    return b;
+  }
+  function buildButtons(){
+    callpanel.innerHTML='';
+    const heads=document.createElement('div');heads.className='heads';
+    heads.innerHTML='<span>Lines</span><span>Spaces</span>';
+    const cols=document.createElement('div');cols.className='cols';
+    const colL=document.createElement('div');colL.className='col lines';
+    const colR=document.createElement('div');colR.className='col spaces';
+    [9,7,5,3,1].forEach(fn=>colL.appendChild(makeBtn(fn,(fn+1)/2)));   // 5,4,3,2,1 top->bottom
+    [8,6,4,2].forEach(fn=>colR.appendChild(makeBtn(fn,fn/2)));         // 4,3,2,1 top->bottom
+    cols.append(colL,colR);
+    callpanel.append(heads,cols);
+  }
+
+  // ---- audio ----
+  let actx=null, soundOn=true;
+  function beep(freq,type,dur,vol){
+    if(!soundOn) return;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type=type;o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
+      const t=actx.currentTime;g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vol,t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.start(t);o.stop(t+dur+.02);
+    }catch(e){}
+  }
+  const tone=f=>beep(f,'sine',.6,.25);
+  const buzz=()=>beep(110,'square',.25,.15);
+
+  // ---- dom refs & state ----
+  const doorframe=document.getElementById('doorframe');
+  const bubble=document.getElementById('bubble');
+  const paxLayer=document.getElementById('paxLayer');
+  const dial=document.getElementById('dial');
+  const arrUp=document.getElementById('arrUp'), arrDn=document.getElementById('arrDn');
+  const msg=document.getElementById('msg');
+  const elScore=document.getElementById('score'),elStreak=document.getElementById('streak'),elBest=document.getElementById('best');
+
+  let mode='beg',score=0,streak=0,best=0;
+  let target=[],step=0,locked=false,carIdx=4;
+
+  // ---- passengers (each is one note) ----
+  const FRONT_X=68, STACK=22;
+  const PAX_SVG=`<div class="paxbody"><svg viewBox="0 0 64 96" fill="none" stroke="#17140E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="32" cy="14" r="9" fill="#17140E"/>
+      <path d="M32 23 L32 58 M32 32 L15 42 M32 32 L49 42 M32 58 L18 90 M32 58 L46 90"/>
+    </svg></div>`;
+  let pax=[];   // pax[0] = front = next to leave
+  function layoutPax(){
+    pax.forEach((p,i)=>{ p.style.left=(FRONT_X-i*STACK)+'px'; p.style.zIndex=20-i; });
+    bubble.style.left=(FRONT_X-2)+'px';
+  }
+  function spawnPax(n){
+    pax.forEach(p=>p.remove()); pax=[];
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div');p.className='pax';p.innerHTML=PAX_SVG;
+      paxLayer.appendChild(p);pax.push(p);
+    }
+    layoutPax();
+    requestAnimationFrame(()=>pax.forEach(p=>p.classList.add('in')));
+  }
+  function walkOut(p,cb){
+    if(!p){cb();return;}
+    const sv=shaftview.getBoundingClientRect(), pr=p.getBoundingClientRect();
+    const dx=(sv.left+sv.width/2)-(pr.left+pr.width/2);   // walk straight out to centre
+    const dy=0;                                           // stay on the floor — no jump
+    p.classList.add('walking');
+    requestAnimationFrame(()=>{ p.style.transform=`translate(${dx}px,${dy}px)`; });
+    setTimeout(()=>{ p.classList.remove('walking'); cb(); },820);
+  }
+
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  const pool=()=>mode==='beg'?BEGINNER:ALLNOTES;
+
+  function renderBubble(){
+    bubble.innerHTML=target.map((n,i)=>{
+      const c=i<step?'done':(i===step?'cur':'');return `<span class="${c}">${n}</span>`;
+    }).join(' ');
+  }
+  function dialLabel(i){ const f=FLOORS[i]; return f.kind==='line'?'L'+((f.n+1)/2):'S'+(f.n/2); }
+  function setDial(i){ dial.textContent=FLOORS[i]?dialLabel(i):'–'; }
+  function setArrows(dir){
+    arrUp.classList.toggle('on',dir>0);arrDn.classList.toggle('on',dir<0);
+  }
+  function setButtons(on){ callpanel.querySelectorAll('.rbtn').forEach(b=>b.disabled=!on); }
+  function litClear(){ callpanel.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('lit')); }
+
+  function newRound(){
+    locked=false;step=0;clearNoteheads();litClear();
+    doorframe.classList.remove('open');shaftview.classList.remove('reveal');
+    setArrows(0);
+    if(mode==='seq'){
+      const len=2+Math.floor(Math.random()*3);target=[];
+      for(let i=0;i<len;i++) target.push(pick(ALLNOTES));
+    }else target=[pick(pool())];
+    renderBubble();setButtons(true);spawnPax(target.length);
+    msg.className='msg';
+    msg.textContent = mode==='seq' ? 'Deliver each note to its floor, in order.' : 'Read the note, then press its floor.';
+  }
+
+  function sync(){elScore.textContent=score;elStreak.textContent=streak;elBest.textContent=best;}
+
+  function choose(idx,btn){
+    if(locked) return;
+    locked=true;setButtons(false);
+    if(btn){litClear();btn.classList.add('lit');}
+    const letter=target[step];
+    const homes=HOMES[letter];
+    const right=homes.includes(idx);
+    const dir=idx>carIdx?1:(idx<carIdx?-1:0);
+
+    doorframe.classList.add('open');
+    setArrows(dir);
+    setTimeout(()=>{                              // after doors open, ride
+      shaftview.classList.add('reveal');
+      scrollTo(idx);carIdx=idx;setDial(idx);
+      setTimeout(()=>{                            // arrived
+        setArrows(0);
+        const f=FLOORS[idx];
+        if(right){
+          const p=pax[0];
+          walkOut(p,()=>{                          // he arrives at centre
+            addNotehead(idx,false,true);           // head becomes the dot
+            tone(f.freq);                           // pitch sounds on landing
+            if(p){p.classList.add('gone');setTimeout(()=>{if(p.parentNode)p.remove();},300);pax.shift();layoutPax();}
+            const twin=homes.find(h=>h!==idx);
+            if(twin!==undefined) addNotehead(twin,true);
+            score++;streak++;best=Math.max(best,streak);sync();
+            step++;
+            if(step>=target.length){
+              msg.className='msg good';
+              msg.textContent = twin!==undefined
+                ? `${letter} lives here — and on the ${FLOORS[twin].ord} too.`
+                : (mode==='seq'?'Whole sequence delivered.':'Correct.');
+              setTimeout(newRound,1250);
+            }else{
+              renderBubble();litClear();
+              setTimeout(()=>{locked=false;setButtons(true);},450);
+            }
+          });
+        }else{
+          buzz();streak=0;sync();
+          const truth=homes[0];
+          msg.className='msg bad';
+          msg.textContent=`Not there — ${letter} is on the ${FLOORS[truth].ord}.`;
+          setTimeout(()=>{                        // ride on to the correct floor
+            const d2=truth>carIdx?1:(truth<carIdx?-1:0);setArrows(d2);
+            scrollTo(truth);carIdx=truth;setDial(truth);
+            setTimeout(()=>{
+              setArrows(0);addNotehead(truth,false);
+              const tw=homes.find(h=>h!==truth);
+              if(tw!==undefined) addNotehead(tw,true);
+              setTimeout(newRound,1400);
+            },600);
+          },850);
+        }
+      },640);
+    },380);
+  }
+
+  // ---- controls ----
+  document.getElementById('modeSeg').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');mode=b.dataset.mode;streak=0;sync();newRound();
+  });
+  const hintBtn=document.getElementById('hintBtn');
+  hintBtn.addEventListener('click',()=>{hintBtn.classList.toggle('on');
+    callpanel.classList.toggle('hints',hintBtn.classList.contains('on'));});
+  const soundBtn=document.getElementById('soundBtn');
+  soundBtn.addEventListener('click',()=>{soundOn=!soundOn;soundBtn.classList.toggle('on',soundOn);});
+
+  window.addEventListener('resize',()=>{ buildStaff(); scrollTo(carIdx); });
+
+  buildStaff();buildButtons();scrollTo(carIdx);setDial(carIdx);newRound();
+})();
+</script>
+</body>
+</html>

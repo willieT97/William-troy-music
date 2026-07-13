@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Old Man and the C — Port I</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono:wght@400;700&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parch:#EFE3C6; --parch2:#E5D4AC; --ink:#17140E;
+    --deep:#0C2A44; --sea:#17557C; --surf:#2E86A8; --foam:#BFE0E8;
+    --rope:#C89B5A; --buoy:#D8443A; --buoyd:#B0322A; --navy:#123A5A;
+    --shadow:6px 6px 0 var(--ink); --shadow-sm:4px 4px 0 var(--ink);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#173a52;color:var(--ink);font-family:'Hanken Grotesk',sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 14px 48px;
+    background:linear-gradient(180deg,#1d4a68 0%,#0f3049 60%,#0a2338 100%)}
+
+  .title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,6vw,40px);color:var(--foam);
+    text-align:center;letter-spacing:1px;line-height:1.05}
+  .title .note{display:inline-block;background:var(--buoy);color:#fff;border:3px solid var(--ink);
+    border-radius:50%;width:.95em;height:.95em;line-height:.9em;text-align:center;transform:translateY(.08em)}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--rope);margin:8px 0 18px;text-align:center}
+
+  .deck{width:100%;max-width:760px;display:flex;flex-direction:column;gap:16px}
+
+  /* dialogue */
+  .talk{display:flex;gap:14px;align-items:stretch}
+  .portrait{flex:none;width:96px;height:112px;border:4px solid var(--ink);box-shadow:var(--shadow-sm);
+    background:#2E86A8;overflow:hidden}
+  .portrait svg{width:100%;height:100%;display:block}
+  .bubble{flex:1;background:var(--parch);border:4px solid var(--ink);box-shadow:var(--shadow);
+    padding:14px 16px;position:relative;display:flex;flex-direction:column;justify-content:center}
+  .bubble p{font-family:'Architects Daughter',cursive;font-size:clamp(16px,2.4vw,19px);line-height:1.5;color:#2a2213}
+  .bubble .go{align-self:flex-end;margin-top:10px;font-family:'Space Mono',monospace;font-weight:700;
+    font-size:12px;text-transform:uppercase;letter-spacing:1px;border:3px solid var(--ink);background:var(--rope);
+    color:#17140E;padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+  .bubble .go:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  .bubble .go[hidden]{display:none}
+
+  /* chart with the note */
+  .chartrow{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
+  .chart{flex:1;min-width:240px;background:var(--parch);border:4px solid var(--ink);box-shadow:var(--shadow);
+    padding:10px 14px;display:flex;align-items:center;gap:12px}
+  .chart .cap{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+    color:#6b5a34;writing-mode:vertical-rl;transform:rotate(180deg)}
+  .chart svg{flex:1;height:110px}
+  .tally{flex:none;width:150px;background:var(--navy);border:4px solid var(--ink);box-shadow:var(--shadow);
+    color:var(--foam);padding:12px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .tally .lab{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.8}
+  .tally .num{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;line-height:1}
+  .tally .num b{color:var(--buoy)}
+  .tally .hint{font-family:'Space Mono',monospace;font-size:11px;line-height:1.4;color:#cfe6ee;min-height:30px}
+
+  /* fretboard as chart */
+  .board{width:100%;background:var(--parch2);border:4px solid var(--ink);box-shadow:var(--shadow);padding:8px}
+  .board svg{display:block;width:100%;height:auto}
+  .log{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;text-align:center;min-height:22px;
+    color:var(--foam)}
+  .log.bad{color:#FFB4A0}
+  .log.good{color:#BFE0E8}
+
+  /* the deep */
+  .depths{width:100%;height:150px;border:4px solid var(--ink);box-shadow:var(--shadow);overflow:hidden;position:relative}
+  .depths svg{position:absolute;inset:0;width:100%;height:100%}
+
+  .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .btn{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;
+    padding:9px 14px;border:3px solid var(--ink);background:var(--parch);box-shadow:var(--shadow-sm);cursor:pointer;color:var(--ink)}
+  .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  .toggle{display:flex;align-items:center;gap:8px}
+  .toggle .dot{width:13px;height:13px;border:2px solid var(--ink);background:#fff}
+  .toggle.on .dot{background:var(--buoy)}
+
+  /* clickable fret cells */
+  .cell{fill:transparent;cursor:pointer}
+  .cell:hover{fill:rgba(216,68,58,.14)}
+</style>
+</head>
+<body>
+
+  <div class="title">Old Man and the <span class="note">C</span></div>
+  <div class="eyebrow">Port I · The Shallows</div>
+
+  <div class="deck">
+
+    <div class="talk">
+      <div class="portrait" aria-hidden="true">
+        <svg viewBox="0 0 96 112">
+          <rect width="96" height="112" fill="#2E86A8"/>
+          <path d="M0 96 Q48 84 96 96 L96 112 L0 112 Z" fill="#17557C"/>
+          <!-- sweater -->
+          <path d="M20 112 Q22 88 48 86 Q74 88 76 112 Z" fill="#123A5A" stroke="#17140E" stroke-width="3"/>
+          <!-- neck/face -->
+          <rect x="40" y="72" width="16" height="14" fill="#D9A87C"/>
+          <circle cx="48" cy="52" r="24" fill="#E7B88A" stroke="#17140E" stroke-width="3"/>
+          <!-- beard -->
+          <path d="M26 52 Q28 84 48 88 Q68 84 70 52 Q60 72 48 72 Q36 72 26 52 Z" fill="#EFEFE9" stroke="#17140E" stroke-width="2.5"/>
+          <path d="M30 50 Q34 40 48 40 Q62 40 66 50" fill="#EFEFE9" stroke="#17140E" stroke-width="2.5"/>
+          <!-- eyes / brows -->
+          <path d="M36 46 q4 -3 8 -1" stroke="#17140E" stroke-width="2" fill="none"/>
+          <path d="M52 45 q4 -2 8 1" stroke="#17140E" stroke-width="2" fill="none"/>
+          <circle cx="40" cy="50" r="2" fill="#17140E"/>
+          <circle cx="57" cy="50" r="2" fill="#17140E"/>
+          <path d="M46 54 q2 3 5 1" stroke="#c98f68" stroke-width="2" fill="none"/>
+          <!-- cap -->
+          <path d="M22 40 Q26 20 48 20 Q70 20 74 40 Q60 32 48 32 Q36 32 22 40 Z" fill="#123A5A" stroke="#17140E" stroke-width="3"/>
+          <rect x="20" y="38" width="56" height="8" rx="2" fill="#0d2a42" stroke="#17140E" stroke-width="3"/>
+          <circle cx="48" cy="24" r="3" fill="#C89B5A"/>
+        </svg>
+      </div>
+      <div class="bubble">
+        <p id="say">…</p>
+        <button class="go" id="go">Aye ▸</button>
+      </div>
+    </div>
+
+    <div class="chartrow">
+      <div class="chart">
+        <span class="cap">the old chart</span>
+        <svg id="stave" viewBox="0 0 260 110" aria-label="a note on the staff"></svg>
+      </div>
+      <div class="tally">
+        <span class="lab">Homes charted</span>
+        <div class="num"><b id="found">0</b> / 2</div>
+        <div class="hint" id="hint">Waiting on the old man…</div>
+      </div>
+    </div>
+
+    <div class="board"><svg id="fret" viewBox="0 0 720 250" aria-label="guitar fretboard"></svg></div>
+    <div class="log" id="logline">&nbsp;</div>
+
+    <div class="depths"><svg id="deep" viewBox="0 0 720 150" preserveAspectRatio="xMidYMid slice"></svg></div>
+
+    <div class="controls">
+      <button class="btn" id="replay">Replay port</button>
+      <button class="btn toggle on" id="sound"><span class="dot"></span>Sound</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  const SVGNS='http://www.w3.org/2000/svg';
+  function el(tag,attrs){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+  // ---- guitar model ----
+  // string index 0 = low E (bottom), 5 = high e (top)
+  const OPEN=[40,45,50,55,59,64];          // MIDI of open strings
+  const NAMES=['E','A','D','G','B','e'];
+  const FRETS=10;                           // show frets 0..10
+  const TARGET_MIDI=48;                     // C3 — the note we're charting
+  // its two homes: low E fret 8, A fret 3
+  const nutX=66, fretW=58, topY=48, strGap=32;
+  const stringY=i=>topY+(5-i)*strGap;       // i:0 low E -> bottom
+  const fretCX=n=>nutX+(n-0.5)*fretW;       // centre of fret n cell
+
+  // ---- audio ----
+  let actx=null, soundOn=true;
+  function tone(freq,type,dur,vol){
+    if(!soundOn) return;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type=type;o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
+      const t=actx.currentTime;g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.start(t);o.stop(t+dur+.02);
+    }catch(e){}
+  }
+  const playC=()=>tone(130.81,'triangle',.7,.28);   // C3
+  const ping=()=>tone(300,'sine',.18,.12);
+
+  // ---- draw the stave (treble clef, note one ledger line below) ----
+  function drawStave(){
+    const s=document.getElementById('stave');s.innerHTML='';
+    const lines=[20,32,44,56,68];
+    lines.forEach(y=>s.appendChild(el('line',{x1:16,y1:y,x2:250,y2:y,stroke:'#3a3016','stroke-width':1.6})));
+    // treble clef
+    const clef=el('path',{d:'M40 74 C30 66 30 54 40 48 C52 41 52 26 43 24 C36 22 33 30 35 36 L44 84',
+      fill:'none',stroke:'#2a2213','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'});
+    clef.setAttribute('transform','translate(-4,-6) scale(1.02)');
+    s.appendChild(clef);
+    // the note: one ledger line below the staff (looks like middle C)
+    const nx=170, ny=80;
+    s.appendChild(el('line',{x1:nx-16,y1:ny,x2:nx+16,y2:ny,stroke:'#2a2213','stroke-width':2}));   // ledger line
+    const head=el('ellipse',{cx:nx,cy:ny,rx:9,ry:6.5,fill:'#17140E',transform:`rotate(-20 ${nx} ${ny})`});
+    s.appendChild(head);
+    s.appendChild(el('text',{x:nx+22,y:ny+5,'font-family':"'Space Mono',monospace",'font-size':16,'font-weight':700,fill:'#b0322a'}) ).textContent='C';
+  }
+
+  // ---- build the fretboard chart ----
+  const fret=document.getElementById('fret');
+  const markers=[];   // {s,f,x,y}
+  function buildBoard(){
+    fret.innerHTML='';
+    // board face
+    fret.appendChild(el('rect',{x:nutX,y:topY-6,width:FRETS*fretW,height:5*strGap+12,fill:'#e9d9ad',stroke:'#7a6535','stroke-width':2}));
+    // fret markers (dots) at 3,5,7,9
+    [3,5,7,9].forEach(n=>fret.appendChild(el('circle',{cx:fretCX(n),cy:stringY(2.5),r:7,fill:'#cdb87e'})));
+    // fret wires
+    for(let k=0;k<=FRETS;k++){
+      fret.appendChild(el('line',{x1:nutX+k*fretW,y1:topY-6,x2:nutX+k*fretW,y2:topY+5*strGap+6,
+        stroke:'#5b4a26','stroke-width':k===0?6:2.5}));
+      if(k>0) fret.appendChild(el('text',{x:fretCX(k),y:topY+5*strGap+26,'text-anchor':'middle',
+        'font-family':"'Space Mono',monospace",'font-size':12,fill:'#efe3c6'}) ).textContent=k;
+    }
+    // strings + labels
+    for(let i=0;i<6;i++){
+      const y=stringY(i);
+      fret.appendChild(el('line',{x1:nutX,y1:y,x2:nutX+FRETS*fretW,y2:y,stroke:'#2a2213','stroke-width':1+i*0.5}));
+      fret.appendChild(el('text',{x:nutX-14,y:y+5,'text-anchor':'middle','font-family':"'Space Mono',monospace",
+        'font-size':14,'font-weight':700,fill:'#efe3c6'}) ).textContent=NAMES[i];
+    }
+    // compass rose, bottom-right, for flavour
+    const cx=nutX+FRETS*fretW-8, cy=topY-2;
+    // click cells
+    for(let i=0;i<6;i++){
+      for(let n=1;n<=FRETS;n++){
+        const r=el('rect',{class:'cell',x:nutX+(n-1)*fretW,y:stringY(i)-14,width:fretW,height:28});
+        r.addEventListener('click',()=>plot(i,n));
+        fret.appendChild(r);
+      }
+    }
+  }
+
+  function addMarker(i,n){
+    const x=fretCX(n), y=stringY(i);
+    const g=el('g',{});
+    g.appendChild(el('circle',{cx:x,cy:y,r:13,fill:'#D8443A',stroke:'#17140E','stroke-width':3}));
+    g.appendChild(el('circle',{cx:x,cy:y,r:6,fill:'#EFE3C6'}));
+    fret.appendChild(g);
+    markers.push({i,n,x,y});
+  }
+  function drawRhumb(){
+    if(markers.length<2) return;
+    const a=markers[0],b=markers[1];
+    const l=el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#123A5A','stroke-width':3,
+      'stroke-dasharray':'2 8','stroke-linecap':'round'});
+    fret.insertBefore(l,fret.querySelector('g'));
+    // distance label
+    const mx=(a.x+b.x)/2, my=(a.y+b.y)/2-10;
+    const t=el('text',{x:mx,y:my,'text-anchor':'middle','font-family':"'Space Mono',monospace",
+      'font-size':12,'font-weight':700,fill:'#123A5A'});
+    t.textContent='↕1 string · ↔5 frets';
+    fret.appendChild(t);
+  }
+
+  // ---- the deep + reveal ----
+  const deep=document.getElementById('deep');
+  let creature=null;
+  function buildDeep(){
+    deep.innerHTML='';
+    deep.appendChild(el('rect',{x:0,y:0,width:720,height:150,fill:'url(#gd)'}));
+    const defs=el('defs',{});
+    const lg=el('linearGradient',{id:'gd',x1:0,y1:0,x2:0,y2:1});
+    lg.appendChild(el('stop',{offset:0,'stop-color':'#2E86A8'}));
+    lg.appendChild(el('stop',{offset:1,'stop-color':'#0C2A44'}));
+    defs.appendChild(lg);deep.appendChild(defs);
+    // light rays
+    for(let k=0;k<4;k++)
+      deep.appendChild(el('path',{d:`M${120+k*160} 0 L${100+k*160} 150 L${150+k*160} 150 L${160+k*160} 0 Z`,
+        fill:'#ffffff',opacity:.05}));
+    // caption
+    deep.appendChild(el('text',{x:16,y:24,'font-family':"'Space Mono',monospace",'font-size':12,
+      fill:'#BFE0E8',opacity:.7}) ).textContent='THE DEEP';
+    // hidden creature — a little reef fish, starts below & faded
+    creature=el('g',{transform:'translate(360,210)',opacity:0});
+    creature.appendChild(el('ellipse',{cx:0,cy:0,rx:46,ry:26,fill:'#E8A33D',stroke:'#17140E','stroke-width':3}));
+    creature.appendChild(el('path',{d:'M42 0 L74 -22 L66 0 L74 22 Z',fill:'#E8A33D',stroke:'#17140E','stroke-width':3}));
+    creature.appendChild(el('path',{d:'M-8 -26 L6 -40 L18 -24 Z',fill:'#d98f2c',stroke:'#17140E','stroke-width':2.5}));
+    creature.appendChild(el('path',{d:'M-16 -20 A46 26 0 0 0 -16 20',fill:'none',stroke:'#c97f1f','stroke-width':4}));
+    creature.appendChild(el('path',{d:'M-2 -22 A40 24 0 0 0 -2 22',fill:'none',stroke:'#c97f1f','stroke-width':4}));
+    creature.appendChild(el('circle',{cx:-26,cy:-4,r:5.5,fill:'#fff',stroke:'#17140E','stroke-width':2}));
+    creature.appendChild(el('circle',{cx:-27,cy:-3,r:2.4,fill:'#17140E'}));
+    creature.appendChild(el('path',{d:'M-44 2 q-8 4 0 8',fill:'none',stroke:'#17140E','stroke-width':2}));
+    deep.appendChild(creature);
+  }
+  function reveal(){
+    if(!creature) return;
+    let t0=performance.now();
+    (function step(now){
+      let t=Math.min(1,(now-t0)/1400);
+      const y=210-95*t, o=t;
+      creature.setAttribute('transform',`translate(360,${y.toFixed(1)})`);
+      creature.setAttribute('opacity',o.toFixed(2));
+      if(t<1) requestAnimationFrame(step);
+    })(performance.now());
+  }
+
+  // ---- narration / state ----
+  const say=document.getElementById('say'), go=document.getElementById('go');
+  const hintEl=document.getElementById('hint'), foundEl=document.getElementById('found');
+  const logline=document.getElementById('logline');
+  const LINES={
+    intro1:"Sit yourself down, sailor. Rest your eyes on my old chart — see that lone note? A single C, hangin' one line below the staff.",
+    intro2:"The sea taught me a secret about this note. It don't keep to one spot on your neck. This one C has two homes — same sound, two places.",
+    hunt:"Go on and chart them both. Start on the fifth string — the A — and count up the frets till you find her.",
+    found1:"Aye, that's one home. Now there's another, on the string just below — the low E. Five frets further along. Feel how far apart they sit.",
+    done:"Two homes for one note. Down a string, up five frets — mark that shape in your bones. And look… somethin' stirs in the shallows below.",
+    final:"That's your first port, sailor. Deeper waters hide notes with three homes, even four — but we'll sail there another day."
+  };
+  let phase='intro1';
+  const found=new Set();
+
+  function setPhase(p){
+    phase=p;
+    say.textContent=LINES[p];
+    if(p==='intro1'){ go.hidden=false; go.textContent='Aye ▸'; hintEl.textContent='Waiting on the old man…'; }
+    else if(p==='intro2'){ go.hidden=false; go.textContent='Two homes? ▸'; }
+    else if(p==='hunt'){ go.hidden=true; hintEl.textContent='Tap a fret on the board to drop a marker.'; }
+    else if(p==='found1'){ go.hidden=true; hintEl.textContent='One more home — the string below, five frets along.'; }
+    else if(p==='done'){ go.hidden=false; go.textContent='Sail on ▸'; hintEl.textContent='Both homes charted. Well sailed.'; }
+    else if(p==='final'){ go.hidden=true; hintEl.textContent='Port I complete.'; }
+  }
+  go.addEventListener('click',()=>{
+    if(phase==='intro1') setPhase('intro2');
+    else if(phase==='intro2') setPhase('hunt');
+    else if(phase==='done') setPhase('final');
+  });
+
+  function flash(msg,cls){ logline.textContent=msg; logline.className='log '+(cls||''); }
+
+  function plot(i,n){
+    if(phase!=='hunt' && phase!=='found1') { flash('The old man is still talkin\u2019…'); return; }
+    const midi=OPEN[i]+n;
+    const key=i+':'+n;
+    if(midi===TARGET_MIDI){
+      if(found.has(key)){ flash('Already charted, that one.'); return; }
+      found.add(key);addMarker(i,n);playC();
+      foundEl.textContent=found.size;
+      flash('A home for C — fixed!','good');
+      if(found.size>=2) complete();
+      else setPhase('found1');
+    }else if(midi%12===0){
+      ping();flash('That\u2019s a C — but the wrong octave. We want the C below.','bad');
+    }else{
+      ping();flash('No C lives there. Listen, and look again.','bad');
+    }
+  }
+
+  function complete(){
+    drawRhumb();
+    setPhase('done');
+    reveal();
+  }
+
+  function reset(){
+    markers.length=0;found.clear();foundEl.textContent='0';
+    buildBoard();buildDeep();flash('\u00a0');
+    setPhase('intro1');
+  }
+
+  // ---- controls ----
+  document.getElementById('replay').addEventListener('click',reset);
+  const soundBtn=document.getElementById('sound');
+  soundBtn.addEventListener('click',()=>{soundOn=!soundOn;soundBtn.classList.toggle('on',soundOn);});
+
+  drawStave();buildBoard();buildDeep();setPhase('intro1');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Missing Piece — which note completes the bar?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --muted:#6F6757; --line:#17140E; --gold:#FFC53D; --green:#1E9E6A;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(14px,3vw,40px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(600px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:14px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.6rem,5.6vw,2.7rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{ content:attr(data-text); position:absolute; left:3px; top:3px; color:var(--pink); mix-blend-mode:multiply; z-index:-1; }
+  .subtitle{ font-family:var(--mono); font-size:.72rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-top:12px; }
+
+  .panel{ position:relative; background:var(--paper); border:2.5px solid var(--line); box-shadow:8px 8px 0 var(--ink); padding:clamp(14px,3vw,22px); }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+  .topbar b{ color:var(--ink); }
+
+  .prompt{ text-align:center; font-family:var(--display); font-weight:700; font-size:1.05rem; color:var(--ink); margin-bottom:12px; }
+
+  .barrow{ display:flex; align-items:center; gap:12px; justify-content:center; }
+  .timesig{ display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:var(--display); font-weight:800; line-height:.84; font-size:1.5rem; color:var(--ink); min-width:24px; }
+  .jigwrap{ min-width:0; overflow-x:auto; }
+  .jig{ max-width:100%; height:auto; display:block; }
+
+  .feedback{ min-height:1.4em; font-family:var(--display); font-weight:700; font-size:1rem; text-align:center; color:var(--muted); margin:14px 0 10px; }
+  .feedback.good{ color:var(--green); } .feedback.bad{ color:var(--pink); }
+
+  .options{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .opt{ background:none; border:0; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; padding:2px; }
+  .opt svg{ display:block; filter:drop-shadow(2px 2px 0 rgba(23,20,14,1)); transition:transform .05s ease; }
+  .opt:active svg{ transform:translate(2px,2px); }
+  .opt .lab{ font-family:var(--mono); font-size:.62rem; font-weight:700; color:var(--muted); }
+  .opt.wrong{ opacity:.4; pointer-events:none; }
+  .opt.right svg path.piece{ fill:#BFE8CE; }
+  .opt.disabled{ opacity:.4; pointer-events:none; }
+
+  .controls{ display:flex; justify-content:center; margin-top:14px; }
+  .btn{ font-family:var(--body); font-weight:600; font-size:.94rem; padding:10px 18px; border:2.5px solid var(--ink);
+    background:var(--paper); color:var(--ink); cursor:pointer; box-shadow:3px 3px 0 var(--ink); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .hint{ text-align:center; font-family:var(--mono); font-size:.66rem; letter-spacing:.05em; color:var(--muted); margin-top:10px; opacity:.85; }
+  @keyframes nudge{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  .jigwrap.shake{ animation:nudge .18s; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="The Missing Piece">The Missing Piece</span>
+      <div class="subtitle">theory · find the piece that completes the bar</div>
+    </header>
+
+    <div class="panel">
+      <div class="topbar">
+        <span><b id="levelName">Level 1 · Complete the Beat</b></span>
+        <span><b>Streak </b><b id="sStreak">0</b>&nbsp;·&nbsp;<b>Best </b><b id="sBest">0</b>&nbsp;·&nbsp;<b>Score </b><b id="sScore">0</b></span>
+      </div>
+
+      <div class="prompt">Which piece fills the gap?</div>
+
+      <div class="barrow">
+        <div class="timesig" id="timesig"><span>4</span><span>4</span></div>
+        <div class="jigwrap" id="jigwrap"><div id="bar"></div></div>
+      </div>
+
+      <div class="feedback" id="feedback">Tap the puzzle piece whose length fills the hole.</div>
+
+      <div class="options" id="options"></div>
+
+      <div class="controls">
+        <button class="btn" id="newBtn">New bar</button>
+      </div>
+      <div class="hint">The hole is cut to size — pick the note-piece that fits it exactly.</div>
+    </div>
+  </div>
+
+<script>
+/* ====================================================================
+   THE MISSING PIECE (theory) — a bar drawn as a jigsaw strip with one
+   piece missing. Pick the note-value piece that fills the hole exactly.
+   A surgical drill for duration arithmetic ("what plus an eighth makes a
+   beat?"). Meters and note values widen by level; a correct answer snaps
+   the piece in and plays the completed bar.
+   ==================================================================== */
+
+  const BEAT_PX=110, H=92;
+  const LAB={4:'4',3:'3',2:'2',1.5:'1½',1:'1',0.75:'¾',0.5:'½',0.25:'¼'};
+  const NAME={4:'whole note',3:'dotted minim',2:'minim',1.5:'dotted crotchet',1:'crotchet',0.75:'dotted quaver',0.5:'quaver',0.25:'semiquaver'};
+  const EPS=1e-6;
+
+  const LEVELS=[
+    {name:'Complete the Beat', meters:['4/4'],            durs:[2,1,0.5],            rests:false, opts:3, adv:4},
+    {name:'Three & Two',       meters:['3/4','2/4'],      durs:[2,1,0.5],            rests:false, opts:3, adv:4},
+    {name:'Dotted & Rests',    meters:['4/4','3/4'],      durs:[3,2,1.5,1,0.5],      rests:true,  opts:4, adv:5},
+    {name:'Compound',          meters:['6/8'],            durs:[1.5,1,0.75,0.5],     rests:true,  opts:4, adv:5},
+    {name:'Sixteenths',        meters:['4/4','3/4'],      durs:[2,1.5,1,0.5,0.25],   rests:true,  opts:4, adv:5},
+    {name:'Odd Meters',        meters:['5/8','7/8','6/8'],durs:[1.5,1,0.75,0.5,0.25],rests:true,  opts:4, adv:6},
+  ];
+
+  const el=id=>document.getElementById(id);
+  const rnd=n=>Math.floor(Math.random()*n);
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  // ---- note / rest glyphs (inner markup, no <svg> wrapper) ----
+  function noteInner(dur){
+    const open=dur>=2, whole=dur>=4, dotted=(dur===3||dur===1.5||dur===0.75), flags=(dur===0.5||dur===0.75)?1:dur===0.25?2:0;
+    let s='<ellipse cx="9" cy="32" rx="6" ry="4.6" transform="rotate(-20 9 32)" fill="'+(open?'none':'#17140E')+'" stroke="#17140E" stroke-width="2"/>';
+    if(!whole) s+='<line x1="14.6" y1="30" x2="14.6" y2="7" stroke="#17140E" stroke-width="2"/>';
+    if(dotted) s+='<circle cx="19" cy="31" r="1.7" fill="#17140E"/>';
+    for(let f=0;f<flags;f++){ const y=7+f*7; s+='<path d="M14.6,'+y+' q9,3 8,13" fill="none" stroke="#17140E" stroke-width="2.4" stroke-linecap="round"/>'; }
+    return s;
+  }
+  function restInner(dur){
+    const dotted=(dur===3||dur===1.5||dur===0.75); let s='';
+    if(dur>=2){ s+='<rect x="5" y="22" width="14" height="5" fill="#17140E"/><line x1="3" y1="27" x2="21" y2="27" stroke="#17140E" stroke-width="1.5"/>'; }
+    else if(dur>=1){ s+='<path d="M8,14 l7,8 l-6,7 l7,8" fill="none" stroke="#6F6757" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16,37 q-8,-1 -3,-9" fill="none" stroke="#6F6757" stroke-width="2.6" stroke-linecap="round"/>'; }
+    else if(dur>=0.5){ s+='<line x1="16" y1="16" x2="8" y2="34" stroke="#6F6757" stroke-width="2.6" stroke-linecap="round"/><circle cx="10" cy="17" r="3" fill="#6F6757"/>'; }
+    else { s+='<line x1="17" y1="14" x2="7" y2="36" stroke="#6F6757" stroke-width="2.4" stroke-linecap="round"/><circle cx="11" cy="16" r="2.6" fill="#6F6757"/><circle cx="8" cy="24" r="2.6" fill="#6F6757"/>'; }
+    if(dotted) s+='<circle cx="21" cy="22" r="1.7" fill="#6F6757"/>';
+    return s;
+  }
+  function glyphAt(tk,cx,cy){ const inner=tk.rest?restInner(tk.dur):noteInner(tk.dur); return '<svg x="'+(cx-12)+'" y="'+(cy-23)+'" width="24" height="46" viewBox="0 0 24 46">'+inner+'</svg>'; }
+  function cutPath(x){ const k=H*0.12, dir=arguments[1];
+    return 'M '+x+' 3 L '+x+' '+(0.36*H)+' C '+x+' '+(0.30*H)+' '+(x+dir*k*1.9)+' '+(0.30*H)+' '+(x+dir*k*1.9)+' '+(0.5*H)+
+           ' C '+(x+dir*k*1.9)+' '+(0.70*H)+' '+x+' '+(0.70*H)+' '+x+' '+(0.64*H)+' L '+x+' '+(H-3); }
+  // a loose jigsaw option piece (66x70) with a right knob and left socket
+  const PIECE="M14 8 H46 Q54 8 54 16 V26 C54 26 63 25 63 34 C63 43 54 42 54 42 V54 Q54 62 46 62 H20 Q12 62 12 54 V42 C12 42 21 43 21 34 C21 25 12 26 12 26 V16 Q12 8 20 8 Z";
+  function pieceSvg(dur){ return '<svg width="66" height="70" viewBox="0 0 66 70">'
+      +'<path class="piece" d="'+PIECE+'" fill="#EAF0FB" stroke="#17140E" stroke-width="2.5" stroke-linejoin="round"/>'
+      +'<svg x="21" y="12" width="24" height="46" viewBox="0 0 24 46">'+noteInner(dur)+'</svg></svg>'; }
+
+  // ---- audio ----
+  let ac=null; const ensureAudio=()=>{ if(!ac){ const A=window.AudioContext||window.webkitAudioContext; ac=new A(); } if(ac.state==='suspended') ac.resume(); return ac; };
+  function tone(when,dur){ const c=ensureAudio(), t=c.currentTime+when, out=c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001,t); out.gain.exponentialRampToValueAtTime(0.26,t+0.02);
+    out.gain.setValueAtTime(0.22,t+Math.max(0.05,dur-0.09)); out.gain.exponentialRampToValueAtTime(0.0001,t+Math.max(0.1,dur));
+    [['sine',1],['triangle',0.3]].forEach(([ty,a])=>{ const o=c.createOscillator(); o.type=ty; o.frequency.value=523.25; const g=c.createGain(); g.gain.value=a; o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.06); }); }
+  function playBar(){
+    ensureAudio(); const beat=0.5; let t=0;
+    puz.tokens.forEach((tk,i)=>{ const durS=tk.dur*beat; if(!tk.rest) tone(t,durS-0.02);
+      setTimeout(()=>{ const e=document.getElementById('cbg'+i); if(!e) return; const base=e.getAttribute('fill'); e.setAttribute('fill','#FFC53D'); setTimeout(()=>{ if(e) e.setAttribute('fill',base); }, durS*1000-40); }, t*1000);
+      t+=durS; });
+    return t;
+  }
+
+  // ---- state ----
+  let levelIdx=0, score=0, streak=0, best=0, puz=null, lockAns=false;
+
+  function trySolution(total,durs){ let rem=total,sol=[],g=0;
+    while(rem>EPS){ const fit=durs.filter(d=>d<=rem+EPS); if(!fit.length)return null;
+      const d=Math.random()<0.5?Math.max(...fit):fit[rnd(fit.length)]; sol.push(d); rem=+(rem-d).toFixed(4); if(g++>40)return null; }
+    return sol; }
+
+  function genPuzzle(){
+    const lv=LEVELS[Math.min(levelIdx,LEVELS.length-1)];
+    const meter=lv.meters[rnd(lv.meters.length)]; const [N,D]=meter.split('/').map(Number); const total=+(N*4/D).toFixed(4);
+    let toks=null,g=0;
+    while(g++<300){ const sol=trySolution(total,lv.durs); if(!sol||sol.length<2) continue; toks=sol.map(d=>({dur:d,rest:false})); break; }
+    if(!toks) toks=[{dur:total/2,rest:false},{dur:total/2,rest:false}];
+    const holeIndex=rnd(toks.length); const answer=toks[holeIndex].dur;
+    if(lv.rests) toks.forEach((tk,i)=>{ if(i!==holeIndex && Math.random()<0.25) tk.rest=true; });
+    const pool=lv.durs.filter(d=>Math.abs(d-answer)>EPS); shuffle(pool);
+    const opts=[answer].concat(pool.slice(0,lv.opts-1)); shuffle(opts);
+    puz={total, tokens:toks, holeIndex, answer, meter, opts};
+    el('timesig').innerHTML='<span>'+N+'</span><span>'+D+'</span>';
+    el('levelName').textContent='Level '+(Math.min(levelIdx,LEVELS.length-1)+1)+' · '+lv.name;
+    lockAns=false; render(); setFeedback('Find the piece that completes the '+meter+' bar.','');
+  }
+
+  function render(){
+    const xs=[0]; let x=0; puz.tokens.forEach(tk=>{ x+=tk.dur*BEAT_PX; xs.push(x); });
+    const W=xs[xs.length-1];
+    let s='<svg class="jig" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">';
+    s+='<rect x="1.5" y="1.5" width="'+(W-3)+'" height="'+(H-3)+'" rx="8" fill="#E7D9B6" stroke="#17140E" stroke-width="2.5"/>';
+    puz.tokens.forEach((tk,i)=>{ const xL=xs[i], xR=xs[i+1], cw=xR-xL, cx=(xL+xR)/2;
+      if(i===puz.holeIndex && !tk.filled){
+        s+='<rect x="'+(xL+5)+'" y="7" width="'+(cw-10)+'" height="'+(H-14)+'" rx="5" fill="#CDBB92" stroke="#FF4E86" stroke-width="2.5" stroke-dasharray="6 5"/>';
+        s+='<text x="'+cx+'" y="'+(H/2+11)+'" font-family="Syne,sans-serif" font-size="30" font-weight="800" fill="#FF4E86" text-anchor="middle">?</text>';
+      } else {
+        s+='<rect id="cbg'+i+'" x="'+(xL+3)+'" y="4" width="'+(cw-6)+'" height="'+(H-8)+'" rx="5" fill="'+(tk.filled?'#BFE8CE':'transparent')+'"/>';
+        s+=glyphAt(tk,cx,H/2-4);
+        s+='<text x="'+cx+'" y="'+(H-9)+'" font-family="Space Mono,monospace" font-size="10" font-weight="700" fill="#8A7B5E" text-anchor="middle">'+LAB[tk.dur]+'</text>';
+      }
+    });
+    for(let i=1;i<xs.length-1;i++){ s+='<path d="'+cutPath(xs[i], (i%2)?1:-1)+'" fill="none" stroke="#17140E" stroke-width="2"/>'; }
+    s+='</svg>';
+    el('bar').innerHTML=s;
+    const optEl=el('options'); optEl.innerHTML='';
+    puz.opts.forEach(d=>{ const b=document.createElement('button'); b.className='opt'; b.dataset.dur=d;
+      b.innerHTML=pieceSvg(d)+'<div class="lab">'+LAB[d]+'</div>'; optEl.appendChild(b); });
+    updateHud();
+  }
+
+  function answer(dur){
+    if(lockAns) return;
+    if(Math.abs(dur-puz.answer)<EPS){
+      lockAns=true; puz.tokens[puz.holeIndex].filled=true; puz.tokens[puz.holeIndex].rest=false;
+      score++; streak++; best=Math.max(best,streak);
+      const before=levelIdx; let need=0; for(let i=0;i<LEVELS.length;i++){ need+=LEVELS[i].adv; if(score<need){ levelIdx=i; break; } levelIdx=Math.min(i+1,LEVELS.length-1); }
+      render();
+      document.querySelectorAll('.opt').forEach(o=>{ if(Math.abs(+o.dataset.dur-puz.answer)<EPS) o.classList.add('right'); else o.classList.add('disabled'); });
+      setFeedback(levelIdx>before ? 'It fits — a '+NAME[puz.answer]+'! Level up ♪' : 'It fits — a '+NAME[puz.answer]+'! ♪','good');
+      const len=playBar();
+      setTimeout(genPuzzle, Math.max(1100, len*1000+650));
+    } else {
+      streak=0; updateHud();
+      const o=[...document.querySelectorAll('.opt')].find(x=>Math.abs(+x.dataset.dur-dur)<EPS); if(o) o.classList.add('wrong');
+      setFeedback('A '+NAME[dur]+' is '+(dur>puz.answer?'too big':'too small')+' for the hole — try again.','bad');
+      const w=el('jigwrap'); w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
+    }
+  }
+
+  el('options').addEventListener('click', e=>{ const o=e.target.closest('.opt'); if(o && !o.classList.contains('wrong') && !o.classList.contains('disabled')) answer(+o.dataset.dur); });
+  el('newBtn').addEventListener('click', ()=>{ streak=0; genPuzzle(); });
+
+  function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
+  function updateHud(){ el('sScore').textContent=score; el('sStreak').textContent=streak; el('sBest').textContent=best; }
+
+  genPuzzle();
+</script>
+</body>
+</html>

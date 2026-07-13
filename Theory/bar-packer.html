@@ -124,9 +124,15 @@
 
       <div class="prompt">Fill the bar exactly — <b id="usedReadout">0 / 4</b> beats</div>
 
-      <div class="barrow">
-        <div class="timesig" id="timesig"><span>4</span><span>4</span></div>
-        <div class="bar" id="bar"></div>
+      <div class="caseWrap">
+        <div class="case">
+          <div class="handle"></div>
+          <div class="latch l"></div><div class="latch r"></div>
+          <div class="tag" id="timesig"><span>4</span><span>4</span></div>
+          <div class="caseinner">
+            <div class="bar" id="bar"></div>
+          </div>
+        </div>
       </div>
 
       <div class="feedback" id="feedback">Tap a note to drop it in the bar.</div>
@@ -242,6 +248,22 @@
   }
   function fmt(x){ return Number.isInteger(x)? x : (Math.round(x*100)/100); }
 
+  // ---- audio: play the packed bar back as a rhythm ----
+  let ac=null; const ensureAudio=()=>{ if(!ac){ const A=window.AudioContext||window.webkitAudioContext; ac=new A(); } if(ac.state==='suspended') ac.resume(); return ac; };
+  function tone(when,dur){ const c=ensureAudio(), t=c.currentTime+when, out=c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001,t); out.gain.exponentialRampToValueAtTime(0.26,t+0.02);
+    out.gain.setValueAtTime(0.22,t+Math.max(0.05,dur-0.09)); out.gain.exponentialRampToValueAtTime(0.0001,t+Math.max(0.1,dur));
+    [['sine',1],['triangle',0.3]].forEach(([ty,a])=>{ const o=c.createOscillator(); o.type=ty; o.frequency.value=523.25; const g=c.createGain(); g.gain.value=a; o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.06); }); }
+  function playRhythm(){
+    ensureAudio(); const beat=0.5; let t=0;
+    const els=el('bar').querySelectorAll('.block');
+    bar.placed.forEach((b,i)=>{ const durS=b.dur*beat;
+      if(!b.rest) tone(t, durS-0.02);
+      const elm=els[i]; setTimeout(()=>{ if(elm){ elm.classList.add('playing'); setTimeout(()=>{ if(elm) elm.classList.remove('playing'); }, durS*1000-40); } }, t*1000);
+      t+=durS; });
+    return t;
+  }
+
   function place(id){
     const i=hand.findIndex(b=>b.id===id); if(i<0) return;
     const b=hand[i];
@@ -262,8 +284,9 @@
     const before=levelIdx;
     // advance level by cumulative solves needed
     let need=0; for(let i=0;i<LEVELS.length;i++){ need+=LEVELS[i].adv; if(solved<need){ levelIdx=i; break; } levelIdx=Math.min(i+1,LEVELS.length-1); }
-    setFeedback(levelIdx>before ? 'Bar packed! ✓  Level up → '+LEVELS[levelIdx].name : 'Bar packed! ✓','good');
-    setTimeout(()=>{ winLock=false; genPuzzle(); }, 1100);
+    setFeedback(levelIdx>before ? 'Packed! ♪  Level up → '+LEVELS[levelIdx].name : 'Packed! ♪  hear your bar…','good');
+    const len=playRhythm();
+    setTimeout(()=>{ winLock=false; genPuzzle(); }, Math.max(1100, len*1000+700));
   }
 
   el('hand').addEventListener('click', e=>{ const t=e.target.closest('.tile'); if(t) place(t.dataset.id); });
