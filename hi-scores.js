@@ -18,12 +18,43 @@
   'use strict';
 
   const CONFIG = {
-    url:     'PASTE_YOUR_SUPABASE_URL_HERE',       // e.g. https://abcdxyz.supabase.co
-    anonKey: 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE'   // the "anon public" key
+    url:     'https://txzxmwwqqrapcirtrurt.supabase.co',
+    anonKey: 'sb_publishable_7DFs8Be2RgFe38U3k_HmtA_k1md1zlX'  // publishable key — safe in the browser
   };
 
   const configured = () =>
     /^https:\/\/.+\.supabase\.co/.test(CONFIG.url) && CONFIG.anonKey.length > 20;
+
+  // keep names readable + safe: letters/numbers/spaces and a little punctuation, max 24
+  function cleanName(n) {
+    n = (n == null ? '' : String(n)).replace(/[^\p{L}\p{N} .'\-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+    return n || 'Player';
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // inject the leaderboard stylesheet once (uses the arcade palette with fallbacks)
+  let styled = false;
+  function injectStyles() {
+    if (styled || typeof document === 'undefined') return; styled = true;
+    const css =
+      '.hsboard{font-family:"Space Mono",ui-monospace,monospace;font-size:.66rem;color:var(--ink,#17140E);width:100%;max-width:260px;margin:14px auto 0;}' +
+      '.hsboard h3{font-family:"Space Mono",monospace;font-weight:700;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted,#6F6757);margin:0 0 5px;display:flex;align-items:center;justify-content:center;gap:6px;}' +
+      '.hsboard .hsdot{width:6px;height:6px;border-radius:50%;background:var(--muted,#6F6757);display:inline-block;}' +
+      '.hsboard .hsdot.live{background:#1E9E6A;}' +
+      '.hsboard ol{list-style:none;margin:0;padding:0;}' +
+      '.hsboard li{display:flex;align-items:baseline;padding:2px 0;border-bottom:1px dashed rgba(23,20,14,.22);}' +
+      '.hsboard .hsrank{width:1.6em;text-align:right;color:var(--muted,#6F6757);flex:0 0 auto;}' +
+      '.hsboard .hsname{flex:1 1 auto;text-align:left;padding:0 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.hsboard .hssc{font-weight:700;color:var(--blue,#2438C8);flex:0 0 auto;}' +
+      '.hsboard li.hsyou{color:var(--pink,#FF4E86);}.hsboard li.hsyou .hssc{color:var(--pink,#FF4E86);}' +
+      '.hsboard .hsempty{color:var(--muted,#6F6757);opacity:.7;padding:3px 0;}' +
+      '.hsboard.hsfixed{margin:14px auto 0;}' +
+      '@media(min-width:1121px){.hsboard.hsfixed{position:fixed;top:50%;right:16px;transform:translateY(-50%);width:186px;max-width:186px;margin:0;background:var(--paper,#F4EEE2);border:2.5px solid var(--ink,#17140E);box-shadow:6px 6px 0 var(--ink,#17140E);padding:12px 14px 14px;z-index:50;}}';
+    const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
+  }
 
   // ---------- localStorage fallback ----------
   const LKEY = g => 'hiscore:' + g;
@@ -63,6 +94,9 @@
     /** true when a real backend is wired up */
     online() { return configured(); },
 
+    /** last name this device entered (remembered between games) */
+    playerName() { try { return localStorage.getItem('hiscore:name') || ''; } catch (_) { return ''; } },
+
     /** top N scores for a game → [{initials, score}], falls back to local */
     async top(game, n = 10) {
       if (configured()) { try { return await remoteTop(game, n); } catch (_) {} }
@@ -72,13 +106,14 @@
     /** highest score for a game, or null */
     async best(game) { const t = await this.top(game, 1); return t[0] || null; },
 
-    /** submit a score (also mirrored locally). initials trimmed to 3 A–Z */
-    async submit(game, score, initials) {
-      initials = (initials || 'AAA').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3) || 'AAA';
+    /** submit a score (also mirrored locally). name trimmed to 24 chars */
+    async submit(game, score, name) {
+      name = cleanName(name);
       score = Math.max(0, Math.round(+score || 0));
-      localAdd(game, initials, score);
-      if (configured()) { try { await remoteAdd(game, initials, score); } catch (_) {} }
-      return { initials, score };
+      try { localStorage.setItem('hiscore:name', name); } catch (_) {}
+      localAdd(game, name, score);
+      if (configured()) { try { await remoteAdd(game, name, score); } catch (_) {} }
+      return { name, initials: name, score };
     },
 
     /** true if `score` would make the top `n` for `game` (for "new high score!") */
@@ -87,45 +122,79 @@
       return t.length < n || score > (t[t.length - 1].score || 0);
     },
 
-    /** arcade-style 3-letter initials entry → Promise<string> ('' if cancelled) */
-    enterInitials(defaultInitials = 'AAA') {
+    /** arcade-style name entry → Promise<string> ('' if cancelled) */
+    enterName(defaultName = '') {
       return new Promise(resolve => {
         const wrap = document.createElement('div');
         wrap.setAttribute('style',
           'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;' +
-          'background:rgba(23,20,14,.86);font-family:"Space Mono",ui-monospace,monospace;');
-        let letters = (defaultInitials + 'AAA').slice(0, 3).toUpperCase().split('');
+          'background:rgba(23,20,14,.86);font-family:"Space Mono",ui-monospace,monospace;padding:16px;');
         const box = document.createElement('div');
         box.setAttribute('style',
-          'background:#F4EEE2;border:2.5px solid #17140E;box-shadow:8px 8px 0 #17140E;padding:22px 26px;text-align:center;');
+          'background:#F4EEE2;border:2.5px solid #17140E;box-shadow:8px 8px 0 #17140E;padding:22px 26px;text-align:center;max-width:340px;width:100%;');
         box.innerHTML =
           '<div style="font-family:Syne,sans-serif;font-weight:800;text-transform:uppercase;color:#2438C8;font-size:1.2rem;margin-bottom:4px">New high score!</div>' +
-          '<div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#6F6757;margin-bottom:14px">Enter your initials</div>' +
-          '<div id="hsRow" style="display:flex;gap:10px;justify-content:center;margin-bottom:16px"></div>' +
+          '<div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#6F6757;margin-bottom:14px">Enter your name</div>' +
+          '<input id="hsName" type="text" maxlength="24" autocomplete="off" spellcheck="false" ' +
+          'style="width:100%;box-sizing:border-box;font-family:Syne,sans-serif;font-weight:800;font-size:1.5rem;text-align:center;' +
+          'color:#17140E;background:#FBF7EE;border:2.5px solid #17140E;box-shadow:2px 2px 0 #17140E;padding:10px 12px;margin-bottom:16px;outline:none;" />' +
           '<button id="hsOk" style="font-family:Hanken Grotesk,sans-serif;font-weight:600;font-size:.95rem;padding:9px 22px;border:2.5px solid #17140E;background:#2438C8;color:#fff;cursor:pointer;box-shadow:3px 3px 0 #17140E">Save</button>';
         wrap.appendChild(box); document.body.appendChild(wrap);
-        const row = box.querySelector('#hsRow');
-        const slots = letters.map((ch, i) => {
-          const b = document.createElement('button');
-          b.type = 'button'; b.textContent = ch;
-          b.setAttribute('style', 'width:52px;height:64px;border:2.5px solid #17140E;background:#FBF7EE;' +
-            'font-family:Syne,sans-serif;font-weight:800;font-size:2rem;color:#17140E;cursor:pointer;box-shadow:2px 2px 0 #17140E');
-          b.addEventListener('click', () => { letters[i] = next(letters[i]); b.textContent = letters[i]; });
-          row.appendChild(b); return b;
-        });
-        function next(c) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; const k = A.indexOf(c); return A[(k + 1) % A.length]; }
-        // keyboard entry too
-        let idx = 0;
-        function onKey(e) {
-          const k = e.key.toUpperCase();
-          if (/^[A-Z0-9]$/.test(k)) { letters[idx % 3] = k; slots[idx % 3].textContent = k; idx++; e.preventDefault(); }
-          else if (e.key === 'Backspace') { idx = Math.max(0, idx - 1); e.preventDefault(); }
-          else if (e.key === 'Enter') { done(); }
+        const input = box.querySelector('#hsName');
+        input.value = defaultName || '';
+        setTimeout(() => { input.focus(); input.select(); }, 30);
+        function done() {
+          window.removeEventListener('keydown', onKey);
+          const v = input.value; wrap.remove(); resolve(v);
         }
-        function done() { window.removeEventListener('keydown', onKey); wrap.remove(); resolve(letters.join('')); }
+        function onKey(e) { if (e.key === 'Enter') { e.preventDefault(); done(); } }
         box.querySelector('#hsOk').addEventListener('click', done);
         window.addEventListener('keydown', onKey);
       });
+    },
+
+    /** back-compat alias */
+    enterInitials(def) { return this.enterName(typeof def === 'string' && def !== 'AAA' ? def : ''); },
+
+    /**
+     * Render a self-contained leaderboard into `container` and return an API.
+     *   opts.n      how many rows (default 5)
+     *   opts.title  heading text (default "High Scores")
+     * Returns { refresh(highlight?), submitIfHigh(value) }.
+     *   submitIfHigh: if `value` would make the top N, prompt for a name,
+     *   submit it, and re-render with that row highlighted. Returns bool.
+     */
+    mountBoard(container, game, opts) {
+      opts = opts || {};
+      const n = opts.n || 5;
+      const title = opts.title || 'High Scores';
+      injectStyles();
+      container.classList.add('hsboard');
+      if (opts.fixed) container.classList.add('hsfixed');
+      container.innerHTML = '<h3><span class="hsdot"></span>' + esc(title) + '</h3><ol></ol>';
+      const self = this;
+      async function refresh(highlight) {
+        let rows = []; try { rows = await self.top(game, n); } catch (_) {}
+        const dot = container.querySelector('.hsdot'); if (dot) dot.classList.toggle('live', configured());
+        const ol = container.querySelector('ol');
+        if (!rows.length) { ol.innerHTML = '<li class="hsempty">No scores yet — be the first!</li>'; return; }
+        let hl = highlight != null;
+        ol.innerHTML = rows.map((r, i) => {
+          const you = hl && r.score === highlight; if (you) hl = false;
+          return '<li class="' + (you ? 'hsyou' : '') + '"><span class="hsrank">' + (i + 1) +
+            '</span><span class="hsname">' + esc(r.initials) + '</span><span class="hssc">' + r.score + '</span></li>';
+        }).join('');
+      }
+      async function submitIfHigh(value) {
+        value = Math.max(0, Math.round(+value || 0));
+        if (value > 0 && await self.isHigh(game, value, n)) {
+          const nm = await self.enterName(self.playerName());
+          if (nm) { await self.submit(game, value, nm); await refresh(value); return true; }
+        }
+        await refresh(); return false;
+      }
+      refresh();
+      return { refresh, submitIfHigh };
     }
   };
 

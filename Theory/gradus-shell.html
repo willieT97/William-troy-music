@@ -229,7 +229,7 @@ function playMelody(notes, step){
   const ac = audio();
   const start = () => {
     let t = ac.currentTime + 0.05; step = step || 0.6;
-    for(const n of notes){ voice(n, t, step * 0.95, 0.32); t += step; }
+    for(const n of notes){ if(n != null) voice(n, t, step * 0.95, 0.32); t += step; }
   };
   if(ac.state === 'suspended'){
     ac.resume().then(start).catch(start);
@@ -398,7 +398,7 @@ const COURSE = [
           P(`Here is such a melody. Hear it, sing it — and with it, our true work begins.`)
         ],
         ex:{ type:'listen', exttl:'Meet the melody', desc:'Play the cantus firmus through and sing it back. Learn its shape in your ear, for you cannot set a good voice against a melody you do not yet hear.',
-             melody:[62,65,64,62,67,65,64,62], melodyLabel:'A sample cantus firmus in D — yours to change.' }
+             melody:[60,60,67,67,69,69,67,null,65,65,64,64,62,62,60], melodyLabel:'“Twinkle, Twinkle, Little Star” in C — a familiar tune to begin with.' }
       }
     ]
   },
@@ -523,6 +523,7 @@ let phSound = null, phAnswered = false, phLastCorrect = false;
 let motionSound = null, motionAnswered = false;
 let motionAllowedSound = null, motionAllowedAnswered = false, motionAllowedFeedback = '';
 let motionAllowedReasonState = null, motionAllowedReasonFeedback = '';
+let motionAllowedSelectedReasons = [];
 
 function mountPerfectImperfect(ex){
   newPerfectImperfect(ex, false);

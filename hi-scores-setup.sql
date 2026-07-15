@@ -19,9 +19,10 @@ create policy "read scores" on public.scores
   for select using (true);
 
 -- anyone may add a score, with light sanity checks
+-- (the "initials" column holds the player's name — up to 24 chars)
 create policy "add scores" on public.scores
   for insert with check (
-    char_length(initials) between 1 and 3
+    char_length(initials) between 1 and 24
     and score >= 0 and score < 100000000
     and char_length(game) between 1 and 60
   );

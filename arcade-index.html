@@ -1221,6 +1221,31 @@
     </div>
   </section>
 
+  <!-- ═══════════ HALL OF FAME ═══════════ -->
+  <style>
+    .hof-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:6px 30px; }
+    .hof-cat h3{ font-family:var(--mono); font-size:.64rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink); opacity:.55; margin:10px 0 6px; }
+    .hof-row{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px dashed rgba(23,20,14,.16); font-family:var(--mono); font-size:.8rem; }
+    .hof-row > a{ color:var(--ink); text-decoration:none; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hof-row > a:hover{ color:var(--blue); }
+    .hof-win{ text-align:right; white-space:nowrap; flex:0 0 auto; }
+    .hof-win .nm{ color:var(--ink); }
+    .hof-win .sc{ font-weight:700; color:var(--blue); margin-left:8px; }
+    .hof-win .none{ color:var(--ink); opacity:.35; }
+    .hofdot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:#C4B79B; vertical-align:middle; margin-left:5px; }
+    .hofdot.live{ background:#1E9E6A; }
+  </style>
+  <section class="cat" id="hall-of-fame">
+    <div class="wrap">
+      <div class="cat-head">
+        <h2>Hall of Fame</h2>
+        <span class="cat-note">Top score on each game<span class="hofdot" id="hofDot"></span></span>
+      </div>
+      <div class="cat-rule"></div>
+      <div id="hofGrid" class="hof-grid">Loading high scores…</div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -1229,6 +1254,72 @@
     <span><a href="index.html">williamtroymusic</a></span>
   </div>
 </footer>
+
+<script src="hi-scores.js"></script>
+<script>
+(function(){
+  if(typeof HiScores==='undefined') return;
+  var CATS=[
+    {name:'Ukulele', games:[
+      ['Ukulele/in-tune.html','in-tune','In Tune'],
+      ['Ukulele/out-of-tune.html','out-of-tune','Out of Tune'],
+      ['Ukulele/chord-quiz.html','chord-quiz','Chord Quiz'],
+      ['Ukulele/what-note-ukulele-3frets.html','what-note-ukulele-3frets','What Note?']
+    ]},
+    {name:'Guitar', games:[
+      ['Guitar/what-note-guitar.html','what-note-guitar','What Note?'],
+      ['Guitar/triad-drop.html','triad-drop','Triad Drop'],
+      ['Guitar/triad-slingshot.html','triad-slingshot','Triad Launch'],
+      ['Guitar/chord-quiz-guitar.html','chord-quiz-guitar','Chord Quiz'],
+      ['Guitar/in-tune-guitar.html','in-tune-guitar','In Tune'],
+      ['Guitar/out-of-tune-guitar.html','out-of-tune-guitar','Out of Tune']
+    ]},
+    {name:'Piano', games:[
+      ['Piano/chord-cascade.html','chord-cascade','Chord Cascade'],
+      ['Piano/chord-catapult.html','chord-catapult','Chord Catapult']
+    ]},
+    {name:'Ear Training', games:[
+      ['Ear Training/chord-progress.html','chord-progress','Chord Progressions'],
+      ['Ear Training/pitch-invaders_2.html','pitch-invaders_2','Pitch Invaders'],
+      ['Ear Training/pitch-invaders-fifths.html','pitch-invaders-fifths','Pitch Invaders · Fifths'],
+      ['Ear Training/pitch-invaders-chromatic.html','pitch-invaders-chromatic','Pitch Invaders · Chromatic']
+    ]},
+    {name:'Theory', games:[
+      ['Theory/scale-climb.html','scale-climb','Scale Climb'],
+      ['Theory/rhythm-runner.html','rhythm-runner','Rhythm Runner'],
+      ['Theory/bar-packer.html','bar-packer','Bar Packer'],
+      ['Theory/missing-piece.html','missing-piece','The Missing Piece'],
+      ['Theory/fix-the-plank.html','fix-the-plank','Fix the Plank'],
+      ['Theory/note-reading.html','note-reading','Note Reading'],
+      ['Theory/apple-shot.html','apple-shot','Apple Shot'],
+      ['Theory/hidden-words.html','hidden-words','Hidden Words'],
+      ['Theory/note-elevator.html','note-elevator','Note Elevator']
+    ]}
+  ];
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  var grid=document.getElementById('hofGrid'), dot=document.getElementById('hofDot');
+  if(dot && HiScores.online()) dot.classList.add('live');
+  grid.innerHTML='';
+  CATS.forEach(function(cat){
+    var wrap=document.createElement('div'); wrap.className='hof-cat';
+    var h=document.createElement('h3'); h.textContent=cat.name; wrap.appendChild(h);
+    cat.games.forEach(function(g){
+      var row=document.createElement('div'); row.className='hof-row';
+      row.innerHTML='<a href="'+g[0]+'">'+esc(g[2])+'</a>'+
+        '<span class="hof-win" data-id="'+esc(g[1])+'"><span class="none">—</span></span>';
+      wrap.appendChild(row);
+    });
+    grid.appendChild(wrap);
+  });
+  document.querySelectorAll('.hof-win').forEach(function(cell){
+    HiScores.top(cell.getAttribute('data-id'),1).then(function(rows){
+      if(rows && rows.length){
+        cell.innerHTML='<span class="nm">'+esc(rows[0].initials)+'</span><span class="sc">'+rows[0].score+'</span>';
+      }
+    }).catch(function(){});
+  });
+})();
+</script>
 
 </body>
 </html>

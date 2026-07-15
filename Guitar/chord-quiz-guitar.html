@@ -198,6 +198,7 @@
     </div>
   </div>
 
+<script src="../hi-scores.js"></script>
 <script>
 /* ====================================================================
    CHORD QUIZ (guitar) — a chord name is shown; place the finger dots
@@ -479,6 +480,22 @@
   // ---- init ----
   buildCells();
   newChord();
+
+/* ---- leaderboard: best streak ---- */
+(function(){
+  if(typeof HiScores==='undefined') return;
+  var GAME='chord-quiz-guitar';
+  var host=document.querySelector('.score')||document.querySelector('.panel')||document.body;
+  var box=document.createElement('div');
+  if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
+  var board=HiScores.mountBoard(box, GAME, {n:5, title:'Longest Streaks', fixed:true});
+  var prev=(typeof streak==='number')?streak:0;
+  setInterval(function(){
+    var s=(typeof streak==='number')?streak:0;
+    if(s<prev && prev>0){ board.submitIfHigh(prev); }
+    prev=s;
+  }, 250);
+})();
 </script>
 </body>
 </html>

@@ -147,6 +147,7 @@
     </div>
   </div>
 
+<script src="../hi-scores.js"></script>
 <script>
 /* ====================================================================
    BAR PACKER (theory) — fill one bar exactly with the right note-value
@@ -297,6 +298,28 @@
   function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
 
   genPuzzle();
+
+/* ---- leaderboard: bars packed ---- */
+(function(){
+  if(typeof HiScores==='undefined') return;
+  var GAME='bar-packer';
+  var host=document.querySelector('.score')||document.querySelector('.panel')||document.body;
+  var box=document.createElement('div');
+  if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
+  var board=HiScores.mountBoard(box, GAME, {n:5, title:'Bars Packed', fixed:true});
+  var last=0, prev=0, timer=null, busy=false;
+  async function record(){
+    if(busy) return; var v=(typeof solved==='number')?solved:0;
+    if(v<=last) return;
+    if(await HiScores.isHigh(GAME, v, 5)){
+      busy=true;
+      var nm=HiScores.playerName() || await HiScores.enterName('');   // ask once, then remembered
+      if(nm){ await HiScores.submit(GAME, v, nm); last=v; await board.refresh(v); }
+      busy=false;
+    } else { last=v; }
+  }
+  setInterval(function(){ var v=(typeof solved==='number')?solved:0; if(v>prev){ prev=v; clearTimeout(timer); timer=setTimeout(record, 1200);} }, 400);
+})();
 </script>
 </body>
 </html>

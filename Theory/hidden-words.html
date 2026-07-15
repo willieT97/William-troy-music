@@ -129,6 +129,7 @@
     <b>A</b> 2nd space, <b>B</b> 3rd line, <b>C</b> 3rd space, <b>D</b> 4th line. Spell the word and it plays back to you.
   </div>
 
+<script src="../hi-scores.js"></script>
 <script>
 (function(){
   "use strict";
@@ -293,7 +294,18 @@
   });
 
   drawLines();buildPad();newWord();
-})();
+
+  /* ---- leaderboard: best streak ---- */
+  if(typeof HiScores!=='undefined'){
+    var _hsHost=document.querySelector('.score')||document.querySelector('.panel')||document.body;
+    var _hsBox=document.createElement('div');
+    if(_hsHost.parentNode){ _hsHost.parentNode.insertBefore(_hsBox,_hsHost.nextSibling); } else { _hsHost.appendChild(_hsBox); }
+    var _hsBoard=HiScores.mountBoard(_hsBox, 'hidden-words', {n:5,title:'Longest Streaks',fixed:true});
+    var _hsPrev=(typeof streak==='number')?streak:0;
+    setInterval(function(){ var s=(typeof streak==='number')?streak:0; if(s<_hsPrev&&_hsPrev>0){ _hsBoard.submitIfHigh(_hsPrev); } _hsPrev=s; },250);
+  }
+
+  })();
 </script>
 </body>
 </html>

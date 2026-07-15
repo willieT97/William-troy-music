@@ -195,6 +195,7 @@
     </div>
   </div>
 
+<script src="../hi-scores.js"></script>
 <script>
 /* ====================================================================
    CHORD CATAPULT (piano) — launch a note in a gravity arc and strike the
@@ -608,6 +609,20 @@
   function updateScore(){ el('sBuilt').textContent=built; el('sStreak').textContent=cleanRun; el('sBest').textContent=best; }
 
   startLevel(0);
+
+/* ---- leaderboard: chords built (recorded when lives run out) ---- */
+(function(){
+  if(typeof HiScores==='undefined') return;
+  var GAME='chord-catapult';
+  var host=document.querySelector('.score')||document.querySelector('.panel')||document.body;
+  var box=document.createElement('div');
+  if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
+  var board=HiScores.mountBoard(box, GAME, {n:5, title:'Chords Built', fixed:true});
+  if(typeof failLevel==='function'){
+    var _f=failLevel;
+    failLevel=function(){ var r=_f.apply(this, arguments); board.submitIfHigh((typeof built==='number')?built:0); return r; };
+  }
+})();
 </script>
 </body>
 </html>

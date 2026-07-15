@@ -212,6 +212,7 @@
     </div>
   </div>
 
+<script src="../hi-scores.js"></script>
 <script>
 /* ====================================================================
    WHAT NOTE? (ukulele, open + 3 frets) — a blank dot marks a position.
@@ -365,6 +366,22 @@
   // start with naturals, and drop the first note in straight away
   setDiff('easy');
   newRound();
+
+/* ---- leaderboard: best streak ---- */
+(function(){
+  if(typeof HiScores==='undefined') return;
+  var GAME='what-note-ukulele-3frets';
+  var host=document.querySelector('.score')||document.querySelector('.panel')||document.body;
+  var box=document.createElement('div');
+  if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
+  var board=HiScores.mountBoard(box, GAME, {n:5, title:'Longest Streaks', fixed:true});
+  var prev=(typeof streak==='number')?streak:0;
+  setInterval(function(){
+    var s=(typeof streak==='number')?streak:0;
+    if(s<prev && prev>0){ board.submitIfHigh(prev); }
+    prev=s;
+  }, 250);
+})();
 </script>
 </body>
 </html>
