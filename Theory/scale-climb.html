@@ -83,6 +83,7 @@
   .bigscore{ font-family:var(--mono); font-weight:700; font-size:1.05rem; color:var(--blue); }
   .stars{ font-size:1.7rem; letter-spacing:4px; color:var(--amber); min-height:1.2em; }
 
+  #lbStart, #lbOver{ display:none; }
   .lb{ font-family:var(--mono); font-size:.66rem; color:var(--ink); width:100%; max-width:230px; margin-top:2px; }
   .lb h3{ font-family:var(--mono); font-weight:700; font-size:.58rem; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0 0 5px; display:flex; align-items:center; justify-content:center; gap:6px; }
   .lb .dot{ width:6px; height:6px; border-radius:50%; background:var(--muted); }
@@ -368,7 +369,7 @@
 
   function stageClear(){
     score += 150 + stage*50;
-    stagesCleared = stage; stage++;
+    stagesCleared = stage; stage++; lives = Math.min(3, lives + 1);
     stageParams(stage);
     barrels = []; barrelTimer = 0;
     newScale();
@@ -395,6 +396,13 @@
   // ---- leaderboard ----
   const GAME = 'scale-climb';
   let lastEntryScore = -1;
+  let sideBoard = null;
+  if (typeof HiScores !== 'undefined' && HiScores.mountBoard) {
+    const host = document.querySelector('.stage') || document.querySelector('.panel');
+    const sBox = document.createElement('div');
+    if (host && host.parentNode) host.parentNode.insertBefore(sBox, host.nextSibling); else document.body.appendChild(sBox);
+    sideBoard = HiScores.mountBoard(sBox, GAME, { n:5, title:'High Scores', fixed:true });
+  }
   function renderBoard(listEl, rows){
     listEl.querySelector('.dot').classList.toggle('live', HiScores.online());
     const ol = listEl.querySelector('ol');
@@ -410,6 +418,7 @@
     let rows = [];
     try { rows = await HiScores.top(GAME, 5); } catch(_){}
     ['lbStart','lbOver'].forEach(id => { const e = el(id); if(e) renderBoard(e, rows); });
+    if (sideBoard) sideBoard.refresh(lastEntryScore >= 0 ? lastEntryScore : undefined);
   }
 
   function showBanner(txt){ el('bannerText').textContent = txt; el('bannerScreen').classList.remove('hidden'); bannerShown = true; }

@@ -170,7 +170,33 @@
       const title = opts.title || 'High Scores';
       injectStyles();
       container.classList.add('hsboard');
-      if (opts.fixed) container.classList.add('hsfixed');
+      if (opts.fixed) {
+        container.classList.add('hsfixed');
+        // vertically align the fixed panel with the game's frame (the .panel), synced live
+        const anchor = opts.anchor || document.querySelector('.panel') || document.querySelector('.stage');
+        if (anchor && window.matchMedia) {
+          const mq = window.matchMedia('(min-width:1121px)');
+          const place = () => {
+            if (mq.matches) {
+              const r = anchor.getBoundingClientRect();
+              container.style.position = 'fixed';
+              container.style.top = Math.max(12, r.top) + 'px';
+              container.style.left = (r.right + 22) + 'px';
+              container.style.right = 'auto';
+              container.style.transform = 'none';
+            } else {
+              container.style.position = container.style.top = container.style.left =
+                container.style.right = container.style.transform = '';
+            }
+          };
+          place();
+          window.addEventListener('resize', place);
+          window.addEventListener('scroll', place, { passive: true });
+          window.addEventListener('load', place);
+          setTimeout(place, 300);
+          if (mq.addEventListener) mq.addEventListener('change', place); else if (mq.addListener) mq.addListener(place);
+        }
+      }
       container.innerHTML = '<h3><span class="hsdot"></span>' + esc(title) + '</h3><ol></ol>';
       const self = this;
       async function refresh(highlight) {

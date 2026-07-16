@@ -27,6 +27,7 @@
     --blue:#2438C8;
     --pink:#FF4E86;
     --gold:#FFC53D;
+    --green:#1E9E6A;
 
     --display:'Syne', system-ui, sans-serif;
     --body:'Hanken Grotesk', system-ui, sans-serif;
@@ -132,6 +133,11 @@
   .game .play::after{ content:"▶"; font-size:.7rem; transition:transform .14s ease; }
   .game:hover .play::after{ transform:translateX(3px); }
 
+  .levelkey{ display:flex; align-items:center; flex-wrap:wrap; gap:.5rem 1.3rem; padding:1rem 0 .2rem; }
+  .levelkey .lk-title{ font-family:var(--mono); font-size:.66rem; letter-spacing:.18em; text-transform:uppercase; color:var(--paper); opacity:.55; }
+  .levelkey .lk{ display:inline-flex; align-items:center; gap:.45rem; font-family:var(--mono); font-size:.72rem; letter-spacing:.04em; color:color-mix(in srgb, var(--paper) 85%, transparent); }
+  .levelkey .lk i{ width:12px; height:12px; border:2px solid var(--paper); display:inline-block; }
+
   footer{ padding:clamp(2.5rem,6vw,4rem) 0; margin-top:1rem;
     border-top:1px solid rgba(255,255,255,0.12); }
   .foot{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:.6rem;
@@ -158,6 +164,14 @@
     <a class="hero-back" href="index.html">← Back to williamtroymusic</a>
   </div>
 </header>
+
+<div class="wrap levelkey">
+  <span class="lk-title">Difficulty</span>
+  <span class="lk"><i style="background:var(--green)"></i>Beginner</span>
+  <span class="lk"><i style="background:var(--blue)"></i>Intermediate</span>
+  <span class="lk"><i style="background:var(--gold)"></i>Advanced</span>
+  <span class="lk"><i style="background:var(--pink)"></i>Professional</span>
+</div>
 
 <main>
 
@@ -216,7 +230,7 @@
       <div class="cat-rule"></div>
       <div class="grid">
 
-        <a class="game" href="Ukulele/in-tune.html" style="--accent:var(--blue);">
+        <a class="game" href="Ukulele/in-tune.html" style="--accent:var(--green);">
           <div class="game-art">
             <svg viewBox="0 0 260 500" role="img" aria-label="Ukulele">
               <path d="M 96,238 C 74,242 60,270 60,300 C 60,330 76,330 76,356 C 76,388 42,402 42,430
@@ -250,7 +264,7 @@
           </div>
         </a>
 
-        <a class="game" href="Ukulele/out-of-tune.html" style="--accent:var(--pink);">
+        <a class="game" href="Ukulele/out-of-tune.html" style="--accent:var(--green);">
           <div class="game-art">
             <svg viewBox="0 0 260 500" role="img" aria-label="Ukulele">
               <path d="M 96,238 C 74,242 60,270 60,300 C 60,330 76,330 76,356 C 76,388 42,402 42,430
@@ -284,7 +298,7 @@
           </div>
         </a>
 
-        <a class="game" href="Ukulele/chord-quiz.html" style="--accent:var(--gold);">
+        <a class="game" href="Ukulele/chord-quiz.html" style="--accent:var(--blue);">
           <div class="game-art">
             <svg viewBox="0 0 300 360" role="img" aria-label="Chord Quiz: prompt shows a chord name above a blank fretboard to build">
               <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700"
@@ -322,6 +336,39 @@
             <span class="tag">Chord quiz</span>
             <h3>Chord Quiz</h3>
             <p>A chord name pops up — tap the frets to build the shape from memory, then check your work. Graded on the shape, not the fingering.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Ukulele/chord-progress-uke.html" style="--accent:var(--blue);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 200" role="img" aria-label="Uke Progress: a row of ukulele chord cards with a marker sweeping to a blank final card">
+              <text x="150" y="26" font-family="'Space Mono',monospace" font-size="12" font-weight="700"
+                    letter-spacing="3" fill="#6F6757" text-anchor="middle">HEAR · NAME</text>
+              <!-- sweep marker over the last card -->
+              <path d="M247,52 l10,0 l-5,9 z" fill="#FF4E86"/>
+              <!-- chord cards -->
+              <g font-family="'Syne',sans-serif" font-weight="800" font-size="26" text-anchor="middle">
+                <rect x="18"  y="70" width="56" height="80" rx="4" fill="#F4EEE2" stroke="#17140E" stroke-width="2.5"/>
+                <text x="46"  y="120" fill="#17140E">C</text>
+                <rect x="84"  y="70" width="56" height="80" rx="4" fill="#F4EEE2" stroke="#17140E" stroke-width="2.5"/>
+                <text x="112" y="120" fill="#17140E">F</text>
+                <rect x="150" y="70" width="56" height="80" rx="4" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+                <text x="178" y="120" fill="#FBF7EE">G</text>
+                <rect x="216" y="70" width="56" height="80" rx="4" fill="#F4EEE2" stroke="#FF4E86" stroke-width="3"/>
+                <text x="244" y="121" fill="#FF4E86">?</text>
+              </g>
+              <text x="244" y="176" font-family="'Space Mono',monospace" font-size="15" font-weight="700"
+                    fill="#FF4E86" text-anchor="middle">&#9834;</text>
+              <text x="46"  y="176" font-family="monospace" font-size="11" font-weight="700" fill="#6F6757" text-anchor="middle">0003</text>
+              <text x="112" y="176" font-family="monospace" font-size="11" font-weight="700" fill="#6F6757" text-anchor="middle">2010</text>
+              <text x="178" y="176" font-family="monospace" font-size="11" font-weight="700" fill="#6F6757" text-anchor="middle">0232</text>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Progressions</span>
+            <h3>Uke Progress</h3>
+            <p>A run of ukulele chords plays, voiced as their real beginner shapes — the last card is blank, so name the chord you hear. Starts with C, G, Am and F and adds one more each level up to the sevenths and Gm.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -411,7 +458,7 @@
           </div>
         </a>
 
-        <a class="game" href="Guitar/out-of-tune-guitar.html" style="--accent:var(--pink);">
+        <a class="game" href="Guitar/out-of-tune-guitar.html" style="--accent:var(--green);">
           <div class="game-art">
             <svg viewBox="0 0 300 560" role="img" aria-label="Guitar">
               <path d="M 98,285 C 72,290 65,320 65,350 C 65,378 88,382 88,410 C 88,442 50,452 50,480
@@ -450,7 +497,7 @@
           </div>
         </a>
 
-        <a class="game" href="Guitar/chord-quiz-guitar.html" style="--accent:var(--gold);">
+        <a class="game" href="Guitar/chord-quiz-guitar.html" style="--accent:var(--blue);">
           <div class="game-art">
             <svg viewBox="0 0 300 360" role="img" aria-label="Guitar chord quiz: a chord name above a blank fretboard to build">
               <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700"
@@ -493,6 +540,37 @@
           </div>
         </a>
 
+        <a class="game" href="Guitar/chord-progress-guitar.html" style="--accent:var(--gold);">
+          <div class="game-art">
+            <svg viewBox="0 0 300 200" role="img" aria-label="Guitar Progress: a row of guitar chord cards with a marker sweeping to a blank final card">
+              <text x="150" y="26" font-family="'Space Mono',monospace" font-size="12" font-weight="700"
+                    letter-spacing="3" fill="#6F6757" text-anchor="middle">HEAR · NAME</text>
+              <path d="M247,52 l10,0 l-5,9 z" fill="#FF4E86"/>
+              <g font-family="'Syne',sans-serif" font-weight="800" font-size="24" text-anchor="middle">
+                <rect x="18"  y="70" width="56" height="80" rx="4" fill="#F4EEE2" stroke="#17140E" stroke-width="2.5"/>
+                <text x="46"  y="118" fill="#17140E">C</text>
+                <rect x="84"  y="70" width="56" height="80" rx="4" fill="#F4EEE2" stroke="#17140E" stroke-width="2.5"/>
+                <text x="112" y="118" fill="#17140E">Am</text>
+                <rect x="150" y="70" width="56" height="80" rx="4" fill="#FFC53D" stroke="#17140E" stroke-width="2.5"/>
+                <text x="178" y="118" fill="#17140E">G</text>
+                <rect x="216" y="70" width="56" height="80" rx="4" fill="#F4EEE2" stroke="#FF4E86" stroke-width="3"/>
+                <text x="244" y="119" fill="#FF4E86">?</text>
+              </g>
+              <text x="244" y="176" font-family="'Space Mono',monospace" font-size="15" font-weight="700"
+                    fill="#FF4E86" text-anchor="middle">&#9834;</text>
+              <text x="46"  y="176" font-family="monospace" font-size="10" font-weight="700" fill="#6F6757" text-anchor="middle">x32010</text>
+              <text x="112" y="176" font-family="monospace" font-size="10" font-weight="700" fill="#6F6757" text-anchor="middle">x02210</text>
+              <text x="178" y="176" font-family="monospace" font-size="10" font-weight="700" fill="#6F6757" text-anchor="middle">320003</text>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Progressions</span>
+            <h3>Guitar Progress</h3>
+            <p>A run of guitar chords plays, voiced as their real shapes — the last card is blank, so name the chord you hear. Ramps from the simple open chords through 7ths and maj7s up to movable barre shapes.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
         <a class="game" href="Guitar/what-note-guitar.html" style="--accent:var(--blue);">
           <div class="game-art">
             <svg viewBox="0 0 300 300" role="img" aria-label="What Note?: a guitar fretboard with a mystery marker to name">
@@ -529,7 +607,7 @@
           </div>
         </a>
 
-        <a class="game" href="Guitar/triad-drop.html" style="--accent:var(--pink);">
+        <a class="game" href="Guitar/triad-drop.html" style="--accent:var(--gold);">
           <div class="game-art">
             <svg viewBox="0 0 300 300" role="img" aria-label="Triad Drop: a guitar fretboard with a three-note triad grip to slide into place">
               <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">PLACE THE TRIAD</text>
@@ -599,7 +677,7 @@
       <div class="cat-rule"></div>
       <div class="grid">
 
-        <a class="game" href="Piano/chord-catapult.html" style="--accent:var(--blue); --art-bg:#E4ECFF;">
+        <a class="game" href="Piano/chord-catapult.html" style="--accent:var(--gold); --art-bg:#E4ECFF;">
           <div class="game-art">
             <svg viewBox="0 0 300 212" role="img" aria-label="Chord Catapult: a catapult flings a note in an arc onto a piano keyboard">
               <!-- ground -->
@@ -647,7 +725,7 @@
           </div>
         </a>
 
-        <a class="game" href="Piano/chord-cascade.html" style="--accent:var(--pink); --art-bg:#EEF2FB;">
+        <a class="game" href="Piano/chord-cascade.html" style="--accent:var(--blue); --art-bg:#EEF2FB;">
           <div class="game-art">
             <svg viewBox="0 0 300 212" role="img" aria-label="Chord Cascade: a chord shape falling onto a scrollable piano keyboard">
               <text x="150" y="26" font-family="'Space Mono',monospace" font-size="12" font-weight="700" letter-spacing="2" fill="#6F6757" text-anchor="middle">CATCH THE CHORD</text>
@@ -844,7 +922,7 @@
           </div>
         </a>
 
-        <a class="game" href="Ear%20Training/chord-progress.html" style="--accent:var(--blue); --art-bg:#E4ECFF;">
+        <a class="game" href="Ear%20Training/chord-progress.html" style="--accent:var(--gold); --art-bg:#E4ECFF;">
           <div class="game-art">
             <svg viewBox="0 0 300 240" role="img" aria-label="Chord Progress: a row of chord cards ending in a blank card to identify">
               <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700"
@@ -904,7 +982,7 @@
       <div class="cat-rule"></div>
       <div class="grid">
 
-        <a class="game" href="Theory/rhythm-runner.html" style="--accent:var(--pink); --art-bg:#EAF0FB;">
+        <a class="game" href="Theory/rhythm-runner.html" style="--accent:var(--blue); --art-bg:#EAF0FB;">
           <div class="game-art">
             <svg viewBox="0 0 300 212" role="img" aria-label="Rhythm Runner: a runner leaping a hole in the road under a bar of rhythm">
               <!-- rhythm above -->
@@ -943,7 +1021,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/bar-packer.html" style="--accent:var(--gold); --art-bg:#EFE7D6;">
+        <a class="game" href="Theory/bar-packer.html" style="--accent:var(--green); --art-bg:#EFE7D6;">
           <div class="game-art">
             <svg viewBox="0 0 300 200" role="img" aria-label="Bar Packer: a suitcase packed with note-value blocks">
               <!-- handle -->
@@ -983,7 +1061,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/missing-piece.html" style="--accent:var(--pink); --art-bg:#E7D9B6;">
+        <a class="game" href="Theory/missing-piece.html" style="--accent:var(--green); --art-bg:#E7D9B6;">
           <div class="game-art">
             <svg viewBox="0 0 300 120" role="img" aria-label="The Missing Piece: a jigsaw bar of notes with one piece-shaped hole">
               <!-- jigsaw board -->
@@ -1015,7 +1093,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/fix-the-plank.html" style="--accent:var(--gold); --art-bg:#2E2416;">
+        <a class="game" href="Theory/fix-the-plank.html" style="--accent:var(--green); --art-bg:#2E2416;">
           <div class="game-art">
             <svg viewBox="0 0 300 120" role="img" aria-label="Fix the Plank: a wooden bar of note-planks with one cracked plank and spare pieces">
               <!-- wooden beam of note-planks -->
@@ -1046,7 +1124,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/note-reading.html" style="--accent:var(--blue); --art-bg:#FBF7EE;">
+        <a class="game" href="Theory/note-reading.html" style="--accent:var(--green); --art-bg:#FBF7EE;">
           <div class="game-art">
             <svg viewBox="0 0 300 170" role="img" aria-label="Note Reading: a note on a musical stave to name">
               <text x="150" y="26" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">NAME THE NOTE</text>
@@ -1074,7 +1152,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/scale-climb.html" style="--accent:var(--gold); --art-bg:#EAF0FB;">
+        <a class="game" href="Theory/scale-climb.html" style="--accent:var(--blue); --art-bg:#EAF0FB;">
           <div class="game-art">
             <svg viewBox="0 0 300 176" role="img" aria-label="Scale Climb: a climber ascending steps of notes while a barrel rolls down">
               <g fill="#F0E6D2" stroke="#17140E" stroke-width="2.5">
@@ -1116,7 +1194,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/apple-shot.html" style="--accent:var(--pink); --art-bg:#FBF7EE;">
+        <a class="game" href="Theory/apple-shot.html" style="--accent:var(--green); --art-bg:#FBF7EE;">
           <div class="game-art">
             <svg viewBox="0 0 300 156" role="img" aria-label="Apple Shot: an apple on a stave with an arrow">
               <text x="150" y="24" font-family="'Space Mono',monospace" font-size="12" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">READ · DRAW · SHOOT</text>
@@ -1139,7 +1217,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/hidden-words.html" style="--accent:var(--blue); --art-bg:#FBF7EE;">
+        <a class="game" href="Theory/hidden-words.html" style="--accent:var(--green); --art-bg:#FBF7EE;">
           <div class="game-art">
             <svg viewBox="0 0 300 160" role="img" aria-label="Hidden Words: notes on a stave spelling a word">
               <text x="150" y="24" font-family="'Space Mono',monospace" font-size="12" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">SPELL THE WORD</text>
@@ -1168,7 +1246,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/note-elevator.html" style="--accent:var(--gold); --art-bg:#EAF0FB;">
+        <a class="game" href="Theory/note-elevator.html" style="--accent:var(--green); --art-bg:#EAF0FB;">
           <div class="game-art">
             <svg viewBox="0 0 300 168" role="img" aria-label="Note Elevator: a lift showing a note beside floor buttons">
               <text x="150" y="24" font-family="'Space Mono',monospace" font-size="12" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">PICK THE FLOOR</text>
@@ -1193,7 +1271,7 @@
           </div>
         </a>
 
-        <a class="game" href="Theory/old-man-and-the-c.html" style="--accent:var(--blue); --art-bg:#BFD3E6;">
+        <a class="game" href="Theory/old-man-and-the-c.html" style="--accent:var(--green); --art-bg:#BFD3E6;">
           <div class="game-art">
             <svg viewBox="0 0 300 160" role="img" aria-label="Old Man and the C: a fisherman reeling in a note">
               <path d="M0 122 q20 -10 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V160 H0 Z" fill="#8FB6D6" stroke="#17140E" stroke-width="2"/>
@@ -1224,14 +1302,14 @@
   <!-- ═══════════ HALL OF FAME ═══════════ -->
   <style>
     .hof-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:6px 30px; }
-    .hof-cat h3{ font-family:var(--mono); font-size:.64rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink); opacity:.55; margin:10px 0 6px; }
-    .hof-row{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px dashed rgba(23,20,14,.16); font-family:var(--mono); font-size:.8rem; }
-    .hof-row > a{ color:var(--ink); text-decoration:none; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .hof-row > a:hover{ color:var(--blue); }
+    .hof-cat h3{ font-family:var(--mono); font-size:.64rem; letter-spacing:.18em; text-transform:uppercase; color:var(--paper); opacity:.5; margin:10px 0 6px; }
+    .hof-row{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px dashed rgba(244,238,226,.18); font-family:var(--mono); font-size:.8rem; }
+    .hof-row > a{ color:var(--paper); text-decoration:none; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hof-row > a:hover{ color:var(--gold); }
     .hof-win{ text-align:right; white-space:nowrap; flex:0 0 auto; }
-    .hof-win .nm{ color:var(--ink); }
-    .hof-win .sc{ font-weight:700; color:var(--blue); margin-left:8px; }
-    .hof-win .none{ color:var(--ink); opacity:.35; }
+    .hof-win .nm{ color:color-mix(in srgb, var(--paper) 85%, transparent); }
+    .hof-win .sc{ font-weight:700; color:var(--gold); margin-left:8px; }
+    .hof-win .none{ color:var(--paper); opacity:.3; }
     .hofdot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:#C4B79B; vertical-align:middle; margin-left:5px; }
     .hofdot.live{ background:#1E9E6A; }
   </style>
@@ -1264,6 +1342,7 @@
       ['Ukulele/in-tune.html','in-tune','In Tune'],
       ['Ukulele/out-of-tune.html','out-of-tune','Out of Tune'],
       ['Ukulele/chord-quiz.html','chord-quiz','Chord Quiz'],
+      ['Ukulele/chord-progress-uke.html','chord-progress-uke','Uke Progress'],
       ['Ukulele/what-note-ukulele-3frets.html','what-note-ukulele-3frets','What Note?']
     ]},
     {name:'Guitar', games:[
@@ -1271,6 +1350,7 @@
       ['Guitar/triad-drop.html','triad-drop','Triad Drop'],
       ['Guitar/triad-slingshot.html','triad-slingshot','Triad Launch'],
       ['Guitar/chord-quiz-guitar.html','chord-quiz-guitar','Chord Quiz'],
+      ['Guitar/chord-progress-guitar.html','chord-progress-guitar','Guitar Progress'],
       ['Guitar/in-tune-guitar.html','in-tune-guitar','In Tune'],
       ['Guitar/out-of-tune-guitar.html','out-of-tune-guitar','Out of Tune']
     ]},

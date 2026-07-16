@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chord Progress — chord ear training</title>
+<title>Uke Progress — ukulele chord ear training</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -161,14 +161,14 @@
     <span class="mark bl"></span><span class="mark br"></span>
 
     <header>
-      <span class="title" data-text="Chord Progress">Chord Progress</span>
-      <div class="subtitle">hear the progression · name the chord</div>
+      <span class="title" data-text="Uke Progress">Uke Progress</span>
+      <div class="subtitle">hear the progression · name the uke chord</div>
     </header>
 
     <div class="panel">
       <div class="hud">
         <div>lv <b id="level">1</b> · <b id="score">0</b> · <span class="stars" id="stars">★0</span> <span class="mult" id="mult">x1</span></div>
-        <div class="keybadge"><b id="keyName">C</b> maj</div>
+        <div class="keybadge">GCEA</div>
         <div class="lives" id="lives">♥♥♥</div>
       </div>
 
@@ -177,14 +177,14 @@
         <div class="progression" id="progression"></div>
         <div class="controls">
           <button class="ctl" id="replayBtn" disabled>↺ Replay</button>
-          <button class="ctl" id="tonicBtn" disabled>♪ Tonic chord</button>
+          <button class="ctl" id="tonicBtn" disabled>♪ First chord</button>
         </div>
         <div class="options locked" id="options"></div>
         <div class="inversions locked" id="inversions" style="display:none"></div>
 
         <div class="overlay" id="startScreen">
-          <h2>Chord Progress</h2>
-          <p>A short chord progression plays, with a marker hovering over each chord. The last card stays blank — listen to the chord that plays there and pick it from the key's chords, laid out in order (C Dm Em F G Am B°). You start with I, IV and V; each level unlocks one more chord until the whole key is in play, and progressions grow longer. Later on the target chord comes voiced in inversions — you'll name the chord, then say whether it's root position, 1st, or 2nd inversion.</p>
+          <h2>Uke Progress</h2>
+          <p>A short progression of ukulele chords plays, with a marker sweeping the cards. The last card stays blank — listen to the chord voiced there and name it from the buttons. Every chord sounds as its real beginner uke shape (GCEA, high‑G). You start with C, G, Am and F; each level adds one more — Dm, Em, D, A, then E7, A7, C7 and finally Gm — and the progressions grow longer.</p>
           <button class="start" id="startBtn">▶ Start</button>
         </div>
 
@@ -205,102 +205,66 @@
 <script src="../hi-scores.js"></script>
 <script>
 /* ====================================================================
-   CHORD PROGRESS — chord-progression ear training
-
-   A progression plays with a hover marker sweeping across chord cards.
-   The final card is blank; its chord still sounds, and the player names
-   it. The game stays in C major; difficulty grows the chord vocabulary,
-   the progression length, and (later) chord inversions.
-
-   Tunables are grouped just below.
+   UKE PROGRESS — ukulele chord-progression ear training
+   A progression of real beginner ukulele shapes plays (reentrant high-G
+   GCEA). The last card is blank; its chord still sounds and the player
+   names it. Chords unlock one per level; progressions grow longer.
    ==================================================================== */
 
-  // ---- tunables -----------------------------------------------------
-  const START_LIVES = 3;
-  const MAX_LIVES = 5;
-  const ROUNDS_PER_LEVEL = 4;
-  const PERFECT_BONUS = 100;
+  const START_LIVES = 3, MAX_LIVES = 5, ROUNDS_PER_LEVEL = 4, PERFECT_BONUS = 100;
   const multiplier = () => Math.min(1 + Math.floor((streak - 1) / 3), 5);
-
-  const progLenForLevel = lvl => lvl <= 2 ? 3 : lvl <= 6 ? 4 : 5;
-  const chordDurForLevel = lvl => Math.max(650, 1000 - lvl*30);   // ms per chord
-
-  // buttons are laid out in scale-degree order; chords come into play one
-  // per level (in UNLOCK_ORDER) until the whole key is available
-  const DEGREE_LAYOUT = ['I','ii','iii','IV','V','vi','vii°'];    // fixed button positions
-  const UNLOCK_ORDER  = ['I','IV','V','vi','ii','iii','vii°'];    // order they activate
-  const DEG_SPEC = { I:[0,'maj'], ii:[1,'min'], iii:[2,'min'], IV:[3,'maj'], V:[4,'maj'], vi:[5,'min'], 'vii°':[6,'dim'] };
-  const activeCount   = lvl => Math.min(7, 3 + (lvl - 1));        // I IV V at L1, +1 each level
-  const activeDegrees = lvl => UNLOCK_ORDER.slice(0, activeCount(lvl));
-
-  // inversions in play at a level: 0 none, 1 adds 1st, 2 adds 2nd
-  const maxInversion = lvl => lvl < 7 ? 0 : lvl < 10 ? 1 : 2;
-  const INV_LABELS = ['Root', '1st', '2nd'];
-  // -------------------------------------------------------------------
-
-  const MAJOR = [0,2,4,5,7,9,11];
-  const NAMES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const NAMES_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
-  const KEY_DISPLAY = {0:'C',7:'G',2:'D',9:'A',4:'E',11:'B',6:'F#',5:'F',10:'Bb',3:'Eb',8:'Ab',1:'Db'};
-  const FLAT_KEYS = [5,10,3,8,1];
-
-  const QUAL = {
-    maj:  { ivals:[0,4,7],    suffix:'' },
-    min:  { ivals:[0,3,7],    suffix:'m' },
-    dom7: { ivals:[0,4,7,10], suffix:'7' },
-    dim:  { ivals:[0,3,6],    suffix:'°' },
-  };
+  const progLenForLevel = lvl => lvl <= 2 ? 3 : 4;
+  const chordDurForLevel = lvl => Math.max(700, 1000 - lvl*28);
 
   const A4 = 440;
+  // reentrant GCEA open strings: g=G4(67) C=C4(60) E=E4(64) A=A4(69)
+  const CHORDS = {
+    C:  { frets:[0,0,0,3], midis:[67,60,64,72] },
+    F:  { frets:[2,0,1,0], midis:[69,60,65,69] },
+    G:  { frets:[0,2,3,2], midis:[67,62,67,71] },
+    D:  { frets:[2,2,2,0], midis:[69,62,66,69] },
+    A:  { frets:[2,1,0,0], midis:[69,61,64,69] },
+    Am: { frets:[2,0,0,0], midis:[69,60,64,69] },
+    Dm: { frets:[2,2,1,0], midis:[69,62,65,69] },
+    Em: { frets:[0,4,3,2], midis:[67,64,67,71] },
+    Gm: { frets:[0,2,3,1], midis:[67,62,67,70] },
+    C7: { frets:[0,0,0,1], midis:[67,60,64,70] },
+    A7: { frets:[0,1,0,0], midis:[67,61,64,69] },
+    E7: { frets:[1,2,0,2], midis:[68,62,64,71] },
+  };
+  const UNLOCK_ORDER = ['C','G','Am','F','Dm','Em','D','A','E7','A7','C7','Gm'];
+  const OPTION_LAYOUT = ['C','F','G','D','A','Am','Dm','Em','Gm','C7','A7','E7'];
+  const unlockIndex = {}; UNLOCK_ORDER.forEach((c,i)=> unlockIndex[c]=i);
+  const activeCount = lvl => Math.min(12, 4 + (lvl - 1));
+  const activeSet   = lvl => new Set(UNLOCK_ORDER.slice(0, activeCount(lvl)));
+  const chordMinLevel = labels => Math.max(1, Math.max.apply(null, labels.map(l=>unlockIndex[l])) - 2);
+
+  // curated, musical progressions; last chord = the blank to identify
+  const PROGRESSIONS = [
+    ['C','F','G'],['Am','F','C'],['C','G','Am'],['G','F','C'],['C','Am','F'],['F','G','Am'],
+    ['C','F','Am','G'],['Am','F','G','C'],['C','G','F','Am'],
+    ['Am','C','Dm'],['C','Dm','G','C'],['Am','Dm','G'],
+    ['C','G','Am','Em'],['Em','Am','F','G'],['C','Em','Am','F'],
+    ['G','C','D'],['G','Em','C','D'],['D','G','Em','C'],['G','D','Em','C'],
+    ['D','G','A','D'],['D','A','G','A'],['G','D','A'],
+    ['Am','Dm','E7'],['Am','E7','Am','Dm'],
+    ['D','G','A7'],['D','G','A7','D'],
+    ['G','C','C7'],['C','C7','F','G'],
+    ['Dm','Gm','A7','Dm'],['Dm','A7','Dm','Gm'],['Dm','Gm','C','F'],
+  ];
+  const PROG = PROGRESSIONS.map(p => ({ chords:p, minLevel:chordMinLevel(p), len:p.length }));
+
   const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-  const now = () => performance.now();
-  const keyScale = tonic => MAJOR.map(iv => (tonic+iv)%12);
-
-  const isFlatKey = pc => FLAT_KEYS.includes(pc);
-  const rootName  = pc => (isFlatKey(currentKey) ? NAMES_FLAT : NAMES_SHARP)[pc % 12];
-
-  function chordOf(rootPc, quality, degree){
-    const q = QUAL[quality];
-    const base = 60 + rootPc;                       // root in octave 4
-    return {
-      root: rootPc, quality, degree,
-      label: rootName(rootPc) + q.suffix,
-      tones: q.ivals.map(iv => base + iv),
-    };
+  function pickProgression(level){
+    const cap = progLenForLevel(level);
+    let elig = PROG.filter(p => p.minLevel <= level && p.len <= cap);
+    if(!elig.length) elig = PROG.filter(p => p.minLevel <= level);
+    if(!elig.length) elig = PROG.filter(p => p.minLevel === 1);
+    return pick(elig).chords;
   }
-
-  // re-voice a chord into an inversion by lifting the lowest note(s) an octave
-  function voiceInversion(tones, inv){
-    const t = tones.slice().sort((a,b)=>a-b);
-    for(let i=0;i<inv;i++){ t[0]+=12; t.sort((a,b)=>a-b); }
-    return t;
-  }
-  // slash-chord label showing the bass note, e.g. C, C/E (1st), C/G (2nd)
-  function slashLabel(ch, inv){
-    if(inv === 0) return ch.label;
-    return ch.label + '/' + rootName(voiceInversion(ch.tones, inv)[0] % 12);
-  }
-
-  function chordForDegree(deg, tonic){
-    const s = keyScale(tonic);
-    const [idx, q] = DEG_SPEC[deg];
-    return chordOf(s[idx], q, deg);
-  }
-
-  // the chords in play at a level, in the current key
-  function vocabulary(lvl, tonic){
-    return activeDegrees(lvl).map(d => chordForDegree(d, tonic));
-  }
-
   function unlockNote(lvl){
-    if(lvl === 1) return 'chords: I  IV  V';
-    if(activeCount(lvl) > activeCount(lvl-1)){
-      const deg = UNLOCK_ORDER[activeCount(lvl)-1];
-      return 'new chord: ' + chordForDegree(deg, currentKey).label + '  (' + deg + ')';
-    }
-    if(maxInversion(lvl) > maxInversion(lvl-1)){
-      return maxInversion(lvl) === 1 ? 'new: 1st inversions' : 'new: 2nd inversions';
-    }
+    if(lvl === 1) return 'chords: C  G  Am  F';
+    if(activeCount(lvl) > activeCount(lvl-1)) return 'new chord: ' + UNLOCK_ORDER[activeCount(lvl)-1];
     return null;
   }
 
@@ -312,35 +276,25 @@
     return audioCtx;
   }
   const midiToFreq = m => A4 * Math.pow(2, (m-69)/12);
-
-  function playMidi(midi, dur=0.75, gain=0.15){
-    const c = ensureAudio(), t = c.currentTime;
-    const o = c.createOscillator(), g = c.createGain();
-    o.type='triangle'; o.frequency.value=midiToFreq(midi);
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(gain,t+0.02);
-    g.gain.setValueAtTime(gain,t+dur-0.14);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  // ukulele pluck: sine fundamental + a little triangle, soft attack, smooth ring
+  // (same voice as the Out of Tune uke game)
+  function pluck(freq, when=0, dur=1.3, amp=0.24){
+    const c = ensureAudio(), t = c.currentTime + when;
+    const out = c.createGain(); out.connect(c.destination);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(amp, t+0.02);      // soft attack
+    out.gain.exponentialRampToValueAtTime(0.0001, t+dur);    // smooth decay
+    [['sine',1.0],['triangle',0.22]].forEach(([type,a])=>{
+      const o = c.createOscillator(); o.type=type; o.frequency.value=freq;
+      const g = c.createGain(); g.gain.value=a;
+      o.connect(g).connect(out); o.start(t); o.stop(t+dur+0.05);
+    });
   }
-  // play a set of tones with the lowest (bass) note loudest so the
-  // inversion reads clearly; upper voices sit softer beneath it
-  const VOICE_GAINS = [0.33, 0.10, 0.078, 0.06];
-  function playTones(midis, dur){
-    midis.slice().sort((a,b)=>a-b).forEach((m,i) => playMidi(m, dur, VOICE_GAINS[Math.min(i, VOICE_GAINS.length-1)]));
+  // strum the four strings low->high (g C E A) with a gentle uke stagger + ring
+  function strumChord(midis, dur){
+    const ring = Math.max(1.1, (dur || 0.9) + 0.5);
+    midis.forEach((m,i) => pluck(midiToFreq(m), i*0.035, ring));
   }
-  function playChord(ch, dur=0.75){ playTones(ch.tones, dur); }
-  function playChordVoiced(ch, inv, dur=0.75){ playTones(voiceInversion(ch.tones, inv), dur); }
-
-  // I – V – I cadence to establish the key
-  function playCadence(tonic){
-    const s = keyScale(tonic);
-    const I = chordOf(s[0],'maj','I'), V = chordOf(s[4],'maj','V');
-    playChord(I, 0.6);
-    setTimeout(() => playChord(V, 0.6), 620);
-    setTimeout(() => playChord(I, 0.8), 1240);
-  }
-
   function sfxRight(){
     const c = ensureAudio();
     [0,4,7,12].forEach((semi,i)=>{
@@ -357,8 +311,7 @@
     const c = ensureAudio(), t = c.currentTime;
     const o = c.createOscillator(), g = c.createGain();
     o.type='sawtooth';
-    o.frequency.setValueAtTime(180,t);
-    o.frequency.exponentialRampToValueAtTime(80,t+0.2);
+    o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(80,t+0.2);
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(0.10,t+0.01);
     g.gain.exponentialRampToValueAtTime(0.0001,t+0.24);
@@ -366,96 +319,57 @@
   }
 
   // ---- state --------------------------------------------------------
-  let state = 'start';   // 'start'|'intro'|'listen'|'answerChord'|'answerInv'|'reveal'|'over'
+  let state = 'start';   // start|intro|listen|answerChord|reveal|over
   let score, level, lives, streak, stars, levelMisses, roundInLevel;
-  let currentKey = 0;
-  let vocab = [], progression = [], target = null, targetInv = 0;
-  let progLen, chordDurMs;
+  let progression = [], target = null, progLen, chordDurMs;
   let playTimers = [];
 
   const progEl    = document.getElementById('progression');
   const optionsEl = document.getElementById('options');
-  const invEl     = document.getElementById('inversions');
   const promptEl  = document.getElementById('prompt');
 
-  function reset(){
-    score=0; level=1; lives=START_LIVES; streak=0; stars=0;
-    levelMisses=0; roundInLevel=0; currentKey=0;
-    clearTimers();
-    updateHUD();
-  }
   function clearTimers(){ playTimers.forEach(clearTimeout); playTimers = []; }
+  function reset(){ score=0; level=1; lives=START_LIVES; streak=0; stars=0; levelMisses=0; roundInLevel=0; clearTimers(); updateHUD(); }
 
-  // ---- level / round flow ------------------------------------------
   function enterLevel(){
-    vocab = vocabulary(level, currentKey);
-    progLen = progLenForLevel(level);
-    chordDurMs = chordDurForLevel(level);
-    levelMisses = 0; roundInLevel = 0;
-
-    state = 'intro';
+    progLen = progLenForLevel(level); chordDurMs = chordDurForLevel(level);
+    levelMisses = 0; roundInLevel = 0; state = 'intro';
     document.getElementById('levelText').textContent = 'Level ' + level;
-    document.getElementById('levelSub').textContent = unlockNote(level) || 'key of C major';
+    document.getElementById('levelSub').textContent = unlockNote(level) || 'name the uke chord';
     updateHUD();
     document.getElementById('levelScreen').classList.remove('hidden');
-    playCadence(currentKey);
-    playTimers.push(setTimeout(() => {
-      document.getElementById('levelScreen').classList.add('hidden');
-      startRound();
-    }, 2300));
+    playTimers.push(setTimeout(() => { document.getElementById('levelScreen').classList.add('hidden'); startRound(); }, 1600));
   }
 
   function makeProgression(){
-    // always open on I to ground the key, then wander the vocabulary
-    const I = vocab.find(c => c.degree === 'I');
-    const prog = [I];
-    for(let i=1; i<progLen-1; i++) prog.push(pick(vocab));
-    target = pick(vocab);                    // the blank chord to identify
-    const maxInv = maxInversion(level);
-    targetInv = maxInv ? Math.floor(Math.random() * (maxInv + 1)) : 0;   // voicing to identify
-    prog.push(target);
-    progression = prog;
+    progression = pickProgression(level).map(l => ({ label:l, frets:CHORDS[l].frets, midis:CHORDS[l].midis }));
+    target = progression[progression.length - 1];
   }
 
   function startRound(){
-    makeProgression();
-    renderCards();
-    renderOptions();
-    renderInversions();
+    makeProgression(); renderCards(); renderOptions();
     optionsEl.classList.add('locked');
-    invEl.classList.add('locked');
-    invEl.style.display = maxInversion(level) >= 1 ? 'grid' : 'none';
-    promptEl.textContent = 'Listen…';
-    state = 'listen';
+    promptEl.textContent = 'Listen…'; state = 'listen';
     document.getElementById('replayBtn').disabled = false;
     document.getElementById('tonicBtn').disabled = false;
     playProgression(toAnswerChord);
   }
-
-  function toAnswerChord(){
-    state = 'answerChord';
-    optionsEl.classList.remove('locked');
-    promptEl.textContent = maxInversion(level) >= 1 ? 'Which chord?' : 'Which chord filled the blank?';
-  }
+  function toAnswerChord(){ state = 'answerChord'; optionsEl.classList.remove('locked'); promptEl.textContent = 'Which chord filled the blank?'; }
 
   function playProgression(onDone){
     clearTimers();
     const cards = [...progEl.children];
     cards.forEach(c => c.classList.remove('playing'));
-    const dur = chordDurMs;
+    const durMs = chordDurMs;
     progression.forEach((ch, i) => {
       playTimers.push(setTimeout(() => {
         cards.forEach(c => c.classList.remove('playing'));
         cards[i].classList.add('playing');
-        const isTarget = (i === progression.length - 1);
-        playChordVoiced(ch, isTarget ? targetInv : 0, Math.min(0.9, dur/1000 - 0.05));
-        if(isTarget){
-          playTimers.push(setTimeout(() => {
-            cards[i].classList.remove('playing');
-            onDone && onDone();
-          }, dur));
+        strumChord(ch.midis, Math.min(0.95, durMs/1000 - 0.05));
+        if(i === progression.length - 1){
+          playTimers.push(setTimeout(() => { cards[i].classList.remove('playing'); onDone && onDone(); }, durMs));
         }
-      }, i * dur));
+      }, i * durMs));
     });
   }
 
@@ -464,77 +378,41 @@
     btn.classList.add('wrong','shake'); btn.disabled = true;
     setTimeout(() => btn.classList.remove('shake'), 300);
     sfxWrong(); updateHUD();
-    if(lives <= 0) gameOver();
-    else promptEl.textContent = msg;
+    if(lives <= 0) gameOver(); else promptEl.textContent = msg;
   }
 
   function success(){
-    state = 'reveal';
-    streak++;
-    score += 10 * multiplier();
+    state = 'reveal'; streak++; score += 10 * multiplier();
     const blank = progEl.lastElementChild;
-    blank.classList.add('correct');
-    blank.querySelector('.name').textContent = slashLabel(target, targetInv);
-    promptEl.textContent = 'Correct — ' + slashLabel(target, targetInv);
-    optionsEl.classList.add('locked'); invEl.classList.add('locked');
+    blank.classList.remove('blank'); blank.classList.add('correct');
+    blank.querySelector('.name').textContent = target.label;
+    blank.querySelector('.deg').textContent = target.frets.join(' ');
+    promptEl.textContent = 'Correct — ' + target.label;
+    optionsEl.classList.add('locked');
     sfxRight(); updateHUD();
     playTimers.push(setTimeout(nextRound, 1300));
   }
 
-  function answerChord(choice, btn){
+  function answerChord(label, btn){
     if(state !== 'answerChord') return;
-    if(choice.degree !== target.degree){ wrongAnswer(btn, 'Not that chord — listen again'); return; }
-    btn.classList.add('right');
-    optionsEl.classList.add('locked');
-    const blank = progEl.lastElementChild;
-    blank.classList.remove('blank');
-    blank.querySelector('.name').textContent = target.label;
-    blank.querySelector('.deg').textContent = target.degree;
-    if(maxInversion(level) >= 1){
-      state = 'answerInv';
-      invEl.classList.remove('locked');
-      promptEl.textContent = 'Which inversion?';
-    } else {
-      success();
-    }
+    if(label !== target.label){ wrongAnswer(btn, 'Not that chord — listen again'); return; }
+    btn.classList.add('right'); optionsEl.classList.add('locked'); success();
   }
 
-  function answerInv(inv, btn){
-    if(state !== 'answerInv') return;
-    if(inv !== targetInv){ wrongAnswer(btn, 'Not that inversion — listen again'); return; }
-    btn.classList.add('right');
-    success();
-  }
-
-  function nextRound(){
-    roundInLevel++;
-    if(roundInLevel >= ROUNDS_PER_LEVEL) completeLevel();
-    else startRound();
-  }
-
-  function completeLevel(){
-    if(levelMisses === 0){ score += PERFECT_BONUS; stars++; }
-    level++;
-    lives = Math.min(MAX_LIVES, lives + 1);
-    updateHUD();
-    enterLevel();
-  }
+  function nextRound(){ roundInLevel++; if(roundInLevel >= ROUNDS_PER_LEVEL) completeLevel(); else startRound(); }
+  function completeLevel(){ if(levelMisses === 0){ score += PERFECT_BONUS; stars++; } level++; lives = Math.min(MAX_LIVES, lives + 1); updateHUD(); enterLevel(); }
 
   function startGame(){
-    ensureAudio();
-    reset();
+    ensureAudio(); reset();
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('overScreen').classList.add('hidden');
     enterLevel();
   }
-
   function gameOver(){
-    state = 'over';
-    clearTimers();
+    state = 'over'; clearTimers();
     document.getElementById('replayBtn').disabled = true;
     document.getElementById('tonicBtn').disabled = true;
-    document.getElementById('finalScore').textContent =
-      'Score ' + score + ' · Level ' + level + ' · ★' + stars;
+    document.getElementById('finalScore').textContent = 'Score ' + score + ' · Level ' + level + ' · ★' + stars;
     document.getElementById('overScreen').classList.remove('hidden');
   }
 
@@ -546,92 +424,64 @@
       const card = document.createElement('div');
       card.className = 'card' + (blank ? ' blank' : '');
       const deg = document.createElement('div'); deg.className = 'deg';
-      deg.textContent = blank ? '?' : ch.degree;
+      deg.textContent = blank ? '?' : ch.frets.join(' ');
       const name = document.createElement('div'); name.className = 'name';
       name.textContent = blank ? '?' : ch.label;
       card.appendChild(deg); card.appendChild(name);
       progEl.appendChild(card);
     });
   }
-
   function renderOptions(){
     optionsEl.innerHTML = '';
-    const active = activeDegrees(level);
-    DEGREE_LAYOUT.forEach(deg => {
-      const ch = chordForDegree(deg, currentKey);
+    const active = activeSet(level);
+    OPTION_LAYOUT.forEach(label => {
       const b = document.createElement('button');
-      b.className = 'opt'; b.textContent = ch.label; b.dataset.deg = deg;
-      if(active.includes(deg)){
-        b.addEventListener('click', () => answerChord(ch, b));
-      } else {
-        b.classList.add('off'); b.disabled = true;
-      }
+      b.className = 'opt'; b.textContent = label; b.dataset.label = label;
+      if(active.has(label)){ b.addEventListener('click', () => answerChord(label, b)); }
+      else { b.classList.add('off'); b.disabled = true; }
       optionsEl.appendChild(b);
     });
-  }
-
-  function renderInversions(){
-    invEl.innerHTML = '';
-    const maxInv = maxInversion(level);
-    for(let k=0; k<3; k++){
-      const b = document.createElement('button');
-      b.className = 'opt inv'; b.textContent = INV_LABELS[k]; b.dataset.inv = k;
-      if(k <= maxInv){ b.addEventListener('click', () => answerInv(k, b)); }
-      else { b.classList.add('off'); b.disabled = true; }
-      invEl.appendChild(b);
-    }
   }
 
   function updateHUD(){
     document.getElementById('score').textContent = score;
     document.getElementById('level').textContent = level;
     document.getElementById('stars').textContent = '★' + stars;
-    document.getElementById('keyName').textContent = KEY_DISPLAY[currentKey];
     document.getElementById('lives').textContent = '♥'.repeat(Math.max(0,lives)) || '—';
     const m = streak >= 1 ? multiplier() : 1;
-    const me = document.getElementById('mult');
-    me.textContent = 'x' + m; me.classList.toggle('hot', m > 1);
+    const me = document.getElementById('mult'); me.textContent = 'x' + m; me.classList.toggle('hot', m > 1);
   }
 
   // ---- input --------------------------------------------------------
   document.getElementById('startBtn').addEventListener('click', startGame);
   document.getElementById('againBtn').addEventListener('click', startGame);
   document.getElementById('replayBtn').addEventListener('click', () => {
-    if(['listen','answerChord','answerInv'].includes(state))
-      playProgression(state === 'listen' ? toAnswerChord : null);
+    if(['listen','answerChord'].includes(state)) playProgression(state === 'listen' ? toAnswerChord : null);
   });
-  document.getElementById('tonicBtn').addEventListener('click', () => {
-    const I = vocab.find(c => c.degree === 'I') || chordOf(currentKey,'maj','I');
-    playChord(I, 0.8);
-  });
+  document.getElementById('tonicBtn').addEventListener('click', () => { if(progression.length) strumChord(progression[0].midis, 0.9); });
   window.addEventListener('keydown', e => {
     if((state==='start' || state==='over') && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); startGame(); return; }
     if(e.key === 'r' || e.key === 'R'){ document.getElementById('replayBtn').click(); }
     else if(e.key === ' '){ e.preventDefault(); document.getElementById('tonicBtn').click(); }
     else if(e.key >= '1' && e.key <= '9'){
       const idx = parseInt(e.key,10) - 1;
-      if(state === 'answerChord'){ const b = optionsEl.children[idx]; if(b) b.click(); }
-      else if(state === 'answerInv'){ const b = invEl.children[idx]; if(b) b.click(); }
+      if(state === 'answerChord'){ const b = optionsEl.children[idx]; if(b && !b.disabled) b.click(); }
     }
   });
-
-  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
   reset();
 
 /* ---- leaderboard: side panel ---- */
 (function(){
   if(typeof HiScores==='undefined') return;
-  var GAME='chord-progress';
+  var GAME='chord-progress-uke';
   var host=document.querySelector('.stage')||document.querySelector('.panel')||document.querySelector('.wrap');
   var box=document.createElement('div');
   if(host && host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { document.body.appendChild(box); }
   var board=HiScores.mountBoard(box, GAME, {n:5, title:'High Scores', fixed:true});
-  function sub(){ board.submitIfHigh((typeof score==='number')?score:0); }
-  ['gameOver','win'].forEach(function(nm){
-    if(typeof window[nm]==='function'){ var o=window[nm]; window[nm]=function(){ var r=o.apply(this,arguments); sub(); return r; }; }
-  });
+  if(typeof gameOver==='function'){ var _g=gameOver; gameOver=function(){ var r=_g.apply(this,arguments); board.submitIfHigh((typeof score==='number')?score:0); return r; }; }
 })();
+
 </script>
 </body>
 </html>

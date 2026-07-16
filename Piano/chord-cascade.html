@@ -306,7 +306,7 @@
     if(ev.match){
       tintKeys(ev.midis,'#1E9E6A');
       piece.notes.forEach((n,i)=>pluck(midiFreq(n), i*0.08));
-      score++; successes++; level=1+Math.floor(successes/5);
+      score++; successes++; { const _pl=level; level=1+Math.floor(successes/5); if(level>_pl){ lives=Math.min(LIVES_MAX, lives+1); renderLives(); } }
       setFeedback(piece.ch.name+' — landed! ✓','good');
       updateHud();
       setTimeout(spawn, 620);
@@ -354,13 +354,18 @@
 
   renderLives(); updateHud(); spawn();
 
-/* ---- leaderboard: final score ---- */
+/* ---- leaderboard: side panel ---- */
 (function(){
-  if(typeof HiScores==='undefined')return;
-  var over=document.getElementById('overlay');
-  var box=document.createElement('div'); if(over) over.appendChild(box);
-  var board=HiScores.mountBoard(box,'chord-cascade',{n:5,title:'High Scores'});
-  if(typeof gameOver==='function'){ var _o=gameOver; gameOver=function(){ var r=_o.apply(this,arguments); board.submitIfHigh((typeof score==='number')?score:0); return r; }; }
+  if(typeof HiScores==='undefined') return;
+  var GAME='chord-cascade';
+  var host=document.querySelector('.stage')||document.querySelector('.panel')||document.querySelector('.wrap');
+  var box=document.createElement('div');
+  if(host && host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { document.body.appendChild(box); }
+  var board=HiScores.mountBoard(box, GAME, {n:5, title:'High Scores', fixed:true});
+  function sub(){ board.submitIfHigh((typeof score==='number')?score:0); }
+  ['gameOver','win'].forEach(function(nm){
+    if(typeof window[nm]==='function'){ var o=window[nm]; window[nm]=function(){ var r=o.apply(this,arguments); sub(); return r; }; }
+  });
 })();
 </script>
 </body>
