@@ -76,6 +76,18 @@
   }
   .hero-back:hover{ opacity:1; }
 
+  .tabs{ padding-top:1.4rem; }
+  .tabs-inner{ display:flex; gap:.5rem; flex-wrap:wrap;
+    border-bottom:2px solid rgba(255,255,255,0.14); }
+  .tabs a{
+    font-family:var(--pixel); font-size:.56rem; letter-spacing:.06em; text-transform:uppercase;
+    text-decoration:none; color:var(--paper); opacity:.55; padding:.7rem .85rem;
+    border:2px solid var(--paper); border-bottom:none; border-radius:5px 5px 0 0;
+    transform:translateY(2px); transition:opacity .15s ease, background .15s ease;
+  }
+  .tabs a:hover{ opacity:1; }
+  .tabs a.cur{ opacity:1; background:var(--paper); color:var(--ink); }
+
   .cat{ padding:clamp(1.5rem,4vw,2.6rem) 0 clamp(2rem,5vw,3.2rem); }
   .cat-head{ display:flex; align-items:baseline; gap:1rem; margin-bottom:1.4rem; flex-wrap:wrap; }
   .cat-head h2{
@@ -153,6 +165,14 @@
 </style>
 </head>
 <body>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap tabs-inner">
+    <a href="arcade-index.html" class="cur" aria-current="page">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html">Resources</a>
+  </div>
+</nav>
 
 <header>
   <div class="wrap">
@@ -1268,30 +1288,6 @@
             <span class="tag">Reading</span>
             <h3>Note Elevator</h3>
             <p>Read the note, then press its floor to send the lift there. Quick-fire stave reading up and down the building, faster as you go.</p>
-            <span class="play">Play</span>
-          </div>
-        </a>
-
-        <a class="game" href="Theory/old-man-and-the-c.html" style="--accent:var(--green); --art-bg:#BFD3E6;">
-          <div class="game-art">
-            <svg viewBox="0 0 300 160" role="img" aria-label="Old Man and the C: a fisherman reeling in a note">
-              <path d="M0 122 q20 -10 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V160 H0 Z" fill="#8FB6D6" stroke="#17140E" stroke-width="2"/>
-              <path d="M118 106 l64 0 l-12 22 l-40 0 z" fill="#B98A4B" stroke="#17140E" stroke-width="2.5"/>
-              <g stroke="#17140E" stroke-width="3" stroke-linecap="round" fill="none">
-                <circle cx="140" cy="86" r="7" fill="#F4EEE2"/>
-                <line x1="140" y1="93" x2="140" y2="106"/>
-                <line x1="140" y1="98" x2="166" y2="80"/>
-              </g>
-              <line x1="166" y1="80" x2="200" y2="64" stroke="#17140E" stroke-width="2"/>
-              <line x1="200" y1="64" x2="208" y2="118" stroke="#17140E" stroke-width="1.5"/>
-              <circle cx="208" cy="126" r="12" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
-              <text x="208" y="131" font-family="'Syne',sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">C</text>
-            </svg>
-          </div>
-          <div class="game-body">
-            <span class="tag">Reading · voyage</span>
-            <h3>Old Man and the C</h3>
-            <p>A seafaring note-reading tale — read each note to reel it in and sail from port to port, casting off in the Shallows.</p>
             <span class="play">Play</span>
           </div>
         </a>
