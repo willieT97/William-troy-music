@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="/analytics.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Counterpoint Dojo — Steps to Parnassus</title>
@@ -443,13 +444,13 @@ const COURSE = [
           P(`This is <b>first species</b> — note against note. Above each note of the cantus firmus you set a single note of your own, and every meeting of the two must be a <b>consonance</b>. No dissonance may sound, for there is nothing yet to soften it.`),
           QA(`And the rules of motion — must I hold all four in mind at once?`,
              `Hold the one that contains them: never walk into a perfect consonance by direct motion, and never let two perfect fifths or octaves follow in a row. Favour the thirds and sixths between; they are the flesh of the line.`),
-          P(`Begin on a perfect consonance, and end on one — the octave or unison on the final <b>D</b>. And at the close, remember Dorian's borrowed lean: let your voice rise from C, sung as <b>C♯</b>, up into the final, while mine falls E to D.`),
+          P(`Begin on a perfect consonance, and end on one — the octave or unison on the final <b>D</b>. And at the close, remember Dorian gives you no leading tone; you must <b>make</b> one. Raise the seventh yourself: select your C and press <b>♯</b>, so it becomes C♯ and leans a half-step up into the final, while mine falls E to D.`),
           P(`Set your voice above the tune, note for note. When you are ready, ask me to correct it, and I will show you where it strays.`)
         ],
         ex:{ type:'counterpoint', exttl:'Set a voice against the tune',
-             desc:'First species over “Twinkle” in D Dorian. Click above each note to place your voice; every meeting must be a consonance, the perfects approached with care, and the close carried home on its leading tone. Then ask the Master to correct it.',
+             desc:'First species over “Twinkle” in D Dorian. Click above each note to place your voice; use the ♭ ♮ ♯ buttons to alter the selected note. Every meeting must be a consonance, the perfects approached with care, and the close carried home on a leading tone you raise yourself. Then ask the Master to correct it.',
              cf:[62,62,69,69,71,71,69,null,67,67,65,65,64,64,62],
-             cfLabel:'Cantus firmus — “Twinkle” in D Dorian' }
+             cfLabel:'Cantus firmus — “Twinkle” in D Dorian', modeName:'D Dorian' }
       }
     ]
   },
@@ -1036,9 +1037,16 @@ function drawModeReveal(ex){
 
 /* ===================== FIRST-SPECIES COUNTERPOINT (write & correct) ===================== */
 const STEP_PC = [0, 2, 4, 5, 7, 9, 11];            // C D E F G A B (diatonic, white keys)
+const STEP_LETTER = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 function stepToMidi(step){
   const oct = Math.floor(step / 7), within = ((step % 7) + 7) % 7;
   return 60 + 12 * oct + STEP_PC[within];          // step 1 -> D4 (62), step 7 -> C5 (72)
+}
+// the counterpoint is stored as {step, acc} (diatonic staff step + accidental -1/0/+1) so the
+// student's own sharps and flats are explicit — never applied for them.
+function noteMidi(n){ return n == null ? null : stepToMidi(n.step) + n.acc; }
+function stepAccName(step, acc){
+  return STEP_LETTER[((step % 7) + 7) % 7] + (acc > 0 ? '♯' : acc < 0 ? '♭' : '') + (Math.floor(step / 7) + 4);
 }
 function genericInterval(cpMidi, cfMidi){
   const d = midiToDiatonicStep(cpMidi) - midiToDiatonicStep(cfMidi);
@@ -1056,35 +1064,36 @@ function intervalName(semi){
   return (semi >= 12 && m !== 0) ? base + ' (compound)' : base;
 }
 function soundingIdx(cf){ return cf.map((v, i) => v == null ? -1 : i).filter(i => i >= 0); }
-function fictaRaise(cf, cpRaw, idxs){          // raise the cadential 7th (C -> C♯) when it rises to the final D
-  const out = cpRaw.slice();
-  if(idxs.length >= 2){
-    const last = idxs[idxs.length - 1], pen = idxs[idxs.length - 2];
-    if(out[pen] != null && out[last] != null){
-      const a = ((out[pen] % 12) + 12) % 12, b = ((out[last] % 12) + 12) % 12;
-      if(a === 0 && b === 2 && out[last] - out[pen] > 0) out[pen] += 1;
-    }
-  }
-  return out;
-}
-function checkCounterpoint(cf, cpRaw){
+function checkCounterpoint(cf, cpNotes, modeName){   // cpNotes: {step,acc}|null per column
+  modeName = modeName || 'the mode';
   const idxs = soundingIdx(cf), findings = [];
-  if(idxs.some(i => cpRaw[i] == null)) return [{ col:-1, ok:false, msg:'Place a note above every note of the cantus firmus before I judge the whole.' }];
-  const cp = fictaRaise(cf, cpRaw, idxs);
-  idxs.forEach((i, k) => {                     // every meeting a consonance, and the voice stays above
+  if(idxs.some(i => cpNotes[i] == null)) return [{ col:-1, ok:false, msg:'Place a note above every note of the cantus firmus before I judge the whole.' }];
+  const cp = cf.map((v, i) => cpNotes[i] == null ? null : noteMidi(cpNotes[i]));   // derived MIDI, aligned to columns
+  const first = idxs[0], last = idxs[idxs.length - 1], pen = idxs[idxs.length - 2];
+  const leadingPc = (((cf[last] % 12) + 12) % 12 + 11) % 12;       // a semitone below the final
+  idxs.forEach((i, k) => {                   // stray accidentals — the only licensed one is the cadential leading tone
+    const nn = cpNotes[i];
+    if(nn.acc !== 0){
+      const pc = ((noteMidi(nn) % 12) + 12) % 12;
+      if(!(i === pen && pc === leadingPc))
+        findings.push({ col:i, ok:false, msg:`Note ${k + 1}: ${stepAccName(nn.step, nn.acc)} strays outside ${modeName}. Musica ficta allows one accidental only — the leading tone at the close; keep every other note natural to the mode.` });
+    }
+  });
+  idxs.forEach((i, k) => {                   // every meeting a consonance, and the voice stays above
     const semi = cp[i] - cf[i];
     if(semi < 0){ findings.push({ col:i, ok:false, msg:`Note ${k + 1}: your voice falls below the cantus firmus — keep it above.` }); return; }
     if(!isConsonant(semi)) findings.push({ col:i, ok:false, msg:`Note ${k + 1}: ${intervalName(semi)} is a dissonance; in first species every meeting must be a consonance.` });
   });
-  const first = idxs[0], last = idxs[idxs.length - 1], pen = idxs[idxs.length - 2];
   if(cp[first] - cf[first] >= 0 && !isPerfect(cp[first] - cf[first]))
     findings.push({ col:first, ok:false, msg:'Begin on a perfect consonance — a unison, fifth, or octave above the final.' });
   if(!isUnisonOctave(cp[last] - cf[last]))
     findings.push({ col:last, ok:false, msg:'End on the final itself — a unison or octave above the cantus firmus.' });
-  const pcPen = ((cpRaw[pen] % 12) + 12) % 12, pcLast = ((cpRaw[last] % 12) + 12) % 12;
-  if(!(pcPen === 0 && pcLast === 2 && cp[last] - cp[pen] > 0))
-    findings.push({ col:pen, ok:false, msg:'The close wants the leading tone: rise a step from the seventh (C, raised to C♯) up to the final D, as the cantus firmus falls E → D.' });
-  for(let k = 0; k < idxs.length - 1; k++){    // motion into the perfects
+  const pcPen = ((cp[pen] % 12) + 12) % 12, pcLast = ((cp[last] % 12) + 12) % 12, rises = cp[last] - cp[pen] > 0;
+  if(pcPen === 0 && pcLast === 2 && rises)   // they left a plain C — the whole point is to raise it themselves
+    findings.push({ col:pen, ok:false, msg:'Your seventh is still a plain C — a whole tone below the final, too far to lean. Select it and press ♯ to raise it to C♯, the leading tone.' });
+  else if(!(pcPen === 1 && pcLast === 2 && rises))
+    findings.push({ col:pen, ok:false, msg:'The close wants the leading tone: your voice should rise a half-step from C♯ up to the final D, as the cantus firmus falls E → D.' });
+  for(let k = 0; k < idxs.length - 1; k++){   // motion into the perfects
     const i = idxs[k], j = idxs[k + 1];
     const cfDir = Math.sign(cf[j] - cf[i]), cpDir = Math.sign(cp[j] - cp[i]);
     const s0 = cp[i] - cf[i], s1 = cp[j] - cf[j];
@@ -1096,13 +1105,12 @@ function checkCounterpoint(cf, cpRaw){
       findings.push({ col:j, ok:false, msg:`Notes ${k + 1}–${k + 2}: a perfect consonance entered by direct motion. Approach the perfects by contrary or oblique motion only.` });
     }
   }
-  if(!findings.length) findings.push({ col:-1, ok:true, msg:'Clean. Every meeting is a consonance, the perfects are approached with care, and the close leans home on its leading tone. Well set, student.' });
+  if(!findings.length) findings.push({ col:-1, ok:true, msg:'Clean. Every meeting is a consonance, the perfects are approached with care, and the close leans home on the leading tone you raised. Well set, student.' });
   return findings;
 }
 const CP_LEFT = 46, CP_SP = 36, CP_RIGHT = 16, CP_VBH = 150;
 function cpWidth(n){ return CP_LEFT + n * CP_SP + CP_RIGHT; }
-function svgCounterpoint(cf, cpRaw, findings, checked){
-  const idxs = soundingIdx(cf), cp = fictaRaise(cf, cpRaw, idxs);
+function svgCounterpoint(cf, cpNotes, findings, checked, sel){
   const flagged = new Set((findings || []).filter(f => !f.ok && f.col >= 0).map(f => f.col));
   const y = s => 100 - 7 * s, lineSteps = [2, 4, 6, 8, 10];
   const n = cf.length, width = cpWidth(n), colX = i => CP_LEFT + i * CP_SP + CP_SP / 2;
@@ -1110,37 +1118,38 @@ function svgCounterpoint(cf, cpRaw, findings, checked){
   out += `<rect x="0" y="0" width="${width}" height="${CP_VBH}" fill="#ffffff" fill-opacity="0"/>`;   // catch clicks anywhere
   out += `<text x="8" y="82" font-size="64" font-family="Georgia,serif" fill="#17140E">\u{1D11E}</text>`;
   lineSteps.forEach(s => out += `<line x1="34" y1="${y(s)}" x2="${width - 8}" y2="${y(s)}" stroke="#17140E" stroke-width="1.6"/>`);
-  const drawNote = (m, x, pink) => {
-    const s = midiToDiatonicStep(m), black = PC_TO_STEP[((m % 12) + 12) % 12] === undefined, c = pink ? '#FF4E86' : '#17140E';
-    if(s <= 0) for(let k = 0; k >= s; k -= 2) out += `<line x1="${x - 11}" y1="${y(k)}" x2="${x + 11}" y2="${y(k)}" stroke="#17140E" stroke-width="1.6"/>`;
-    if(s >= 12) for(let k = 12; k <= s; k += 2) out += `<line x1="${x - 11}" y1="${y(k)}" x2="${x + 11}" y2="${y(k)}" stroke="#17140E" stroke-width="1.6"/>`;
-    if(black) out += `<text x="${x - 15}" y="${y(s) + 5}" font-family="Georgia,serif" font-size="15" fill="${c}">♯</text>`;
-    out += `<ellipse cx="${x}" cy="${y(s)}" rx="8" ry="5.6" fill="none" stroke="${c}" stroke-width="2.4"/>`;
+  const drawNoteAt = (step, acc, x, color) => {
+    if(step <= 0) for(let k = 0; k >= step; k -= 2) out += `<line x1="${x - 11}" y1="${y(k)}" x2="${x + 11}" y2="${y(k)}" stroke="#17140E" stroke-width="1.6"/>`;
+    if(step >= 12) for(let k = 12; k <= step; k += 2) out += `<line x1="${x - 11}" y1="${y(k)}" x2="${x + 11}" y2="${y(k)}" stroke="#17140E" stroke-width="1.6"/>`;
+    if(acc) out += `<text x="${x - 15}" y="${y(step) + 5}" font-family="Georgia,serif" font-size="16" fill="${color}">${acc > 0 ? '♯' : '♭'}</text>`;
+    out += `<ellipse cx="${x}" cy="${y(step)}" rx="8" ry="5.6" fill="none" stroke="${color}" stroke-width="2.4"/>`;
   };
   cf.forEach((m, i) => {
     const x = colX(i);
     if(m == null){ out += `<rect x="${x - 6}" y="${y(8)}" width="12" height="5" fill="#17140E"/>`; return; }
-    drawNote(m, x, false);                                   // cantus firmus (lower, fixed)
-    if(cp[i] != null){                                       // the student's voice (upper)
+    drawNoteAt(midiToDiatonicStep(m), 0, x, '#17140E');       // cantus firmus (lower, fixed, naturals)
+    const cpn = cpNotes[i];
+    if(cpn != null){                                          // the student's voice (upper)
       const pink = checked && flagged.has(i);
-      drawNote(cp[i], x, pink);
-      const gi = genericInterval(cp[i], cf[i]);
+      const color = pink ? '#FF4E86' : (i === sel ? '#2438C8' : '#17140E');
+      drawNoteAt(cpn.step, cpn.acc, x, color);
+      const gi = genericInterval(noteMidi(cpn), m);
       if(gi) out += `<text x="${x}" y="140" font-family="Space Mono,monospace" font-size="10" text-anchor="middle" fill="${pink ? '#FF4E86' : '#6F6757'}">${gi}</text>`;
     }
   });
   out += `</svg>`;
   return out;
 }
-function playCounterpoint(cf, cpRaw){
-  const idxs = soundingIdx(cf), cp = fictaRaise(cf, cpRaw, idxs), ac = audio(), step = 0.62;
+function playCounterpoint(cf, cpNotes){
+  const ac = audio(), step = 0.62;
   const start = () => {
     let t = ac.currentTime + 0.05;
-    cf.forEach((m, i) => { if(m != null){ voice(m, t, step * 0.95, 0.3); if(cp[i] != null) voice(cp[i], t, step * 0.95, 0.3); } t += step; });
+    cf.forEach((m, i) => { if(m != null){ voice(m, t, step * 0.95, 0.3); const cm = noteMidi(cpNotes[i]); if(cm != null) voice(cm, t, step * 0.95, 0.3); } t += step; });
   };
   if(ac.state === 'suspended') ac.resume().then(start).catch(start); else start();
 }
-let cpNotes = [], cpChecked = false, cpFindings = [];
-function mountCounterpoint(ex){ cpNotes = ex.cf.map(() => null); cpChecked = false; cpFindings = []; drawCounterpoint(ex); }
+let cpNotes = [], cpChecked = false, cpFindings = [], cpSel = null;
+function mountCounterpoint(ex){ cpNotes = ex.cf.map(() => null); cpChecked = false; cpFindings = []; cpSel = null; drawCounterpoint(ex); }
 function renderCpFeedback(){
   if(!cpChecked) return '';
   if(cpFindings.length === 1 && cpFindings[0].ok) return `<div class="fb ok">${cpFindings[0].msg}</div>`;
@@ -1148,9 +1157,17 @@ function renderCpFeedback(){
     cpFindings.slice(0, 8).map(f => `<div class="fb ${f.ok ? 'ok' : 'no'}" style="min-height:0;margin:5px 0">${f.msg}</div>`).join('');
 }
 function drawCounterpoint(ex){
+  const hasSel = cpSel != null && cpNotes[cpSel] != null;
+  const selName = hasSel ? stepAccName(cpNotes[cpSel].step, cpNotes[cpSel].acc) : '—';
   el('cpBox').innerHTML = `
-    <div style="overflow-x:auto; border:2px solid var(--ink); background:var(--paper); margin:2px 0 6px; padding:6px 4px 2px;" id="cpWrap">${svgCounterpoint(ex.cf, cpNotes, cpFindings, cpChecked)}</div>
-    <div class="lab2">${ex.cfLabel} — the lower voice is fixed. Click above a note to set your voice; click again to move it. The number under each pair is the interval.</div>
+    <div style="overflow-x:auto; border:2px solid var(--ink); background:var(--paper); margin:2px 0 6px; padding:6px 4px 2px;" id="cpWrap">${svgCounterpoint(ex.cf, cpNotes, cpFindings, cpChecked, cpSel)}</div>
+    <div class="lab2">${ex.cfLabel} — the lower voice is fixed. Click above a note to place your voice; click again to move it. The number under each pair is the interval.</div>
+    <div class="row" style="margin-top:10px; align-items:center; gap:8px;">
+      <span class="lab2" style="margin:0">Selected: <b style="color:var(--blue)">${selName}</b></span>
+      <button class="btn" id="cpFlat" ${hasSel ? '' : 'disabled'} title="lower a half-step">♭ flat</button>
+      <button class="btn" id="cpNat" ${hasSel ? '' : 'disabled'} title="natural">♮ natural</button>
+      <button class="btn" id="cpSharp" ${hasSel ? '' : 'disabled'} title="raise a half-step">♯ sharp</button>
+    </div>
     <div class="row" style="margin-top:12px">
       <button class="btn big" id="cpPlay">▶ Hear both voices</button>
       <button class="btn ink" id="cpCheck">Correct my work</button>
@@ -1166,11 +1183,15 @@ function drawCounterpoint(ex){
     if(col < 0 || col >= ex.cf.length || ex.cf[col] == null) return;   // outside, or over the rest
     let step = Math.round((100 - vy) / 7);
     step = Math.max(1, Math.min(14, step));
-    cpNotes[col] = stepToMidi(step); cpChecked = false; cpFindings = []; drawCounterpoint(ex);
+    cpNotes[col] = { step, acc: 0 }; cpSel = col; cpChecked = false; cpFindings = []; drawCounterpoint(ex);
   });
+  const setAcc = a => { if(cpSel != null && cpNotes[cpSel] != null){ cpNotes[cpSel].acc = a; cpChecked = false; cpFindings = []; drawCounterpoint(ex); } };
+  el('cpFlat').addEventListener('click', () => setAcc(-1));
+  el('cpNat').addEventListener('click', () => setAcc(0));
+  el('cpSharp').addEventListener('click', () => setAcc(1));
   el('cpPlay').addEventListener('click', () => playCounterpoint(ex.cf, cpNotes));
-  el('cpCheck').addEventListener('click', () => { cpFindings = checkCounterpoint(ex.cf, cpNotes); cpChecked = true; drawCounterpoint(ex); });
-  el('cpClear').addEventListener('click', () => { cpNotes = ex.cf.map(() => null); cpChecked = false; cpFindings = []; drawCounterpoint(ex); });
+  el('cpCheck').addEventListener('click', () => { cpFindings = checkCounterpoint(ex.cf, cpNotes, ex.modeName); cpChecked = true; drawCounterpoint(ex); });
+  el('cpClear').addEventListener('click', () => { cpNotes = ex.cf.map(() => null); cpSel = null; cpChecked = false; cpFindings = []; drawCounterpoint(ex); });
 }
 
 /* ----- cantus firmus browser (pick a nursery rhyme, see it, hear it) ----- */
