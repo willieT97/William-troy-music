@@ -38,17 +38,9 @@
   .rule{ border-top:1px solid #dbe2e0; margin:16px 0 20px; }
 
   /* hand key (below the chords) */
-  .handcard{ background:#fff; border-radius:18px; padding:20px 20px 26px; box-shadow:0 6px 18px rgba(20,30,60,.09);
+  .handcard{ background:#fff; border-radius:18px; padding:14px; box-shadow:0 6px 18px rgba(20,30,60,.09);
     margin-top:26px; }
-  .handcard h2{ font-family:var(--disp); font-weight:700; font-size:1.25rem; margin:0 0 2px; text-align:center; }
-  .handcard .sub{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--muted); text-align:center; margin-bottom:16px; }
-  .handrow{ display:flex; align-items:center; justify-content:center; gap:clamp(24px,7vw,64px); flex-wrap:wrap; }
-  .handrow svg{ width:200px; max-width:64vw; height:auto; display:block; }
-  .key{ list-style:none; padding:0; margin:0; display:grid; gap:13px; }
-  .key li{ display:flex; align-items:center; gap:13px; font-family:var(--disp); font-weight:600; font-size:1.1rem; }
-  .key .sw{ width:28px; height:28px; border-radius:50%; flex:0 0 auto; color:#fff; font-family:var(--body);
-    font-weight:800; font-size:.9rem; display:grid; place-items:center; }
+  .hand-img{ display:block; width:100%; max-width:640px; height:auto; margin:0 auto; }
 
   /* chord grid */
   .ukegrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(138px,1fr)); gap:16px; }
@@ -85,7 +77,7 @@
   <header class="top">
     <span class="kicker">Ukulele · first chords</span>
     <h1>Ukulele Chords 🌺</h1>
-    <p class="lede">Eight chords to get you strumming. Each dot is coloured for the finger you press it with — check the hand.</p>
+    <p class="lede">Ten chords to get you strumming. Each dot is coloured for the finger you press it with — check the hand.</p>
     <p class="hint noprint">Strings are G · C · E · A. Tap a chord to hear it.</p>
   </header>
 
@@ -94,54 +86,7 @@
   <div class="ukegrid" id="grid"></div>
 
   <section class="handcard">
-    <h2>Which finger?</h2>
-    <div class="sub">Your fretting hand</div>
-    <div class="handrow">
-      <svg viewBox="0 0 200 240" role="img" aria-label="A hand with each finger coloured to match the chord dots">
-        <defs>
-          <linearGradient id="skin" x1="0.15" y1="0" x2="0.55" y2="1">
-            <stop offset="0" stop-color="#F9DBBE"/>
-            <stop offset="1" stop-color="#E8BB93"/>
-          </linearGradient>
-          <filter id="handShadow" x="-25%" y="-25%" width="150%" height="150%">
-            <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#b6875c" flood-opacity="0.30"/>
-          </filter>
-        </defs>
-        <g filter="url(#handShadow)" fill="url(#skin)">
-          <!-- palm -->
-          <path d="M53,122 C43,154 45,190 70,206 C91,218 117,217 133,201 C150,185 150,150 143,120
-                   C140,108 118,105 96,105 C74,105 57,110 53,122 Z"/>
-          <!-- thumb -->
-          <rect x="43" y="106" width="25" height="60" rx="12.5" transform="rotate(-52 56 162)"/>
-          <!-- fingers: index, middle, ring, pinky -->
-          <rect x="55"   y="60" width="22" height="90"  rx="11"   transform="rotate(-9 66 124)"/>
-          <rect x="78.5" y="42" width="23" height="108" rx="11.5" transform="rotate(-1 90 124)"/>
-          <rect x="102"  y="54" width="22" height="96"  rx="11"   transform="rotate(7 113 124)"/>
-          <rect x="125"  y="66" width="18" height="82"  rx="9"    transform="rotate(16 134 122)"/>
-        </g>
-        <!-- creases -->
-        <g fill="none" stroke="#D5A87E" stroke-width="1.5" stroke-linecap="round" opacity="0.5">
-          <path d="M60,130 C86,122 108,122 137,132"/>
-          <path d="M66,152 C88,160 114,158 132,150"/>
-          <path d="M58,98 c1.5,4 7.5,4 9,0" transform="rotate(-9 62 98)"/>
-          <path d="M85,80 c1.5,4 7.5,4 9,0" transform="rotate(-1 89 80)"/>
-          <path d="M110,94 c1.5,4 7.5,4 9,0" transform="rotate(7 114 94)"/>
-        </g>
-        <!-- coloured fingernails + numbers -->
-        <g font-family="'Nunito',sans-serif" font-weight="800" font-size="12.5" fill="#fff" text-anchor="middle">
-          <ellipse cx="57"  cy="68" rx="8.5" ry="10.5" fill="#2E77E6" transform="rotate(-9 57 68)"/><text x="57"  y="72">1</text>
-          <ellipse cx="89"  cy="50" rx="8.5" ry="10.5" fill="#E0922A" transform="rotate(-1 89 50)"/><text x="89"  y="54">2</text>
-          <ellipse cx="119" cy="62" rx="8.5" ry="10.5" fill="#1F9D55" transform="rotate(7 119 62)"/><text x="119" y="66">3</text>
-          <ellipse cx="145" cy="76" rx="8"   ry="10"   fill="#B159D6" transform="rotate(16 145 76)"/><text x="145" y="80">4</text>
-        </g>
-      </svg>
-      <ul class="key">
-        <li><span class="sw" style="background:var(--f1)">1</span> Index</li>
-        <li><span class="sw" style="background:var(--f2)">2</span> Middle</li>
-        <li><span class="sw" style="background:var(--f3)">3</span> Ring</li>
-        <li><span class="sw" style="background:var(--f4)">4</span> Pinky</li>
-      </ul>
-    </div>
+    <img class="hand-img" src="finger-guide.png" alt="Which finger? Your fretting hand — 1 index (blue), 2 middle (amber), 3 ring (green), 4 pinky (purple)." />
   </section>
 
   <p class="foot noprint"><a href="resources.html">← Back to Resources</a></p>
@@ -165,7 +110,9 @@
     {name:'D',  dots:[{s:0,f:2,fg:1},{s:1,f:2,fg:2},{s:2,f:2,fg:3}]},
     {name:'Dm', dots:[{s:2,f:1,fg:1},{s:0,f:2,fg:2},{s:1,f:2,fg:3}]},
     {name:'A',  dots:[{s:1,f:1,fg:1},{s:0,f:2,fg:2}]},
-    {name:'Em', dots:[{s:3,f:2,fg:1},{s:2,f:3,fg:2},{s:1,f:4,fg:3}]}
+    {name:'Em', dots:[{s:3,f:2,fg:1},{s:2,f:3,fg:2},{s:1,f:4,fg:3}]},
+    {name:'E7', dots:[{s:0,f:1,fg:1},{s:1,f:2,fg:2},{s:3,f:2,fg:3}]},
+    {name:'G7', dots:[{s:2,f:1,fg:1},{s:1,f:2,fg:2},{s:3,f:2,fg:3}]}
   ];
 
   // ---- audio ----

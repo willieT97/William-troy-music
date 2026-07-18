@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rhythm Zoo — Music Arcade</title>
+<meta name="description" content="A child-friendly beginner rhythm sheet: every note is an animal. Say its name and clap for each part. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF7EE; --ink:#2E2A24; --muted:#8a8072;
+    --disp:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.5;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+    background-image:radial-gradient(120% 80% at 50% -10%, #fff, transparent 55%); }
+  .wrap{ max-width:900px; margin:0 auto; padding:22px 16px 70px; }
+
+  .tabs{ display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--disp); font-weight:600; font-size:.82rem; text-decoration:none; color:var(--ink);
+    background:#fff; padding:8px 18px; border-radius:999px; box-shadow:0 3px 0 rgba(46,42,36,.12); transition:transform .12s; }
+  .tabs a:hover{ transform:translateY(-2px); }
+  .tabs a.cur{ background:#F5A623; color:#fff; box-shadow:0 3px 0 #cf8611; }
+
+  header.top{ text-align:center; margin-bottom:6px; }
+  .kicker{ display:inline-block; font-family:var(--disp); font-weight:600; font-size:.78rem;
+    letter-spacing:.08em; text-transform:uppercase; color:#E0662A; background:#FCE3D4;
+    padding:5px 14px; border-radius:999px; }
+  h1{ font-family:var(--disp); font-weight:700; font-size:clamp(2.1rem,6.5vw,3.2rem); margin:.45rem 0 .2rem; }
+  .lede{ max-width:46ch; margin:.4rem auto 0; color:var(--muted); font-weight:700; font-size:1.1rem; }
+  .how{ text-align:center; font-family:var(--disp); font-weight:500; color:#6b6156; margin-top:12px; font-size:1rem; }
+  .how b{ color:var(--ink); }
+
+  .rule{ border-top:2px dashed #e7ddcf; margin:18px 0 22px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(185px,1fr)); gap:18px; }
+
+  .card{ background:#fff; border-radius:22px; overflow:hidden; cursor:pointer; text-align:center;
+    box-shadow:0 6px 16px rgba(60,45,25,.09); border:2px solid #f1e7d8;
+    transition:transform .13s, box-shadow .13s; }
+  .card:hover{ transform:translateY(-4px); box-shadow:0 12px 24px rgba(60,45,25,.15); }
+  .card:focus-visible{ outline:3px solid var(--c); outline-offset:3px; }
+  .card .art{ background:var(--ct); height:104px; display:flex; align-items:center; justify-content:center; }
+  .card .art svg{ height:70px; width:auto; }
+  .card .pic{ font-size:2.7rem; line-height:1; margin:12px 0 0; }
+  .card .kick{ font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--c); margin-top:8px; }
+  .card .art + .kick{ margin-top:18px; }
+  .word{ font-family:var(--disp); font-weight:700; font-size:1.45rem; margin:5px 8px 10px;
+    display:flex; gap:5px; justify-content:center; flex-wrap:wrap; }
+  .syl{ padding:2px 9px; border-radius:9px; background:var(--ct); color:var(--c);
+    transition:transform .12s ease, background .12s, color .12s; }
+  .syl.lit{ background:var(--c); color:#fff; transform:scale(1.14) translateY(-2px); }
+  .meta{ font-family:var(--body); font-weight:800; color:#7a7062; font-size:.9rem; padding:0 10px 8px; }
+  .tap{ font-family:var(--mono); font-size:.6rem; letter-spacing:.08em; text-transform:uppercase;
+    color:#b7ab98; padding-bottom:14px; }
+  .card:hover .tap{ color:var(--c); }
+
+  /* ---------- rhythm builder ---------- */
+  .builder{ margin-top:36px; }
+  .builder h2{ font-family:var(--disp); font-weight:700; text-align:center; font-size:1.6rem; margin:0 0 4px; }
+  .binstr{ text-align:center; color:var(--muted); font-weight:700; margin:0 auto 16px; max-width:44ch; }
+  .palette{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
+  .pal{ cursor:pointer; background:#fff; border:2px solid var(--ct); border-radius:14px; padding:9px 12px 8px;
+    display:flex; flex-direction:column; align-items:center; gap:3px; box-shadow:0 3px 0 rgba(60,45,25,.10);
+    transition:transform .12s, box-shadow .12s, border-color .12s; }
+  .pal:hover{ transform:translateY(-3px); border-color:var(--c); }
+  .pal:active{ transform:translateY(0); box-shadow:0 1px 0 rgba(60,45,25,.10); }
+  .pal:disabled{ opacity:.38; cursor:default; box-shadow:0 3px 0 rgba(60,45,25,.06); }
+  .pal:disabled:hover{ transform:none; border-color:var(--ct); }
+  .pal .palnote{ height:30px; display:flex; align-items:center; }
+  .pal .palnote svg{ height:27px; width:auto; }
+  .pal .palemoji{ font-size:1.2rem; line-height:1; min-height:1.2rem; }
+  .pal .palname{ font-family:var(--disp); font-weight:600; font-size:.66rem; color:var(--c);
+    text-transform:uppercase; letter-spacing:.04em; }
+
+  .board{ position:relative; background:#fff; border:3px solid #cfd6de; border-radius:14px 14px 0 0;
+    min-height:124px; padding:16px; box-shadow:inset 0 2px 10px rgba(30,40,60,.05); }
+  .board-inner{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; position:relative; z-index:1; }
+  .board-empty{ position:absolute; inset:0; display:grid; place-items:center; padding:16px; text-align:center;
+    color:#c3bdb0; font-family:var(--disp); font-weight:600; }
+  .tray{ height:15px; margin:0 6px; border-radius:0 0 12px 12px;
+    background:linear-gradient(180deg,#c4cbd4,#9aa3ae); box-shadow:inset 0 2px 3px rgba(0,0,0,.22); }
+
+  .pcard{ position:relative; width:82px; background:#fff; border:2.5px solid var(--c); border-radius:13px;
+    padding:8px 4px 7px; text-align:center; cursor:pointer; box-shadow:0 3px 8px rgba(60,45,25,.12);
+    transition:transform .14s, box-shadow .14s, background .14s; }
+  .pcard:hover{ transform:translateY(-2px); }
+  .pcard::after{ content:"✕"; position:absolute; top:-8px; right:-8px; width:18px; height:18px; border-radius:50%;
+    background:#fff; color:#9a9a9a; border:1.5px solid #ddd; font-size:.7rem; line-height:15px;
+    opacity:0; transition:opacity .12s; }
+  .pcard:hover::after{ opacity:1; }
+  .pcard.playing{ transform:translateY(-8px) scale(1.06); background:var(--ct); box-shadow:0 10px 20px rgba(0,0,0,.16); }
+  .pcard .pnote{ height:36px; display:flex; align-items:center; justify-content:center; }
+  .pcard .pnote svg{ height:31px; width:auto; }
+  .pcard .pemoji{ font-size:1.25rem; line-height:1; margin-top:2px; min-height:1.25rem; }
+  .pcard .pword{ display:flex; gap:2px; justify-content:center; flex-wrap:wrap; font-family:var(--disp);
+    font-weight:700; font-size:.68rem; color:var(--c); margin-top:2px; }
+  .ps{ padding:0 3px; border-radius:5px; transition:background .1s, color .1s, transform .1s; }
+  .ps.lit{ background:var(--c); color:#fff; transform:scale(1.14); }
+
+  .controls{ display:flex; gap:14px; justify-content:center; align-items:center; margin-top:18px; flex-wrap:wrap; }
+  .controls button{ font-family:var(--disp); font-weight:700; cursor:pointer; border:none; border-radius:999px;
+    padding:11px 24px; font-size:1rem; transition:transform .1s; }
+  .controls button:active{ transform:translateY(2px); }
+  .controls button:disabled{ opacity:.55; cursor:default; }
+  #play{ background:#1F9D55; color:#fff; box-shadow:0 4px 0 #17703d; }
+  #clear{ background:#fff; color:#7a7062; box-shadow:0 4px 0 #e6ddce; }
+  .tempo-l{ display:flex; align-items:center; gap:8px; font-size:1.15rem; }
+  .tempo-l input{ accent-color:#F5A623; width:120px; }
+  .beatcount{ font-family:var(--mono); font-size:.78rem; color:var(--muted); font-weight:700; min-width:6ch; }
+  .beatcount.full{ color:#1F9D55; }
+
+  .foot{ margin-top:32px; text-align:center; font-family:var(--disp); font-weight:500; font-size:.95rem; }
+  .foot a{ color:#E0662A; text-decoration:none; }
+  .foot a:hover{ text-decoration:underline; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html" class="cur" aria-current="page">Resources</a>
+  </nav>
+
+  <header class="top">
+    <span class="kicker">Rhythm · say &amp; clap</span>
+    <h1>Rhythm Zoo 🦁</h1>
+    <p class="lede">Every note is an animal! Say its name out loud and clap once for each part.</p>
+    <p class="how">👏 <b>Tap a card</b> to hear it clapped — watch the word light up in time.</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="rule"></div>
+
+  <section class="builder">
+    <h2>Build a rhythm 🥁</h2>
+    <p class="binstr">Build one bar — 4 beats. Tap the animals to add them, then press ▶ Play. Tap a card on the board to take it down.</p>
+    <div class="palette" id="palette"></div>
+    <div class="board">
+      <div class="board-inner" id="seq"></div>
+      <div class="board-empty" id="board-empty">Tap the animals above to build your rhythm…</div>
+    </div>
+    <div class="tray" aria-hidden="true"></div>
+    <div class="controls">
+      <button id="play">▶ Play</button>
+      <button id="clear">Clear</button>
+      <span class="tempo-l" title="Tempo">🐢 <input type="range" id="tempo" min="55" max="140" value="92" aria-label="Tempo"> 🐇</span>
+      <span class="beatcount" id="beatcount"></span>
+    </div>
+  </section>
+
+  <p class="foot"><a href="resources.html">← Back to Resources</a></p>
+
+</div>
+
+<script>
+(function(){
+  var INK='#2E2A24';
+  // note artwork
+  function svgWrap(vb, inner){ return '<svg viewBox="0 0 '+vb+'" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>'; }
+  var ART={
+    crotchet: svgWrap('70 90','<g fill="'+INK+'"><ellipse cx="26" cy="66" rx="12" ry="9" transform="rotate(-22 26 66)"/><rect x="36" y="14" width="3.6" height="54" rx="1"/></g>'),
+    minim:    svgWrap('70 90','<g fill="'+INK+'"><ellipse cx="26" cy="66" rx="12" ry="9" transform="rotate(-22 26 66)" fill="#fff" stroke="'+INK+'" stroke-width="4"/><rect x="36" y="14" width="3.6" height="54" rx="1" fill="'+INK+'"/></g>'),
+    quaver:   svgWrap('104 90','<g fill="'+INK+'"><ellipse cx="26" cy="68" rx="11" ry="8.5" transform="rotate(-22 26 68)"/><ellipse cx="74" cy="68" rx="11" ry="8.5" transform="rotate(-22 74 68)"/><rect x="35.5" y="18" width="3.4" height="52" rx="1"/><rect x="83.5" y="18" width="3.4" height="52" rx="1"/><rect x="35.5" y="16" width="51.4" height="8" rx="2"/></g>'),
+    semiquaver: svgWrap('150 90','<g fill="'+INK+'"><ellipse cx="24" cy="70" rx="10" ry="8" transform="rotate(-22 24 70)"/><ellipse cx="60" cy="70" rx="10" ry="8" transform="rotate(-22 60 70)"/><ellipse cx="96" cy="70" rx="10" ry="8" transform="rotate(-22 96 70)"/><ellipse cx="132" cy="70" rx="10" ry="8" transform="rotate(-22 132 70)"/><rect x="32.5" y="22" width="3.2" height="52" rx="1"/><rect x="68.5" y="22" width="3.2" height="52" rx="1"/><rect x="104.5" y="22" width="3.2" height="52" rx="1"/><rect x="140.5" y="22" width="3.2" height="52" rx="1"/><rect x="32.5" y="20" width="111.2" height="7" rx="2"/><rect x="32.5" y="31" width="111.2" height="7" rx="2"/></g>'),
+    rest:     svgWrap('60 90','<g fill="none" stroke="'+INK+'" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M20,18 L37,37 L24,50 L39,68"/><path d="M39,68 c-9,-4 -15,5 -8,12" stroke-width="6"/></g>')
+  };
+
+  var NOTES=[
+    { key:'crotchet',   art:ART.crotchet,   pic:'🐑',   name:'Crotchet',    sylls:['sheep'], meta:'1 beat · 1 clap',
+      c:'#1F9D55', ct:'#E3F5EB', hits:[{i:0,t:0,clap:1,dur:1}] },
+    { key:'minim',      art:ART.minim,      pic:'',     name:'Minim',       sylls:['zoo'],   meta:'2 beats · 1 long clap',
+      c:'#8B5CF6', ct:'#EEE8FD', hits:[{i:0,t:0,clap:1,dur:2}] },
+    { key:'quaver',     art:ART.quaver,     pic:'🐒',   name:'Quavers',     sylls:['mon','key'], meta:'½ beat each · 2 claps',
+      c:'#E0922A', ct:'#FBEDD6', hits:[{i:0,t:0,clap:1,dur:.5},{i:1,t:.5,clap:1,dur:.5}] },
+    { key:'semiquaver', art:ART.semiquaver, pic:'🐛',   name:'Semiquavers', sylls:['cat','er','pil','lar'], meta:'¼ beat each · 4 fast claps',
+      c:'#12A5B4', ct:'#DAF3F6', hits:[{i:0,t:0,clap:1,dur:.25},{i:1,t:.25,clap:1,dur:.25},{i:2,t:.5,clap:1,dur:.25},{i:3,t:.75,clap:1,dur:.25}] },
+    { key:'rest',       art:ART.rest,       pic:'🤷',   name:'Rest',        sylls:['rest'], meta:'1 silent beat · no clap!',
+      c:'#F35D8B', ct:'#FCE3EC', hits:[{i:0,t:0,clap:0,dur:1}] }
+  ];
+
+  // ---- audio: a little woodblock "clap" ----
+  var actx=null;
+  function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+  function clap(at){
+    var a=ac(), t=a.currentTime+at, o=a.createOscillator(), g=a.createGain();
+    o.type='square'; o.frequency.setValueAtTime(1500,t); o.frequency.exponentialRampToValueAtTime(680,t+0.05);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.15);
+  }
+
+  var B=620; // ms per beat
+  function play(cardEl, data){
+    var spans=cardEl.querySelectorAll('.syl');
+    data.hits.forEach(function(h){
+      if(h.clap) clap(h.t*B/1000);
+      var span=spans[h.i]; if(!span) return;
+      setTimeout(function(){ span.classList.add('lit'); }, h.t*B);
+      setTimeout(function(){ span.classList.remove('lit'); }, h.t*B + Math.max(h.dur*B*0.85, 200));
+    });
+  }
+
+  var grid=document.getElementById('grid');
+  NOTES.forEach(function(n){
+    var card=document.createElement('div');
+    card.className='card'; card.style.setProperty('--c',n.c); card.style.setProperty('--ct',n.ct);
+    card.setAttribute('role','button'); card.setAttribute('tabindex','0');
+    card.setAttribute('aria-label',n.name+', say '+n.sylls.join('-'));
+    var sylHtml=n.sylls.map(function(s){ return '<span class="syl">'+s+'</span>'; }).join('');
+    card.innerHTML=
+      '<div class="art">'+n.art+'</div>'+
+      (n.pic ? '<div class="pic">'+n.pic+'</div>' : '')+
+      '<div class="kick">'+n.name+'</div>'+
+      '<div class="word">'+sylHtml+'</div>'+
+      '<div class="meta">'+n.meta+'</div>'+
+      '<div class="tap">tap to clap</div>';
+    function hit(){ play(card,n); }
+    card.addEventListener('click',hit);
+    card.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); hit(); } });
+    grid.appendChild(card);
+  });
+
+  // ---- rhythm builder ----
+  function noteLen(n){ return n.hits.reduce(function(m,h){ return Math.max(m, h.t + h.dur); }, 0); }
+  var byKey={}; NOTES.forEach(function(n){ byKey[n.key]=n; });
+
+  var MAX=4;             // one bar of 4 beats
+  var seq=[];            // {note, el}
+  var palBtns=[];        // {b, len}
+  var playing=false;
+  var seqEl=document.getElementById('seq');
+  var boardEmpty=document.getElementById('board-empty');
+  var beatOut=document.getElementById('beatcount');
+
+  function total(){ return seq.reduce(function(s,it){ return s + noteLen(it.note); }, 0); }
+  function updatePalette(){
+    var left=MAX-total();
+    palBtns.forEach(function(p){ p.b.disabled = playing || p.len>left; });
+  }
+  function refresh(){
+    var t=total();
+    boardEmpty.style.display = seq.length ? 'none' : 'grid';
+    beatOut.textContent = t + ' / ' + MAX + ' beats';
+    beatOut.classList.toggle('full', t>=MAX);
+    updatePalette();
+  }
+
+  function seqCard(n){
+    var el=document.createElement('div');
+    el.className='pcard'; el.style.setProperty('--c',n.c); el.style.setProperty('--ct',n.ct);
+    el.title='tap to remove';
+    var syl=n.sylls.map(function(s){ return '<span class="ps">'+s+'</span>'; }).join('');
+    el.innerHTML='<div class="pnote">'+n.art+'</div>'+
+      '<div class="pemoji">'+(n.pic||'&nbsp;')+'</div>'+
+      '<div class="pword">'+syl+'</div>';
+    el.addEventListener('click', function(){
+      if(playing) return;
+      var i=seq.map(function(s){return s.el;}).indexOf(el);
+      if(i>-1){ seq.splice(i,1); el.remove(); refresh(); }
+    });
+    return el;
+  }
+  function addNote(n){ if(playing || total()+noteLen(n)>MAX) return; var el=seqCard(n); seq.push({note:n, el:el}); seqEl.appendChild(el); refresh(); }
+
+  // palette
+  var pal=document.getElementById('palette');
+  NOTES.forEach(function(n){
+    var b=document.createElement('button');
+    b.className='pal'; b.style.setProperty('--c',n.c); b.style.setProperty('--ct',n.ct);
+    b.setAttribute('aria-label','Add '+n.name);
+    b.innerHTML='<div class="palnote">'+n.art+'</div>'+
+      '<div class="palemoji">'+(n.pic||'&nbsp;')+'</div>'+
+      '<div class="palname">'+n.name+'</div>';
+    b.addEventListener('click', function(){ addNote(n); });
+    pal.appendChild(b);
+    palBtns.push({ b:b, len:noteLen(n) });
+  });
+
+  // controls
+  var playBtn=document.getElementById('play'), clearBtn=document.getElementById('clear'), tempo=document.getElementById('tempo');
+  clearBtn.addEventListener('click', function(){ if(playing) return; seq.forEach(function(s){ s.el.remove(); }); seq=[]; refresh(); });
+
+  playBtn.addEventListener('click', function(){
+    if(playing || !seq.length) return;
+    playing=true; playBtn.disabled=true; clearBtn.disabled=true; updatePalette();
+    var beat=60/(+tempo.value); // seconds per beat
+    var pos=0; // beats
+    seq.forEach(function(it){
+      var n=it.note, startMs=pos*beat*1000, durMs=noteLen(n)*beat*1000;
+      var spans=it.el.querySelectorAll('.ps');
+      n.hits.forEach(function(h){
+        if(h.clap) clap((pos+h.t)*beat);
+        var sp=spans[h.i]; if(!sp) return;
+        setTimeout(function(){ sp.classList.add('lit'); }, (pos+h.t)*beat*1000);
+        setTimeout(function(){ sp.classList.remove('lit'); }, (pos+h.t)*beat*1000 + Math.max(h.dur*beat*1000*0.8, 150));
+      });
+      setTimeout(function(){ it.el.classList.add('playing'); }, startMs);
+      setTimeout(function(){ it.el.classList.remove('playing'); }, startMs + durMs - 40);
+      pos += noteLen(n);
+    });
+    setTimeout(function(){ playing=false; playBtn.disabled=false; clearBtn.disabled=false; refresh(); }, pos*beat*1000 + 150);
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
