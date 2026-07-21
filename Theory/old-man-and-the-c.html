@@ -182,9 +182,7 @@
     const lines=[20,32,44,56,68];
     lines.forEach(y=>s.appendChild(el('line',{x1:16,y1:y,x2:250,y2:y,stroke:'#3a3016','stroke-width':1.6})));
     // treble clef
-    const clef=el('path',{d:'M40 74 C30 66 30 54 40 48 C52 41 52 26 43 24 C36 22 33 30 35 36 L44 84',
-      fill:'none',stroke:'#2a2213','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'});
-    clef.setAttribute('transform','translate(-4,-6) scale(1.02)');
+    const clef=el('image',{href:'/treble-clef.svg',x:8,y:13,width:27,height:75});
     s.appendChild(clef);
     // the note: one ledger line below the staff (looks like middle C)
     const nx=170, ny=80;

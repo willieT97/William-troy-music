@@ -398,9 +398,7 @@
   const ln = (x1,y1,x2,y2,c,w) => '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+w+'"/>';
 
   function trebleClef(){
-    return '<g transform="translate(34,60) scale(0.8333) translate(-34,-56)" fill="none" stroke="#17140E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">'
-      + '<path d="M 34 78 C 22 78 20 64 33 62 C 49 60 52 40 36 36 C 24 33 22 16 33 13 C 43 10 47 23 38 29 C 27 36 24 50 33 55 C 40 59 45 54 42 48"/>'
-      + '<circle cx="40" cy="74" r="2.6" fill="#17140E" stroke="none"/></g>';
+    return '<image href="/treble-clef.svg" x="21" y="24" width="23" height="63"/>';
   }
   function bassClef(){
     return '<g transform="translate(33,110) scale(0.8333) translate(-33,-132)" fill="none" stroke="#17140E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">'
