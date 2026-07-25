@@ -53,6 +53,14 @@
 
   .wrap{max-width:1240px;margin:0 auto;position:relative;z-index:1}
 
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
+  .tabs a{ font-family:'Space Mono',monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink); padding:8px 15px; border:2px solid var(--ink);
+    background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); transition:transform .08s, background .12s; }
+  .tabs a:hover{ background:#fff; }
+  .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+  .tabs a.cur{ background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--green); }
+
   header{margin-bottom:26px}
   .eyebrow{
     font-family:'Space Mono',monospace;
@@ -369,6 +377,14 @@
 <div class="blob b2"></div>
 
 <div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html">Resources</a>
+    <a href="training.html" class="cur" aria-current="page">Training</a>
+  </nav>
+
   <header>
     <span class="eyebrow">Melody Trainer · Prototype 002</span>
     <h1 id="tuneTitle">Twinkle, Twinkle</h1>
