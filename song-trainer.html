@@ -88,7 +88,12 @@
   select{ font-family:var(--body); font-weight:600; font-size:1rem; padding:9px 14px; color:#f1ece1;
     border:2px solid var(--line); border-radius:0; cursor:pointer;
     background:linear-gradient(180deg,#524d40,#3a372f); box-shadow:3px 3px 0 rgba(0,0,0,.5); }
-  .songmeta{ text-align:center; font-family:var(--stencil); font-size:.9rem; letter-spacing:.04em; color:var(--muted); margin-bottom:16px; }
+  .loadbtn{ font-family:var(--stencil); font-size:.9rem; letter-spacing:.04em; color:#211d13; cursor:pointer;
+    padding:8px 14px 6px; border:2px solid var(--line); background:linear-gradient(180deg,#eec24a,#cd9226); box-shadow:2px 2px 0 rgba(0,0,0,.5); }
+  .loadbtn:active{ transform:translate(2px,2px); box-shadow:none; }
+  .loadhint{ max-width:60ch; margin:10px auto 0; text-align:center; font-size:.82rem; color:var(--muted); }
+  .loadhint b{ color:#cfcabd; font-weight:600; }
+  .songmeta{ text-align:center; font-family:var(--stencil); font-size:.9rem; letter-spacing:.04em; color:var(--muted); margin:16px 0 16px; }
   .songmeta b{ color:var(--hazard); }
 
   .keyctl{ display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; margin-bottom:22px; }
@@ -216,7 +221,9 @@
   <div class="pick">
     <label for="songSel">Song</label>
     <select id="songSel"></select>
+    <label class="loadbtn" title="Import a song from MuseScore">＋ MuseScore XML<input type="file" id="xmlFile" accept=".musicxml,.xml,.mxl" hidden></label>
   </div>
+  <p class="loadhint">Songs load automatically from the <b>songs/</b> folder. Drop a MuseScore export in there (<b>File ▸ Export ▸ MusicXML, Uncompressed .musicxml</b>) with chord symbols and a written rhythm — repeats and 1st/2nd endings are followed. Or use <b>＋ MuseScore XML</b> to try a one-off file.</p>
   <div class="songmeta" id="songMeta"></div>
 
   <div class="keyctl">
@@ -405,6 +412,127 @@
       ]}
   ];
 
+  // ---- MusicXML (MuseScore) parser ----
+  // Reads chord symbols (harmony), rhythm (note/rest durations) and repeats out
+  // of an uncompressed MusicXML file and returns a song in the SONGS shape.
+  var STEP_PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  function stepAlterPc(step, alter){ return ((STEP_PC[step]+(alter||0))%12+12)%12; }
+  function kindIsMinor(kind){ return /min|dim/i.test(kind||''); }
+  function beatsToToken(beats){
+    var tbl=[[4,'w'],[3,'hd'],[2,'h'],[1.5,'qd'],[1,'q'],[0.75,'8d'],[0.5,'8'],[0.375,'16d'],[0.25,'16'],[0.125,'32']];
+    var best='q', bd=1e9; tbl.forEach(function(t){ var d=Math.abs(t[0]-beats); if(d<bd){ bd=d; best=t[1]; } });
+    return best;
+  }
+  var ROMAN=['I','♭II','II','♭III','III','IV','♯IV','V','♭VI','VI','♭VII','VII'];
+  function romanNumeral(pc, q, tonicPc){
+    var base=ROMAN[((pc-tonicPc)%12+12)%12]; return q==='min' ? base.toLowerCase() : base;
+  }
+  function xText(parent, sel){ var e=parent&&parent.querySelector(sel); return e?e.textContent.trim():null; }
+
+  function parseMusicXML(xmlText){
+    var doc=new DOMParser().parseFromString(xmlText, 'application/xml');
+    if(doc.querySelector('parsererror')) throw new Error('that file isn’t readable MusicXML.');
+    var part=doc.querySelector('part'); if(!part) throw new Error('no music part was found in the file.');
+    var title=xText(doc,'work-title')||xText(doc,'movement-title')||'Untitled';
+    var composer=null;
+    [].some.call(doc.querySelectorAll('identification creator'), function(c){
+      if((c.getAttribute('type')||'')==='composer'){ composer=c.textContent.trim(); return true; } return false; });
+
+    var fifths=0, modeStr='major', kEl=doc.querySelector('attributes key');
+    if(kEl){ var f=xText(kEl,'fifths'); if(f!=null) fifths=+f; var md=xText(kEl,'mode'); if(md) modeStr=md.toLowerCase(); }
+    var mode=/minor/.test(modeStr)?'min':'maj';
+    var tonicPc=(((7*fifths)+(mode==='min'?9:0))%12+12)%12;
+    var tempo=90, snd=doc.querySelector('sound[tempo]');
+    if(snd) tempo=Math.round(+snd.getAttribute('tempo'));
+    else { var pm=doc.querySelector('metronome per-minute'); if(pm) tempo=Math.round(+pm.textContent); }
+    tempo=Math.min(200,Math.max(40,tempo||90));
+
+    var divisions=1, measures=[];
+    [].forEach.call(part.querySelectorAll(':scope > measure'), function(mEl){
+      var segs=[], cur=null, curChord=null;
+      var mo={segs:segs, repFwd:false, repBack:false, repTimes:2, endStart:false, endStop:false, endNums:null};
+      function flush(){ if(cur && cur.r.length) segs.push(cur); cur=null; }
+      [].forEach.call(mEl.children, function(el){
+        var tag=el.tagName;
+        if(tag==='attributes'){ var d=xText(el,'divisions'); if(d!=null) divisions=+d||divisions; }
+        else if(tag==='harmony'){
+          var rs=xText(el,'root root-step'); if(!rs) return;
+          var ra=xText(el,'root root-alter');
+          var kEln=el.querySelector('kind');
+          var kind=(kEln?(kEln.textContent||kEln.getAttribute('text')):'')||'major';
+          var bs=xText(el,'bass bass-step'), ba=xText(el,'bass bass-alter');
+          curChord={pc:stepAlterPc(rs, ra?+ra:0), min:kindIsMinor(kind), bass: bs!=null?stepAlterPc(bs, ba?+ba:0):null};
+          flush(); cur={chord:curChord, r:[]};
+        }
+        else if(tag==='note'){
+          if(el.querySelector(':scope > chord')) return;    // stacked note = same onset
+          if(el.querySelector(':scope > grace')) return;     // grace note = no duration
+          var dt=xText(el,'duration'), dur=dt!=null?+dt:0; if(!(dur>0)) return;
+          var isRest=!!el.querySelector(':scope > rest');
+          if(!cur){ if(!curChord) return; cur={chord:curChord, r:[]}; }
+          cur.r.push(beatsToToken(dur/divisions)+(isRest?'r':''));
+        }
+        else if(tag==='barline'){
+          var rep=el.querySelector('repeat');
+          if(rep){ var dir=rep.getAttribute('direction');
+            if(dir==='forward') mo.repFwd=true;
+            if(dir==='backward'){ mo.repBack=true; var t=rep.getAttribute('times'); if(t) mo.repTimes=+t; } }
+          var end=el.querySelector('ending');
+          if(end){ var et=end.getAttribute('type');
+            if(et==='start'){ mo.endStart=true; mo.endNums=(end.getAttribute('number')||'').split(/[ ,]+/).map(Number).filter(Boolean); }
+            if(et==='stop'||et==='discontinue') mo.endStop=true; }
+        }
+      });
+      flush();
+      measures.push(mo);
+    });
+
+    var order=expandRepeats(measures), bars=[];
+    order.forEach(function(mi){ measures[mi].segs.forEach(function(seg){
+      var c=seg.chord, name=SHARP[c.pc]+(c.min?'m':'')+(c.bass!=null?'/'+SHARP[c.bass]:'');
+      bars.push({ c:name, rn:romanNumeral(c.pc, c.min?'min':'maj', tonicPc), r:seg.r.slice() });
+    }); });
+    if(!bars.length) throw new Error('no chord symbols found. In MuseScore add them with Add ▸ Text ▸ Chord Symbol.');
+
+    return { id:'xml-'+Date.now(), title:title, artist:composer||'MusicXML', tonicPc:tonicPc, mode:mode,
+      tempo:tempo, rhythm:'Imported from MuseScore', bars:bars, scales:defaultScales(mode), tips:defaultTips(mode) };
+  }
+
+  // Expand forward/backward repeats and 1st/2nd endings into a linear measure order.
+  function expandRepeats(ms){
+    var order=[], i=0, start=0, safety=0, hits={};
+    while(i<ms.length && safety++<20000){
+      var m=ms[i];
+      if(m.repFwd) start=i;
+      if(m.endStart && m.endNums && m.endNums.length){
+        var pass=(hits['s'+start]||0)+1;
+        if(m.endNums.indexOf(pass)<0){ var j=i; while(j<ms.length && !ms[j].endStop) j++; i=j+1; continue; }
+      }
+      order.push(i);
+      if(m.repBack){
+        hits['b'+i]=(hits['b'+i]||0)+1; hits['s'+start]=(hits['s'+start]||0)+1;
+        if(hits['b'+i] < (m.repTimes||2)){ i=start; continue; }
+      }
+      i++;
+    }
+    return order;
+  }
+  function defaultScales(mode){
+    return mode==='min'
+      ? [ {label:'natural minor', note:'The key itself — sits over the whole loop.', rootOff:0, iv:[0,2,3,5,7,8,10]},
+          {label:'minor pentatonic', note:'Five notes, hard to hit a wrong one.', rootOff:0, iv:[0,3,5,7,10]},
+          {label:'blues', note:'Minor pentatonic plus the ♭5 “blue” note.', rootOff:0, iv:[0,3,5,6,7,10]} ]
+      : [ {label:'major', note:'The key — the bright parent scale.', rootOff:0, iv:[0,2,4,5,7,9,11]},
+          {label:'major pentatonic', note:'Five happy notes over the whole loop.', rootOff:0, iv:[0,2,4,7,9]},
+          {label:'minor pentatonic', note:'The relative minor — same notes, a darker start.', rootOff:9, iv:[0,3,5,7,10]} ];
+  }
+  function defaultTips(mode){
+    return [ 'Loop it slowly, then nudge the tempo up as it locks in.',
+      'On each change, aim for a chord tone (the notes listed above each chord).',
+      (mode==='min' ? 'The minor pentatonic works over the whole loop — lean on it, then add colour.'
+                    : 'The major pentatonic sits over the whole loop — target chord tones on the changes.') ];
+  }
+
   // ---- audio ----
   var actx=null;
   function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
@@ -586,7 +714,7 @@
     var host=document.getElementById('chart'); host.innerHTML=''; events=[];
     if(!window.Vex){ host.textContent='notation could not load'; return; }
     var VF=Vex.Flow, n=song.bars.length;
-    var avail=host.clientWidth||620, barW=Math.max(168, Math.floor((avail-4)/n)), totalW=barW*n+4;
+    var avail=host.clientWidth||620, barW=Math.max(n>6?128:168, Math.floor((avail-4)/n)), totalW=barW*n+4;
     var r=new VF.Renderer(host, VF.Renderer.Backends.SVG); r.resize(totalW,150); var ctx=r.getContext();
     var P=prog(), x=2;
     P.forEach(function(bar,bi){
@@ -604,7 +732,8 @@
       });
       try{ var cs=new VF.ChordSymbol(); if(cs.setReportWidth) cs.setReportWidth(false); cs.addText(bar.name); vfNotes[0].addModifier(cs,0); }catch(e){}
       var beams=VF.Beam.generateBeams(vfNotes,{groups:[new VF.Fraction(1,4)], stem_direction:1});
-      var voice=new VF.Voice({num_beats:4, beat_value:4}); voice.setStrict(false); voice.addTickables(vfNotes);
+      var nb=meta.reduce(function(s,m){ return s+m.beats; },0);
+      var voice=new VF.Voice({num_beats:Math.max(1,Math.round(nb)), beat_value:4}); voice.setStrict(false); voice.addTickables(vfNotes);
       new VF.Formatter().joinVoices([voice]).format([voice], barW-24);
       voice.draw(ctx,st); beams.forEach(function(b){ b.setContext(ctx).draw(); });
       meta.forEach(function(m){ events.push(m); });
@@ -720,7 +849,46 @@
   document.getElementById('keyDown').addEventListener('click', function(){ setKey(-1); });
   document.getElementById('keyReset').addEventListener('click', function(){ setKey(0); });
   sel.addEventListener('change', function(){ loadSong(+sel.value); });
+
+  // ---- song library ----
+  function addSong(s){ SONGS.push(s); var o=document.createElement('option'); o.value=SONGS.length-1;
+    o.textContent=s.title+' — '+s.artist; sel.appendChild(o); return SONGS.length-1; }
+
+  // one-off import from disk (this session only — drop files in songs/ to keep them)
+  document.getElementById('xmlFile').addEventListener('change', function(e){
+    var f=e.target.files[0]; e.target.value=''; if(!f) return;
+    if(/\.mxl$/i.test(f.name)){ alert('That’s a compressed .mxl file. In MuseScore choose File ▸ Export ▸ MusicXML and pick “Uncompressed (*.musicxml)”, then load that.'); return; }
+    var rd=new FileReader();
+    rd.onload=function(){ try{ var s=parseMusicXML(String(rd.result)); var idx=addSong(s); sel.value=idx; loadSong(idx); }
+      catch(err){ alert('Couldn’t import this file — '+err.message); } };
+    rd.readAsText(f);
+  });
+
   loadSong(0);
+
+  // ---- auto-load the songs/ folder ----
+  // Locally we read the server's directory listing (zero setup); when deployed
+  // we read songs/manifest.json (GitHub Pages has no directory listing).
+  function discoverSongs(){
+    var isLocal = /^(localhost|127\.|0\.0\.0\.0|\[?::1\]?)$/.test(location.hostname) || location.protocol==='file:';
+    function viaManifest(){ return fetch('songs/manifest.json',{cache:'no-store'}).then(function(r){ return r.ok?r.json():Promise.reject(); }); }
+    function viaListing(){ return fetch('songs/',{cache:'no-store'}).then(function(r){ return r.ok?r.text():Promise.reject(); })
+      .then(function(t){ var out=[], re=/href="([^"?]+\.musicxml)"/gi, m; while((m=re.exec(t))) out.push(decodeURIComponent(m[1].split('/').pop())); return out; }); }
+    var first=isLocal?viaListing:viaManifest, second=isLocal?viaManifest:viaListing;
+    return first().catch(second).catch(function(){ return []; })
+      .then(function(list){ return (list||[]).filter(function(v,i,a){ return a.indexOf(v)===i; }); });
+  }
+  function loadFolderSong(name){
+    return fetch('songs/'+encodeURIComponent(name),{cache:'no-store'})
+      .then(function(r){ return r.ok?r.text():Promise.reject(); })
+      .then(function(xml){ var s=parseMusicXML(xml); if(s.title==='Untitled') s.title=name.replace(/\.musicxml$/i,''); return addSong(s); })
+      .catch(function(e){ console.warn('Song failed to load:', name, e); return -1; });
+  }
+  discoverSongs().then(function(names){
+    var seq=Promise.resolve(), firstIdx=-1;
+    names.forEach(function(n){ seq=seq.then(function(){ return loadFolderSong(n); }).then(function(idx){ if(firstIdx<0 && idx>=0) firstIdx=idx; }); });
+    return seq.then(function(){ if(firstIdx>=0){ sel.value=firstIdx; loadSong(firstIdx); } });
+  });
 })();
 </script>
 </body>
