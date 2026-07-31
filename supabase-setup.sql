@@ -15,17 +15,27 @@ create table if not exists public.songs (
   created_at timestamptz not null default now(),
   title      text,
   data       jsonb not null,          -- the whole song: {root,mode,tempo,snap,chords,notes}
-  edit_token text not null            -- secret returned once at publish; needed to unpublish
+  edit_token text not null,           -- secret returned once at publish; needed to unpublish
+  votes      int not null default 0   -- upvotes, for the gallery chart
 );
+-- if the table already existed without the votes column:
+alter table public.songs add column if not exists votes int not null default 0;
 
 -- Lock the table down: RLS on, and no direct grants to anonymous users.
 alter table public.songs enable row level security;
 revoke all on public.songs from anon, authenticated;
 
--- Public, read-only view WITHOUT the secret edit_token (used to open shared links).
+-- Public, read-only view WITHOUT the secret edit_token (shared links + the gallery).
 create or replace view public.songs_public as
-  select id, created_at, title, data from public.songs;
+  select id, created_at, title, data, votes from public.songs;
 grant select on public.songs_public to anon;
+
+-- Upvote a song (returns the new count). Client de-dupes one vote per browser.
+create or replace function public.vote_song(p_id uuid)
+returns int language sql security definer set search_path = public as $$
+  update public.songs set votes = votes + 1 where id = p_id returning votes;
+$$;
+grant execute on function public.vote_song(uuid) to anon;
 
 -- Publish: inserts a song, makes the secret token server-side, returns id + token.
 -- search_path includes `extensions` so pgcrypto's gen_random_bytes/gen_random_uuid resolve

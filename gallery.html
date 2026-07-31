@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charts — Music Arcade</title>
+<meta name="description" content="The charts — play the songs other makers built, and upvote your favourites. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F1Fb; --ink:#241a34; --muted:#8a7fa0;
+    --violet:#7C4DFF; --pink:#FF4E86; --teal:#12C7A6; --amber:#FF9F1C; --green:#2BB673;
+    --disp:'Fredoka',sans-serif; --body:'Nunito',sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:var(--body); color:var(--ink); min-height:100vh; -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(120% 90% at 8% 0%, rgba(124,77,255,.14), transparent 55%),
+      radial-gradient(120% 90% at 100% 8%, rgba(255,78,134,.12), transparent 52%),
+      radial-gradient(100% 80% at 60% 100%, rgba(18,199,166,.12), transparent 55%),
+      var(--bg); }
+  .wrap{ max-width:760px; margin:0 auto; padding:22px 18px 80px; }
+
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--body); font-weight:800; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink); padding:9px 15px; border:2.5px solid var(--ink); border-radius:12px;
+    background:#fff; box-shadow:3px 3px 0 var(--ink); transition:transform .1s; }
+  .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+  .tabs a.cur{ background:var(--violet); color:#fff; }
+
+  header.top{ text-align:center; margin-bottom:14px; }
+  h1{ font-family:var(--disp); font-weight:700; font-size:clamp(2rem,7vw,3rem); margin:.2rem 0 .3rem; }
+  h1 .em{ color:var(--violet); }
+  .lede{ max-width:52ch; margin:0 auto; color:#5b5170; font-weight:600; }
+
+  .sortbar{ display:flex; gap:8px; justify-content:center; margin:16px 0 22px; }
+  .sortbar button{ font-family:var(--body); font-weight:800; font-size:.82rem; cursor:pointer; border:2.5px solid var(--ink);
+    border-radius:12px; padding:7px 16px; background:#fff; color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
+  .sortbar button.on{ background:var(--violet); color:#fff; }
+
+  .song{ display:flex; gap:14px; align-items:center; background:#fff; border:2.5px solid var(--ink); border-radius:16px;
+    box-shadow:5px 5px 0 var(--ink); padding:12px 14px; margin-bottom:14px; }
+  .rank{ font-family:var(--disp); font-weight:700; font-size:1.4rem; color:var(--muted); min-width:1.6em; text-align:center; }
+  .rank.top1{ color:var(--amber); } .rank.top2{ color:#9aa0ad; } .rank.top3{ color:#c98a4b; }
+  .mid{ flex:1; min-width:0; }
+  .nm{ font-family:var(--disp); font-weight:600; font-size:1.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pvwrap{ position:relative; margin-top:6px; }
+  .pvwrap canvas{ display:block; width:100%; border-radius:8px; border:2px solid #e6ddf4; }
+  .ph{ position:absolute; top:0; bottom:0; width:2px; background:var(--pink); display:none; pointer-events:none; }
+  .side{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .play{ width:48px; height:48px; border-radius:50%; border:2.5px solid var(--ink); background:var(--green); color:#fff;
+    font-size:1.1rem; cursor:pointer; box-shadow:2px 2px 0 var(--ink); display:flex; align-items:center; justify-content:center; }
+  .play.on{ background:var(--pink); }
+  .play:active{ transform:translate(2px,2px); box-shadow:none; }
+  .vote{ display:flex; flex-direction:column; align-items:center; cursor:pointer; border:2.5px solid var(--ink); border-radius:12px;
+    background:#fff; padding:3px 10px 4px; box-shadow:2px 2px 0 var(--ink); line-height:1; user-select:none; }
+  .vote .up{ font-size:.9rem; color:var(--violet); }
+  .vote .n{ font-family:var(--disp); font-weight:700; font-size:1rem; }
+  .vote.voted{ background:var(--violet); color:#fff; } .vote.voted .up, .vote.voted .n{ color:#fff; }
+  .vote:active{ transform:translate(2px,2px); box-shadow:none; }
+
+  .state{ text-align:center; color:var(--muted); font-weight:700; margin:40px 0; }
+  .state a{ color:var(--violet); font-weight:800; }
+  .foot{ margin-top:36px; text-align:center; color:var(--muted); font-weight:700; font-size:.82rem; }
+  .foot a{ color:var(--violet); text-decoration:none; }
+  @media(max-width:520px){ .song{ flex-wrap:wrap; } .mid{ order:3; flex-basis:100%; } }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html" class="cur" aria-current="page">Create</a>
+  </nav>
+
+  <header class="top">
+    <h1>The <span class="em">Charts</span></h1>
+    <p class="lede">Songs made by other makers — hit play to hear one, and upvote the ones you love to push them up the charts.</p>
+  </header>
+
+  <div class="sortbar">
+    <button id="sortTop" class="on">🏆 Top</button>
+    <button id="sortNew">✨ New</button>
+  </div>
+
+  <div id="gallery"></div>
+
+  <div class="foot">
+    <p>Made something? <a href="composer.html">Open the Song Maker</a> · <a href="create.html">&larr; Back to Create</a></p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var SB={ url:'https://txzxmwwqqrapcirtrurt.supabase.co', anonKey:'sb_publishable_7DFs8Be2RgFe38U3k_HmtA_k1md1zlX' };
+  var _sb=null, _sbP=null;
+  function supaReady(){ return !!(SB.url && SB.anonKey); }
+  function loadSupa(){ if(_sb) return Promise.resolve(_sb); if(_sbP) return _sbP;
+    _sbP=new Promise(function(res,rej){ if(window.supabase){ _sb=window.supabase.createClient(SB.url,SB.anonKey); return res(_sb); }
+      var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      s.onload=function(){ try{ _sb=window.supabase.createClient(SB.url,SB.anonKey); res(_sb); }catch(e){ rej(e); } };
+      s.onerror=function(){ rej(new Error('load fail')); }; document.head.appendChild(s); });
+    return _sbP; }
+
+  // ---------- audio ----------
+  var NLOW=60, COLS=64, NROWS=25, totalBeats=16;
+  var QINT={ maj:[0,4,7], min:[0,3,7], dim:[0,3,6], aug:[0,4,8],
+    '7':[0,4,7,10], maj7:[0,4,7,11], m7:[0,3,7,10], m7b5:[0,3,6,10],
+    sus2:[0,2,7], sus4:[0,5,7], '6':[0,4,7,9], m6:[0,3,7,9], add9:[0,4,7,14] };
+  var actx=null;
+  function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+  function freq(m){ return 440*Math.pow(2,(m-69)/12); }
+  function toneAt(m,when,dur,gain,type){ var a=ac(),o=a.createOscillator(),g=a.createGain();
+    o.type=type||'triangle'; o.frequency.value=freq(m);
+    g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(gain||0.16,when+0.012); g.gain.exponentialRampToValueAtTime(0.0001,when+dur);
+    o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+dur+0.03); }
+  function chordMidis(pc,q){ var r=48+pc, iv=QINT[q]||QINT.maj, out=iv.map(function(i){ return r+i; }); out.push(r+12); return out; }
+  function strumAt(pc,q,when,dur){ chordMidis(pc,q).forEach(function(m,i){ toneAt(m, when+i*0.02, Math.max(0.3,Math.min(dur,4)), 0.1); }); }
+
+  // ---------- playback (one song at a time, looping) ----------
+  var playing=null, schedInt=null, raf=null, anchorT=0, spb=0.5, sidx=0, loopCount=0, sched=[], curPh=null, curBtn=null;
+  function eventsFor(d){ var evs=[];
+    (d.chords||[]).forEach(function(c){ evs.push({t:c.col*0.25, dur:c.len*0.25, type:'chord', pc:c.pc, q:c.q}); });
+    (d.notes||[]).forEach(function(n){ evs.push({t:n.col*0.25, dur:n.len*0.25, type:'note', midi:NLOW+n.row}); });
+    evs.sort(function(a,b){ return a.t-b.t; }); return evs; }
+  function stopPlay(){ playing=null; if(schedInt){ clearInterval(schedInt); schedInt=null; } if(raf){ cancelAnimationFrame(raf); raf=null; }
+    if(curBtn){ curBtn.classList.remove('on'); curBtn.textContent='▶'; } if(curPh){ curPh.style.display='none'; } curBtn=null; curPh=null; }
+  function playSong(song, btn, ph){
+    if(playing===song.id){ stopPlay(); return; }
+    stopPlay(); ac(); playing=song.id; curBtn=btn; curPh=ph; var d=song.data||{};
+    spb=60/(d.tempo||100); sched=eventsFor(d); anchorT=ac().currentTime+0.1; sidx=0; loopCount=0;
+    btn.classList.add('on'); btn.textContent='⏹'; ph.style.display='block';
+    schedInt=setInterval(tick,25); tick(); raf=requestAnimationFrame(animate);
+  }
+  function tick(){ if(!playing) return; var now=ac().currentTime, horizon=now+0.2;
+    while(true){ if(sidx>=sched.length){ loopCount++; sidx=0; }
+      var ev=sched[sidx], when=anchorT+(loopCount*totalBeats+ev.t)*spb; if(when>horizon) break;
+      if(ev.type==='chord') strumAt(ev.pc,ev.q,when,ev.dur*spb); else toneAt(ev.midi,when,Math.max(0.12,ev.dur*spb*0.95),0.2,'sawtooth');
+      sidx++; } }
+  function animate(){ if(!playing||!curPh) return; var now=ac().currentTime, beat=((now-anchorT)/spb%totalBeats+totalBeats)%totalBeats;
+    curPh.style.left=(beat/totalBeats*100)+'%'; raf=requestAnimationFrame(animate); }
+
+  // ---------- preview ----------
+  function drawPreview(cv, d){
+    var w=cv.clientWidth||440, chordH=13, gap=2, rollH=58, H=chordH+gap+rollH, dpr=window.devicePixelRatio||1;
+    cv.width=w*dpr; cv.height=H*dpr; cv.style.height=H+'px'; var x=cv.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0);
+    var cw=w/COLS, rowh=rollH/NROWS, ry=chordH+gap;
+    x.clearRect(0,0,w,H); x.fillStyle='#faf7ff'; x.fillRect(0,ry,w,rollH);
+    x.strokeStyle='#e6ddf4'; x.lineWidth=1; for(var b=0;b<=4;b++){ var bx=b*16*cw+.5; x.beginPath(); x.moveTo(bx,0); x.lineTo(bx,H); x.stroke(); }
+    (d.chords||[]).forEach(function(c){ x.fillStyle=c.color||'#7C4DFF'; var bw=Math.max(2,c.len*cw-1); x.fillRect(c.col*cw,0,bw,chordH);
+      if(bw>18 && c.name){ x.fillStyle='#fff'; x.font='600 9px Fredoka, sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(c.name, c.col*cw+bw/2, chordH/2+.5); } });
+    (d.notes||[]).forEach(function(n){ x.fillStyle='#7C4DFF'; x.fillRect(n.col*cw, ry+(NROWS-1-n.row)*rowh, Math.max(2,n.len*cw-0.5), Math.max(2,rowh-0.4)); });
+  }
+
+  // ---------- voting ----------
+  var VK='songmaker.voted', voted={};
+  try{ (JSON.parse(localStorage.getItem(VK))||[]).forEach(function(id){ voted[id]=true; }); }catch(e){}
+  function saveVoted(){ try{ localStorage.setItem(VK, JSON.stringify(Object.keys(voted))); }catch(e){} }
+  function vote(song, btn){ if(voted[song.id]) return; voted[song.id]=true; saveVoted();
+    var nEl=btn.querySelector('.n'); nEl.textContent=(+nEl.textContent||0)+1; btn.classList.add('voted');
+    loadSupa().then(function(sb){ return sb.rpc('vote_song',{ p_id:song.id }); })
+      .then(function(res){ if(!res.error && res.data!=null) nEl.textContent=res.data; })
+      .catch(function(){});
+  }
+
+  // ---------- render ----------
+  var gallery=document.getElementById('gallery');
+  var previews=[]; // {cv, data} to (re)draw on resize
+  function render(songs){
+    stopPlay(); gallery.innerHTML=''; previews=[];
+    if(!songs.length){ gallery.innerHTML='<div class="state">No songs on the charts yet.<br>Be the first — <a href="composer.html">make one in the Song Maker</a> and hit Publish!</div>'; return; }
+    songs.forEach(function(sg,i){
+      var row=document.createElement('div'); row.className='song';
+      var rank=document.createElement('div'); rank.className='rank'+(sortMode==='top'&&i<3?(' top'+(i+1)):''); rank.textContent=sortMode==='top'?('#'+(i+1)):'♪';
+      var side=document.createElement('div'); side.className='side';
+      var play=document.createElement('button'); play.className='play'; play.textContent='▶'; play.setAttribute('aria-label','Play');
+      var vbtn=document.createElement('div'); vbtn.className='vote'+(voted[sg.id]?' voted':''); vbtn.title='Upvote';
+      vbtn.innerHTML='<span class="up">▲</span><span class="n">'+(sg.votes||0)+'</span>';
+      side.appendChild(play); side.appendChild(vbtn);
+      var mid=document.createElement('div'); mid.className='mid';
+      var nm=document.createElement('div'); nm.className='nm'; nm.textContent=sg.title||'Untitled';
+      var pv=document.createElement('div'); pv.className='pvwrap';
+      var cv=document.createElement('canvas'); var ph=document.createElement('div'); ph.className='ph';
+      pv.appendChild(cv); pv.appendChild(ph); mid.appendChild(nm); mid.appendChild(pv);
+      row.appendChild(rank); row.appendChild(mid); row.appendChild(side); gallery.appendChild(row);
+      play.addEventListener('click', function(){ playSong(sg, play, ph); });
+      vbtn.addEventListener('click', function(){ vote(sg, vbtn); });
+      previews.push({cv:cv, data:sg.data||{}});
+    });
+    requestAnimationFrame(function(){ previews.forEach(function(p){ drawPreview(p.cv, p.data); }); });
+  }
+  window.addEventListener('resize', function(){ previews.forEach(function(p){ drawPreview(p.cv, p.data); }); });
+
+  var sortMode='top';
+  function load(){ if(!supaReady()){ gallery.innerHTML='<div class="state">The charts aren’t switched on yet.</div>'; return; }
+    gallery.innerHTML='<div class="state">Loading the charts…</div>';
+    loadSupa().then(function(sb){ var q=sb.from('songs_public').select('id,title,data,votes,created_at').limit(60);
+      q = sortMode==='top' ? q.order('votes',{ascending:false}).order('created_at',{ascending:false}) : q.order('created_at',{ascending:false});
+      return q; })
+      .then(function(res){ if(res.error) throw res.error; render(res.data||[]); })
+      .catch(function(){ gallery.innerHTML='<div class="state">Couldn’t load the charts right now.</div>'; });
+  }
+  document.getElementById('sortTop').addEventListener('click', function(){ if(sortMode==='top')return; sortMode='top'; this.classList.add('on'); document.getElementById('sortNew').classList.remove('on'); load(); });
+  document.getElementById('sortNew').addEventListener('click', function(){ if(sortMode==='new')return; sortMode='new'; this.classList.add('on'); document.getElementById('sortTop').classList.remove('on'); load(); });
+  load();
+})();
+</script>
+</body>
+</html>
