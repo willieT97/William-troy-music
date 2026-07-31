@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create — Music Arcade</title>
+<meta name="description" content="The making room. Build your own songs — drop chords into bars and draw a melody. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F1Fb; --ink:#241a34; --muted:#8a7fa0;
+    --violet:#7C4DFF; --pink:#FF4E86; --teal:#12C7A6; --amber:#FF9F1C; --blue:#2D8CFF; --green:#2BB673;
+    --disp:'Fredoka',sans-serif; --body:'Nunito',sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:var(--body); color:var(--ink); min-height:100vh; -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(120% 90% at 8% 0%, rgba(124,77,255,.16), transparent 55%),
+      radial-gradient(120% 90% at 100% 8%, rgba(255,78,134,.13), transparent 52%),
+      radial-gradient(100% 80% at 60% 100%, rgba(18,199,166,.13), transparent 55%),
+      var(--bg); }
+  .wrap{ max-width:820px; margin:0 auto; padding:22px 20px 90px; }
+
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:28px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--body); font-weight:800; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink); padding:9px 15px; border:2.5px solid var(--ink); border-radius:12px;
+    background:#fff; box-shadow:3px 3px 0 var(--ink); transition:transform .1s; }
+  .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+  .tabs a.cur{ background:var(--violet); color:#fff; }
+
+  header.top{ text-align:center; margin-bottom:8px; }
+  .title{ font-family:var(--disp); font-weight:700; font-size:clamp(2.2rem,8vw,3.6rem); line-height:1; letter-spacing:-.01em; }
+  .title .em{ color:var(--violet); }
+  .belt{ display:inline-block; margin-top:12px; font-family:var(--body); font-weight:800; font-size:.7rem; letter-spacing:.12em;
+    text-transform:uppercase; color:#fff; background:var(--pink); padding:6px 12px; border-radius:20px; }
+  .lede{ max-width:54ch; margin:18px auto 0; text-align:center; font-size:1.06rem; font-weight:600; color:#5b5170; }
+
+  .rule{ height:3px; background:linear-gradient(90deg,var(--violet),var(--pink),var(--amber),var(--teal)); border-radius:3px; margin:30px 0 26px; }
+
+  .cards{ display:grid; gap:24px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); max-width:640px; margin-inline:auto; }
+  .card{ display:flex; flex-direction:column; text-decoration:none; color:var(--ink);
+    border:2.5px solid var(--ink); border-radius:20px; background:#fff; box-shadow:8px 8px 0 var(--ink);
+    overflow:hidden; transition:transform .14s ease, box-shadow .14s ease; }
+  .card:hover{ transform:translate(-3px,-3px); box-shadow:11px 11px 0 var(--ink); }
+  .card .art{ height:170px; display:flex; align-items:center; justify-content:center; border-bottom:2.5px solid var(--ink);
+    background:linear-gradient(150deg,#efe7ff,#ffe8f0); }
+  .card .art svg{ width:80%; height:auto; }
+  .card .body{ padding:18px 20px 22px; display:flex; flex-direction:column; flex:1; }
+  .card .kick{ align-self:flex-start; font-family:var(--body); font-weight:800; font-size:.6rem; letter-spacing:.12em;
+    text-transform:uppercase; color:#fff; background:var(--violet); padding:5px 9px; border-radius:20px; margin-bottom:12px; }
+  .card h3{ font-family:var(--disp); font-weight:700; font-size:1.5rem; margin:0 0 .5rem; }
+  .card p{ margin:0 0 1.2rem; font-size:.96rem; font-weight:600; color:#5b5170; }
+  .card .go{ margin-top:auto; align-self:flex-start; font-family:var(--disp); font-weight:600; font-size:.95rem;
+    color:#fff; background:var(--violet); padding:8px 16px; border-radius:12px; }
+  .card .go::after{ content:" \25B8"; }
+
+  .soon{ text-align:center; margin-top:28px; color:var(--muted); font-weight:700; font-size:.85rem; }
+  .foot{ margin-top:40px; text-align:center; color:var(--muted); font-weight:700; font-size:.82rem; }
+  .foot a{ color:var(--violet); text-decoration:none; }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html" class="cur" aria-current="page">Create</a>
+  </nav>
+
+  <header class="top">
+    <h1 class="title">Cre<span class="em">ate</span></h1>
+    <div class="belt">Make your own music</div>
+    <p class="lede">The making room. No scores to read, no rules to follow — drop chords into bars, draw a melody, and press play. Build your own song from scratch.</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <div class="cards">
+    <a class="card" href="composer.html">
+      <div class="art">
+        <svg viewBox="0 0 300 160" role="img" aria-label="Song Maker: chord blocks over a piano roll with melody notes">
+          <rect x="18" y="16" width="60" height="30" rx="8" fill="#7C4DFF" stroke="#241a34" stroke-width="3"/>
+          <rect x="86" y="16" width="60" height="30" rx="8" fill="#2D8CFF" stroke="#241a34" stroke-width="3"/>
+          <rect x="154" y="16" width="60" height="30" rx="8" fill="#FF9F1C" stroke="#241a34" stroke-width="3"/>
+          <rect x="222" y="16" width="60" height="30" rx="8" fill="#FF4E86" stroke="#241a34" stroke-width="3"/>
+          <text x="48" y="37" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="16" fill="#fff">C</text>
+          <text x="116" y="37" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="16" fill="#fff">G</text>
+          <text x="184" y="37" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="16" fill="#fff">Am</text>
+          <text x="252" y="37" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="16" fill="#fff">F</text>
+          <rect x="18" y="58" width="264" height="86" rx="10" fill="#fff" stroke="#241a34" stroke-width="3"/>
+          <g stroke="#efe8f8" stroke-width="1">
+            <line x1="18" y1="80" x2="282" y2="80"/><line x1="18" y1="101" x2="282" y2="101"/><line x1="18" y1="122" x2="282" y2="122"/>
+            <line x1="84" y1="58" x2="84" y2="144"/><line x1="150" y1="58" x2="150" y2="144"/><line x1="216" y1="58" x2="216" y2="144"/>
+          </g>
+          <rect x="30" y="104" width="26" height="14" rx="4" fill="#2BB673" stroke="#241a34" stroke-width="2"/>
+          <rect x="70" y="84" width="40" height="14" rx="4" fill="#7C4DFF" stroke="#241a34" stroke-width="2"/>
+          <rect x="132" y="125" width="26" height="14" rx="4" fill="#7C4DFF" stroke="#241a34" stroke-width="2"/>
+          <rect x="176" y="104" width="26" height="14" rx="4" fill="#2BB673" stroke="#241a34" stroke-width="2"/>
+          <rect x="222" y="84" width="46" height="14" rx="4" fill="#7C4DFF" stroke="#241a34" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="kick">Compose · drag &amp; drop</span>
+        <h3>Song Maker</h3>
+        <p>Drop chords into the bars and draw a melody on the piano roll — the rows in your key are highlighted, so it's hard to hit a wrong note. Pick a key, set the tempo, and play your song back.</p>
+        <span class="go">Start making</span>
+      </div>
+    </a>
+  </div>
+
+  <p class="soon">More makers coming soon.</p>
+
+  <div class="foot">
+    <p><a href="index.html">&larr; williamtroymusic</a></p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -120,10 +120,15 @@
   /* light "worksheet" panel for notation & diagrams */
   .panel{ background:var(--panel); border:2px solid var(--line); border-radius:2px; padding:12px;
     box-shadow: inset 0 0 14px rgba(0,0,0,.14); }
+  .parthead{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .partplay{ font-family:var(--stencil); font-size:.85rem; letter-spacing:.04em; cursor:pointer; color:#211d13;
+    padding:6px 14px 4px; border:2px solid var(--line); background:linear-gradient(180deg,#eec24a,#cd9226); box-shadow:2px 2px 0 rgba(0,0,0,.5); }
+  .partplay:active{ transform:translate(2px,2px); box-shadow:none; }
+  .partplay.on{ color:#f6ece2; background:linear-gradient(180deg,#c1592c,#8f3d1c); border-color:#3a1c0c; }
 
   /* rhythm/slash notation chart (VexFlow) */
-  #chart{ overflow-x:auto; }
-  #chart svg{ display:block; }
+  #chart, #bassChart, #drumChart{ overflow-x:auto; }
+  #chart svg, #bassChart svg, #drumChart svg{ display:block; }
   .vf-play, .vf-play *{ fill:#1F9D55 !important; stroke:#1F9D55 !important; }
 
   .controls{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:18px; }
@@ -193,6 +198,17 @@
   .foot{ margin-top:40px; text-align:center; font-family:var(--stencil); font-size:.95rem; letter-spacing:.05em; color:var(--muted); }
   .foot a{ color:var(--hazard); text-decoration:none; }
   .foot a:hover{ text-decoration:underline; }
+  /* tonality modal */
+  .modal{ position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; background:rgba(8,6,3,.72); }
+  .modal.on{ display:flex; }
+  .modal .box{ background:linear-gradient(180deg,#43463f,#33352e); border:3px solid var(--line); box-shadow:8px 9px 0 rgba(0,0,0,.55);
+    padding:22px 24px; max-width:400px; text-align:center; }
+  .modal h3{ font-family:var(--disp); font-weight:400; text-transform:uppercase; letter-spacing:.02em; font-size:1.4rem; margin:0 0 6px; color:#f1ece1; }
+  .modal p{ color:#cfcabd; font-size:.95rem; margin:0 0 16px; }
+  .modal .opts{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .modal .opts button{ font-family:var(--stencil); font-size:1rem; letter-spacing:.04em; padding:11px 18px 9px; cursor:pointer;
+    color:#f1ece1; border:2px solid var(--line); background:linear-gradient(180deg,#524d40,#3a372f); box-shadow:3px 3px 0 rgba(0,0,0,.5); }
+  .modal .opts button:hover{ color:#211d13; background:linear-gradient(180deg,#eec24a,#cd9226); }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 </style>
 </head>
@@ -205,6 +221,7 @@
     <a href="dojo.html">Dojo</a>
     <a href="resources.html">Resources</a>
     <a href="training.html" class="cur" aria-current="page">Training</a>
+    <a href="create.html">Create</a>
   </nav>
 
   <header class="top">
@@ -223,7 +240,7 @@
     <select id="songSel"></select>
     <label class="loadbtn" title="Import a song from MuseScore">＋ MuseScore XML<input type="file" id="xmlFile" accept=".musicxml,.xml,.mxl" hidden></label>
   </div>
-  <p class="loadhint">Songs load automatically from the <b>songs/</b> folder. Drop a MuseScore export in there (<b>File ▸ Export ▸ MusicXML, Uncompressed .musicxml</b>) with chord symbols and a written rhythm — repeats and 1st/2nd endings are followed. Or use <b>＋ MuseScore XML</b> to try a one-off file.</p>
+  <p class="loadhint">Songs load automatically from the <b>songs/</b> folder. Drop a MuseScore export in there (<b>File ▸ Export ▸ MusicXML, Uncompressed .musicxml</b>) with chord symbols and a written rhythm — add a <b>bass</b> staff and a <b>Drumset</b> staff in the same file to play them along too. Repeats and 1st/2nd endings are followed. Or use <b>＋ MuseScore XML</b> to try a one-off file.</p>
   <div class="songmeta" id="songMeta"></div>
 
   <div class="keyctl">
@@ -232,6 +249,13 @@
     <span class="kn" id="keyNow"></span>
     <button id="keyUp" title="Up a semitone">♯&nbsp;+</button>
     <button id="keyReset" title="Back to the original key">↺ original</button>
+  </div>
+  <div class="keyctl" id="tonalRow" style="display:none">
+    <span class="kl">Tonality</span>
+    <div class="seg" id="tonalSeg" role="group" aria-label="Tonality">
+      <button data-mode="maj"></button>
+      <button data-mode="min"></button>
+    </div>
   </div>
 
   <div class="card">
@@ -243,9 +267,27 @@
     <div class="controls">
       <button id="playBtn">▶ Play</button>
       <span class="tempo">🐢 <input type="range" id="tempo" min="50" max="150" value="88"> 🐇 <b id="bpm">88</b> bpm</span>
+      <label class="toggle" id="bassTog" style="display:none"><input type="checkbox" id="bassCb" checked> bass</label>
+      <label class="toggle" id="drumTog" style="display:none"><input type="checkbox" id="drumCb" checked> drums</label>
       <label class="toggle"><input type="checkbox" id="metro"> click</label>
       <label class="toggle"><input type="checkbox" id="loop" checked> loop</label>
     </div>
+  </div>
+
+  <div class="card" id="bassCard" style="display:none">
+    <span class="rivet tl"></span><span class="rivet tr"></span>
+    <span class="rivet bl"></span><span class="rivet br"></span>
+    <h2>Bass line</h2>
+    <div class="parthead"><span class="sub">As written — for the bass player</span><button class="partplay" id="bassPlay">▶ Play bass</button></div>
+    <div class="panel"><div id="bassChart"></div></div>
+  </div>
+
+  <div class="card" id="drumCard" style="display:none">
+    <span class="rivet tl"></span><span class="rivet tr"></span>
+    <span class="rivet bl"></span><span class="rivet br"></span>
+    <h2>Drum groove</h2>
+    <div class="parthead"><span class="sub">As written — for the drummer</span><button class="partplay" id="drumPlay">▶ Play drums</button></div>
+    <div class="panel"><div id="drumChart"></div></div>
   </div>
 
   <div class="card">
@@ -299,6 +341,14 @@
     <p style="margin:16px 0 0;"><a href="training.html">&larr; Back to Training</a></p>
   </div>
 
+</div>
+
+<div class="modal" id="tonalModal" role="dialog" aria-modal="true" aria-label="Choose tonality">
+  <div class="box">
+    <h3>What key is this?</h3>
+    <p id="tonalModalMsg">This key signature could be either — pick the one that sounds like home.</p>
+    <div class="opts" id="tonalModalBtns"></div>
+  </div>
 </div>
 
 <script>
@@ -418,39 +468,113 @@
   var STEP_PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
   function stepAlterPc(step, alter){ return ((STEP_PC[step]+(alter||0))%12+12)%12; }
   function kindIsMinor(kind){ return /min|dim/i.test(kind||''); }
+  function tonicFromKey(fifths, mode){ return (((7*fifths)+(mode==='min'?9:0))%12+12)%12; }
+  var SECTION_RE=/verse|chorus|bridge|intro|outro|pre-?chorus|post-?chorus|solo|interlude|refrain|hook|instrumental|break|ending|coda|turnaround|riff|vamp|\btag\b|\bpart\b|\bsection\b/i;
   function beatsToToken(beats){
     var tbl=[[4,'w'],[3,'hd'],[2,'h'],[1.5,'qd'],[1,'q'],[0.75,'8d'],[0.5,'8'],[0.375,'16d'],[0.25,'16'],[0.125,'32']];
     var best='q', bd=1e9; tbl.forEach(function(t){ var d=Math.abs(t[0]-beats); if(d<bd){ bd=d; best=t[1]; } });
     return best;
   }
+  // turn a list of note onsets (t, dur, payload) into a bar of notes + rests
+  function pushRests(seq, beats){
+    var vals=[4,3,2,1.5,1,0.75,0.5,0.25], b=beats, guard=0;
+    while(b>0.03 && guard++<32){ var v=null; for(var i=0;i<vals.length;i++){ if(vals[i]<=b+0.01){ v=vals[i]; break; } }
+      if(v==null) break; seq.push({tok:beatsToToken(v), rest:true}); b-=v; }
+  }
+  function seqFromOnsets(onsets, len){
+    onsets=onsets.slice().sort(function(a,b){ return a.t-b.t; });
+    var seq=[], cursor=0;
+    onsets.forEach(function(o){
+      if(o.t > cursor+0.02) pushRests(seq, o.t-cursor);
+      var dur=o.dur||0.25; if(o.t+dur > len+0.02) dur=len-o.t; if(dur<=0.02) dur=0.25;
+      seq.push({tok:beatsToToken(dur), rest:false, o:o}); cursor=o.t+dur;
+    });
+    if(cursor < len-0.02) pushRests(seq, len-cursor);
+    return seq;
+  }
+  function drumSeq(onsets, len){                 // merge simultaneous hits into one notehead group
+    var byT={}, keys=[];
+    onsets.forEach(function(o){ var k=o.t.toFixed(4); if(!byT[k]){ byT[k]={t:o.t, dur:o.dur, gms:[]}; keys.push(k); } byT[k].gms.push(o.gm); byT[k].dur=Math.max(byT[k].dur,o.dur); });
+    return seqFromOnsets(keys.map(function(k){ return byT[k]; }), len);
+  }
+
   var ROMAN=['I','♭II','II','♭III','III','IV','♯IV','V','♭VI','VI','♭VII','VII'];
   function romanNumeral(pc, q, tonicPc){
     var base=ROMAN[((pc-tonicPc)%12+12)%12]; return q==='min' ? base.toLowerCase() : base;
   }
   function xText(parent, sel){ var e=parent&&parent.querySelector(sel); return e?e.textContent.trim():null; }
 
+  function pitchMidi(el){ var p=el.querySelector(':scope > pitch'); if(!p) return null;
+    var step=xText(p,'step'), oct=+xText(p,'octave'), alt=+(xText(p,'alter')||0);
+    return (oct+1)*12 + (STEP_PC[step]||0) + alt; }
+  function drumGm(el, map){ var ins=el.querySelector(':scope > instrument'); var id=ins?ins.getAttribute('id'):null;
+    return (id && map[id]!=null) ? map[id] : 38; }
+  // Walk one part's measures; return per-measure {onsets:[{t,dur,el}], len} with local beat times.
+  function parsePartNotes(partEl){
+    var out=[], divisions=1;
+    [].forEach.call(partEl.querySelectorAll(':scope > measure'), function(mEl){
+      var onsets=[], cursor=0, last=0, maxc=0;
+      [].forEach.call(mEl.children, function(el){
+        var tag=el.tagName;
+        if(tag==='attributes'){ var d=xText(el,'divisions'); if(d!=null) divisions=+d||divisions; }
+        else if(tag==='backup'){ cursor-=(+xText(el,'duration')||0)/divisions; if(cursor<0) cursor=0; }
+        else if(tag==='forward'){ cursor+=(+xText(el,'duration')||0)/divisions; if(cursor>maxc) maxc=cursor; }
+        else if(tag==='note'){
+          if(el.querySelector(':scope > grace')) return;
+          var isChord=!!el.querySelector(':scope > chord');
+          var dur=(+xText(el,'duration')||0)/divisions;
+          var isRest=!!el.querySelector(':scope > rest');
+          if(!isRest) onsets.push({t:isChord?last:cursor, dur:dur, el:el});
+          if(!isChord){ last=cursor; cursor+=dur; if(cursor>maxc) maxc=cursor; }
+        }
+      });
+      out.push({onsets:onsets, len:maxc});
+    });
+    return out;
+  }
+
   function parseMusicXML(xmlText){
     var doc=new DOMParser().parseFromString(xmlText, 'application/xml');
     if(doc.querySelector('parsererror')) throw new Error('that file isn’t readable MusicXML.');
-    var part=doc.querySelector('part'); if(!part) throw new Error('no music part was found in the file.');
+    var musicParts=[].slice.call(doc.querySelectorAll('score-partwise > part'));
+    if(!musicParts.length) musicParts=[].slice.call(doc.querySelectorAll('part'));
+    if(!musicParts.length) throw new Error('no music part was found in the file.');
     var title=xText(doc,'work-title')||xText(doc,'movement-title')||'Untitled';
     var composer=null;
     [].some.call(doc.querySelectorAll('identification creator'), function(c){
       if((c.getAttribute('type')||'')==='composer'){ composer=c.textContent.trim(); return true; } return false; });
 
-    var fifths=0, modeStr='major', kEl=doc.querySelector('attributes key');
+    // part-list metadata: names + drum (unpitched → General MIDI) maps
+    var pinfo={};
+    [].forEach.call(doc.querySelectorAll('part-list > score-part'), function(sp){
+      var dm={}, perc=false;
+      [].forEach.call(sp.querySelectorAll('midi-instrument'), function(mi){
+        var un=xText(mi,'midi-unpitched'); if(un!=null){ dm[mi.getAttribute('id')]=(+un)-1; perc=true; } });
+      pinfo[sp.getAttribute('id')]={ name:(xText(sp,'part-name')||'').toLowerCase(), drumMap:dm, isPerc:perc };
+    });
+    // classify: chords part has the harmony symbols; then a bass part and a drum part
+    var chordsPart=null, bassPart=null, drumPart=null;
+    musicParts.forEach(function(p){ if(!chordsPart && p.querySelector('harmony')) chordsPart=p; });
+    if(!chordsPart) chordsPart=musicParts[0];
+    musicParts.forEach(function(p){ if(p===chordsPart) return;
+      var inf=pinfo[p.getAttribute('id')]||{}, perc=inf.isPerc || /drum|perc/.test(inf.name||'') || !!p.querySelector('note > unpitched');
+      if(perc){ if(!drumPart) drumPart=p; } else if(!bassPart) bassPart=p; });
+    var drumMap=drumPart?((pinfo[drumPart.getAttribute('id')]||{}).drumMap||{}):{};
+
+    // read the key from the CHORD staff (drum staves are keyless and would mask it)
+    var fifths=0, modeStr='', kEl=chordsPart.querySelector('attributes key') || doc.querySelector('attributes key');
     if(kEl){ var f=xText(kEl,'fifths'); if(f!=null) fifths=+f; var md=xText(kEl,'mode'); if(md) modeStr=md.toLowerCase(); }
-    var mode=/minor/.test(modeStr)?'min':'maj';
-    var tonicPc=(((7*fifths)+(mode==='min'?9:0))%12+12)%12;
+    var mode=/minor|dorian|phrygian|aeolian/.test(modeStr)?'min':'maj';
+    var tonicPc=tonicFromKey(fifths, mode);
     var tempo=90, snd=doc.querySelector('sound[tempo]');
     if(snd) tempo=Math.round(+snd.getAttribute('tempo'));
     else { var pm=doc.querySelector('metronome per-minute'); if(pm) tempo=Math.round(+pm.textContent); }
     tempo=Math.min(200,Math.max(40,tempo||90));
 
     var divisions=1, measures=[];
-    [].forEach.call(part.querySelectorAll(':scope > measure'), function(mEl){
+    [].forEach.call(chordsPart.querySelectorAll(':scope > measure'), function(mEl){
       var segs=[], cur=null, curChord=null;
-      var mo={segs:segs, repFwd:false, repBack:false, repTimes:2, endStart:false, endStop:false, endNums:null};
+      var mo={segs:segs, repFwd:false, repBack:false, repTimes:2, endStart:false, endStop:false, endNums:null, section:null, implicit:(mEl.getAttribute('implicit')==='yes')};
       function flush(){ if(cur && cur.r.length) segs.push(cur); cur=null; }
       [].forEach.call(mEl.children, function(el){
         var tag=el.tagName;
@@ -472,6 +596,11 @@
           if(!cur){ if(!curChord) return; cur={chord:curChord, r:[]}; }
           cur.r.push(beatsToToken(dur/divisions)+(isRest?'r':''));
         }
+        else if(tag==='direction'){
+          var rh=el.querySelector('direction-type rehearsal'), wd=el.querySelector('direction-type words');
+          var txt=rh?rh.textContent.trim():(wd?wd.textContent.trim():'');
+          if(txt && !mo.section && (rh || SECTION_RE.test(txt))) mo.section=txt;
+        }
         else if(tag==='barline'){
           var rep=el.querySelector('repeat');
           if(rep){ var dir=rep.getAttribute('direction');
@@ -487,15 +616,59 @@
       measures.push(mo);
     });
 
-    var order=expandRepeats(measures), bars=[];
-    order.forEach(function(mi){ measures[mi].segs.forEach(function(seg){
-      var c=seg.chord, name=SHARP[c.pc]+(c.min?'m':'')+(c.bass!=null?'/'+SHARP[c.bass]:'');
-      bars.push({ c:name, rn:romanNumeral(c.pc, c.min?'min':'maj', tonicPc), r:seg.r.slice() });
-    }); });
+    var chordN=parsePartNotes(chordsPart);
+    var bassN=bassPart?parsePartNotes(bassPart):null;
+    var drumN=drumPart?parsePartNotes(drumPart):null;
+
+    var order=expandRepeats(measures);
+    function mlenOf(mi){ return (chordN[mi] && chordN[mi].len) ? chordN[mi].len : 0; }
+    var fullBeats=0; measures.forEach(function(mo,mi){ if(!mo.implicit) fullBeats=Math.max(fullBeats, mlenOf(mi)); }); if(!fullBeats) fullBeats=4;
+
+    // ---- DISPLAY: one entry per SOURCE measure (repeats kept as markers, not written out) ----
+    var dispMeasures=measures.map(function(mo, mi){
+      return {
+        cells: mo.segs.map(function(seg){ var c=seg.chord;
+          return { pc:c.pc, q:c.min?'min':'maj', bass:(c.bass!=null && c.bass!==c.pc)?c.bass:null, r:seg.r.slice() }; }),
+        repStart:mo.repFwd, repEnd:mo.repBack, repTimes:mo.repTimes||2,
+        voltaNums:(mo.endStart?mo.endNums:null), voltaEnd:mo.endStop, section:mo.section,
+        len:mlenOf(mi), pickup:mo.implicit
+      };
+    });
+    var dispBassM = bassPart ? measures.map(function(mo,mi){ var ons=[];
+      if(bassN && bassN[mi]) bassN[mi].onsets.forEach(function(o){ var m=pitchMidi(o.el); if(m!=null) ons.push({t:o.t,dur:o.dur,midi:m}); });
+      return seqFromOnsets(ons, mlenOf(mi)); }) : null;
+    var dispDrumM = drumPart ? measures.map(function(mo,mi){ var ons=[];
+      if(drumN && drumN[mi]) drumN[mi].onsets.forEach(function(o){ ons.push({t:o.t,dur:o.dur,gm:drumGm(o.el,drumMap)}); });
+      return drumSeq(ons, mlenOf(mi)); }) : null;
+
+    // ---- compact chord list (one pass) for shapes/theory dedup ----
+    var bars=[];
+    measures.forEach(function(mo){ mo.segs.forEach(function(seg){ var c=seg.chord;
+      bars.push({ c:SHARP[c.pc]+(c.min?'m':'')+(c.bass!=null?'/'+SHARP[c.bass]:''), rn:romanNumeral(c.pc,c.min?'min':'maj',tonicPc), r:seg.r.slice() }); }); });
     if(!bars.length) throw new Error('no chord symbols found. In MuseScore add them with Add ▸ Text ▸ Chord Symbol.');
 
+    // ---- PLAYBACK: expanded over the repeat order (chords carry mi+k to map back to the written bar) ----
+    var chordEv=[], bassEv=[], drumEv=[], cum=0;
+    order.forEach(function(mi){
+      var mstart=cum, mlen=mlenOf(mi), tcell=mstart, k=0;
+      measures[mi].segs.forEach(function(seg){ var c=seg.chord;
+        seg.r.forEach(function(tok){
+          var rest=/r$/.test(tok), beats=durBeats(tok.replace(/[dr]/g,''), /d/.test(tok));
+          chordEv.push({ t:tcell, beats:beats, rest:rest, pc:c.pc, q:c.min?'min':'maj',
+            bass:(c.bass!=null && c.bass!==c.pc)?c.bass:null, mi:mi, k:k });
+          tcell+=beats; k++;
+        });
+      });
+      if(bassN && bassN[mi]) bassN[mi].onsets.forEach(function(o){ var m=pitchMidi(o.el); if(m!=null) bassEv.push({t:mstart+o.t, midi:m, dur:o.dur}); });
+      if(drumN && drumN[mi]) drumN[mi].onsets.forEach(function(o){ drumEv.push({t:mstart+o.t, gm:drumGm(o.el, drumMap)}); });
+      cum += mlen;
+    });
+
+    var extras=[]; if(bassPart) extras.push('bass'); if(drumPart) extras.push('drums');
     return { id:'xml-'+Date.now(), title:title, artist:composer||'MusicXML', tonicPc:tonicPc, mode:mode,
-      tempo:tempo, rhythm:'Imported from MuseScore', bars:bars, scales:defaultScales(mode), tips:defaultTips(mode) };
+      tempo:tempo, rhythm:'Imported from MuseScore'+(extras.length?' · '+extras.join(' · '):''),
+      bars:bars, measures:dispMeasures, fullBeats:fullBeats, scales:defaultScales(mode), tips:defaultTips(mode), fifths:fifths, modeSpecified:/major|minor|dorian|phrygian|aeolian/.test(modeStr),
+      play:{ chords:chordEv, bass:bassEv, drums:drumEv, bassM:dispBassM, drumM:dispDrumM, hasBass:!!bassPart, hasDrums:!!drumPart } };
   }
 
   // Expand forward/backward repeats and 1st/2nd endings into a linear measure order.
@@ -537,24 +710,75 @@
   var actx=null;
   function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
   function freq(m){ return 440*Math.pow(2,(m-69)/12); }
-  function tone(m, at, dur, gain){
-    var a=ac(), t=a.currentTime+at, o=a.createOscillator(), g=a.createGain();
-    o.type='triangle'; o.frequency.value=freq(m);
-    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(gain||0.16,t+0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+0.03);
+  function toneAt(m, when, dur, gain, type){
+    var a=ac(), o=a.createOscillator(), g=a.createGain();
+    o.type=type||'triangle'; o.frequency.value=freq(m);
+    g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(gain||0.16,when+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,when+dur);
+    o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+dur+0.03);
   }
+  function tone(m, at, dur, gain){ toneAt(m, ac().currentTime+(at||0), dur, gain); }
   function chordMidis(rootPc,q,bassPc){
     var r=48+rootPc, third=r+(q==='min'?3:4), fifth=r+7;
     var arr=[r, third, fifth, r+12];
     if(bassPc!=null) arr.unshift(36+bassPc);
     return arr;
   }
-  function strum(rootPc,q,bassPc, at){ chordMidis(rootPc,q,bassPc).forEach(function(m,i){ tone(m, (at||0)+i*0.018, 0.9); }); }
-  function click(at){ var a=ac(),t=a.currentTime+(at||0),o=a.createOscillator(),g=a.createGain();
-    o.type='square'; o.frequency.value=1600; g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(0.14,t+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
-    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.08); }
+  function strumAt(rootPc,q,bassPc, when){ chordMidis(rootPc,q,bassPc).forEach(function(m,i){ toneAt(m, when+i*0.018, 0.9, 0.15); }); }
+  function strum(rootPc,q,bassPc, at){ strumAt(rootPc,q,bassPc, ac().currentTime+(at||0)); }
+
+  // authored bass line
+  function bassAt(midi, when, dur){
+    var a=ac(), o=a.createOscillator(), g=a.createGain(), lp=a.createBiquadFilter();
+    o.type='triangle'; o.frequency.value=freq(midi);
+    lp.type='lowpass'; lp.frequency.value=900;
+    var d=Math.min(Math.max((dur||0.5)*0.92, 0.12), 1.4);
+    g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(0.32,when+0.014);
+    g.gain.exponentialRampToValueAtTime(0.0001,when+d);
+    o.connect(lp); lp.connect(g); g.connect(a.destination); o.start(when); o.stop(when+d+0.03);
+  }
+  // synthesized drum kit (General MIDI note → sound)
+  var noiseBuf=null;
+  function noiseSrc(){ var a=ac(); if(!noiseBuf){ var n=Math.floor(a.sampleRate*0.7); noiseBuf=a.createBuffer(1,n,a.sampleRate);
+      var d=noiseBuf.getChannelData(0); for(var i=0;i<n;i++) d[i]=Math.random()*2-1; }
+    var s=a.createBufferSource(); s.buffer=noiseBuf; return s; }
+  function drumAt(gm, when){
+    var a=ac();
+    function kick(){ var o=a.createOscillator(), g=a.createGain(); o.type='sine';
+      o.frequency.setValueAtTime(150,when); o.frequency.exponentialRampToValueAtTime(50,when+0.11);
+      g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(0.95,when+0.005); g.gain.exponentialRampToValueAtTime(0.0001,when+0.17);
+      o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+0.2); }
+    function snare(){ var s=noiseSrc(), g=a.createGain(), hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1200;
+      g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(0.5,when+0.004); g.gain.exponentialRampToValueAtTime(0.0001,when+0.16);
+      s.connect(hp); hp.connect(g); g.connect(a.destination); s.start(when); s.stop(when+0.18);
+      var o=a.createOscillator(), g2=a.createGain(); o.type='triangle'; o.frequency.value=185;
+      g2.gain.setValueAtTime(0.0001,when); g2.gain.exponentialRampToValueAtTime(0.22,when+0.004); g2.gain.exponentialRampToValueAtTime(0.0001,when+0.11);
+      o.connect(g2); g2.connect(a.destination); o.start(when); o.stop(when+0.13); }
+    function hat(open){ var s=noiseSrc(), g=a.createGain(), hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=7000;
+      var d=open?0.3:0.05; g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(0.22,when+0.002); g.gain.exponentialRampToValueAtTime(0.0001,when+d);
+      s.connect(hp); hp.connect(g); g.connect(a.destination); s.start(when); s.stop(when+d+0.02); }
+    function cymbal(){ var s=noiseSrc(), g=a.createGain(), hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=5000;
+      g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(0.3,when+0.003); g.gain.exponentialRampToValueAtTime(0.0001,when+0.6);
+      s.connect(hp); hp.connect(g); g.connect(a.destination); s.start(when); s.stop(when+0.65); }
+    function tom(f){ var o=a.createOscillator(), g=a.createGain(); o.type='sine';
+      o.frequency.setValueAtTime(f,when); o.frequency.exponentialRampToValueAtTime(f*0.6,when+0.2);
+      g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(0.5,when+0.005); g.gain.exponentialRampToValueAtTime(0.0001,when+0.25);
+      o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+0.3); }
+    if(gm===35||gm===36) kick();
+    else if(gm===38||gm===40||gm===37||gm===39) snare();
+    else if(gm===42||gm===44) hat(false);
+    else if(gm===46) hat(true);
+    else if(gm===49||gm===52||gm===55||gm===57) cymbal();
+    else if(gm===51||gm===53||gm===59) hat(true);
+    else if(gm===41||gm===43) tom(120);
+    else if(gm===45||gm===47) tom(180);
+    else if(gm===48||gm===50) tom(250);
+    else hat(false);
+  }
+  function clickAt(when){ var a=ac(),o=a.createOscillator(),g=a.createGain();
+    o.type='square'; o.frequency.value=1600; g.gain.setValueAtTime(0.0001,when);
+    g.gain.exponentialRampToValueAtTime(0.12,when+0.004); g.gain.exponentialRampToValueAtTime(0.0001,when+0.06);
+    o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+0.08); }
 
   // ---- chord diagrams ----
   function ukeDiagram(frets){
@@ -689,7 +913,7 @@
 
   // ---- state + render ----
   var song=null, inst='uke', scaleIdx=0, off=0, slashMode=true, scaleView='piano';
-  var events=[], playing=false, pTimer=null, beatTimer=null, pIdx=0;
+  var events=[], playing=false, schedInt=null, endTimer=null, hiTimers=[], sched=[], songLen=0, schedIdx=0, loopCount=0, anchorT=0, anchorBeat=0, spb=0.5, bassOn=true, drumsOn=true, soloMode=null;
 
   function keyInfo(){ return KEYINFO[song.mode][((song.tonicPc+off)%12+12)%12]; }
   function pref(){ return keyInfo().pref; }
@@ -702,44 +926,137 @@
       var isSlash = c.bass!=null && c.bass!==c.pc;
       var bass = (slashMode && isSlash) ? ((c.bass+off)%12+12)%12 : null;
       var third=(pc+(c.q==='min'?3:4))%12, fifth=(pc+7)%12;
-      return { pc:pc, q:c.q, bass:bass, slash:isSlash, rn:bar.rn, r:bar.r,
+      return { pc:pc, q:c.q, bass:bass, slash:isSlash, rn:romanNumeral(c.pc, c.q, ((song.tonicPc%12)+12)%12), r:bar.r,
         name: spell(pc,p)+(c.q==='min'?'m':'')+(bass!=null?'/'+spell(bass,p):''),
         tones: spell(pc,p)+' · '+spell(third,p)+' · '+spell(fifth,p) };
     });
   }
 
   function durBeats(val, dotted){ var b={w:4,h:2,q:1,'8':0.5,'16':0.25,'32':0.125}[val]||1; return dotted?b*1.5:b; }
+  function chordName(pc,q,bass){ var p=pref();
+    return spell(((pc+off)%12+12)%12,p)+(q==='min'?'m':'')+((slashMode&&bass!=null)?'/'+spell(((bass+off)%12+12)%12,p):''); }
+  // shared: draw one row-wrapped system of measures with repeat barlines/voltas; onNotes(measure) supplies its notes
+  function drawSystem(host, M, opts, onNotes){
+    host.innerHTML=''; if(!window.Vex || !M.length) return null;
+    var VF=Vex.Flow, perRow=4, lead=opts.clef?26:0, secH=opts.sections?22:0;
+    var avail=host.clientWidth||760, hasPickup=M.some(function(m){return m.pickup;});
+    var fullW=Math.max(96, Math.floor((avail-4-lead)/(perRow+(hasPickup?0.45:0)))), rowH=opts.rowH, top=opts.top;
+    var fullBeats=(song&&song.fullBeats)||4;
+    // lay out: new row per section, else wrap every perRow *full* bars; a pickup bar is narrow and doesn't count
+    var row=0, contentCount=0;
+    M.forEach(function(m,i){
+      if(opts.sections && m.section && i>0){ row++; contentCount=0; }
+      else if(contentCount>=perRow){ row++; contentCount=0; }
+      m.__r=row;
+      m.__w = m.pickup ? Math.max(Math.round(fullW*Math.min(1,(m.len||fullBeats)/fullBeats)), Math.round(fullW*0.34)) : fullW;
+      if(!m.pickup) contentCount++;
+    });
+    var nRows=row+1, rowLabel={}, rowX={};
+    M.forEach(function(m){ if(rowX[m.__r]==null){ rowX[m.__r]=2; m.__first=true; } else m.__first=false;
+      m.__wFull=m.__w+(opts.clef&&m.__first?lead:0); m.__x=rowX[m.__r]; rowX[m.__r]+=m.__wFull; });
+    if(opts.sections) M.forEach(function(m){ if(m.__first && m.section) rowLabel[m.__r]=m.section; });
+    var rowY=[], y=top; for(var rr=0; rr<nRows; rr++){ if(rowLabel[rr]) y+=secH; rowY[rr]=y; y+=rowH; }
+    var totalW=4; for(var rr2 in rowX) totalW=Math.max(totalW, rowX[rr2]+4);
+    var totalH=y+4;
+    var r=new VF.Renderer(host, VF.Renderer.Backends.SVG); r.resize(totalW, totalH); var ctx=r.getContext();
+    var svg=host.querySelector('svg');
+    M.forEach(function(m, mi){
+      var first=m.__first, x=m.__x, yTop=rowY[m.__r], w=m.__wFull;
+      if(first && rowLabel[m.__r] && svg){ var lt=el('text'); lt.setAttribute('x',x+1); lt.setAttribute('y',yTop-secH+14);
+        lt.setAttribute('font-family',"'Staatliches',sans-serif"); lt.setAttribute('font-size','14'); lt.setAttribute('letter-spacing','.04em'); lt.setAttribute('fill','#a8542a'); lt.textContent=m.section.toUpperCase(); svg.appendChild(lt); }
+      var st=new VF.Stave(x, yTop, w);
+      if(opts.single) st.setConfigForLines([{visible:false},{visible:false},{visible:true},{visible:false},{visible:false}]);
+      if(opts.clef && first) st.addClef(opts.clef);
+      if(m.repStart) st.setBegBarType(VF.Barline.type.REPEAT_BEGIN);
+      if(m.repEnd) st.setEndBarType(VF.Barline.type.REPEAT_END); else if(mi===M.length-1) st.setEndBarType(VF.Barline.type.END);
+      try{ if(VF.Volta && st.setVolta){
+        if(m.voltaNums && m.voltaNums.length) st.setVolta(m.voltaEnd?VF.Volta.type.BEGIN_END:VF.Volta.type.BEGIN, m.voltaNums.join(','), -4);
+        else if(m.voltaEnd) st.setVolta(VF.Volta.type.END, '', -4);
+      } }catch(e){}
+      st.setContext(ctx).draw();
+      var notes=onNotes(m, mi) || [];
+      var beams=VF.Beam.generateBeams(notes,{groups:[new VF.Fraction(1,4)], stem_direction:1});
+      var nb=notes.reduce(function(s,nn){ return s + (nn.__b||1); },0);
+      var voice=new VF.Voice({num_beats:Math.max(1,Math.round(nb)), beat_value:4}); voice.setStrict(false); voice.addTickables(notes);
+      new VF.Formatter().joinVoices([voice]).format([voice], w-(opts.clef&&first?lead+10:16)-(m.repEnd?10:0));
+      voice.draw(ctx,st); beams.forEach(function(b){ b.setContext(ctx).draw(); });
+      if(m.repEnd && m.repTimes>2 && svg){ var t=el('text'); t.setAttribute('x',x+w-6); t.setAttribute('y',yTop-4); t.setAttribute('text-anchor','end');
+        t.setAttribute('font-family',"'Oswald',sans-serif"); t.setAttribute('font-weight','700'); t.setAttribute('font-size','11'); t.setAttribute('fill','#8a3a1a'); t.textContent='×'+m.repTimes; svg.appendChild(t); }
+    });
+    return true;
+  }
   function renderChart(){
     document.getElementById('rhythmLabel').textContent=song.rhythm;
-    var host=document.getElementById('chart'); host.innerHTML=''; events=[];
-    if(!window.Vex){ host.textContent='notation could not load'; return; }
-    var VF=Vex.Flow, n=song.bars.length;
-    var avail=host.clientWidth||620, barW=Math.max(n>6?128:168, Math.floor((avail-4)/n)), totalW=barW*n+4;
-    var r=new VF.Renderer(host, VF.Renderer.Backends.SVG); r.resize(totalW,150); var ctx=r.getContext();
-    var P=prog(), x=2;
-    P.forEach(function(bar,bi){
-      var st=new VF.Stave(x,34,barW);
-      st.setConfigForLines([{visible:false},{visible:false},{visible:true},{visible:false},{visible:false}]);
-      if(bi===n-1) st.setEndBarType(VF.Barline.type.END);
-      st.setContext(ctx).draw();
-      var meta=[];
-      var vfNotes=bar.r.map(function(t){
-        var rest=/r$/.test(t), dotted=/d/.test(t), val=t.replace(/[dr]/g,'');
-        var note=new VF.StaveNote({keys:['b/4'], duration:val+(rest?'r':''), type:rest?'r':'s', stem_direction:1});
-        if(dotted) VF.Dot.buildAndAttach([note],{all:true});
-        meta.push({rest:rest, beats:durBeats(val,dotted), pc:bar.pc, q:bar.q, bass:bar.bass, barIdx:bi});
-        return note;
-      });
-      try{ var cs=new VF.ChordSymbol(); if(cs.setReportWidth) cs.setReportWidth(false); cs.addText(bar.name); vfNotes[0].addModifier(cs,0); }catch(e){}
-      var beams=VF.Beam.generateBeams(vfNotes,{groups:[new VF.Fraction(1,4)], stem_direction:1});
-      var nb=meta.reduce(function(s,m){ return s+m.beats; },0);
-      var voice=new VF.Voice({num_beats:Math.max(1,Math.round(nb)), beat_value:4}); voice.setStrict(false); voice.addTickables(vfNotes);
-      new VF.Formatter().joinVoices([voice]).format([voice], barW-24);
-      voice.draw(ctx,st); beams.forEach(function(b){ b.setContext(ctx).draw(); });
-      meta.forEach(function(m){ events.push(m); });
-      x+=barW;
+    var host=document.getElementById('chart'); events=[];
+    var VF=window.Vex&&Vex.Flow;
+    if(!VF){ host.textContent='notation could not load'; return; }
+    var lastName=null;
+    // show measures that carry chords (or a repeat/volta marker); skip empty melody-only bars
+    var DM=[]; (song.measures||[]).forEach(function(m, mi){
+      if(m.cells.length || m.repStart || m.repEnd || (m.voltaNums&&m.voltaNums.length) || m.voltaEnd || m.section){
+        var mm={}; for(var kk in m) mm[kk]=m[kk]; mm.mi=mi; DM.push(mm); } });
+    drawSystem(host, DM, {single:true, rowH:104, top:30, sections:true}, function(m){
+      return [].concat.apply([], m.cells.map(function(cell){
+        return cell.r.map(function(tok, ci){
+          var rest=/r$/.test(tok), dotted=/d/.test(tok), val=tok.replace(/[dr]/g,'');
+          var note=new VF.StaveNote({keys:['b/4'], duration:val+(rest?'r':''), type:rest?'r':'s', stem_direction:1});
+          if(dotted) VF.Dot.buildAndAttach([note],{all:true});
+          note.__b=durBeats(val,dotted);
+          if(ci===0 && !rest){ var nm=chordName(cell.pc,cell.q,cell.bass);
+            if(nm!==lastName){ try{ var cs=new VF.ChordSymbol(); if(cs.setReportWidth) cs.setReportWidth(false); cs.addText(nm); note.addModifier(cs,0); }catch(e){} lastName=nm; } }
+          return note;
+        });
+      }));
     });
-    var groups=host.querySelectorAll('.vf-stavenote'); events.forEach(function(e,i){ e.el=groups[i]; });
+    // map playback (expanded) chord events onto the written note elements, per source measure
+    var byMi={}; var allEls=host.querySelectorAll('.vf-stavenote'), gi=0;
+    DM.forEach(function(m){ var cnt=0; m.cells.forEach(function(c){ cnt+=c.r.length; });
+      byMi[m.mi]=[]; for(var j=0;j<cnt;j++) byMi[m.mi].push(allEls[gi++]); });
+    events=(song.play.chords||[]).map(function(e){ return { t:e.t, beats:e.beats, rest:e.rest, pc:e.pc, q:e.q, bass:e.bass,
+      el:(byMi[e.mi]?byMi[e.mi][e.k]:null) }; });
+  }
+  // ---- bass / drum notation staves ----
+  var VNAMES=['c','c#','d','d#','e','f','f#','g','g#','a','a#','b'];
+  function midiKey(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1; return VNAMES[pc]+'/'+oct; }
+  function drumKey(gm){
+    if(gm===35||gm===36) return 'f/4';                 // kick
+    if(gm===37||gm===38||gm===39||gm===40) return 'c/5'; // snare
+    if(gm===42||gm===44||gm===46) return 'g/5/x2';      // hi-hat
+    if(gm===51||gm===53||gm===59) return 'f/5/x2';      // ride
+    if(gm===49||gm===52||gm===55||gm===57) return 'a/5/x2'; // crash
+    if(gm===41||gm===43) return 'g/4';                  // low tom
+    if(gm===45||gm===47) return 'e/5';                  // mid tom
+    if(gm===48||gm===50) return 'f/5';                  // high tom
+    return 'c/5';
+  }
+  function signedOff(){ return off>6 ? off-12 : off; }
+  function renderNotationRow(hostId, mseqByMeasure, clef){
+    var host=document.getElementById(hostId); if(!host) return;
+    if(!window.Vex || !mseqByMeasure || !mseqByMeasure.length){ host.innerHTML=''; return; }
+    var VF=Vex.Flow, isPerc=(clef==='percussion'), sOff=signedOff();
+    // attach repeat markers (shared with the chord measures) to each bar's sequence
+    var M=(song.measures||[]).map(function(mm, mi){
+      return { repStart:mm.repStart, repEnd:mm.repEnd, repTimes:mm.repTimes, voltaNums:mm.voltaNums, voltaEnd:mm.voltaEnd,
+        section:mm.section, pickup:mm.pickup, len:mm.len, seq:(mseqByMeasure[mi]||[]) };
+    });
+    // drop empty (all-rest) bars — keep any that carry a chord loop's structure
+    M=M.filter(function(m){ return m.seq.some(function(it){ return !it.rest; }) || m.repStart || m.repEnd || (m.voltaNums&&m.voltaNums.length) || m.voltaEnd || m.section; });
+    if(!M.length) M=[{seq:[], repStart:false, repEnd:false}];
+    drawSystem(host, M, {clef:clef, rowH:isPerc?80:88, top:8, sections:true}, function(m){
+      return (m.seq||[]).map(function(it){
+        var val=it.tok.replace(/d/g,''), dotted=/d/.test(it.tok), note;
+        if(it.rest){ note=new VF.StaveNote({keys:[isPerc?'c/5':'d/3'], duration:val+'r'}); }
+        else { var keys = isPerc ? it.o.gms.map(drumKey).filter(function(v,i,a){return a.indexOf(v)===i;}) : [midiKey(it.o.midi+sOff)];
+          if(!keys.length) keys=[isPerc?'c/5':'c/3'];
+          note=new VF.StaveNote({keys:keys, duration:val, stem_direction:1, clef:isPerc?undefined:'bass'}); }
+        if(dotted) VF.Dot.buildAndAttach([note],{all:true});
+        note.__b=durBeats(val,dotted); return note;
+      });
+    });
+  }
+  function renderParts(){
+    if(song.play && song.play.hasBass) renderNotationRow('bassChart', song.play.bassM, 'bass');
+    if(song.play && song.play.hasDrums) renderNotationRow('drumChart', song.play.drumM, 'percussion');
   }
   function renderShapes(){
     var box=document.getElementById('shapes'); box.innerHTML='';
@@ -795,29 +1112,88 @@
     else scaleKeyboard(pcs, root);
   }
 
-  // ---- playback ----
+  // ---- tonality (major vs relative minor from the key signature) ----
+  function keyNameFor(fifths, mode){ return KEYINFO[mode][tonicFromKey(fifths, mode)].name; }
+  function applyTonality(s, mode){ s.mode=mode; s.tonicPc=tonicFromKey(s.fifths||0, mode); s.scales=defaultScales(mode); s.tips=defaultTips(mode); }
+  function setTonality(mode){ if(!song || song.fifths==null || mode===song.mode) return;
+    applyTonality(song, mode); try{ localStorage.setItem('tonality:'+song.title, mode); }catch(e){} renderAll(); }
+  function askTonality(fifths){
+    return new Promise(function(resolve){
+      var modal=document.getElementById('tonalModal'), btns=document.getElementById('tonalModalBtns'); btns.innerHTML='';
+      [['maj',keyNameFor(fifths,'maj')],['min',keyNameFor(fifths,'min')]].forEach(function(o){
+        var b=document.createElement('button'); b.textContent=o[1];
+        b.addEventListener('click', function(){ modal.classList.remove('on'); resolve(o[0]); }); btns.appendChild(b); });
+      modal.classList.add('on');
+    });
+  }
+  [].forEach.call(document.querySelectorAll('#tonalSeg button'), function(b){ b.addEventListener('click', function(){ setTonality(b.dataset.mode); }); });
+
+  // ---- playback: lookahead scheduler (chords + bass + drums + click, in sync) ----
   var playBtn=document.getElementById('playBtn'), tempo=document.getElementById('tempo'), bpm=document.getElementById('bpm');
   var metro=document.getElementById('metro'), loopCb=document.getElementById('loop');
   function secPerBeat(){ return 60/(+tempo.value); }
-  function clearHi(){ events.forEach(function(e){ if(e.el) e.el.classList.remove('vf-play'); }); }
-  function pstep(){
-    clearHi();
-    var e=events[pIdx];
-    if(e && e.el) e.el.classList.add('vf-play');
-    if(e && !e.rest) strum(e.pc, e.q, e.bass);
-    var wait=(e?e.beats:1)*secPerBeat()*1000;
-    pTimer=setTimeout(function(){
-      pIdx++;
-      if(pIdx>=events.length){ if(loopCb.checked){ pIdx=0; } else { stop(); return; } }
-      pstep();
-    }, wait);
+  function clearHi(){ for(var i=0;i<events.length;i++){ if(events[i].el) events[i].el.classList.remove('vf-play'); } }
+  function buildSched(){
+    sched=[]; songLen=0;
+    // song length = the longest part (chords may be shorter than a fully-written bass/drum part)
+    events.forEach(function(e){ songLen=Math.max(songLen, e.t+e.beats); });
+    if(song.play){
+      (song.play.bass||[]).forEach(function(b){ songLen=Math.max(songLen, b.t+(b.dur||0.5)); });
+      (song.play.drums||[]).forEach(function(d){ songLen=Math.max(songLen, d.t+0.5); });
+    }
+    if(!soloMode) events.forEach(function(e){ sched.push({t:e.t, type:'chord', e:e}); });
+    if(song.play){
+      if(!soloMode || soloMode==='bass') (song.play.bass||[]).forEach(function(b){ sched.push({t:b.t, type:'bass', midi:b.midi+signedOff(), dur:b.dur}); });
+      if(!soloMode || soloMode==='drums') (song.play.drums||[]).forEach(function(d){ sched.push({t:d.t, type:'drum', gm:d.gm}); });
+    }
+    var L=Math.max(1, Math.round(songLen)); for(var bt=0; bt<L; bt++) sched.push({t:bt, type:'click'});
+    sched.sort(function(a,b){ return a.t-b.t; });
   }
-  function startBeat(){ if(beatTimer){ clearInterval(beatTimer); beatTimer=null; } if(!metro.checked) return; click(); beatTimer=setInterval(click, secPerBeat()*1000); }
-  function start(){ if(playing||!events.length) return; ac(); playing=true; pIdx=0; playBtn.textContent='■ Stop'; playBtn.classList.add('on'); pstep(); startBeat(); }
-  function stop(){ playing=false; clearTimeout(pTimer); if(beatTimer){ clearInterval(beatTimer); beatTimer=null; } playBtn.textContent='▶ Play'; playBtn.classList.remove('on'); clearHi(); }
-  playBtn.addEventListener('click', function(){ playing?stop():start(); });
-  tempo.addEventListener('input', function(){ bpm.textContent=tempo.value; if(playing) startBeat(); });
-  metro.addEventListener('change', function(){ if(playing) startBeat(); });
+  function fireEvent(ev, when, now){
+    if(ev.type==='chord'){
+      var e=ev.e, delay=Math.max(0,(when-now))*1000;
+      hiTimers.push(setTimeout(function(){ if(!playing) return; clearHi(); if(e.el) e.el.classList.add('vf-play'); }, delay));
+      if(!e.rest){ var pc=((e.pc+off)%12+12)%12, bass=(slashMode && e.bass!=null)?((e.bass+off)%12+12)%12:null; strumAt(pc, e.q, bass, when); }
+    }
+    else if(ev.type==='bass'){ if(soloMode || bassOn) bassAt(ev.midi, when, ev.dur); }
+    else if(ev.type==='drum'){ if(soloMode || drumsOn) drumAt(ev.gm, when); }
+    else if(ev.type==='click'){ if(metro.checked) clickAt(when); }
+  }
+  function schedTick(){
+    if(!playing) return;
+    var now=ac().currentTime, horizon=now+0.18;
+    while(true){
+      if(schedIdx>=sched.length){
+        if(loopCb.checked){ loopCount++; schedIdx=0; }
+        else { var endWhen=anchorT+((loopCount*songLen+songLen)-anchorBeat)*spb;
+          if(schedInt){ clearInterval(schedInt); schedInt=null; }
+          endTimer=setTimeout(stop, Math.max(0,(endWhen-now))*1000+250); return; }
+      }
+      var ev=sched[schedIdx], absBeat=loopCount*songLen+ev.t, when=anchorT+(absBeat-anchorBeat)*spb;
+      if(when>horizon) break;
+      fireEvent(ev, when, now); schedIdx++;
+    }
+  }
+  var bassPlay=document.getElementById('bassPlay'), drumPlay=document.getElementById('drumPlay');
+  function updatePlay(){
+    var full=playing && !soloMode;
+    playBtn.textContent = full?'■ Stop':'▶ Play'; playBtn.classList.toggle('on', full);
+    if(bassPlay){ var b=playing&&soloMode==='bass'; bassPlay.textContent=b?'■ Stop':'▶ Play bass'; bassPlay.classList.toggle('on', b); }
+    if(drumPlay){ var d=playing&&soloMode==='drums'; drumPlay.textContent=d?'■ Stop':'▶ Play drums'; drumPlay.classList.toggle('on', d); }
+  }
+  function start(only){ if(!events.length) return; if(playing) stop(); ac(); soloMode=only||null; buildSched(); if(!sched.length){ soloMode=null; return; }
+    playing=true; spb=secPerBeat(); anchorT=ac().currentTime+0.12; anchorBeat=0; schedIdx=0; loopCount=0;
+    updatePlay(); schedInt=setInterval(schedTick,25); schedTick();
+  }
+  function stop(){ playing=false; soloMode=null; if(schedInt){ clearInterval(schedInt); schedInt=null; } if(endTimer){ clearTimeout(endTimer); endTimer=null; }
+    hiTimers.forEach(function(t){ clearTimeout(t); }); hiTimers=[]; clearHi(); updatePlay(); }
+  playBtn.addEventListener('click', function(){ (playing && !soloMode) ? stop() : start(null); });
+  if(bassPlay) bassPlay.addEventListener('click', function(){ (playing && soloMode==='bass') ? stop() : start('bass'); });
+  if(drumPlay) drumPlay.addEventListener('click', function(){ (playing && soloMode==='drums') ? stop() : start('drums'); });
+  tempo.addEventListener('input', function(){ bpm.textContent=tempo.value;
+    if(playing){ var now=ac().currentTime; anchorBeat=anchorBeat+(now-anchorT)/spb; anchorT=now; spb=secPerBeat(); } });
+  document.getElementById('bassCb').addEventListener('change', function(){ bassOn=this.checked; });
+  document.getElementById('drumCb').addEventListener('change', function(){ drumsOn=this.checked; });
 
   // ---- instrument toggle ----
   [].forEach.call(document.querySelectorAll('#instSeg button'), function(b){ b.addEventListener('click', function(){
@@ -831,15 +1207,37 @@
   var sel=document.getElementById('songSel');
   SONGS.forEach(function(s,i){ var o=document.createElement('option'); o.value=i; o.textContent=s.title+' — '+s.artist; sel.appendChild(o); });
   function renderAll(){
-    renderChart(); renderShapes(); renderTheory();
+    document.getElementById('bassTog').style.display = (song.play && song.play.hasBass) ? '' : 'none';
+    document.getElementById('drumTog').style.display = (song.play && song.play.hasDrums) ? '' : 'none';
+    document.getElementById('bassCard').style.display = (song.play && song.play.hasBass) ? '' : 'none';
+    document.getElementById('drumCard').style.display = (song.play && song.play.hasDrums) ? '' : 'none';
+    renderChart(); renderParts(); renderShapes(); renderTheory(); updatePlay();
     document.getElementById('keyNow').textContent=keyInfo().name;
     var orig=KEYINFO[song.mode][song.tonicPc].name;
     document.getElementById('songMeta').innerHTML='~'+song.tempo+' bpm'+(off!==0?' · originally '+orig:'');
     document.getElementById('keyReset').style.visibility = off!==0 ? 'visible':'hidden';
     document.getElementById('slashRow').style.display = hasSlash() ? '' : 'none';
     [].forEach.call(document.querySelectorAll('#slashSeg button'), function(b){ b.classList.toggle('on', (b.dataset.slash==='1')===slashMode); });
+    var showTonal = song.fifths!=null;
+    document.getElementById('tonalRow').style.display = showTonal ? '' : 'none';
+    if(showTonal){ var tb=document.querySelectorAll('#tonalSeg button');
+      tb[0].textContent=keyNameFor(song.fifths,'maj'); tb[1].textContent=keyNameFor(song.fifths,'min');
+      tb[0].classList.toggle('on', song.mode==='maj'); tb[1].classList.toggle('on', song.mode==='min'); }
   }
-  function loadSong(i){ stop(); song=SONGS[i]; scaleIdx=0; off=0; slashMode=true;
+  // built-in songs store only .bars — derive the display measures + playback list they need
+  function buildScoreFromBars(s){
+    if(s.measures) return;
+    var meas=[], chords=[], t=0, fb=0;
+    s.bars.forEach(function(bar, mi){
+      var c=parseChord(bar.c), bass=(c.bass!=null && c.bass!==c.pc)?c.bass:null;
+      var len=bar.r.reduce(function(a,tok){ return a+durBeats(tok.replace(/[dr]/g,''), /d/.test(tok)); },0); fb=Math.max(fb,len);
+      meas.push({ cells:[{pc:c.pc, q:c.q, bass:bass, r:bar.r.slice()}], repStart:false, repEnd:false, repTimes:2, voltaNums:null, voltaEnd:false, section:null, len:len, pickup:false });
+      var k=0; bar.r.forEach(function(tok){ var rest=/r$/.test(tok), beats=durBeats(tok.replace(/[dr]/g,''), /d/.test(tok));
+        chords.push({t:t, beats:beats, rest:rest, pc:c.pc, q:c.q, bass:bass, mi:mi, k:k}); t+=beats; k++; });
+    });
+    s.measures=meas; s.fullBeats=fb||4; s.play=s.play||{hasBass:false,hasDrums:false,bass:[],drums:[]}; s.play.chords=chords;
+  }
+  function loadSong(i){ stop(); song=SONGS[i]; buildScoreFromBars(song); scaleIdx=0; off=0; slashMode=true;
     tempo.value=song.tempo; bpm.textContent=song.tempo;
     renderAll();
   }
@@ -859,7 +1257,10 @@
     var f=e.target.files[0]; e.target.value=''; if(!f) return;
     if(/\.mxl$/i.test(f.name)){ alert('That’s a compressed .mxl file. In MuseScore choose File ▸ Export ▸ MusicXML and pick “Uncompressed (*.musicxml)”, then load that.'); return; }
     var rd=new FileReader();
-    rd.onload=function(){ try{ var s=parseMusicXML(String(rd.result)); var idx=addSong(s); sel.value=idx; loadSong(idx); }
+    rd.onload=function(){ try{ var s=parseMusicXML(String(rd.result));
+      if(!s.title || /^untitled/i.test(s.title)) s.title=f.name.replace(/\.(musicxml|xml)$/i,'');
+      askTonality(s.fifths||0).then(function(mode){ applyTonality(s, mode); try{ localStorage.setItem('tonality:'+s.title, mode); }catch(e){}
+        var idx=addSong(s); sel.value=idx; loadSong(idx); }); }
       catch(err){ alert('Couldn’t import this file — '+err.message); } };
     rd.readAsText(f);
   });
@@ -881,8 +1282,19 @@
   function loadFolderSong(name){
     return fetch('songs/'+encodeURIComponent(name),{cache:'no-store'})
       .then(function(r){ return r.ok?r.text():Promise.reject(); })
-      .then(function(xml){ var s=parseMusicXML(xml); if(s.title==='Untitled') s.title=name.replace(/\.musicxml$/i,''); return addSong(s); })
+      .then(function(xml){ var s=parseMusicXML(xml); if(!s.title || /^untitled/i.test(s.title)) s.title=name.replace(/\.musicxml$/i,'');
+        return applyStoredTonality(name, s).then(function(){ return addSong(s); }); })
       .catch(function(e){ console.warn('Song failed to load:', name, e); return -1; });
+  }
+  // Tonality for folder songs: a personal choice (localStorage) wins, else a
+  // committed sidecar songs/<name>.json {"mode":"minor"}, else the file's own key.
+  function applyStoredTonality(name, s){
+    if(s.fifths==null) return Promise.resolve();
+    try{ var ls=localStorage.getItem('tonality:'+s.title); if(ls){ applyTonality(s, /min/i.test(ls)?'min':'maj'); return Promise.resolve(); } }catch(e){}
+    var base=name.replace(/\.musicxml$/i,'');
+    return fetch('songs/'+encodeURIComponent(base)+'.json',{cache:'no-store'})
+      .then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; })
+      .then(function(cfg){ if(cfg && cfg.mode) applyTonality(s, /min/i.test(cfg.mode)?'min':'maj'); });
   }
   discoverSongs().then(function(names){
     var seq=Promise.resolve(), firstIdx=-1;
