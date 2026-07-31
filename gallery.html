@@ -9,6 +9,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script type="module">
+  // real sampled instruments (smplr) for Song Lab tracks. Falls back to built-in synths if unavailable.
+  (async () => {
+    try { window.SMPLR = await import("https://unpkg.com/smplr/dist/index.mjs"); }
+    catch (e) { console.warn('smplr unavailable — using built-in synths', e); }
+  })();
+</script>
 <style>
   :root{
     --bg:#F6F1Fb; --ink:#241a34; --muted:#8a7fa0;
@@ -165,6 +172,26 @@
     g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.5,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.24); }
   function drumHit(kind,t){ if(kind==='k'||kind==='kick') kickAt(t); else if(kind==='s'||kind==='snare') snareAt(t); else if(kind==='h'||kind==='hat') hatAt(t); else if(kind==='open') openAt(t); else if(kind==='clap') clapAt(t); else if(kind==='tom') tomAt(t); }
 
+  // ---------- real sampled instruments (smplr) for Song Lab tracks, synth fallback ----------
+  function smplrOK(){ return !!(window.SMPLR && window.SMPLR.Soundfont); }
+  var CACHE={ mel:{}, kit:{} }, LAB=null;
+  function loadMelodic(name){ if(!name||!smplrOK()) return null; if(CACHE.mel[name]) return CACHE.mel[name];
+    var inst; try{ inst=new window.SMPLR.Soundfont(ac(),{instrument:name}); }catch(e){ return null; }
+    inst._ready=false; var lp=(inst.load!=null?inst.load:inst.ready); Promise.resolve(lp).then(function(){ inst._ready=true; }).catch(function(){});
+    CACHE.mel[name]=inst; return inst; }
+  function buildDrumMap(kit){ var g=[]; try{ g=kit.getGroupNames()||[]; }catch(e){}
+    function pick(res,fb){ for(var j=0;j<res.length;j++){ for(var i=0;i<g.length;i++){ if(res[j].test(g[i])) return g[i]; } } return fb||null; }
+    var closed=pick([/close/i,/hhclosed/i,/^hihat$/i,/hihat/i,/\bhh\b/i]);
+    return { kick:pick([/kick/i,/bass.?drum/i]), snare:pick([/snare/i]), hat:closed, open:pick([/open/i,/hhopen/i])||closed, clap:pick([/clap/i,/hand/i],closed), tom:pick([/tom/i,/floor/i]) }; }
+  function loadKit(name){ if(!name||!smplrOK()) return null; if(CACHE.kit[name]) return CACHE.kit[name];
+    var kit; try{ kit=new window.SMPLR.DrumMachine(ac(),{instrument:name}); }catch(e){ return null; }
+    kit._ready=false; var lp=(kit.load!=null?kit.load:kit.ready); Promise.resolve(lp).then(function(){ kit._ready=true; kit._map=buildDrumMap(kit); }).catch(function(){});
+    CACHE.kit[name]=kit; return kit; }
+  function prepareLab(d){ if(!smplrOK()||!d||!d.inst){ LAB=null; return; }
+    var c=loadMelodic(d.inst.chords), m=loadMelodic(d.inst.melody), b=loadMelodic(d.inst.bass), k=loadKit(d.inst.kit);
+    try{ if(c)c.output.volume=80; if(m)m.output.volume=100; if(b)b.output.volume=122; if(k)k.output.volume=108; }catch(e){}
+    LAB={ chords:c, melody:m, bass:b, drums:k }; }
+
   // ---------- playback (one song at a time, looping) ----------
   var playing=null, schedInt=null, raf=null, anchorT=0, spb=0.5, sidx=0, loopCount=0, sched=[], curPh=null, curBtn=null, curTotal=16;
   function isLab(d){ return !!(d && (d.kind==='lab' || (d.sections && d.sections.length))); }
@@ -172,8 +199,8 @@
   function labEvents(d){ var evs=[], tB=0, IN=['kick','snare','hat','open','clap','tom'];
     expandedLab(d).forEach(function(sec){
       (sec.chords||[]).forEach(function(c){ strumSpans(c, sec.rhythm||'held').forEach(function(s){ evs.push({t:tB+s.col*0.25, dur:s.len*0.25, type:'chord', pc:c.pc, q:c.q, inv:c.inv}); }); });
-      (sec.notes||[]).forEach(function(n){ evs.push({t:tB+n.col*0.25, dur:n.len*0.25, type:'note', midi:48+n.row, wave:'sawtooth', gain:0.2}); });   // Song Lab melody (C3 base)
-      (sec.bass||[]).forEach(function(n){ evs.push({t:tB+n.col*0.25, dur:n.len*0.25, type:'note', midi:28+n.row, wave:'triangle', gain:0.55}); });    // Song Lab bass (E1 base, louder)
+      (sec.notes||[]).forEach(function(n){ evs.push({t:tB+n.col*0.25, dur:n.len*0.25, type:'note', midi:48+n.row, wave:'sawtooth', gain:0.2, part:'melody'}); });   // Song Lab melody (C3 base)
+      (sec.bass||[]).forEach(function(n){ evs.push({t:tB+n.col*0.25, dur:n.len*0.25, type:'note', midi:28+n.row, wave:'triangle', gain:0.55, part:'bass'}); });    // Song Lab bass (E1 base, louder)
       for(var bar=0;bar<sec.bars;bar++){ var b0=bar*16; IN.forEach(function(inst){ ((sec.beat&&sec.beat[inst])||[]).forEach(function(st){ evs.push({t:tB+(b0+st)*0.25, type:'drum', d:inst}); }); }); }
       tB += sec.bars*4;
     });
@@ -197,6 +224,7 @@
   function playSong(song, btn, ph){
     if(playing===song.id){ stopPlay(); return; }
     stopPlay(); ac(); playing=song.id; curBtn=btn; curPh=ph; var d=song.data||{};
+    if(isLab(d)) prepareLab(d); else LAB=null;
     spb=60/(d.tempo||100); var built=eventsFor(d); sched=built.evs; curTotal=built.total; anchorT=ac().currentTime+0.1; sidx=0; loopCount=0;
     btn.classList.add('on'); btn.textContent='⏹'; ph.style.display='block';
     schedInt=setInterval(tick,25); tick(); raf=requestAnimationFrame(animate);
@@ -204,9 +232,9 @@
   function tick(){ if(!playing) return; var now=ac().currentTime, horizon=now+0.2;
     while(true){ if(sidx>=sched.length){ loopCount++; sidx=0; }
       var ev=sched[sidx], when=anchorT+(loopCount*curTotal+ev.t)*spb; if(when>horizon) break;
-      if(ev.type==='chord') strumAt(ev.pc,ev.q,when,ev.dur*spb,ev.inv);
-      else if(ev.type==='drum') drumHit(ev.d,when);
-      else toneAt(ev.midi,when,Math.max(0.12,ev.dur*spb*0.95),ev.gain||0.2,ev.wave||'sawtooth');
+      if(ev.type==='chord'){ var ic=LAB&&LAB.chords; if(ic&&ic._ready){ chordMidis(ev.pc,ev.q,ev.inv).forEach(function(mm,i){ try{ ic.start({note:mm,time:when+i*0.012,duration:Math.max(0.25,ev.dur*spb),velocity:74}); }catch(e){} }); } else strumAt(ev.pc,ev.q,when,ev.dur*spb,ev.inv); }
+      else if(ev.type==='drum'){ var kt=LAB&&LAB.drums; if(kt&&kt._ready&&kt._map&&kt._map[ev.d]){ try{ kt.start({note:kt._map[ev.d],time:when}); }catch(e){} } else drumHit(ev.d,when); }
+      else { var im=(LAB&&ev.part)?LAB[ev.part]:null; if(im&&im._ready){ try{ im.start({note:ev.midi,time:when,duration:Math.max(0.12,ev.dur*spb*0.95),velocity:ev.part==='bass'?104:92}); }catch(e){} } else toneAt(ev.midi,when,Math.max(0.12,ev.dur*spb*0.95),ev.gain||0.2,ev.wave||'sawtooth'); }
       sidx++; } }
   function animate(){ if(!playing||!curPh) return; var now=ac().currentTime, beat=((now-anchorT)/spb%curTotal+curTotal)%curTotal;
     curPh.style.left=(beat/curTotal*100)+'%'; raf=requestAnimationFrame(animate); }

@@ -9,6 +9,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script type="module">
+  // real sampled instruments (smplr). If it can't load, Song Lab falls back to built-in synths.
+  (async () => {
+    try {
+      const SMPLR = await import("https://unpkg.com/smplr/dist/index.mjs");
+      window.SMPLR = SMPLR;
+      window.dispatchEvent(new CustomEvent('smplr-ready'));
+    } catch (e) { console.warn('smplr unavailable — using built-in synths', e); }
+  })();
+</script>
 <style>
   :root{
     --bg:#F6F1Fb; --ink:#241a34; --muted:#8a7fa0; --line:#241a34;
@@ -61,6 +71,10 @@
     border-radius:10px; background:#fff; cursor:pointer; box-shadow:2px 2px 0 var(--ink); }
   input[type=text]{ cursor:text; }
   .spacer{ flex:1; }
+  .soundgrid{ display:flex; gap:16px; flex-wrap:wrap; }
+  .sndsel{ display:flex; flex-direction:column; gap:5px; font-weight:800; color:var(--muted); font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; }
+  .sndsel select{ text-transform:none; letter-spacing:0; font-size:.9rem; }
+  .sndstatus{ font-family:var(--body); font-weight:700; font-size:.72rem; color:var(--muted); text-transform:none; letter-spacing:0; }
   .parts{ display:inline-flex; gap:6px; flex-wrap:wrap; }
   .partbtn{ font-family:var(--body); font-weight:800; font-size:.8rem; cursor:pointer; border:2.5px solid var(--ink); border-radius:20px;
     padding:6px 13px; background:#fff; color:var(--muted); box-shadow:2px 2px 0 var(--ink); opacity:.55; }
@@ -186,6 +200,16 @@
         <button type="button" class="partbtn on" data-p="drums">Drums</button>
       </span>
       <span class="hintline" style="margin:0">turn parts off to hear just one</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Sounds <span class="sub">— real instruments for each part <span class="sndstatus" id="sndStatus"></span></span></h2>
+    <div class="soundgrid">
+      <label class="sndsel">Chords<select id="instChords"></select></label>
+      <label class="sndsel">Melody<select id="instMelody"></select></label>
+      <label class="sndsel">Bass<select id="instBass"></select></label>
+      <label class="sndsel">Drum kit<select id="instKit"></select></label>
     </div>
   </div>
 
@@ -356,10 +380,12 @@
   function emptyBeat(){ var b={}; INSTR.forEach(function(x){ b[x.id]=[]; }); return b; }
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   function newSection(name,bars){ return { id:uid(), name:name||'Verse', bars:bars||4, repeat:1, rhythm:'held', chords:[], notes:[], bass:[], beat:emptyBeat() }; }
-  var state={ root:0, mode:'ion', tempo:110, sections:[newSection('Verse',4)], cur:0, custom:[] };
+  var DEFAULT_INST={ chords:'electric_piano_1', melody:'acoustic_grand_piano', bass:'electric_bass_finger', kit:'TR-808' };
+  var state={ root:0, mode:'ion', tempo:110, sections:[newSection('Verse',4)], cur:0, custom:[], inst:Object.assign({},DEFAULT_INST) };
   function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
   function load(){ try{ var s=JSON.parse(localStorage.getItem(LS)); if(s&&s.sections&&s.sections.length){ state=s;
     if(state.cur==null||state.cur>=state.sections.length) state.cur=0; if(!state.custom) state.custom=[];
+    if(!state.inst) state.inst=Object.assign({},DEFAULT_INST); else Object.keys(DEFAULT_INST).forEach(function(k){ if(!state.inst[k]) state.inst[k]=DEFAULT_INST[k]; });
     state.sections.forEach(function(sec){ if(!sec.beat) sec.beat=emptyBeat(); INSTR.forEach(function(x){ if(!sec.beat[x.id]) sec.beat[x.id]=[]; }); if(!sec.rhythm) sec.rhythm='held'; if(!sec.bass) sec.bass=[]; }); } }catch(e){} }
   function curSec(){ return state.sections[state.cur]; }
   function cols(){ return curSec().bars*SUB; }
@@ -424,6 +450,39 @@
     g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.5,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.24); }
   function drumHit(kind, t){ if(kind==='kick') kickAt(t); else if(kind==='snare') snareAt(t); else if(kind==='hat') hatAt(t); else if(kind==='open') openAt(t); else if(kind==='clap') clapAt(t); else if(kind==='tom') tomAt(t); }
 
+  // ---------- real sampled instruments (smplr) with synth fallback ----------
+  function smplrOK(){ return !!(window.SMPLR && window.SMPLR.Soundfont); }
+  var SND={ cache:{}, kits:{}, active:{chords:null,melody:null,bass:null,drums:null}, drumMap:{} };
+  function loadMelodic(name){ if(!name||!smplrOK()) return null; if(SND.cache[name]) return SND.cache[name];
+    var inst; try{ inst=new window.SMPLR.Soundfont(ac(), {instrument:name}); }catch(e){ return null; }
+    inst._ready=false; var lp=(inst.load!=null?inst.load:inst.ready);
+    Promise.resolve(lp).then(function(){ inst._ready=true; updateSndStatus(); }).catch(function(){});
+    SND.cache[name]=inst; return inst; }
+  function loadKit(name){ if(!name||!smplrOK()) return null; if(SND.kits[name]) return SND.kits[name];
+    var kit; try{ kit=new window.SMPLR.DrumMachine(ac(), {instrument:name}); }catch(e){ return null; }
+    kit._ready=false; var lp=(kit.load!=null?kit.load:kit.ready);
+    Promise.resolve(lp).then(function(){ kit._ready=true; if(SND.active.drums===kit) SND.drumMap=buildDrumMap(kit); updateSndStatus(); }).catch(function(){});
+    SND.kits[name]=kit; return kit; }
+  function buildDrumMap(kit){ var g=[]; try{ g=kit.getGroupNames()||[]; }catch(e){}
+    function pick(res, fb){ for(var j=0;j<res.length;j++){ for(var i=0;i<g.length;i++){ if(res[j].test(g[i])) return g[i]; } } return fb||null; }
+    var closed=pick([/close/i,/hhclosed/i,/^hihat$/i,/hihat/i,/\bhh\b/i]);
+    return { kick:pick([/kick/i,/bass.?drum/i]), snare:pick([/snare/i]), hat:closed,
+      open:pick([/open/i,/hhopen/i])||closed, clap:pick([/clap/i,/hand/i],closed), tom:pick([/tom/i,/floor/i]) }; }
+  function ensureInstruments(){ if(!smplrOK()) return;
+    SND.active.chords=loadMelodic(state.inst.chords); SND.active.melody=loadMelodic(state.inst.melody); SND.active.bass=loadMelodic(state.inst.bass);
+    SND.active.drums=loadKit(state.inst.kit); if(SND.active.drums&&SND.active.drums._ready) SND.drumMap=buildDrumMap(SND.active.drums);
+    try{ if(SND.active.chords) SND.active.chords.output.volume=80; if(SND.active.melody) SND.active.melody.output.volume=100;
+      if(SND.active.bass) SND.active.bass.output.volume=122; if(SND.active.drums) SND.active.drums.output.volume=108; }catch(e){} }
+  function soundChord(pc,q,inv,when,dur){ var ic=SND.active.chords; if(ic&&ic._ready){ chordMidis(pc,q,inv).forEach(function(m,i){ try{ ic.start({note:m,time:when+i*0.012,duration:Math.max(0.25,dur),velocity:74}); }catch(e){} }); } else strumAt(pc,q,when,dur,inv); }
+  function soundNote(part,midi,when,dur){ var im=SND.active[part]; if(im&&im._ready){ try{ im.start({note:midi,time:when,duration:Math.max(0.12,dur),velocity:part==='bass'?104:92}); }catch(e){} }
+    else { var isB=part==='bass'; toneAt(midi,when,Math.max(0.12,dur), isB?TRACKS.bass.gain:TRACKS.mel.gain, isB?TRACKS.bass.wave:TRACKS.mel.wave); } }
+  function soundDrum(kind,when){ var kit=SND.active.drums, gn=SND.drumMap[kind]; if(kit&&kit._ready&&gn){ try{ kit.start({note:gn,time:when}); }catch(e){} } else drumHit(kind,when); }
+  function updateSndStatus(){ var el=document.getElementById('sndStatus'); if(!el) return;
+    if(!smplrOK()){ el.textContent='· loading sound engine…'; return; }
+    var a=SND.active, keys=['chords','melody','bass','drums'];
+    var loading=keys.some(function(k){ return a[k]&&!a[k]._ready; }), any=keys.some(function(k){ return a[k]; });
+    el.textContent = loading?'· loading instruments…':(any?'· real instruments ✓':''); }
+
   // ---------- layout ----------
   var gutter=42, rowh=11, chordH=32, cellw=0;
   var stage=document.getElementById('stage'), gridwrap=document.getElementById('gridwrap');
@@ -481,7 +540,7 @@
   function snapNear(c){ return Math.round(c/snap)*snap; }
   function snapFloor(c){ return Math.floor(c/snap)*snap; }
   function edgeZone(n){ return Math.min(11, Math.max(5, n.len*cellw*0.35)); }
-  function playNote(row,dur){ toneAt(trk().base+row, ac().currentTime+0.01, dur, trk().gain, trk().wave); }
+  function playNote(row,dur){ soundNote(editTrack==='bass'?'bass':'melody', trk().base+row, ac().currentTime+0.01, dur); }
   var act=null, dragIdx=-1, cDragIdx=-1;
   canvas.addEventListener('pointerdown', function(e){ e.preventDefault(); ac(); var N=trackNotes();
     var p=posFromEvent(e), hit=noteAt(p.row,p.col);
@@ -514,7 +573,7 @@
   chordCanvas.addEventListener('pointerdown', function(e){ e.preventDefault(); ac(); var CH=curSec().chords;
     var p=chordPos(e), hit=chordAt(p.col); if(hit<0) return; var ch=CH[hit], rightX=(ch.col+ch.len)*cellw;
     if(p.x > rightX-chordEdge(ch)) cact={type:'resize', idx:hit, moved:false}; else cact={type:'move', idx:hit, sc:p.col, o:{col:ch.col}, moved:false};
-    cDragIdx=hit; chordCanvas.setPointerCapture(e.pointerId); strumAt(ch.pc,ch.q,ac().currentTime+0.01,0.4,ch.inv); drawChordLane();
+    cDragIdx=hit; chordCanvas.setPointerCapture(e.pointerId); soundChord(ch.pc,ch.q,ch.inv,ac().currentTime+0.01,0.4); drawChordLane();
   });
   chordCanvas.addEventListener('pointermove', function(e){ var CH=curSec().chords;
     if(!cact){ var p0=chordPos(e), h=chordAt(p0.col); if(h>=0){ var cc=CH[h]; chordCanvas.style.cursor=(p0.x>(cc.col+cc.len)*cellw-chordEdge(cc))?'ew-resize':'move'; } else chordCanvas.style.cursor='default'; return; }
@@ -543,7 +602,7 @@
   var ghost=null, dragChord=null;
   function startChipDrag(e, c){ e.preventDefault(); ac(); dragChord=c;
     ghost=document.createElement('div'); ghost.className='chip ghost'; ghost.style.background=c.color||'#7C4DFF'; ghost.innerHTML='<span class="nm">'+c.name+'</span>'; document.body.appendChild(ghost);
-    moveGhost(e); strumAt(c.pc,c.q, ac().currentTime+0.01, 0.5, c.inv);
+    moveGhost(e); soundChord(c.pc,c.q,c.inv, ac().currentTime+0.01, 0.5);
     document.addEventListener('pointermove', moveGhost); document.addEventListener('pointerup', dropChip); }
   function overLane(e){ var el=document.elementFromPoint(e.clientX,e.clientY); return el && (el===chordCanvas || (el.closest && el.closest('#chordwrap'))); }
   function moveGhost(e){ if(!ghost) return; ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px'; chordwrap.classList.toggle('over', !!overLane(e)); }
@@ -596,7 +655,7 @@
     { name:'Half-time', b:{kick:[0],        snare:[8],    hat:[0,2,4,6,8,10,12,14], open:[], clap:[], tom:[]} }
   ];
   function applyPreset(p){ var b=emptyBeat(); INSTR.forEach(function(x){ b[x.id]=(p.b[x.id]||[]).slice(); }); curSec().beat=b; save(); renderBeat();
-    var t0=ac().currentTime+0.05, spb=secPerBeat(); INSTR.forEach(function(inst){ (b[inst.id]||[]).forEach(function(st){ drumHit(inst.id, t0+(st*0.25)*spb); }); }); }
+    var t0=ac().currentTime+0.05, spb=secPerBeat(); INSTR.forEach(function(inst){ (b[inst.id]||[]).forEach(function(st){ soundDrum(inst.id, t0+(st*0.25)*spb); }); }); }
   function renderBeatPresets(){ var host=document.getElementById('beatpresets'); host.innerHTML='';
     BEATPRESETS.forEach(function(p){ var btn=document.createElement('button'); btn.type='button'; btn.className='bpreset'; btn.textContent=p.name;
       btn.addEventListener('click', function(){ ac(); applyPreset(p); }); host.appendChild(btn); });
@@ -610,7 +669,7 @@
       for(var st=0;st<16;st++){ (function(st){ var on=beat[inst.id].indexOf(st)>=0;
         var b=document.createElement('button'); b.className='cell'+(st%4===0?' beatstart':'')+(on?' on':''); if(on) b.style.background=inst.col;
         b.addEventListener('click', function(){ ac(); var arr=beat[inst.id], idx=arr.indexOf(st);
-          if(idx>=0){ arr.splice(idx,1); b.classList.remove('on'); b.style.background=''; } else { arr.push(st); b.classList.add('on'); b.style.background=inst.col; drumHit(inst.id, ac().currentTime+0.01); } save(); });
+          if(idx>=0){ arr.splice(idx,1); b.classList.remove('on'); b.style.background=''; } else { arr.push(st); b.classList.add('on'); b.style.background=inst.col; soundDrum(inst.id, ac().currentTime+0.01); } save(); });
         cells.appendChild(b); })(st); }
       line.appendChild(cells); host.appendChild(line);
     });
@@ -630,9 +689,9 @@
     tB += sec.bars*4; });
     totalBeats=Math.max(1,tB); evs.sort(function(a,b){ return a.t-b.t; }); return evs; }
   function fire(ev, when){ if(ev.part && !hear[ev.part]) return;
-    if(ev.type==='chord') strumAt(ev.c.pc, ev.c.q, when, ev.dur*spb, ev.c.inv);
-    else if(ev.type==='note') toneAt(ev.midi, when, Math.max(0.12, ev.dur*spb*0.95), ev.gain||0.2, ev.wave||'sawtooth');
-    else if(ev.type==='drum') drumHit(ev.d, when); }
+    if(ev.type==='chord') soundChord(ev.c.pc, ev.c.q, ev.c.inv, when, ev.dur*spb);
+    else if(ev.type==='note') soundNote(ev.part, ev.midi, when, ev.dur*spb*0.95);
+    else if(ev.type==='drum') soundDrum(ev.d, when); }
   function tick(){ if(!playing) return; var now=ac().currentTime, horizon=now+0.2;
     while(true){ if(sidx>=sched.length){ if(loopCb.checked){ loopCount++; sidx=0; } else { stop(); return; } }
       var ev=sched[sidx], when=anchorT+(loopCount*totalBeats+ev.t)*spb; if(when>horizon) break; fire(ev, when); sidx++; } }
@@ -641,7 +700,7 @@
     if(loc){ if(loc.idx!==playingSec){ playingSec=loc.idx; if(loc.idx!==state.cur){ selectSection(loc.idx,true); } renderArrange(); }
       var C=loc.bars*16, x=gutter + (loc.local/(loc.bars*4))*(C*cellw); playhead.style.left=x+'px'; playhead.style.display='block'; }
     raf=requestAnimationFrame(animate); }
-  function start(){ if(playing) return; ac(); sched=buildEvents(); playing=true; spb=secPerBeat(); anchorT=ac().currentTime+0.1; sidx=0; loopCount=0; playingSec=-1;
+  function start(){ if(playing) return; ac(); ensureInstruments(); sched=buildEvents(); playing=true; spb=secPerBeat(); anchorT=ac().currentTime+0.1; sidx=0; loopCount=0; playingSec=-1;
     playBtn.textContent='■ Stop'; playBtn.classList.add('on'); playhead.style.display='block'; schedInt=setInterval(tick,25); tick(); raf=requestAnimationFrame(animate); }
   function stop(){ playing=false; if(schedInt){ clearInterval(schedInt); schedInt=null; } if(raf){ cancelAnimationFrame(raf); raf=null; }
     playBtn.textContent='▶ Play'; playBtn.classList.remove('on'); playhead.style.display='none'; playingSec=-1; renderArrange(); }
@@ -668,6 +727,24 @@
   [].forEach.call(document.querySelectorAll('#tracktabs .tracktab'), function(b){ b.addEventListener('click', function(){ ac(); setTrack(b.getAttribute('data-t')); }); });
   // per-part hear/mute toggles
   [].forEach.call(document.querySelectorAll('#parts .partbtn'), function(b){ b.addEventListener('click', function(){ var p=b.getAttribute('data-p'); hear[p]=!hear[p]; b.classList.toggle('on', hear[p]); }); });
+  // instrument pickers (real sampled sounds)
+  var INST_CHORDS=[['electric_piano_1','Electric piano'],['acoustic_grand_piano','Grand piano'],['drawbar_organ','Organ'],['acoustic_guitar_nylon','Nylon guitar'],['acoustic_guitar_steel','Steel guitar'],['electric_guitar_clean','Clean guitar'],['overdriven_guitar','Rock guitar'],['pad_2_warm','Warm pad'],['string_ensemble_1','Strings'],['harpsichord','Harpsichord']];
+  var INST_MELODY=[['acoustic_grand_piano','Grand piano'],['electric_piano_1','Electric piano'],['acoustic_guitar_steel','Steel guitar'],['electric_guitar_clean','Clean guitar'],['overdriven_guitar','Rock guitar'],['music_box','Music box'],['vibraphone','Vibraphone'],['flute','Flute'],['lead_1_square','Square lead'],['lead_2_sawtooth','Saw lead']];
+  var INST_BASS=[['electric_bass_finger','Finger bass'],['acoustic_bass','Upright bass'],['electric_bass_pick','Picked bass'],['fretless_bass','Fretless'],['synth_bass_1','Synth bass'],['synth_bass_2','Synth bass 2'],['slap_bass_1','Slap bass']];
+  var instChords=document.getElementById('instChords'), instMelody=document.getElementById('instMelody'), instBass=document.getElementById('instBass'), instKit=document.getElementById('instKit');
+  function fillSel(sel,list){ sel.innerHTML=''; list.forEach(function(o){ var e=document.createElement('option'); e.value=o[0]; e.textContent=o[1]; sel.appendChild(e); }); }
+  fillSel(instChords,INST_CHORDS); fillSel(instMelody,INST_MELODY); fillSel(instBass,INST_BASS);
+  function populateKits(){ if(!smplrOK()){ instKit.innerHTML='<option value="'+state.inst.kit+'">'+state.inst.kit+'</option>'; instKit.value=state.inst.kit; return; }
+    var names=[]; try{ names=window.SMPLR.getDrumMachineNames()||[]; }catch(e){} if(!names.length) names=[state.inst.kit];
+    instKit.innerHTML=''; names.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; instKit.appendChild(o); });
+    if(names.indexOf(state.inst.kit)<0) state.inst.kit=names[0]; instKit.value=state.inst.kit; }
+  function syncSounds(){ instChords.value=state.inst.chords; instMelody.value=state.inst.melody; instBass.value=state.inst.bass; populateKits(); updateSndStatus(); }
+  instChords.addEventListener('change', function(){ state.inst.chords=this.value; save(); ac(); ensureInstruments(); updateSndStatus(); });
+  instMelody.addEventListener('change', function(){ state.inst.melody=this.value; save(); ac(); ensureInstruments(); updateSndStatus(); });
+  instBass.addEventListener('change', function(){ state.inst.bass=this.value; save(); ac(); ensureInstruments(); updateSndStatus(); });
+  instKit.addEventListener('change', function(){ state.inst.kit=this.value; save(); ac(); ensureInstruments(); updateSndStatus(); });
+  window.addEventListener('smplr-ready', function(){ populateKits(); if(actx) ensureInstruments(); updateSndStatus(); });
+  document.addEventListener('pointerdown', function _once(){ document.removeEventListener('pointerdown', _once); ac(); if(smplrOK()) ensureInstruments(); updateSndStatus(); });
   document.getElementById('clearSectBtn').addEventListener('click', function(){ if(!confirm('Clear the chords, notes, bass and beat in this section?')) return; var s=curSec(); s.chords=[]; s.notes=[]; s.bass=[]; s.beat=emptyBeat(); save(); redrawAll(); renderBeat(); });
 
   // ---------- save / open ----------
@@ -697,7 +774,7 @@
   function openSaved(i){ var sg=lib.songs[i]; if(!sg) return; if(songHasContent() && !confirm('Open “'+sg.name+'”? Your current song will be replaced — save it first to keep it.')) return;
     state=clone(sg.data); if(state.cur==null||state.cur>=state.sections.length) state.cur=0; if(!state.custom) state.custom=[]; save(); renderAll(); showToast('Opened “'+sg.name+'” 🎵'); }
   function newSong(){ if(songHasContent() && !confirm('Start a new song? Save first to keep this one.')) return;
-    state={ root:0, mode:'ion', tempo:110, sections:[newSection('Verse',4)], cur:0, custom:[] }; save(); renderAll(); }
+    state={ root:0, mode:'ion', tempo:110, sections:[newSection('Verse',4)], cur:0, custom:[], inst:Object.assign({},DEFAULT_INST) }; save(); renderAll(); }
   document.getElementById('saveBtn').addEventListener('click', saveSong);
   document.getElementById('newBtn').addEventListener('click', newSong);
 
@@ -712,7 +789,7 @@
       .catch(function(){ showToast('Couldn’t open that shared song.'); }); }
 
   // ---------- init ----------
-  function renderAll(){ editTrack='mel'; syncTrackTabs(); syncControls(); renderArrange(); renderEditorTitle(); renderChords(); renderBeatPresets(); renderBeat(); renderKeys(); relayout(); }
+  function renderAll(){ editTrack='mel'; syncTrackTabs(); syncControls(); syncSounds(); renderArrange(); renderEditorTitle(); renderChords(); renderBeatPresets(); renderBeat(); renderKeys(); relayout(); }
   loadLib(); load(); renderKeys(); renderAll(); renderMySongs();
   openSharedFromUrl();
   window.addEventListener('resize', relayout);
