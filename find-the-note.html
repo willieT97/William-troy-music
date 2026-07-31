@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find the Note on Your Instrument — Music Arcade</title>
+<meta name="description" content="Pick a note and see exactly where it lives on the piano, guitar, ukulele, bass and tenor banjo — the whole chromatic scale, mapped to your instrument, printable as a PDF. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F8; --ink:#2A3242; --muted:#6b7488; --line:#cfd6e2;
+    --blue:#2657C4; --blue-tint:#E3EBFB; --hi:#E6462F; --hi-tint:#FCE4DE;
+    --disp:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .wrap{ max-width:900px; margin:0 auto; padding:22px 16px 70px; }
+
+  .tabs{ display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--disp); font-weight:600; font-size:.82rem; text-decoration:none; color:var(--ink);
+    background:#fff; padding:8px 18px; border-radius:999px; box-shadow:0 3px 0 rgba(42,50,66,.12); transition:transform .12s; }
+  .tabs a:hover{ transform:translateY(-2px); }
+  .tabs a.cur{ background:var(--blue); color:#fff; box-shadow:0 3px 0 #1c48a3; }
+
+  header.top{ text-align:center; margin-bottom:6px; }
+  .kicker{ display:inline-block; font-family:var(--disp); font-weight:600; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--hi); background:var(--hi-tint); padding:5px 14px; border-radius:999px; }
+  h1{ font-family:var(--disp); font-weight:700; font-size:clamp(1.9rem,6vw,2.9rem); margin:.45rem 0 .2rem; }
+  .lede{ max-width:56ch; margin:.3rem auto 0; color:var(--muted); font-weight:600; }
+
+  /* instrument tabs */
+  .insttabs{ display:flex; justify-content:center; margin:20px 0 10px; }
+  .insttabs .seg{ display:inline-flex; flex-wrap:wrap; justify-content:center; background:#fff; border-radius:16px; padding:4px; box-shadow:0 2px 7px rgba(20,30,60,.12); }
+  .insttabs button{ border:none; background:transparent; font-family:var(--disp); font-weight:600; font-size:.92rem; padding:9px 20px; border-radius:12px; cursor:pointer; color:var(--muted); transition:color .15s; }
+  .insttabs button.on{ background:var(--ink); color:#fff; }
+
+  /* note picker + toolbar */
+  .picker{ display:flex; flex-direction:column; align-items:center; gap:9px; margin:14px 0 6px; }
+  .picker .plabel{ font-family:var(--disp); font-weight:600; font-size:.9rem; color:var(--ink); }
+  .notes{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+  .notes button{ font-family:var(--disp); font-weight:600; font-size:.9rem; min-width:40px; padding:8px 10px; border-radius:10px; cursor:pointer;
+    border:2px solid var(--line); background:#fff; color:var(--ink); transition:all .12s; }
+  .notes button:hover{ border-color:var(--ink); }
+  .notes button.on{ background:var(--hi); border-color:var(--hi); color:#fff; box-shadow:0 3px 0 #b5361f; }
+  .notes button.sharp{ color:var(--muted); }
+  .notes button.on.sharp{ color:#fff; }
+  .notes button.none{ min-width:0; color:var(--muted); font-size:.9rem; }
+  .notes button.none.on{ background:var(--ink); border-color:var(--ink); box-shadow:0 3px 0 #1a212c; }
+  .scalepick{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:6px 10px; border-radius:12px; border:2px solid transparent; }
+  .scalepick.active{ border-color:#2E77E6; background:#eaf2ff; }
+  .scalepick select{ font-family:var(--disp); font-weight:600; font-size:.88rem; padding:7px 10px; border:2px solid var(--line); border-radius:10px; background:#fff; cursor:pointer; }
+  .scalebtn{ font-family:var(--disp); font-weight:600; font-size:.85rem; cursor:pointer; border:2px solid #2E77E6; background:#2E77E6; color:#fff; padding:8px 16px; border-radius:10px; }
+  .scalebtn:active{ transform:translateY(1px); }
+  .degtoggle{ display:inline-flex; align-items:center; gap:6px; font-family:var(--body); font-weight:700; font-size:.82rem; color:var(--ink); cursor:pointer; }
+  .degtoggle input{ width:16px; height:16px; accent-color:#2E77E6; cursor:pointer; }
+  .pdfbtn{ font-family:var(--disp); font-weight:600; font-size:.84rem; cursor:pointer; border:none; color:#fff; background:var(--blue);
+    padding:9px 18px; border-radius:999px; box-shadow:0 3px 0 #1c48a3; }
+  .pdfbtn:active{ transform:translateY(3px); box-shadow:none; }
+
+  .rule{ border-top:1px solid var(--line); margin:14px 0 16px; }
+
+  .stage{ overflow-x:auto; padding-bottom:6px; }
+  .diagram{ background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); padding:22px 20px; display:inline-block; min-width:100%; text-align:center; }
+  .diagram svg{ display:block; margin:0 auto; }
+
+  /* piano case */
+  .pcase{ display:inline-block; background:linear-gradient(#414c5e,#2A3242); padding:14px 13px 13px; border-radius:12px 12px 9px 9px; box-shadow:0 10px 22px rgba(20,30,60,.28), inset 0 1px 0 rgba(255,255,255,.12); }
+  .pfelt{ height:7px; border-radius:4px; background:linear-gradient(#c0392b,#8f2a20); margin-bottom:11px; box-shadow:inset 0 1px 2px rgba(0,0,0,.35); }
+  .piano{ position:relative; }
+  .pkey{ position:absolute; cursor:pointer; padding:0; border:none; font-family:var(--mono); }
+  .pkey.white{ top:0; background:linear-gradient(#fff,#f2f4f7); border:1px solid #b9c2d0; border-radius:0 0 6px 6px; box-shadow:inset 0 -7px 10px rgba(0,0,0,.05); z-index:1;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px; font-size:.68rem; color:#8894a8; }
+  .pkey.black{ top:0; background:linear-gradient(#3b4453,#1e2530); border-radius:0 0 5px 5px; z-index:2; box-shadow:0 3px 5px rgba(0,0,0,.4), inset 0 -3px 3px rgba(255,255,255,.08);
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px; font-size:.58rem; color:#aeb7c6; }
+  .pkey.white.on{ background:linear-gradient(#fddcd5,#f9cabf); border-color:var(--hi); color:var(--hi); font-weight:700; }
+  .pkey.black.on{ background:linear-gradient(#ef5c46,#d13a24); color:#fff; font-weight:700; }
+  .pkey.white.scale{ background:linear-gradient(#dbe8fb,#c3d8f7); border-color:#2E77E6; color:#2E77E6; font-weight:700; }
+  .pkey.black.scale{ background:linear-gradient(#4f86e6,#2e63c4); color:#fff; font-weight:700; }
+  .pkey:active{ transform:translateY(1px); }
+
+  .tip{ font-family:var(--mono); font-size:.72rem; color:var(--muted); text-align:center; margin-top:14px; }
+  .tip b{ color:var(--ink); }
+  .foot{ margin-top:26px; text-align:center; font-family:var(--mono); font-size:.72rem; color:#6b6b6b; }
+  .foot a{ color:var(--blue); text-decoration:none; }
+  .foot a:hover{ text-decoration:underline; }
+
+  /* print / PDF */
+  .printhead{ display:none; }
+  @media print{
+    @page{ size:landscape; margin:12mm; }
+    body{ background:#fff; }
+    .tabs,.insttabs,.picker,.rule,.tip,.foot,header.top{ display:none !important; }
+    .printhead{ display:block; text-align:center; margin:0 0 14px; }
+    .printhead h2{ font-family:var(--disp); font-weight:700; font-size:1.5rem; margin:0; color:#2A3242; }
+    .printhead p{ font-family:var(--mono); font-size:.82rem; color:#555; margin:5px 0 0; }
+    .wrap{ max-width:none; padding:0; }
+    .stage{ overflow:visible; }
+    .diagram{ box-shadow:none; border:1px solid #ddd; display:block; padding:16px; }
+    .diagram svg{ width:100% !important; height:auto !important; }
+    .pcase{ box-shadow:none; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html" class="cur" aria-current="page">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header class="top">
+    <span class="kicker">Reference · every instrument</span>
+    <h1>Find the Note on Your Instrument</h1>
+    <p class="lede">Pick a note and see exactly where it lives — the whole chromatic scale mapped onto the piano, guitar, ukulele, bass and tenor banjo. Tap any note to hear it, and print it out.</p>
+  </header>
+
+  <div class="printhead" id="printhead"></div>
+
+  <div class="insttabs">
+    <div class="seg" id="insttabs">
+      <button data-inst="piano" class="on">Piano</button>
+      <button data-inst="guitar">Guitar</button>
+      <button data-inst="ukulele">Ukulele</button>
+      <button data-inst="bass">Bass</button>
+      <button data-inst="banjo">Banjo</button>
+    </div>
+  </div>
+
+  <div class="picker">
+    <span class="plabel">Find a note:</span>
+    <div class="notes" id="notes"></div>
+    <span class="plabel">…or show a scale:</span>
+    <div class="scalepick" id="scalepick">
+      <select id="scaleRoot"></select>
+      <select id="scaleType"></select>
+      <button class="scalebtn" id="scaleBtn">Show scale</button>
+      <label class="degtoggle"><input type="checkbox" id="degToggle"> scale degrees</label>
+    </div>
+    <button class="pdfbtn" id="pdfBtn">🖨 Print</button>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="stage">
+    <div class="diagram" id="diagram"></div>
+  </div>
+
+  <p class="tip" id="tip"></p>
+
+  <div class="foot">
+    <p><a href="resources.html">&larr; Back to Resources</a></p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  function disp(n){ return n.replace('#','♯'); }
+  var WHITE=[0,2,4,5,7,9,11];
+  function isBlack(pc){ return WHITE.indexOf(pc)<0; }
+
+  // ---- audio ----
+  var actx=null;
+  function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+  function freq(m){ return 440*Math.pow(2,(m-69)/12); }
+  function playNote(m){ var a=ac(), o=a.createOscillator(), g=a.createGain(), t=a.currentTime;
+    o.type='triangle'; o.frequency.value=freq(m);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.95); }
+
+  // ---- instruments (strings top->bottom, low->high; open MIDI note) ----
+  var FRETS=12;
+  var INSTR={
+    guitar:{ label:'Guitar', tuning:'E A D G B E', pegR:5, strings:[{m:64},{m:59},{m:55},{m:50},{m:45},{m:40}] },
+    ukulele:{ label:'Ukulele', tuning:'G C E A', pegR:4, strings:[{m:69},{m:64},{m:60},{m:67}] },
+    bass:{ label:'Bass', tuning:'E A D G', pegR:6.5, strings:[{m:43},{m:38},{m:33},{m:28}] },
+    banjo:{ label:'Tenor Banjo', tuning:'G D A E (Irish)', pegR:5, strings:[{m:64},{m:57},{m:50},{m:43}] }
+  };
+  var MARKERS=[3,5,7,9,12];
+
+  var SCALES={
+    major:{name:'Major', iv:[0,2,4,5,7,9,11]},
+    minor:{name:'Minor', iv:[0,2,3,5,7,8,10]},
+    majpent:{name:'Major pentatonic', iv:[0,2,4,7,9]},
+    minpent:{name:'Minor pentatonic', iv:[0,3,5,7,10]},
+    blues:{name:'Blues', iv:[0,3,5,6,7,10]},
+    dorian:{name:'Dorian', iv:[0,2,3,5,7,9,10]},
+    mixolydian:{name:'Mixolydian', iv:[0,2,4,5,7,9,10]},
+    harmonicminor:{name:'Harmonic minor', iv:[0,2,3,5,7,8,11]}
+  };
+  var DEGREES={0:'1',1:'♭2',2:'2',3:'♭3',4:'3',5:'4',6:'♭5',7:'5',8:'♭6',9:'6',10:'♭7',11:'7'};
+  var state={ inst:'piano', hi:{kind:'note', pc:0}, showDeg:false };   // hi = {kind:'note',pc} | {kind:'scale',root,type} | {kind:'none'}
+  function scalePCs(root,type){ return (SCALES[type]||SCALES.major).iv.map(function(s){ return ((root+s)%12+12)%12; }); }
+  function styleFor(pc){ var h=state.hi;
+    if(h.kind==='note') return pc===h.pc ? 'root' : '';
+    if(h.kind==='scale'){ var r=((h.root%12)+12)%12; if(pc===r) return 'root'; return scalePCs(h.root,h.type).indexOf(pc)>=0 ? 'scale' : ''; }
+    return ''; }
+  function noteLabel(pc){ if(state.showDeg && state.hi.kind==='scale' && styleFor(pc)) return DEGREES[((pc-state.hi.root)%12+12)%12]; return disp(NAMES[pc]); }
+
+  // ---- note / scale picker ----
+  var notesEl=document.getElementById('notes');
+  var scaleRoot=document.getElementById('scaleRoot'), scaleType=document.getElementById('scaleType'), scaleWrap=document.getElementById('scalepick');
+  var noneBtn=document.createElement('button'); noneBtn.className='none'; noneBtn.textContent='🚫'; noneBtn.title='Clear — show every note, no highlight';
+  noneBtn.addEventListener('click', function(){ setNone(); }); notesEl.appendChild(noneBtn);
+  NAMES.forEach(function(nm,pc){ var b=document.createElement('button'); b.className=(isBlack(pc)?'sharp':''); b.textContent=disp(nm); b.dataset.pc=pc;
+    b.addEventListener('click', function(){ setNote(pc); playNote(60+pc); }); notesEl.appendChild(b); });
+  NAMES.forEach(function(nm,pc){ var o=document.createElement('option'); o.value=pc; o.textContent=disp(nm); scaleRoot.appendChild(o); });
+  Object.keys(SCALES).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=SCALES[k].name; scaleType.appendChild(o); });
+  function applyScale(){ setScale(+scaleRoot.value, scaleType.value); }
+  scaleRoot.addEventListener('change', applyScale); scaleType.addEventListener('change', applyScale);
+  document.getElementById('scaleBtn').addEventListener('click', function(){ ac(); applyScale(); });
+  document.getElementById('degToggle').addEventListener('change', function(){ state.showDeg=this.checked; render(); });
+  function syncPicker(){ var h=state.hi;
+    [].forEach.call(notesEl.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
+    if(h.kind==='none') noneBtn.classList.add('on');
+    else if(h.kind==='note'){ var b=notesEl.querySelector('button[data-pc="'+h.pc+'"]'); if(b) b.classList.add('on'); }
+    scaleWrap.classList.toggle('active', h.kind==='scale'); }
+  function setNote(pc){ state.hi={kind:'note', pc:pc}; syncPicker(); render(); }
+  function setScale(root,type){ state.hi={kind:'scale', root:root, type:type}; syncPicker(); render(); }
+  function setNone(){ state.hi={kind:'none'}; syncPicker(); render(); }
+  syncPicker();
+
+  // ---- instrument tabs ----
+  var tabs=document.getElementById('insttabs');
+  [].forEach.call(tabs.children, function(b){ b.addEventListener('click', function(){ state.inst=b.dataset.inst;
+    [].forEach.call(tabs.children, function(x){ x.classList.toggle('on', x===b); }); render(); }); });
+
+  document.getElementById('pdfBtn').addEventListener('click', function(){ window.print(); });
+
+  // ---- rendering ----
+  var diagram=document.getElementById('diagram'), tip=document.getElementById('tip'), printhead=document.getElementById('printhead');
+  function render(){ if(state.inst==='piano') renderPiano(); else renderFretboard(INSTR[state.inst]); updateText(); }
+  function updateText(){
+    var h=state.hi, label = state.inst==='piano' ? 'Piano' : INSTR[state.inst].label;
+    var tuning = state.inst==='piano' ? '' : (' · '+INSTR[state.inst].tuning);
+    var title = (h.kind==='scale') ? ('The '+disp(NAMES[((h.root%12)+12)%12])+' '+SCALES[h.type].name+' scale on the '+label) : ('The chromatic scale on the '+label);
+    printhead.innerHTML='<h2>'+title+'</h2><p>Find the Note · williamtroymusic'+tuning+'</p>';
+    if(h.kind==='none'){ tip.innerHTML='Every note is shown. Pick a note or a scale to highlight it — tap any key/fret to hear it.'; return; }
+    if(h.kind==='scale'){ var rn=disp(NAMES[((h.root%12)+12)%12]), extra=state.showDeg?' as <b>scale degrees</b> (1 = root)':'';
+      tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.'; return; }
+    var n=disp(NAMES[h.pc]);
+    if(state.inst==='piano') tip.innerHTML='Every <b>'+n+'</b> on the keyboard is highlighted. Tap a key to hear it.';
+    else tip.innerHTML='Tuning: <b>'+INSTR[state.inst].tuning+'</b>. Every <b>'+n+'</b> on the '+INSTR[state.inst].label.toLowerCase()+' is highlighted — tap any fret to hear the note.';
+  }
+
+  function renderPiano(){
+    var lo=48, hi=72, W=38, BW=24, H=162, BH=102;
+    var whites=[], blacks=[], wc=0;
+    for(var m=lo;m<=hi;m++){ var pc=m%12; if(!isBlack(pc)){ whites.push({m:m,pc:pc,x:wc*W}); wc++; } else { blacks.push({m:m,pc:pc,x:wc*W-BW/2}); } }
+    var totalW=wc*W;
+    var piano=document.createElement('div'); piano.className='piano'; piano.style.width=totalW+'px'; piano.style.height=H+'px';
+    whites.forEach(function(k){ var st=styleFor(k.pc); var lab=noteLabel(k.pc); var b=document.createElement('button'); b.className='pkey white'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=(W-1)+'px'; b.style.height=H+'px';
+      b.textContent=lab+((k.pc===0 && lab===disp(NAMES[0]))?(Math.floor(k.m/12)-1):''); b.title=disp(NAMES[k.pc]);
+      b.addEventListener('click', function(){ setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
+    blacks.forEach(function(k){ var st=styleFor(k.pc); var b=document.createElement('button'); b.className='pkey black'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=BW+'px'; b.style.height=BH+'px';
+      b.textContent=noteLabel(k.pc); b.title=disp(NAMES[k.pc]);
+      b.addEventListener('click', function(e){ e.stopPropagation(); setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
+    var felt=document.createElement('div'); felt.className='pfelt'; felt.style.width=totalW+'px';
+    var cse=document.createElement('div'); cse.className='pcase'; cse.appendChild(felt); cse.appendChild(piano);
+    diagram.innerHTML=''; diagram.appendChild(cse);
+  }
+
+  function mix(a,b,t){ return 'rgb('+Math.round(a[0]+(b[0]-a[0])*t)+','+Math.round(a[1]+(b[1]-a[1])*t)+','+Math.round(a[2]+(b[2]-a[2])*t)+')'; }
+  function renderFretboard(inst){
+    var strings=inst.strings, n=strings.length;
+    var leftPad=10, openW=32, nutW=9, fretW=44, topPad=22, stringGap=32, neckTop=12, rightPad=12;
+    var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FRETS*fretW;
+    var neckH=topPad*2 + (n-1)*stringGap, totalW=fretEnd+rightPad, totalH=neckTop+neckH+30;
+    function sy(i){ return neckTop + topPad + i*stringGap; }
+    function fx(f){ return fbStart+(f-0.5)*fretW; }
+    function wireX(f){ return fbStart+f*fretW; }
+    function inlay(cx,cy){ return '<circle cx="'+cx+'" cy="'+cy+'" r="6" fill="#F1E7CC" stroke="#c9ad78" stroke-width="1"/>'; }
+
+    var s='<svg viewBox="0 0 '+totalW+' '+totalH+'" width="'+totalW+'" height="'+totalH+'" xmlns="http://www.w3.org/2000/svg" font-family="Space Mono, monospace">';
+    s+='<defs><linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFDEBA"/><stop offset="1" stop-color="#DBBE86"/></linearGradient></defs>';
+    // neck (fretboard) from the nut to fret 12
+    s+='<rect x="'+fbStart+'" y="'+neckTop+'" width="'+(fretEnd-fbStart)+'" height="'+neckH+'" rx="7" fill="url(#wood)" stroke="#c19a5e" stroke-width="1.5"/>';
+    for(var gi=0; gi<4; gi++){ var gy=neckTop+6+gi*(neckH/4)+(gi%2?3:0); s+='<line x1="'+fbStart+'" y1="'+gy+'" x2="'+fretEnd+'" y2="'+gy+'" stroke="#c8a86a" stroke-width="1" opacity="0.22"/>'; }
+    MARKERS.forEach(function(f){ if(f>FRETS) return; var cx=fx(f); if(f===12){ s+=inlay(cx, neckTop+neckH*0.30); s+=inlay(cx, neckTop+neckH*0.70); } else s+=inlay(cx, neckTop+neckH/2); });
+    for(var f=1; f<=FRETS; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#9fa6b2" stroke-width="3"/><line x1="'+(wx-0.9)+'" y1="'+neckTop+'" x2="'+(wx-0.9)+'" y2="'+(neckTop+neckH)+'" stroke="#e8ebf0" stroke-width="1"/>'; }
+    // nut
+    s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#F5EEDA" stroke="#cdbf95" stroke-width="1"/>';
+    // strings run from the open column across the neck
+    strings.forEach(function(str,i){ var y=sy(i), t=i/Math.max(1,n-1), th=(3.5-t*2.2).toFixed(2), col=mix([176,138,72],[201,206,216],t);
+      s+='<line x1="'+openX+'" y1="'+y+'" x2="'+fretEnd+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+th+'"/>'; });
+    // open-string notes, before the first fret
+    strings.forEach(function(str,i){ var y=sy(i), pc=str.m%12, st=styleFor(pc);
+      var fill=st==='root'?'#E6462F':st==='scale'?'#2E77E6':'#fff', stk=st==='root'?'#b5361f':st==='scale'?'#1f5fbf':'#cfd6e2', txt=st?'#fff':'#2A3242';
+      s+='<circle cx="'+openX+'" cy="'+y+'" r="11" fill="'+fill+'" stroke="'+stk+'" stroke-width="'+(st?1.5:2)+'"/>'
+        +'<text x="'+openX+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" font-weight="'+(st?700:600)+'" fill="'+txt+'">'+noteLabel(pc)+'</text>'
+        +'<rect x="'+(openX-openW/2)+'" y="'+(y-14)+'" width="'+openW+'" height="28" fill="transparent" data-midi="'+str.m+'" data-pc="'+pc+'" style="cursor:pointer"/>'; });
+    // fretted notes (frets 1-12)
+    strings.forEach(function(str,i){ var y=sy(i);
+      for(var f2=1; f2<=FRETS; f2++){ var midi=str.m+f2, pc=((midi%12)+12)%12, x=fx(f2), st=styleFor(pc);
+        if(st){ s+='<circle cx="'+x+'" cy="'+y+'" r="12.5" fill="'+(st==='root'?'#E6462F':'#2E77E6')+'" stroke="'+(st==='root'?'#b5361f':'#1f5fbf')+'" stroke-width="1.5"/><text x="'+x+'" y="'+(y+3.9)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">'+noteLabel(pc)+'</text>'; }
+        else { s+='<text x="'+x+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" paint-order="stroke" stroke="#efdcae" stroke-width="2.6" stroke-linejoin="round" fill="#5a4423">'+noteLabel(pc)+'</text>'; }
+        s+='<rect x="'+(x-fretW/2)+'" y="'+(y-15)+'" width="'+fretW+'" height="30" fill="transparent" data-midi="'+midi+'" data-pc="'+pc+'" style="cursor:pointer"/>';
+      } });
+    // fret numbers + open label
+    for(var fn=1; fn<=FRETS; fn++){ s+='<text x="'+fx(fn)+'" y="'+(neckTop+neckH+20)+'" text-anchor="middle" font-size="10" fill="#8894a8">'+fn+'</text>'; }
+    s+='<text x="'+openX+'" y="'+(neckTop+neckH+20)+'" text-anchor="middle" font-size="10" fill="#8894a8">open</text>';
+    s+='</svg>';
+    diagram.innerHTML=s;
+    var svg=diagram.querySelector('svg');
+    svg.addEventListener('click', function(e){ var t=e.target.closest('[data-midi]'); if(!t) return; setNote(+t.dataset.pc); playNote(+t.dataset.midi); });
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
