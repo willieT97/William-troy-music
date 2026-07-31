@@ -113,6 +113,17 @@
   .rhythmopt .rslash{ background:#fff; border-radius:7px; padding:1px 2px; display:flex; justify-content:center; align-items:center; min-height:40px; }
   .rhythmopt .rslash svg{ display:block; }
 
+  /* drum grooves */
+  .drums{ display:flex; gap:10px; flex-wrap:wrap; }
+  .drumopt{ cursor:pointer; border:2.5px solid var(--ink); border-radius:14px; background:#fff; font:inherit;
+    box-shadow:2px 2px 0 var(--ink); padding:7px 9px 6px; text-align:center; }
+  .drumopt:active{ transform:translate(2px,2px); box-shadow:none; }
+  .drumopt.on{ background:var(--violet); }
+  .drumopt .dname{ font-family:var(--disp); font-weight:600; font-size:.85rem; color:var(--ink); margin-bottom:4px; }
+  .drumopt.on .dname{ color:#fff; }
+  .drumopt .dgrid{ background:#fff; border-radius:7px; padding:3px; display:inline-block; }
+  .drumopt .dgrid canvas{ display:block; }
+
   /* composition timeline */
   .stage{ overflow-x:auto; padding-bottom:2px; }
   .timeline{ position:relative; display:inline-block; }
@@ -184,6 +195,12 @@
   </div>
 
   <div class="card">
+    <h2>Drums — add a beat</h2>
+    <div class="drums" id="drums"></div>
+    <div class="hintline">Lay a beat under your song. Click one to hear it.</div>
+  </div>
+
+  <div class="card">
     <h2>Your song</h2>
     <div class="stage" id="stage">
       <div class="timeline" id="timeline">
@@ -230,11 +247,11 @@
   // ---------- state ----------
   var NBARS=4, SUB=16, COLS=NBARS*SUB;          // 16th-note resolution, 4 bars
   var NLOW=60, NROWS=25;                          // C4 up two octaves
-  var state={ root:0, mode:'maj', tempo:100, snap:2, rhythm:'held', chords:[], notes:[] }; // chord block: {pc,q,name,color,col,len}; snap: 4=1/4,2=1/8,1=1/16
+  var state={ root:0, mode:'maj', tempo:100, snap:2, rhythm:'held', drums:'none', chords:[], notes:[] }; // chord block: {pc,q,name,color,col,len}; snap: 4=1/4,2=1/8,1=1/16
   var undoStack=[], redoStack=[];
   var LS='songmaker.v3';
   function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
-  function load(){ try{ var s=JSON.parse(localStorage.getItem(LS)); if(s&&s.notes){ state=s; if(!Array.isArray(state.chords)) state.chords=[]; if(!state.snap) state.snap=2; if(!state.rhythm) state.rhythm='held'; } }catch(e){} }
+  function load(){ try{ var s=JSON.parse(localStorage.getItem(LS)); if(s&&s.notes){ state=s; if(!Array.isArray(state.chords)) state.chords=[]; if(!state.snap) state.snap=2; if(!state.rhythm) state.rhythm='held'; if(!state.drums) state.drums='none'; } }catch(e){} }
   // song library + unlock progress (kept separate so clearing the canvas never wipes it)
   var LSP='songmaker.lib.v1', lib={ made:0, songs:[] };
   function loadLib(){ try{ var l=JSON.parse(localStorage.getItem(LSP)); if(l&&typeof l.made==='number'){ lib=l; if(!lib.songs) lib.songs=[]; } }catch(e){} }
@@ -342,6 +359,18 @@
     return out;
   }
 
+  // ---------- drum grooves ----------
+  // one 4/4 bar, 16 steps. k=kick, s=snare, h=hi-hat hit positions (repeats every bar)
+  var DRUMS=[
+    { id:'none',     name:'No drums',  k:[],          s:[],     h:[] },
+    { id:'rock',     name:'Rock',      k:[0,8],       s:[4,12], h:[0,2,4,6,8,10,12,14] },
+    { id:'pop',      name:'Pop',       k:[0,8,10],    s:[4,12], h:[0,2,4,6,8,10,12,14] },
+    { id:'dance',    name:'Dance',     k:[0,4,8,12],  s:[4,12], h:[2,6,10,14] },
+    { id:'hiphop',   name:'Hip-hop',   k:[0,6,10],    s:[4,12], h:[0,2,4,6,8,10,12,14] },
+    { id:'halftime', name:'Half-time', k:[0],         s:[8],    h:[0,2,4,6,8,10,12,14] }
+  ];
+  function currentGroove(){ for(var i=0;i<DRUMS.length;i++) if(DRUMS[i].id===state.drums) return DRUMS[i]; return DRUMS[0]; }
+
   // ---------- audio ----------
   var actx=null;
   function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
@@ -362,6 +391,25 @@
   function clickAt(when){ var a=ac(),o=a.createOscillator(),g=a.createGain(); o.type='square'; o.frequency.value=1600;
     g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(0.1,when+0.004); g.gain.exponentialRampToValueAtTime(0.0001,when+0.05);
     o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+0.07); }
+  // ---- synth drums ----
+  var _noise=null;
+  function noiseBuf(){ if(_noise) return _noise; var a=ac(); _noise=a.createBuffer(1, Math.floor(a.sampleRate*0.3), a.sampleRate);
+    var d=_noise.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1; return _noise; }
+  function kickAt(t){ var a=ac(),o=a.createOscillator(),g=a.createGain(); o.type='sine';
+    o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(50,t+0.11);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.8,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.18); }
+  function snareAt(t){ var a=ac();
+    var n=a.createBufferSource(); n.buffer=noiseBuf(); var hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1400;
+    var g=a.createGain(); g.gain.setValueAtTime(0.4,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+    n.connect(hp); hp.connect(g); g.connect(a.destination); n.start(t); n.stop(t+0.15);
+    var o=a.createOscillator(),og=a.createGain(); o.type='triangle'; o.frequency.value=190;
+    og.gain.setValueAtTime(0.2,t); og.gain.exponentialRampToValueAtTime(0.0001,t+0.08); o.connect(og); og.connect(a.destination); o.start(t); o.stop(t+0.1); }
+  function hatAt(t){ var a=ac(); var n=a.createBufferSource(); n.buffer=noiseBuf();
+    var hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=7000;
+    var g=a.createGain(); g.gain.setValueAtTime(0.15,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.045);
+    n.connect(hp); hp.connect(g); g.connect(a.destination); n.start(t); n.stop(t+0.06); }
+  function drumHit(kind, t){ if(kind==='k') kickAt(t); else if(kind==='s') snareAt(t); else hatAt(t); }
 
   // ---------- layout ----------
   var gutter=42, rowh=15, chordH=34, cellw=0;
@@ -606,6 +654,28 @@
     });
   }
 
+  // ---------- drum-groove picker ----------
+  function drawGroovePreview(cv, gr){
+    var cw=7, gap=1, W=16*(cw+gap)+gap, H=3*(cw+gap)+gap, dpr=window.devicePixelRatio||1;
+    cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px'; var x=cv.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0);
+    var rows=[gr.h, gr.s, gr.k], cols=['#12C7A6','#FF4E86','#7C4DFF'];   // hi-hat / snare / kick
+    for(var r=0;r<3;r++){ for(var c=0;c<16;c++){ var on=rows[r].indexOf(c)>=0, px=gap+c*(cw+gap)+cw/2, py=gap+r*(cw+gap)+cw/2;
+      x.fillStyle = on ? cols[r] : (c%4===0?'#ded3f0':'#efe8f8'); x.beginPath(); x.arc(px, py, on?cw/2:1.5, 0, 6.2832); x.fill(); } }
+  }
+  function previewDrums(gr){ if(gr.id==='none') return; var t0=ac().currentTime+0.06, spb=secPerBeat();
+    ['k','s','h'].forEach(function(kind){ (kind==='k'?gr.k:kind==='s'?gr.s:gr.h).forEach(function(p){ drumHit(kind, t0+(p*0.25)*spb); }); }); }
+  function renderDrums(){
+    var host=document.getElementById('drums'); if(!host) return; host.innerHTML='';
+    DRUMS.forEach(function(gr){
+      var opt=document.createElement('button'); opt.type='button'; opt.className='drumopt'+(gr.id===state.drums?' on':''); opt.dataset.id=gr.id;
+      var nm=document.createElement('div'); nm.className='dname'; nm.textContent=gr.name; opt.appendChild(nm);
+      if(gr.id!=='none'){ var g=document.createElement('div'); g.className='dgrid'; g.appendChild(document.createElement('canvas')); opt.appendChild(g); }
+      opt.addEventListener('click', function(){ ac(); state.drums=gr.id; save(); renderDrums(); previewDrums(gr); });
+      host.appendChild(opt);
+      if(gr.id!=='none') drawGroovePreview(opt.querySelector('canvas'), gr);
+    });
+  }
+
   // ---------- playback ----------
   var playBtn=document.getElementById('playBtn'), tempoEl=document.getElementById('tempo'), bpmEl=document.getElementById('bpm');
   var loopCb=document.getElementById('loop'), metroCb=document.getElementById('metro');
@@ -614,12 +684,20 @@
   function buildEvents(){ var evs=[];
     state.chords.forEach(function(c){ chordStrums(c).forEach(function(s){ if(s.col<COLS) evs.push({t:s.col*0.25, dur:s.len*0.25, type:'chord', c:c}); }); });
     state.notes.forEach(function(n){ evs.push({t:n.col*0.25, dur:n.len*0.25, type:'note', midi:NLOW+n.row}); });
+    if(state.drums!=='none'){ var gr=currentGroove();
+      for(var bar=0;bar<NBARS;bar++){ var b0=bar*SUB;
+        gr.h.forEach(function(p){ evs.push({t:(b0+p)*0.25, type:'drum', d:'h'}); });
+        gr.s.forEach(function(p){ evs.push({t:(b0+p)*0.25, type:'drum', d:'s'}); });
+        gr.k.forEach(function(p){ evs.push({t:(b0+p)*0.25, type:'drum', d:'k'}); });
+      }
+    }
     for(var beat=0;beat<NBARS*4;beat++) evs.push({t:beat, type:'click'});
     evs.sort(function(a,b){ return a.t-b.t; }); return evs;
   }
   var sched=[], sidx=0, loopCount=0, totalBeats=NBARS*4;
   function fire(ev, when){ if(ev.type==='chord') strumAt(ev.c.pc, ev.c.q, when, ev.dur*spb, ev.c.inv);
     else if(ev.type==='note') toneAt(ev.midi, when, Math.max(0.12, ev.dur*spb*0.95), 0.2, 'sawtooth');
+    else if(ev.type==='drum') drumHit(ev.d, when);
     else if(ev.type==='click' && metroCb.checked) clickAt(when); }
   function tick(){ if(!playing) return; var now=ac().currentTime, horizon=now+0.2;
     while(true){ if(sidx>=sched.length){ if(loopCb.checked){ loopCount++; sidx=0; } else { stop(); return; } }
@@ -687,14 +765,14 @@
   }
   function openSaved(i){ var sg=lib.songs[i]; if(!sg) return;
     if(songHasContent() && !confirm('Open “'+sg.name+'”? Your current song will be replaced — finish it first to keep it.')) return;
-    var d=sg.data; state.root=d.root; state.mode=d.mode; state.tempo=d.tempo; state.snap=d.snap||2; state.rhythm=d.rhythm||'held';
+    var d=sg.data; state.root=d.root; state.mode=d.mode; state.tempo=d.tempo; state.snap=d.snap||2; state.rhythm=d.rhythm||'held'; state.drums=d.drums||'none';
     state.chords=(d.chords||[]).slice(); state.notes=(d.notes||[]).slice();
-    undoStack.length=0; redoStack.length=0; updateUndoBtns(); save(); syncControls(); renderPalette(); renderRhythms(); redrawAll(); showToast('Opened “'+sg.name+'” 🎵');
+    undoStack.length=0; redoStack.length=0; updateUndoBtns(); save(); syncControls(); renderPalette(); renderRhythms(); renderDrums(); redrawAll(); showToast('Opened “'+sg.name+'” 🎵');
   }
   function finishSong(){
     if(!songHasContent()){ showToast('Add some chords or notes first! 🎵'); return; }
     var def='Song '+(lib.songs.length+1), name=prompt('Name your song 🎵', def); if(name===null) return; name=(name.trim()||def);
-    lib.songs.unshift({ name:name, ts:Date.now(), data:{root:state.root,mode:state.mode,tempo:state.tempo,snap:state.snap,rhythm:state.rhythm,chords:state.chords.slice(),notes:state.notes.slice()} });
+    lib.songs.unshift({ name:name, ts:Date.now(), data:{root:state.root,mode:state.mode,tempo:state.tempo,snap:state.snap,rhythm:state.rhythm,drums:state.drums,chords:state.chords.slice(),notes:state.notes.slice()} });
     var before=lib.made; lib.made++; saveLib();
     state.chords=[]; state.notes=[]; save(); undoStack.length=0; redoStack.length=0; updateUndoBtns(); redrawAll();
     renderMySongs(); renderMadeCount(); renderPalette();
@@ -722,13 +800,13 @@
   function openSharedFromUrl(){ var m=/[?&]song=([\w-]+)/.exec(location.search||''); if(!m||!supaReady()) return;
     loadSupa().then(function(sb){ return sb.from('songs_public').select('title,data').eq('id',m[1]).single(); })
       .then(function(res){ if(res.error||!res.data) throw (res.error||new Error('not found')); var d=res.data.data||{};
-        state.root=d.root||0; state.mode=d.mode||'maj'; state.tempo=d.tempo||100; state.snap=d.snap||2; state.rhythm=d.rhythm||'held';
+        state.root=d.root||0; state.mode=d.mode||'maj'; state.tempo=d.tempo||100; state.snap=d.snap||2; state.rhythm=d.rhythm||'held'; state.drums=d.drums||'none';
         state.chords=(d.chords||[]).slice(); state.notes=(d.notes||[]).slice();
-        save(); syncControls(); renderPalette(); renderRhythms(); redrawAll(); showToast('Opened shared song “'+(res.data.title||'')+'” 🎵',3000); })
+        save(); syncControls(); renderPalette(); renderRhythms(); renderDrums(); redrawAll(); showToast('Opened shared song “'+(res.data.title||'')+'” 🎵',3000); })
       .catch(function(){ showToast('Couldn’t open that shared song.'); }); }
 
   // ---------- init ----------
-  loadLib(); load(); syncControls(); renderKeys(); renderPalette(); renderRhythms(); renderMySongs(); renderMadeCount(); relayout(); updateUndoBtns();
+  loadLib(); load(); syncControls(); renderKeys(); renderPalette(); renderRhythms(); renderDrums(); renderMySongs(); renderMadeCount(); relayout(); updateUndoBtns();
   openSharedFromUrl();
   window.addEventListener('resize', function(){ relayout(); });
 })();
