@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scale Theory — Music Arcade</title>
+<meta name="description" content="How scales are built — a pattern of whole and half steps. The major and minor scales, why harmonic and melodic minor exist, pentatonics, the blues note, and the modes — with piano and single-string diagrams. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F8; --ink:#2A3242; --muted:#6b7488; --line:#cfd6e2;
+    --blue:#2657C4; --blue-tint:#E3EBFB; --hi:#E6462F; --gold:#E0922A;
+    --disp:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .wrap{ max-width:940px; margin:0 auto; padding:22px 16px 70px; }
+  section[id]{ scroll-margin-top:16px; }
+
+  .tabs{ display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--disp); font-weight:600; font-size:.82rem; text-decoration:none; color:var(--ink);
+    background:#fff; padding:8px 18px; border-radius:999px; box-shadow:0 3px 0 rgba(42,50,66,.12); transition:transform .12s; }
+  .tabs a:hover{ transform:translateY(-2px); }
+  .tabs a.cur{ background:var(--blue); color:#fff; box-shadow:0 3px 0 #1c48a3; }
+
+  header.top{ text-align:center; margin-bottom:6px; }
+  .kicker{ display:inline-block; font-family:var(--disp); font-weight:600; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); background:var(--blue-tint); padding:5px 14px; border-radius:999px; }
+  h1{ font-family:var(--disp); font-weight:700; font-size:clamp(1.9rem,6vw,2.9rem); margin:.45rem 0 .2rem; }
+  .lede{ max-width:58ch; margin:.3rem auto 0; color:var(--muted); font-weight:600; }
+
+  .card{ background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); }
+  .intro{ margin-top:24px; padding:20px 22px; }
+  .intro p{ margin:0; font-size:1rem; line-height:1.65; }
+  .intro p + p{ margin-top:10px; }
+  .intro b{ color:var(--blue); }
+  .intro .w{ color:var(--hi); } .intro .h{ color:var(--gold); }
+
+  .sec{ font-family:var(--disp); font-weight:700; font-size:clamp(1.4rem,4.6vw,1.95rem); text-align:center; margin:46px 0 0; }
+  .sec .n{ color:var(--blue); }
+  .lead{ max-width:62ch; margin:12px auto 0; font-size:.99rem; line-height:1.64; }
+  .lead p{ margin:0; } .lead p + p{ margin-top:11px; }
+  .lead b{ color:var(--ink); }
+  .lead .em{ color:var(--blue); font-weight:700; }
+
+  .picker{ text-align:center; margin-top:18px; }
+  .picker .lab{ font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:8px; }
+  .roots{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .roots button{ font-family:var(--disp); font-weight:600; font-size:.95rem; padding:7px 12px; border-radius:10px;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; min-width:42px; transition:transform .1s; }
+  .roots button:hover{ transform:translateY(-2px); }
+  .roots button.on{ background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 3px 0 #1c48a3; }
+
+  .history{ margin-top:16px; padding:20px 22px; background:#FBF5E7; border:1px solid #E7D9B6; border-radius:16px; box-shadow:0 6px 18px rgba(60,45,20,.08); }
+  .history .h{ font-family:var(--disp); font-weight:700; font-size:1.08rem; color:#7a531a; display:flex; align-items:center; gap:9px; margin-bottom:9px; }
+  .history p{ margin:0; font-size:.97rem; line-height:1.65; color:#4a4230; }
+  .history p + p{ margin-top:10px; }
+  .history b{ color:#9a6b1e; }
+
+  .scard{ margin-top:16px; background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); border-top:5px solid var(--acc); padding:16px 18px 18px; }
+  .duo{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+  .duo .scard{ margin-top:0; }
+  .qhead{ display:flex; align-items:center; gap:12px; }
+  .qsym{ font-family:var(--disp); font-weight:700; font-size:1.35rem; color:#fff; background:var(--acc);
+    border-radius:12px; padding:6px 14px; min-width:52px; text-align:center; }
+  .qname{ font-family:var(--disp); font-weight:700; font-size:1.22rem; line-height:1; }
+  .qsub{ font-family:var(--mono); font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
+  .kb{ margin:14px 0 8px; }
+  .kbsvg{ display:block; width:100%; height:auto; }
+  .frow{ display:flex; gap:8px; align-items:baseline; margin-top:8px; flex-wrap:wrap; }
+  .flab{ font-family:var(--mono); font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); flex:none; width:52px; padding-top:4px; }
+  .chips{ display:flex; gap:5px; flex-wrap:wrap; }
+  .chips span{ font-family:var(--disp); font-weight:700; font-size:1rem; background:var(--tint); color:var(--acc); padding:3px 10px; border-radius:8px; }
+  .pattern{ font-family:var(--mono); font-weight:700; font-size:1rem; color:var(--acc); letter-spacing:.04em; }
+  .playq{ margin-top:14px; font-family:var(--disp); font-weight:600; font-size:.85rem; cursor:pointer; border:none; color:#fff;
+    background:var(--acc); padding:9px 16px; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.18); }
+  .playq:active{ transform:translateY(3px); box-shadow:none; }
+  .comingsoon{ display:inline-block; margin:14px auto 0; font-family:var(--mono); font-size:.76rem; color:#7a6a45;
+    background:#FBF5E7; border:1px dashed #d8c79b; padding:9px 14px; border-radius:10px; }
+  .comingsoon b{ color:#9a6b1e; }
+  .center{ text-align:center; }
+
+  .cheat{ margin-top:40px; }
+  .cheat h2{ font-family:var(--disp); font-weight:700; font-size:1.35rem; text-align:center; margin:0 0 6px; }
+  .cheatbox{ overflow-x:auto; border-radius:14px; box-shadow:0 6px 18px rgba(20,30,60,.10); margin-top:14px; }
+  table.cs{ width:100%; border-collapse:collapse; background:#fff; min-width:540px; }
+  table.cs th, table.cs td{ padding:10px 14px; text-align:left; border-bottom:1px solid var(--line); }
+  table.cs thead th{ font-family:var(--mono); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  table.cs tbody tr:last-child td{ border-bottom:none; }
+  table.cs .csname{ font-family:var(--disp); font-weight:700; font-size:1rem; border-left:5px solid var(--rc); padding-left:12px; }
+  table.cs .csname a{ color:inherit; text-decoration:none; }
+  table.cs .csname a:hover{ text-decoration:underline; }
+  table.cs .steps{ font-family:var(--mono); font-weight:700; font-size:.84rem; }
+  table.cs .cnt{ font-family:var(--mono); font-size:.82rem; color:var(--muted); }
+  table.cs .grp td{ font-family:var(--mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); background:#f6f8fc; }
+
+  .dirctrl{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; align-items:center; margin-top:16px; }
+  .dl{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .sel{ font-family:var(--disp); font-weight:600; font-size:.92rem; padding:7px 12px; border-radius:10px; border:1.5px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+  .legend2{ font-family:var(--mono); font-size:.66rem; color:var(--muted); margin-top:12px; }
+
+  .explore{ margin-top:28px; text-align:center; }
+  .explore .lab{ font-family:var(--mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:10px; }
+  .explore a{ display:inline-block; margin:4px 10px; font-family:var(--body); font-weight:700; font-size:.9rem; color:var(--blue); text-decoration:none; border-bottom:2px solid transparent; }
+  .explore a:hover{ border-bottom-color:var(--blue); }
+
+  .tip{ font-family:var(--mono); font-size:.72rem; color:var(--muted); text-align:center; margin-top:24px; }
+  .tip b{ color:var(--ink); }
+  .foot{ margin-top:26px; text-align:center; font-family:var(--mono); font-size:.72rem; color:#6b6b6b; }
+  .foot a{ color:var(--blue); text-decoration:none; }
+  .foot a:hover{ text-decoration:underline; }
+  @media print{ .tabs,.tip,.foot,.playq,.picker,.explore{ display:none !important; } body{ background:#fff; } .scard,.card,.cheatbox,.history{ box-shadow:none; border:1px solid #ddd; } }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html" class="cur" aria-current="page">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header class="top">
+    <span class="kicker">Reference · scale theory</span>
+    <h1>Scale Theory</h1>
+    <p class="lede">A scale is a ladder of notes from a root to its octave. Learn how the major and minor scales are built, why we bend the minor, and how pentatonics, the blues note and the modes all grow from the same few steps.</p>
+  </header>
+
+  <section class="card intro">
+    <p>Between one note and the next there are only two step sizes: a <span class="w"><b>whole step</b> (2 semitones)</span> and a <span class="h"><b>half step</b> (1 semitone)</span>. A scale is just a fixed recipe of those steps.</p>
+    <p>The <b>major scale</b> is <b>W&ndash;W&ndash;H&ndash;W&ndash;W&ndash;W&ndash;H</b>. Follow that from any note and you always land on a major scale. Change the recipe and everything else on this page appears.</p>
+  </section>
+
+  <div class="picker">
+    <span class="lab">Try any root — every diagram transposes</span>
+    <div class="roots" id="roots"></div>
+  </div>
+
+  <!-- 1. MAJOR -->
+  <section id="s-major">
+    <h2 class="sec"><span class="n">1</span> · The major scale</h2>
+    <div class="lead"><p>Everything starts here. Its bright, finished sound comes from two things: a <b>major 3rd</b> near the bottom, and a <b>7th just a half step below the octave</b> — a "leading tone" that leans hard toward home. On the keyboard, watch where the steps are whole (a key skipped between) or half (right next door).</p></div>
+    <div id="majorDia"></div>
+  </section>
+
+  <!-- 2. NATURAL MINOR (before the string section) -->
+  <section id="s-minor">
+    <h2 class="sec"><span class="n">2</span> · The natural minor scale</h2>
+    <div class="lead"><p>Start a major scale on its <b>6th</b> note instead of its 1st and you get the <b>natural minor</b> — the very same seven notes, but a new home (this is why C major and A minor are "relatives"). Measured from its own root, three notes now sit a semitone lower than the major scale's: the <b>♭3, ♭6 and ♭7</b>. That lowered 3rd is the sound of "sad." Its recipe is <b>W&ndash;H&ndash;W&ndash;W&ndash;H&ndash;W&ndash;W</b>.</p></div>
+    <div id="minorDia"></div>
+  </section>
+
+  <!-- 3. ON A STRING -->
+  <section id="s-string">
+    <h2 class="sec"><span class="n">3</span> · On a string — where it began</h2>
+    <section class="history">
+      <div class="h"><span aria-hidden="true">📜</span> The oldest music lesson</div>
+      <p>The scale is ancient. Greek theorists worked out the seven-note scale by dividing a vibrating string into whole-number lengths on a one-string instrument called the <b>monochord</b>. Halve the string for the octave, take two-thirds for a fifth — the whole ladder falls out of one string and some simple maths.</p>
+      <p>A thousand years later the monk <b>Guido of Arezzo</b> used that same one-string tool to teach choirs to read music, and gave the notes their singing names — <b>ut&ndash;re&ndash;mi&ndash;fa&ndash;sol&ndash;la</b>, the ancestors of today's <b>do&ndash;re&ndash;mi</b>. On a fretted string those steps become something you can see and count: each fret is one half step, so a scale is just a pattern of fret jumps.</p>
+    </section>
+    <div class="lead"><p>Imagine a string tuned to your root. Play it <b>open</b> (step 1), then climb: a <b>whole step is 2 frets</b>, a <b>half step is 1 fret</b>. Seven jumps and you're home, an octave up at fret 12.</p></div>
+    <div id="stringDia"></div>
+  </section>
+
+  <!-- 4. HARMONIC & MELODIC MINOR -->
+  <section id="s-minorvariants">
+    <h2 class="sec"><span class="n">4</span> · Harmonic &amp; melodic minor</h2>
+    <div class="lead">
+      <p>The natural minor has one weakness. Its top note, the <b>♭7</b>, sits a whole step below the tonic — too far to pull strongly home. Music wants <span class="em">gravity</span>: a note a half step below the tonic that aches to resolve up to it — a <b>leading tone</b>.</p>
+      <p>So we raise the 7th. That gives the <b>harmonic minor</b> (♭3, ♭6, <b>♮7</b>) — now the ending pulls home hard. But raising it opens a wide gap below: an <b>augmented 2nd</b>, three frets between the ♭6 and the ♮7 — that unmistakable, exotic colour (you can see the "1½" jump on the string).</p>
+      <p>To smooth the climb, we can raise the 6th too: the <b>melodic minor</b> (♭3, <b>♮6, ♮7</b>), which sounds almost major on the way up and usually relaxes back to natural minor coming down. Both scales exist for one reason — to give the tonic gravity. Singers had done exactly this for centuries, raising the 7th at cadences (<i>musica ficta</i>), the practice Fux later codified in <i>Gradus ad Parnassum</i>.</p>
+    </div>
+    <div class="duo"><div id="harmDia"></div><div id="melDia"></div></div>
+  </section>
+
+  <!-- 5. PENTATONIC -->
+  <section id="s-pentatonic">
+    <h2 class="sec"><span class="n">5</span> · Pentatonic scales</h2>
+    <div class="lead">
+      <p>A scale's tension lives in its <b>half steps</b>. In the major scale they fall between the <b>3rd&ndash;4th</b> and the <b>7th&ndash;8th</b> — and the 4th and 7th are the restless notes that make them. Take those two out and five notes remain that never clash: the <b>major pentatonic</b> (1 2 3 5 6).</p>
+      <p>Do the same to the minor scale — drop the <b>2nd</b> and the <b>♭6</b> — and you get the <b>minor pentatonic</b> (1 ♭3 4 5 ♭7). Fewer notes, no wrong turns: it's why pentatonics are usually the first scales anyone learns, and the sound of folk music the world over. (The faded notes below are the ones we removed.)</p>
+    </div>
+    <div class="duo"><div id="majpentDia"></div><div id="minpentDia"></div></div>
+  </section>
+
+  <!-- 6. BLUES -->
+  <section id="s-blues">
+    <h2 class="sec"><span class="n">6</span> · The blues scale</h2>
+    <div class="lead"><p>Take the minor pentatonic and sneak in one extra note — a <b>flattened 5th (♭5)</b>, tucked between the 4th and the 5th. That's the <span class="em">blue note</span> (shown in blue below): it belongs to neither major nor minor, it lives in the cracks, and sliding into and out of it is the whole sound of the blues.</p></div>
+    <div id="bluesDia"></div>
+    <p class="center"><span class="comingsoon">A fuller story — the 12-bar form, dominant 7ths and bent notes — is coming on the <b>Blues Theory</b> page.</span></p>
+  </section>
+
+  <!-- 7. MODES -->
+  <section id="s-modes">
+    <h2 class="sec"><span class="n">7</span> · The modes</h2>
+    <div class="lead">
+      <p>Play only the white keys of a piano but begin on a different note each time, and you get <b>seven</b> scales built from the same notes that each feel completely different — the <b>modes</b>. Each is given away by a single <span class="em">signature note</span>.</p>
+      <p>These are the old <b>church modes</b>, the scales Fux teaches in <i>Gradus ad Parnassum</i>. In that world a melody in Dorian, Mixolydian or Aeolian would <b>raise its 7th at the cadence</b> (<i>musica ficta</i>) to borrow the major scale's pull home — the one exception being <b>Phrygian</b>, whose <b>♭2</b> gives it a falling cadence all its own. Below, hear them all from the same root so each signature note stands out against a fixed home.</p>
+    </div>
+    <div class="cheatbox">
+      <table class="cs">
+        <thead><tr><th>Mode</th><th>Signature note</th><th>Character</th></tr></thead>
+        <tbody id="modestbl"></tbody>
+      </table>
+    </div>
+    <div class="picker">
+      <span class="lab">Modes on the string — pick one</span>
+      <div class="roots" id="modebtns"></div>
+    </div>
+    <div id="modeDia"></div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section id="s-cheat" class="cheat">
+    <h2>All the scales</h2>
+    <p class="tip" style="margin-top:2px">Tap a name to open it in the scale library below.</p>
+    <div class="cheatbox">
+      <table class="cs">
+        <thead><tr><th>Scale</th><th>Step pattern</th><th>Notes</th></tr></thead>
+        <tbody id="csbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SCALE LIBRARY -->
+  <section id="s-directory">
+    <h2 class="sec">The scale library</h2>
+    <p class="secnote">Any scale, any root — mapped across the <b>whole piano</b> or the <b>full neck</b> of each string instrument. The complete picture to study or print.</p>
+    <div class="picker dirctrl">
+      <label class="dl">Scale <select id="dirScale" class="sel"></select></label>
+      <label class="dl">Root <select id="dirRoot" class="sel"></select></label>
+    </div>
+    <div class="picker"><div class="roots" id="dirInst"></div></div>
+    <div id="dirDia"></div>
+  </section>
+
+  <section class="explore">
+    <span class="lab">Keep exploring</span>
+    <a href="chord-theory.html">Build chords from these notes →</a>
+    <a href="circle-of-fifths.html">How scales become keys →</a>
+    <a href="find-the-note.html">Find any note on your instrument →</a>
+  </section>
+
+  <p class="tip">Tip: <b>W</b> = whole step (2 semitones / 2 frets), <b>H</b> = half step (1). A "1½" is three semitones — a whole step plus a half.</p>
+
+  <div class="foot">
+    <p><a href="resources.html">&larr; Back to Resources</a></p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var DISP="'Fredoka',system-ui,sans-serif", MONO="'Space Mono',monospace";
+  var LETTERS=['C','D','E','F','G','A','B'];
+  var LETTERPC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  function accSym(a){ return a===0?'':a>0?'♯'.repeat(a):'♭'.repeat(-a); }
+
+  var ROOTS=[
+    {name:'C',  letter:'C', pc:0},  {name:'D♭', letter:'D', pc:1},  {name:'D',  letter:'D', pc:2},
+    {name:'E♭', letter:'E', pc:3},  {name:'E',  letter:'E', pc:4},  {name:'F',  letter:'F', pc:5},
+    {name:'F♯', letter:'F', pc:6},  {name:'G',  letter:'G', pc:7},  {name:'A♭', letter:'A', pc:8},
+    {name:'A',  letter:'A', pc:9},  {name:'B♭', letter:'B', pc:10}, {name:'B',  letter:'B', pc:11}
+  ];
+
+  var SC={
+    major:      {name:'Major',            acc:'#E0922A', tint:'#FBEFD8', ints:[0,2,4,5,7,9,11], lst:[0,1,2,3,4,5,6], degs:['1','2','3','4','5','6','7']},
+    minor:      {name:'Natural minor',    acc:'#2657C4', tint:'#E3EBFB', ints:[0,2,3,5,7,8,10], lst:[0,1,2,3,4,5,6], degs:['1','2','♭3','4','5','♭6','♭7']},
+    harmonic:   {name:'Harmonic minor',   acc:'#8A54C6', tint:'#EEE4F7', ints:[0,2,3,5,7,8,11], lst:[0,1,2,3,4,5,6], degs:['1','2','♭3','4','5','♭6','7']},
+    melodic:    {name:'Melodic minor',    acc:'#C0567F', tint:'#F7E3EC', ints:[0,2,3,5,7,9,11], lst:[0,1,2,3,4,5,6], degs:['1','2','♭3','4','5','6','7']},
+    majpent:    {name:'Major pentatonic', acc:'#1F9D55', tint:'#DEF3E6', ints:[0,2,4,7,9],      lst:[0,1,2,4,5],    degs:['1','2','3','5','6']},
+    minpent:    {name:'Minor pentatonic', acc:'#B5462F', tint:'#F7E1DA', ints:[0,3,5,7,10],     lst:[0,2,3,4,6],    degs:['1','♭3','4','5','♭7']},
+    blues:      {name:'Blues',            acc:'#556070', tint:'#E6E9EE', ints:[0,3,5,6,7,10],   lst:[0,2,3,4,4,6],  degs:['1','♭3','4','♭5','5','♭7']},
+    ionian:     {name:'Ionian',      acc:'#E0922A', tint:'#FBEFD8', ints:[0,2,4,5,7,9,11], lst:[0,1,2,3,4,5,6], degs:['1','2','3','4','5','6','7'],      sig:'— (the major scale)', chr:'Bright and resolved — the plain major scale.'},
+    dorian:     {name:'Dorian',      acc:'#1F9D55', tint:'#DEF3E6', ints:[0,2,3,5,7,9,10], lst:[0,1,2,3,4,5,6], degs:['1','2','♭3','4','5','6','♭7'],   sig:'natural 6th', chr:'Minor but hopeful — jazz and Celtic folk.'},
+    phrygian:   {name:'Phrygian',    acc:'#B5462F', tint:'#F7E1DA', ints:[0,1,3,5,7,8,10], lst:[0,1,2,3,4,5,6], degs:['1','♭2','♭3','4','5','♭6','♭7'], sig:'♭2', chr:'Dark and Spanish — flamenco and metal.'},
+    lydian:     {name:'Lydian',      acc:'#2E77E6', tint:'#E1ECFB', ints:[0,2,4,6,7,9,11], lst:[0,1,2,3,4,5,6], degs:['1','2','3','♯4','5','6','7'],    sig:'♯4', chr:'Bright and floating — the "wonder" sound in film.'},
+    mixolydian: {name:'Mixolydian',  acc:'#C79A2A', tint:'#F7EFCF', ints:[0,2,4,5,7,9,10], lst:[0,1,2,3,4,5,6], degs:['1','2','3','4','5','6','♭7'],    sig:'♭7', chr:'Major with a bluesy edge — rock and folk.'},
+    aeolian:    {name:'Aeolian',     acc:'#2657C4', tint:'#E3EBFB', ints:[0,2,3,5,7,8,10], lst:[0,1,2,3,4,5,6], degs:['1','2','♭3','4','5','♭6','♭7'], sig:'— (the natural minor)', chr:'Sad and serious — the natural minor scale.'},
+    locrian:    {name:'Locrian',     acc:'#7A3FB0', tint:'#EEE4F7', ints:[0,1,3,5,6,8,10], lst:[0,1,2,3,4,5,6], degs:['1','♭2','♭3','4','♭5','♭6','♭7'], sig:'♭2 and ♭5', chr:'Restless and unstable — rarely a home key.'}
+  };
+  for(var k in SC){ SC[k].key=k; }
+  var MODE_ORDER=['ionian','dorian','phrygian','lydian','mixolydian','aeolian','locrian'];
+
+  var NAMES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  var TUNINGS={ guitar:{ label:'Guitar', open:[64,59,55,50,45,40] }, bass:{ label:'Bass', open:[43,38,33,28] }, banjo:{ label:'Tenor Banjo', open:[64,57,50,43] } };
+  var DIR_INSTS=[{k:'piano',label:'Piano'},{k:'guitar',label:'Guitar'},{k:'bass',label:'Bass'},{k:'banjo',label:'Banjo'}];
+  var DIR_ORDER=['major','minor','harmonic','melodic','majpent','minpent','blues','ionian','dorian','phrygian','lydian','mixolydian','aeolian','locrian'];
+
+  function steps(sc){ var a=sc.ints, out=[]; for(var i=0;i<a.length-1;i++) out.push(a[i+1]-a[i]); out.push(12-a[a.length-1]); return out; }
+  function stepLabel(s){ return s===1?'H':(s===2?'W':(s===3?'1½':String(s))); }
+  function patternHTML(sc){ return steps(sc).map(stepLabel).join(' – '); }
+
+  function spell(root, iv, ls){
+    var li=LETTERS.indexOf(root.letter), letter=LETTERS[(li+ls)%7];
+    var reqPc=(root.pc+iv)%12, natPc=LETTERPC[letter];
+    var a=((reqPc-natPc+6)%12+12)%12-6;
+    return letter+accSym(a);
+  }
+  function scaleNames(root,sc){ return sc.ints.map(function(iv,i){ return spell(root,iv,sc.lst[i]); }); }
+
+  // ---- audio ----
+  var actx=null;
+  function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+  function freq(m){ return 440*Math.pow(2,(m-69)/12); }
+  function tone(m, when, dur, gain){ var a=ac(), o=a.createOscillator(), g=a.createGain();
+    o.type='triangle'; o.frequency.value=freq(m);
+    g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(gain||0.16,when+0.012); g.gain.exponentialRampToValueAtTime(0.0001,when+dur);
+    o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+dur+0.03); }
+  function playScale(root,sc){ var t=ac().currentTime+0.03, base=60+root.pc, ns=sc.ints.map(function(i){return base+i;}); ns.push(base+12);
+    ns.forEach(function(m,i){ tone(m, t+i*0.17, 0.42, 0.16); }); }
+
+  function bracket(x1,x2,label,y){ y=y||18; var mid=(x1+x2)/2;
+    return '<path d="M'+x1+' '+(y+7)+' V'+y+' H'+x2+' V'+(y+7)+'" fill="none" stroke="var(--acc)" stroke-width="1.5"/>'+
+      '<text x="'+mid+'" y="'+(y-3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="10" font-weight="700" fill="var(--acc)">'+label+'</text>';
+  }
+
+  // ---- piano (one octave from the root) ----
+  var WHITE={0:1,2:1,4:1,5:1,7:1,9:1,11:1};
+  function isWhite(m){ return !!WHITE[((m%12)+12)%12]; }
+  function scaleKeyboardSVG(root,sc){
+    var KW=24, KH=94, BW=15, BH=58, PADX=8, TOP=30;
+    var rootMidi=60+root.pc, notes=sc.ints.map(function(i){return rootMidi+i;}); notes.push(rootMidi+12);
+    var labels=sc.degs.concat(['8']);
+    var start=rootMidi; while(!isWhite(start)) start--;
+    var end=rootMidi+12; while(!isWhite(end)) end++;
+    var whites=[]; for(var m=start;m<=end;m++){ if(isWhite(m)) whites.push(m); }
+    function wxi(i){ return PADX+i*KW; }
+    function cxm(mm){ return isWhite(mm) ? wxi(whites.indexOf(mm))+KW/2 : wxi(whites.indexOf(mm-1))+KW; }
+    var W=PADX*2+whites.length*KW, H=TOP+KH+22;
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+' on a keyboard">';
+    whites.forEach(function(wm,i){ var hit=notes.indexOf(wm)>=0;
+      s+='<rect x="'+wxi(i)+'" y="'+TOP+'" width="'+KW+'" height="'+KH+'" rx="3" fill="'+(hit?'var(--tint)':'#fff')+'" stroke="#c7cfdb" stroke-width="1"/>'; });
+    whites.forEach(function(wm,i){ if(i===whites.length-1)return;
+      if(whites[i+1]-wm===2){ var bm=wm+1, hit=notes.indexOf(bm)>=0;
+        s+='<rect x="'+(wxi(i)+KW-BW/2)+'" y="'+TOP+'" width="'+BW+'" height="'+BH+'" rx="2" fill="'+(hit?'var(--acc)':'#2a3242')+'"/>'; }});
+    var my=TOP+KH-15, by=TOP+BH-14;
+    notes.forEach(function(mm,idx){ var x=cxm(mm), ring=(idx===0||idx===notes.length-1), lbl=labels[idx];
+      if(isWhite(mm)){
+        s+='<circle cx="'+x+'" cy="'+my+'" r="9.5" fill="var(--acc)"'+(ring?' stroke="#fff" stroke-width="2"':'')+'/>';
+        s+='<text x="'+x+'" y="'+(my+3.3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" font-weight="700" fill="#fff">'+lbl+'</text>';
+      } else {
+        if(ring) s+='<circle cx="'+x+'" cy="'+by+'" r="8" fill="none" stroke="#fff" stroke-width="1.6"/>';
+        s+='<text x="'+x+'" y="'+(by+3.3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" font-weight="700" fill="#fff">'+lbl+'</text>';
+      }
+    });
+    for(var i=0;i<notes.length-1;i++){ s+=bracket(cxm(notes[i]),cxm(notes[i+1]), stepLabel(notes[i+1]-notes[i])); }
+    return s+'</svg>';
+  }
+
+  // ---- one string: open = root, frets 0..12 ----
+  function stringSVG(root, sc, opts){
+    opts=opts||{};
+    var withOct = opts.octave!==false, showBr = opts.brackets!==false;
+    var styleOf = opts.styleOf || function(){ return 'on'; };
+    var FR=12, leftPad=8, openW=26, nutW=8, fretW=38, rightPad=12;
+    var brkY=13, strY=46, neckTop=30, neckH=30, numY=74, H=84;
+    var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FR*fretW, W=fretEnd+rightPad;
+    function fx(f){ return f===0?openX:fbStart+(f-0.5)*fretW; }
+    function wireX(f){ return fbStart+f*fretW; }
+    var frets=sc.ints.slice(), labels=sc.degs.slice();
+    if(withOct){ frets.push(12); labels.push('8'); }
+    function dot(cx,label,style,ring){
+      if(style==='ghost'){ return '<circle cx="'+cx+'" cy="'+strY+'" r="10.5" fill="#fff" stroke="#b7bdc9" stroke-width="1.4" stroke-dasharray="3 2"/>'+
+        '<text x="'+cx+'" y="'+(strY+3.6)+'" text-anchor="middle" font-family="'+MONO+'" font-size="9" font-weight="700" fill="#aab0bd">'+label+'</text>'; }
+      var fill = style==='blue' ? '#2E77E6' : 'var(--acc)', rr = (ring || style==='blue');
+      return '<circle cx="'+cx+'" cy="'+strY+'" r="11" fill="'+fill+'"'+(rr?' stroke="#fff" stroke-width="2"':'')+'/>'+
+        '<text x="'+cx+'" y="'+(strY+3.6)+'" text-anchor="middle" font-family="'+MONO+'" font-size="9.5" font-weight="700" fill="#fff">'+label+'</text>';
+    }
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+' along one string">';
+    s+='<rect x="'+fbStart+'" y="'+neckTop+'" width="'+(fretEnd-fbStart)+'" height="'+neckH+'" rx="5" fill="#f6efe0" stroke="#d8c79b" stroke-width="1.4"/>';
+    for(var f=1; f<=FR; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#b7bcc8" stroke-width="2"/>'; }
+    s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#efe7d2" stroke="#cdbf95" stroke-width="1"/>';
+    s+='<line x1="'+openX+'" y1="'+strY+'" x2="'+fretEnd+'" y2="'+strY+'" stroke="#8a8f9c" stroke-width="2.2"/>';
+    if(showBr){ for(var i=0;i<frets.length-1;i++){ s+=bracket(fx(frets[i]),fx(frets[i+1]), stepLabel(frets[i+1]-frets[i]), brkY); } }
+    frets.forEach(function(f,i){ var st=styleOf(i), ring=(st==='on' && (labels[i]==='1'||labels[i]==='8')); s+=dot(fx(f), labels[i], st, ring); });
+    for(var fn=1; fn<=FR; fn++){ s+='<text x="'+fx(fn)+'" y="'+numY+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" fill="#9aa3b2">'+fn+'</text>'; }
+    s+='<text x="'+openX+'" y="'+numY+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" fill="#9aa3b2">open</text>';
+    return s+'</svg>';
+  }
+
+  // ---- library: whole piano (two octaves) ----
+  function pianoFullSVG(root, sc){
+    var KW=22, KH=104, BW=13, BH=64, PADX=8, TOP=8;
+    var whites=[]; for(var m=48;m<=72;m++){ if(isWhite(m)) whites.push(m); }
+    var degOf={}; sc.ints.forEach(function(iv,i){ degOf[(root.pc+iv)%12]=sc.degs[i]; });
+    function wxi(i){ return PADX+i*KW; }
+    function cxm(mm){ return isWhite(mm) ? wxi(whites.indexOf(mm))+KW/2 : wxi(whites.indexOf(mm-1))+KW; }
+    var W=PADX*2+whites.length*KW, H=TOP+KH+8, my=TOP+KH-16;
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+' across the piano">';
+    whites.forEach(function(wm,i){ var pc=((wm%12)+12)%12, hit=(pc in degOf);
+      s+='<rect x="'+wxi(i)+'" y="'+TOP+'" width="'+KW+'" height="'+KH+'" rx="3" fill="'+(hit?'var(--tint)':'#fff')+'" stroke="#c7cfdb" stroke-width="1"/>'; });
+    whites.forEach(function(wm,i){ if(i===whites.length-1)return; if(whites[i+1]-wm===2){ var bm=wm+1, pc=((bm%12)+12)%12, hit=(pc in degOf);
+      s+='<rect x="'+(wxi(i)+KW-BW/2)+'" y="'+TOP+'" width="'+BW+'" height="'+BH+'" rx="2" fill="'+(hit?'var(--acc)':'#2a3242')+'"/>'; }});
+    var by=TOP+BH-15;
+    for(var mm=48;mm<=72;mm++){ var pc=((mm%12)+12)%12; if(!(pc in degOf)) continue; var x=cxm(mm), ring=(pc===root.pc), lbl=degOf[pc];
+      if(isWhite(mm)){
+        s+='<circle cx="'+x+'" cy="'+my+'" r="8.5" fill="var(--acc)"'+(ring?' stroke="#fff" stroke-width="2"':'')+'/>'+
+          '<text x="'+x+'" y="'+(my+3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" font-weight="700" fill="#fff">'+lbl+'</text>';
+      } else {
+        if(ring) s+='<circle cx="'+x+'" cy="'+by+'" r="7" fill="none" stroke="#fff" stroke-width="1.6"/>';
+        s+='<text x="'+x+'" y="'+(by+3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" font-weight="700" fill="#fff">'+lbl+'</text>';
+      }
+    }
+    return s+'</svg>';
+  }
+
+  // ---- library: the whole neck (all strings, 12 frets) ----
+  function fretboardFullSVG(instKey, root, sc){
+    var T=TUNINGS[instKey], open=T.open, n=open.length;
+    var degOf={}; sc.ints.forEach(function(iv,i){ degOf[((root.pc+iv)%12+12)%12]=sc.degs[i]; });
+    var FR=12, leftPad=8, openW=26, nutW=8, fretW=40, topPad=14, stringGap=26, neckTop=8, rightPad=12;
+    var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FR*fretW;
+    var neckH=topPad*2+(n-1)*stringGap, W=fretEnd+rightPad, H=neckTop+neckH+22;
+    function sy(i){ return neckTop+topPad+i*stringGap; }
+    function fx(f){ return fbStart+(f-0.5)*fretW; }
+    function wireX(f){ return fbStart+f*fretW; }
+    function dot(cx,cy,label){ var ring=(label==='1'); return '<circle cx="'+cx+'" cy="'+cy+'" r="9.5" fill="var(--acc)"'+(ring?' stroke="#fff" stroke-width="2"':'')+'/>'+
+      '<text x="'+cx+'" y="'+(cy+3.3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" font-weight="700" fill="#fff">'+label+'</text>'; }
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+' on '+T.label+'">';
+    s+='<rect x="'+fbStart+'" y="'+neckTop+'" width="'+(fretEnd-fbStart)+'" height="'+neckH+'" rx="6" fill="#f6efe0" stroke="#d8c79b" stroke-width="1.4"/>';
+    [3,5,7,9].forEach(function(fr){ s+='<circle cx="'+fx(fr)+'" cy="'+(neckTop+neckH/2)+'" r="3.2" fill="#e4d5ab"/>'; });
+    s+='<circle cx="'+fx(12)+'" cy="'+(neckTop+neckH*0.3)+'" r="3.2" fill="#e4d5ab"/><circle cx="'+fx(12)+'" cy="'+(neckTop+neckH*0.7)+'" r="3.2" fill="#e4d5ab"/>';
+    for(var f=1; f<=FR; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#b7bcc8" stroke-width="2.2"/>'; }
+    s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#efe7d2" stroke="#cdbf95" stroke-width="1"/>';
+    open.forEach(function(m,i){ var y=sy(i), th=(1.1+i*0.35).toFixed(1); s+='<line x1="'+openX+'" y1="'+y+'" x2="'+fretEnd+'" y2="'+y+'" stroke="#8a8f9c" stroke-width="'+th+'"/>'; });
+    open.forEach(function(m,i){ var y=sy(i), pc=((m%12)+12)%12, d=degOf[pc];
+      if(d!==undefined){ s+=dot(openX,y,d); }
+      else{ s+='<circle cx="'+openX+'" cy="'+y+'" r="9.5" fill="#fff" stroke="#c7cfdb" stroke-width="1.4"/>'+
+        '<text x="'+openX+'" y="'+(y+3.4)+'" text-anchor="middle" font-family="'+DISP+'" font-size="9" font-weight="700" fill="#aab0bd">'+NAMES[pc]+'</text>'; }
+    });
+    open.forEach(function(m,i){ var y=sy(i);
+      for(var f2=1; f2<=FR; f2++){ var pc=((m+f2)%12+12)%12, d=degOf[pc]; if(d!==undefined) s+=dot(fx(f2),y,d); }
+    });
+    for(var fn=1; fn<=FR; fn++){ s+='<text x="'+fx(fn)+'" y="'+(neckTop+neckH+15)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" fill="#9aa3b2">'+fn+'</text>'; }
+    s+='<text x="'+openX+'" y="'+(neckTop+neckH+15)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" fill="#9aa3b2">open</text>';
+    return s+'</svg>';
+  }
+
+  // ---- cards ----
+  function header(root,sc){ return '<div class="qhead"><span class="qsym">'+root.name+'</span>'
+    +'<div><div class="qname">'+sc.name+'</div><div class="qsub">'+root.name+' '+sc.name.toLowerCase()+'</div></div></div>'; }
+  function chipsHTML(root,sc){ return '<div class="chips">'+scaleNames(root,sc).map(function(nm){ return '<span>'+nm+'</span>'; }).join('')+'</div>'; }
+  function playBtn(key){ return '<button class="playq" data-scale="'+key+'">▶ Hear it</button>'; }
+
+  function pianoCard(sc){ var root=ROOTS[state.rootIdx];
+    return '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'+header(root,sc)
+      +'<div class="kb">'+scaleKeyboardSVG(root,sc)+'</div>'
+      +'<div class="frow"><span class="flab">Notes</span>'+chipsHTML(root,sc)+'</div>'
+      +'<div class="frow"><span class="flab">Steps</span><span class="pattern">'+patternHTML(sc)+'</span></div>'
+      +playBtn(sc.key)+'</div>'; }
+
+  function stringCard(sc){ var root=ROOTS[state.rootIdx];
+    return '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'+header(root,sc)
+      +'<div class="kb">'+stringSVG(root,sc)+'</div>'
+      +'<div class="frow"><span class="flab">Steps</span><span class="pattern">'+patternHTML(sc)+'</span></div>'
+      +playBtn(sc.key)+'</div>'; }
+
+  function compareCard(resultSc, fullSc, coreKey, extraStyle){ var root=ROOTS[state.rootIdx], core=SC[coreKey].ints;
+    var svg=stringSVG(root, fullSc, { octave:false, brackets:false, styleOf:function(i){ return core.indexOf(fullSc.ints[i])>=0 ? 'on':extraStyle; } });
+    return '<div class="scard" style="--acc:'+resultSc.acc+';--tint:'+resultSc.tint+'">'+header(root,resultSc)
+      +'<div class="kb">'+svg+'</div>'
+      +'<div class="frow"><span class="flab">Notes</span>'+chipsHTML(root,resultSc)+'</div>'
+      +playBtn(resultSc.key)+'</div>'; }
+
+  // ---- render ----
+  var state={ rootIdx:0, modeKey:'dorian' };
+  var rootsEl=document.getElementById('roots');
+  function set(id,html){ document.getElementById(id).innerHTML=html; }
+
+  ROOTS.forEach(function(r,i){ var b=document.createElement('button'); b.textContent=r.name;
+    b.addEventListener('click', function(){ state.rootIdx=i; renderRoots(); renderAll(); }); rootsEl.appendChild(b); });
+  function renderRoots(){ [].forEach.call(rootsEl.children, function(b,i){ b.classList.toggle('on', i===state.rootIdx); }); }
+
+  var modebtnsEl=document.getElementById('modebtns');
+  MODE_ORDER.forEach(function(key){ var b=document.createElement('button'); b.textContent=SC[key].name; b.dataset.mode=key;
+    b.addEventListener('click', function(){ state.modeKey=key; renderMode(); }); modebtnsEl.appendChild(b); });
+
+  function renderMode(){ var sc=SC[state.modeKey];
+    set('modeDia', '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'+header(ROOTS[state.rootIdx],sc)
+      +'<div class="kb">'+stringSVG(ROOTS[state.rootIdx],sc)+'</div>'
+      +'<div class="frow"><span class="flab">Notes</span>'+chipsHTML(ROOTS[state.rootIdx],sc)+'</div>'
+      +'<div class="frow"><span class="flab">Steps</span><span class="pattern">'+patternHTML(sc)+'</span></div>'
+      +'<button class="playq" data-scale="__mode__">▶ Hear it</button></div>');
+    [].forEach.call(modebtnsEl.children, function(b){ b.classList.toggle('on', b.dataset.mode===state.modeKey); });
+  }
+
+  function renderAll(){
+    set('majorDia', pianoCard(SC.major));
+    set('minorDia', pianoCard(SC.minor));
+    set('stringDia', stringCard(SC.major));
+    set('harmDia', stringCard(SC.harmonic));
+    set('melDia', stringCard(SC.melodic));
+    set('majpentDia', compareCard(SC.majpent, SC.major, 'majpent', 'ghost'));
+    set('minpentDia', compareCard(SC.minpent, SC.minor, 'minpent', 'ghost'));
+    set('bluesDia', compareCard(SC.blues, SC.blues, 'minpent', 'blue'));
+    renderMode();
+  }
+
+  function renderModesTable(){
+    set('modestbl', MODE_ORDER.map(function(key){ var sc=SC[key];
+      return '<tr><td class="csname" style="--rc:'+sc.acc+';color:'+sc.acc+'">'+sc.name+'</td>'
+        +'<td class="steps">'+sc.sig+'</td><td class="cnt" style="color:#4a4a55">'+sc.chr+'</td></tr>';
+    }).join('')); }
+
+  var CHEAT=['major','minor','harmonic','melodic','majpent','minpent','blues'];
+  function cheatRow(key){ var sc=SC[key];
+    return '<tr><td class="csname" style="--rc:'+sc.acc+';color:'+sc.acc+'"><a href="#s-directory" data-scale="'+key+'">'+sc.name+'</a></td>'
+      +'<td class="steps">'+patternHTML(sc)+'</td><td class="cnt">'+sc.ints.length+' notes</td></tr>'; }
+  function renderCheat(){
+    var rows=CHEAT.map(cheatRow);
+    rows.push('<tr class="grp"><td colspan="3">The modes</td></tr>');
+    MODE_ORDER.forEach(function(key){ rows.push(cheatRow(key)); });
+    set('csbody', rows.join(''));
+  }
+
+  document.addEventListener('click', function(e){ var b=e.target.closest('.playq'); if(!b) return; ac();
+    var key = b.dataset.scale==='__mode__' ? state.modeKey : b.dataset.scale;
+    var rIdx = b.dataset.root!==undefined ? +b.dataset.root : state.rootIdx;
+    playScale(ROOTS[rIdx], SC[key]); });
+
+  // ---- scale library (bottom of page) ----
+  var dir={ scale:'major', rootIdx:0, inst:'guitar' };
+  var dirScaleEl=document.getElementById('dirScale'), dirRootEl=document.getElementById('dirRoot'), dirInstEl=document.getElementById('dirInst');
+  DIR_ORDER.forEach(function(key){ var o=document.createElement('option'); o.value=key;
+    o.textContent=SC[key].name+(key==='ionian'?' (= major)':(key==='aeolian'?' (= natural minor)':'')); dirScaleEl.appendChild(o); });
+  ROOTS.forEach(function(r,i){ var o=document.createElement('option'); o.value=i; o.textContent=r.name; dirRootEl.appendChild(o); });
+  dirScaleEl.addEventListener('change', function(){ dir.scale=this.value; renderDirectory(); });
+  dirRootEl.addEventListener('change', function(){ dir.rootIdx=+this.value; renderDirectory(); });
+  DIR_INSTS.forEach(function(it){ var b=document.createElement('button'); b.textContent=it.label; b.dataset.inst=it.k;
+    b.addEventListener('click', function(){ dir.inst=it.k; renderDirectory(); }); dirInstEl.appendChild(b); });
+  function renderDirectory(){
+    var root=ROOTS[dir.rootIdx], sc=SC[dir.scale];
+    var dia = dir.inst==='piano' ? pianoFullSVG(root,sc) : fretboardFullSVG(dir.inst,root,sc);
+    var instLabel = dir.inst==='piano' ? 'Piano' : TUNINGS[dir.inst].label;
+    set('dirDia', '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'
+      +'<div class="qhead"><span class="qsym">'+root.name+'</span><div><div class="qname">'+sc.name+'</div>'
+      +'<div class="qsub">'+root.name+' '+sc.name.toLowerCase()+' · '+instLabel+'</div></div></div>'
+      +'<div class="kb">'+dia+'</div>'
+      +'<div class="frow"><span class="flab">Notes</span>'+chipsHTML(root,sc)+'</div>'
+      +'<button class="playq" data-scale="'+dir.scale+'" data-root="'+dir.rootIdx+'">▶ Hear it</button>'
+      +'<div class="legend2">The root (1) is ringed; the numbers are scale degrees.</div></div>');
+    dirScaleEl.value=dir.scale; dirRootEl.value=dir.rootIdx;
+    [].forEach.call(dirInstEl.children, function(b){ b.classList.toggle('on', b.dataset.inst===dir.inst); });
+  }
+  document.addEventListener('click', function(e){ var a=e.target.closest('#csbody a[data-scale]'); if(!a) return;
+    dir.scale=a.dataset.scale; renderDirectory(); });
+
+  renderRoots(); renderModesTable(); renderCheat(); renderAll(); renderDirectory();
+})();
+</script>
+</body>
+</html>

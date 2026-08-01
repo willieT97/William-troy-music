@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chord Theory — Music Arcade</title>
+<meta name="description" content="How the four basic chords are built — major, minor, diminished and augmented triads. See them on the piano, learn the string-instrument story, build a chord along a single string, then across the whole neck. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F8; --ink:#2A3242; --muted:#6b7488; --line:#cfd6e2;
+    --blue:#2657C4; --blue-tint:#E3EBFB; --hi:#E6462F; --gold:#E0922A;
+    --disp:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .wrap{ max-width:940px; margin:0 auto; padding:22px 16px 70px; }
+
+  .tabs{ display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--disp); font-weight:600; font-size:.82rem; text-decoration:none; color:var(--ink);
+    background:#fff; padding:8px 18px; border-radius:999px; box-shadow:0 3px 0 rgba(42,50,66,.12); transition:transform .12s; }
+  .tabs a:hover{ transform:translateY(-2px); }
+  .tabs a.cur{ background:var(--blue); color:#fff; box-shadow:0 3px 0 #1c48a3; }
+
+  header.top{ text-align:center; margin-bottom:6px; }
+  .kicker{ display:inline-block; font-family:var(--disp); font-weight:600; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); background:var(--blue-tint); padding:5px 14px; border-radius:999px; }
+  h1{ font-family:var(--disp); font-weight:700; font-size:clamp(1.9rem,6vw,2.9rem); margin:.45rem 0 .2rem; }
+  .lede{ max-width:58ch; margin:.3rem auto 0; color:var(--muted); font-weight:600; }
+
+  .card{ background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); }
+  .intro{ margin-top:24px; padding:20px 22px; }
+  .intro p{ margin:0; font-size:1rem; line-height:1.65; }
+  .intro p + p{ margin-top:10px; }
+  .intro b{ color:var(--blue); }
+  .intro .m3{ color:var(--gold); } .intro .M3{ color:var(--hi); }
+
+  .sec{ font-family:var(--disp); font-weight:700; font-size:clamp(1.4rem,4.6vw,1.95rem); text-align:center; margin:46px 0 0; }
+  .sec .n{ color:var(--blue); }
+  .secnote{ max-width:60ch; margin:8px auto 0; text-align:center; color:var(--muted); font-weight:600; }
+  .secnote b{ color:var(--ink); }
+
+  .picker{ text-align:center; margin-top:18px; }
+  .picker .lab{ font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:8px; }
+  .roots{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .roots button{ font-family:var(--disp); font-weight:600; font-size:.95rem; padding:7px 12px; border-radius:10px;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; min-width:42px; transition:transform .1s; }
+  .roots button:hover{ transform:translateY(-2px); }
+  .roots button.on{ background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 3px 0 #1c48a3; }
+  .tuningcap{ font-family:var(--mono); font-size:.68rem; color:var(--muted); margin-top:9px; min-height:1em; }
+
+  .history{ margin-top:18px; padding:20px 22px; background:#FBF5E7; border:1px solid #E7D9B6; border-radius:16px; box-shadow:0 6px 18px rgba(60,45,20,.08); }
+  .history .h{ font-family:var(--disp); font-weight:700; font-size:1.08rem; color:#7a531a; display:flex; align-items:center; gap:9px; margin-bottom:9px; }
+  .history p{ margin:0; font-size:.97rem; line-height:1.65; color:#4a4230; }
+  .history p + p{ margin-top:10px; }
+  .history b{ color:#9a6b1e; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; margin-top:20px; }
+  .grid.one{ grid-template-columns:1fr; }
+  .qcard{ background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); border-top:5px solid var(--acc); padding:16px 18px 18px; }
+  .qhead{ display:flex; align-items:center; gap:12px; }
+  .qsym{ font-family:var(--disp); font-weight:700; font-size:1.4rem; color:#fff; background:var(--acc);
+    border-radius:12px; padding:6px 12px; min-width:52px; text-align:center; }
+  .qname{ font-family:var(--disp); font-weight:700; font-size:1.3rem; line-height:1; }
+  .qsub{ font-family:var(--mono); font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
+  .kb{ margin:12px 0 6px; }
+  .kbsvg{ display:block; width:100%; height:auto; }
+  .frow{ display:flex; gap:8px; align-items:baseline; margin-top:7px; }
+  .flab{ font-family:var(--mono); font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); flex:none; width:52px; padding-top:2px; }
+  .fval{ font-family:var(--body); font-weight:600; font-size:.9rem; }
+  .fval em{ font-family:var(--mono); font-style:normal; color:var(--muted); font-size:.8em; }
+  .fval.notes{ font-family:var(--disp); font-weight:700; font-size:1.05rem; color:var(--acc); letter-spacing:.02em; }
+  .feel{ margin-top:11px; font-size:.88rem; color:#555; line-height:1.45; }
+  .playq{ margin-top:13px; font-family:var(--disp); font-weight:600; font-size:.85rem; cursor:pointer; border:none; color:#fff;
+    background:var(--acc); padding:9px 16px; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.18); }
+  .playq:active{ transform:translateY(3px); box-shadow:none; }
+
+  .cheat{ margin-top:34px; }
+  .cheat h2{ font-family:var(--disp); font-weight:700; font-size:1.35rem; text-align:center; margin:0 0 12px; }
+  .cheatbox{ overflow-x:auto; border-radius:14px; box-shadow:0 6px 18px rgba(20,30,60,.10); }
+  table.cs{ width:100%; border-collapse:collapse; background:#fff; min-width:460px; }
+  table.cs th, table.cs td{ padding:11px 14px; text-align:left; border-bottom:1px solid var(--line); }
+  table.cs thead th{ font-family:var(--mono); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  table.cs tbody tr:last-child td{ border-bottom:none; }
+  table.cs .csname{ font-family:var(--disp); font-weight:700; font-size:1.02rem; border-left:5px solid var(--rc); padding-left:12px; }
+  table.cs .recipe{ font-family:var(--mono); font-weight:700; font-size:.88rem; }
+  table.cs .hi5{ font-weight:700; }
+
+  .explore{ margin-top:28px; text-align:center; }
+  .explore .lab{ font-family:var(--mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:10px; }
+  .explore a{ display:inline-block; margin:4px 10px; font-family:var(--body); font-weight:700; font-size:.9rem; color:var(--blue); text-decoration:none; border-bottom:2px solid transparent; }
+  .explore a:hover{ border-bottom-color:var(--blue); }
+
+  .tip{ font-family:var(--mono); font-size:.72rem; color:var(--muted); text-align:center; margin-top:24px; }
+  .tip b{ color:var(--ink); }
+  .foot{ margin-top:26px; text-align:center; font-family:var(--mono); font-size:.72rem; color:#6b6b6b; }
+  .foot a{ color:var(--blue); text-decoration:none; }
+  .foot a:hover{ text-decoration:underline; }
+  @media print{ .tabs,.tip,.foot,.playq,.picker,.explore{ display:none !important; } body{ background:#fff; } .qcard,.card,.cheatbox,.history{ box-shadow:none; border:1px solid #ddd; } }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html" class="cur" aria-current="page">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header class="top">
+    <span class="kicker">Reference · chord theory</span>
+    <h1>Chord Theory</h1>
+    <p class="lede">Every basic chord is a <b>triad</b> — three notes stacked in thirds. Change the size of those thirds and you get four flavours: major, minor, diminished and augmented. See them on the piano, then discover where the whole idea came from — a single string.</p>
+  </header>
+
+  <section class="card intro">
+    <p>A <b>triad</b> is three notes: a <b>root</b>, a note a <b>third</b> above it, and one more third on top (the <b>fifth</b>). A "third" always spans two letter-names — but it comes in two sizes: a <span class="M3"><b>major third</b> (4 semitones)</span> and a <span class="m3"><b>minor third</b> (3 semitones)</span>.</p>
+    <p>Which two sizes you stack decides the chord's quality. Stack a big third then a small one and you've got a major chord; swap the order and it's minor. Everything below is that one idea, shown three ways.</p>
+  </section>
+
+  <div class="picker">
+    <span class="lab">Try any root (the piano &amp; full-neck diagrams follow it)</span>
+    <div class="roots" id="roots"></div>
+  </div>
+
+  <h2 class="sec"><span class="n">1</span> · At the piano</h2>
+  <p class="secnote">The keyboard lays every semitone out in a row, so a chord is easy to see. Count <b>4 semitones</b> up for a major third, <b>3</b> for a minor third.</p>
+  <div class="grid" id="pianoGrid"></div>
+
+  <h2 class="sec"><span class="n">2</span> · On a string — where it began</h2>
+  <section class="history">
+    <div class="h"><span aria-hidden="true">📜</span> A very old idea</div>
+    <p>Long before pianos existed, musicians worked out how notes fit together by measuring a single stretched string. The ancient Greeks — Pythagoras among them — used a one-string instrument called the <b>monochord</b>, sliding a bridge along it and listening: halve the string and you hear the same note an octave higher; take two-thirds of it and you get a perfect fifth. Whole-number ratios, one string.</p>
+    <p>That monochord stayed the main teaching tool right through the Middle Ages. Theorists like <b>Guido of Arezzo</b> used it to work out scales and train church singers, and lute and viol players tied gut frets across the neck at those same distances. Each fret step is <b>one semitone</b> — so a fretted string is really a ruler for building intervals. Stack a few of those intervals and you have a chord.</p>
+  </section>
+  <p class="secnote">Because <b>one fret = one semitone</b>, you can build a whole chord on a single string just by counting frets. Here is each chord climbing up the <b>A string</b> in C — root, third, fifth:</p>
+  <div class="grid one" id="singleGrid"></div>
+
+  <h2 class="sec"><span class="n">3</span> · Across the whole neck</h2>
+  <p class="secnote">You wouldn't really play a chord all on one string — you spread the same notes across the neck. Same three notes, marked <b>R · 3 · 5</b> wherever they fall. Pick your instrument:</p>
+  <div class="picker">
+    <div class="roots" id="insts"></div>
+    <div class="tuningcap" id="tuningcap"></div>
+  </div>
+  <div class="grid" id="neckGrid"></div>
+
+  <section class="cheat">
+    <h2>The cheat sheet</h2>
+    <div class="cheatbox">
+      <table class="cs">
+        <thead><tr><th>Chord</th><th>Lower third</th><th>Upper third</th><th>Fifth</th><th>Semitones</th></tr></thead>
+        <tbody id="csbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="explore">
+    <span class="lab">Keep exploring</span>
+    <a href="chords.html">See real chord shapes to play →</a>
+    <a href="circle-of-fifths.html">Which chords belong to each key →</a>
+    <a href="find-the-note.html">Find any note on your instrument →</a>
+  </section>
+
+  <p class="tip">Tip: the little numbers over the diagrams are how many <b>semitones</b> to count up for each third — on the piano that's keys, on a string that's frets.</p>
+
+  <div class="foot">
+    <p><a href="resources.html">&larr; Back to Resources</a></p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var DISP="'Fredoka',system-ui,sans-serif", MONO="'Space Mono',monospace";
+  var LETTERS=['C','D','E','F','G','A','B'];
+  var LETTERPC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  function accSym(a){ return a===0?'':a>0?'♯'.repeat(a):'♭'.repeat(-a); }
+
+  var ROOTS=[
+    {name:'C',  letter:'C', pc:0},  {name:'D♭', letter:'D', pc:1},  {name:'D',  letter:'D', pc:2},
+    {name:'E♭', letter:'E', pc:3},  {name:'E',  letter:'E', pc:4},  {name:'F',  letter:'F', pc:5},
+    {name:'F♯', letter:'F', pc:6},  {name:'G',  letter:'G', pc:7},  {name:'A♭', letter:'A', pc:8},
+    {name:'A',  letter:'A', pc:9},  {name:'B♭', letter:'B', pc:10}, {name:'B',  letter:'B', pc:11}
+  ];
+
+  var QUALS=[
+    {key:'maj', name:'Major',      sym:'',  third:4, fifth:7, acc:'#E0922A', tint:'#FBEFD8',
+      feel:'Bright and happy — the resolved, "at home" sound behind most songs.'},
+    {key:'min', name:'Minor',      sym:'m', third:3, fifth:7, acc:'#2657C4', tint:'#E3EBFB',
+      feel:'Darker and more serious or sad — still settled, just a different mood.'},
+    {key:'dim', name:'Diminished', sym:'°', third:3, fifth:6, acc:'#7A3FB0', tint:'#EFE4F7',
+      feel:'Tense and unstable — it sounds like it needs to move somewhere else.'},
+    {key:'aug', name:'Augmented',  sym:'+', third:4, fifth:8, acc:'#E6462F', tint:'#FBE3DE',
+      feel:'Dreamy and restless — it seems to float, unsure where to land.'}
+  ];
+  function thirdName(iv){ return iv===4?'major 3rd':'minor 3rd'; }
+  function fifthName(iv){ return iv===7?'perfect 5th':(iv===6?'diminished 5th':'augmented 5th'); }
+
+  function spell(root, iv, ls){
+    var li=LETTERS.indexOf(root.letter), letter=LETTERS[(li+ls)%7];
+    var reqPc=(root.pc+iv)%12, natPc=LETTERPC[letter];
+    var a=((reqPc-natPc+6)%12+12)%12-6;
+    return letter+accSym(a);
+  }
+  function toneNames(root,q){ return [root.name, spell(root,q.third,2), spell(root,q.fifth,4)]; }
+
+  var NAMES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  var TUNINGS={
+    guitar:{ label:'Guitar',      open:[64,59,55,50,45,40] },  // top→bottom = high→low
+    bass:  { label:'Bass',        open:[43,38,33,28] },
+    banjo: { label:'Tenor Banjo', open:[64,57,50,43] }
+  };
+  var INSTS=[{k:'guitar',label:'Guitar'},{k:'bass',label:'Bass'},{k:'banjo',label:'Banjo'}];
+  function tuningStr(k){ return TUNINGS[k].open.slice().reverse().map(function(m){ return NAMES[((m%12)+12)%12]; }).join(' '); }
+
+  // ---- audio ----
+  var actx=null;
+  function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+  function freq(m){ return 440*Math.pow(2,(m-69)/12); }
+  function tone(m, when, dur, gain){ var a=ac(), o=a.createOscillator(), g=a.createGain();
+    o.type='triangle'; o.frequency.value=freq(m);
+    g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(gain||0.16,when+0.012); g.gain.exponentialRampToValueAtTime(0.0001,when+dur);
+    o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+dur+0.03); }
+  function playTriad(root,q){ var t=ac().currentTime+0.02, base=60+root.pc, ms=[base, base+q.third, base+q.fifth];
+    ms.forEach(function(m,i){ tone(m, t+i*0.07, 1.5, 0.15); }); }
+
+  // ---- brackets shared by keyboard + single string ----
+  function bracket(x1,x2,label,y){ y=y||18; var mid=(x1+x2)/2;
+    return '<path d="M'+x1+' '+(y+7)+' V'+y+' H'+x2+' V'+(y+7)+'" fill="none" stroke="var(--acc)" stroke-width="1.5"/>'+
+      '<text x="'+mid+'" y="'+(y-3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="10" font-weight="700" fill="var(--acc)">'+label+'</text>';
+  }
+
+  // ---- piano keyboard (fixed window C4..G5) ----
+  var WHITE={0:1,2:1,4:1,5:1,7:1,9:1,11:1};
+  function isWhite(m){ return !!WHITE[((m%12)+12)%12]; }
+  var whiteMidis=[]; for(var _m=60; whiteMidis.length<12; _m++){ if(isWhite(_m)) whiteMidis.push(_m); }
+  var KW=24, KH=96, BW=15, BH=60, PADX=8, TOP=30;
+  function whiteX(i){ return PADX + i*KW; }
+  function midiCenter(m){ if(isWhite(m)) return whiteX(whiteMidis.indexOf(m))+KW/2; return whiteX(whiteMidis.indexOf(m-1))+KW; }
+  function keyboardSVG(root,q){
+    var base=60+root.pc, mR=base, m3=base+q.third, m5=base+q.fifth, hits=[mR,m3,m5];
+    var W=PADX*2+12*KW, H=TOP+KH+24, s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+q.name+' on a keyboard">';
+    whiteMidis.forEach(function(wm,i){ var hit=hits.indexOf(wm)>=0;
+      s+='<rect x="'+whiteX(i)+'" y="'+TOP+'" width="'+KW+'" height="'+KH+'" rx="3" fill="'+(hit?'var(--tint)':'#fff')+'" stroke="#c7cfdb" stroke-width="1"/>'; });
+    whiteMidis.forEach(function(wm,i){ if(i===whiteMidis.length-1) return;
+      if(whiteMidis[i+1]-wm===2){ var bm=wm+1, hit=hits.indexOf(bm)>=0;
+        s+='<rect x="'+(whiteX(i)+KW-BW/2)+'" y="'+TOP+'" width="'+BW+'" height="'+BH+'" rx="2" fill="'+(hit?'var(--acc)':'#2a3242')+'"/>'; } });
+    var roles=['R','3','5'], my=TOP+KH-16;
+    hits.forEach(function(m,i){ var cx=midiCenter(m);
+      s+='<circle cx="'+cx+'" cy="'+my+'" r="10" fill="var(--acc)"/>';
+      s+='<text x="'+cx+'" y="'+(my+3.5)+'" text-anchor="middle" font-family="'+MONO+'" font-size="9" font-weight="700" fill="#fff">'+roles[i]+'</text>'; });
+    var nm=toneNames(root,q);
+    hits.forEach(function(m,i){ s+='<text x="'+midiCenter(m)+'" y="'+(TOP+KH+16)+'" text-anchor="middle" font-family="'+DISP+'" font-size="13" font-weight="700" fill="var(--acc)">'+nm[i]+'</text>'; });
+    s+=bracket(midiCenter(mR),midiCenter(m3),'+'+q.third);
+    s+=bracket(midiCenter(m3),midiCenter(m5),'+'+(q.fifth-q.third));
+    return s+'</svg>';
+  }
+
+  // ---- one chord along a single string (the A string), frets 0..12 ----
+  function singleStringSVG(root,q){
+    var FR=12, leftPad=8, openW=30, nutW=8, fretW=38, rightPad=12;
+    var brkY=13, strY=46, neckTop=30, neckH=30, numY=74, H=84;
+    var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FR*fretW, W=fretEnd+rightPad;
+    function fx(f){ return f===0?openX:fbStart+(f-0.5)*fretW; }
+    function wireX(f){ return fbStart+f*fretW; }
+    var rootFret=((root.pc-9)%12+12)%12, thirdFret=rootFret+q.third, fifthFret=rootFret+q.fifth;
+    function dot(cx,label){ return '<circle cx="'+cx+'" cy="'+strY+'" r="11" fill="var(--acc)"/>'+
+      '<text x="'+cx+'" y="'+(strY+3.6)+'" text-anchor="middle" font-family="'+MONO+'" font-size="10" font-weight="700" fill="#fff">'+label+'</text>'; }
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+q.name+' along one string">';
+    s+='<rect x="'+fbStart+'" y="'+neckTop+'" width="'+(fretEnd-fbStart)+'" height="'+neckH+'" rx="5" fill="#f6efe0" stroke="#d8c79b" stroke-width="1.4"/>';
+    for(var f=1; f<=FR; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#b7bcc8" stroke-width="2"/>'; }
+    s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#efe7d2" stroke="#cdbf95" stroke-width="1"/>';
+    s+='<line x1="'+openX+'" y1="'+strY+'" x2="'+fretEnd+'" y2="'+strY+'" stroke="#8a8f9c" stroke-width="2.2"/>';
+    // open A (string name)
+    s+='<circle cx="'+openX+'" cy="'+strY+'" r="11" fill="#fff" stroke="#c7cfdb" stroke-width="1.5"/>'+
+       '<text x="'+openX+'" y="'+(strY+3.6)+'" text-anchor="middle" font-family="'+DISP+'" font-size="11" font-weight="700" fill="#9aa3b2">A</text>';
+    s+=dot(fx(rootFret),'R'); s+=dot(fx(thirdFret),'3'); s+=dot(fx(fifthFret),'5');
+    s+=bracket(fx(rootFret),fx(thirdFret),'+'+q.third,brkY);
+    s+=bracket(fx(thirdFret),fx(fifthFret),'+'+(q.fifth-q.third),brkY);
+    for(var fn=1; fn<=FR; fn++){ s+='<text x="'+fx(fn)+'" y="'+numY+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" fill="#9aa3b2">'+fn+'</text>'; }
+    s+='<text x="'+openX+'" y="'+numY+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" fill="#9aa3b2">open</text>';
+    return s+'</svg>';
+  }
+
+  // ---- the same chord across the whole neck (first 5 frets) ----
+  function fretboardSVG(instKey,root,q){
+    var T=TUNINGS[instKey], open=T.open, n=open.length;
+    var rootPc=root.pc, thirdPc=(root.pc+q.third)%12, fifthPc=(root.pc+q.fifth)%12;
+    function role(pc){ pc=((pc%12)+12)%12; return pc===rootPc?'R':(pc===thirdPc?'3':(pc===fifthPc?'5':null)); }
+    var FR=5, leftPad=8, openW=30, nutW=8, fretW=46, topPad=16, stringGap=28, neckTop=8, rightPad=12;
+    var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FR*fretW;
+    var neckH=topPad*2+(n-1)*stringGap, W=fretEnd+rightPad, H=neckTop+neckH+22;
+    function sy(i){ return neckTop+topPad+i*stringGap; }
+    function fx(f){ return fbStart+(f-0.5)*fretW; }
+    function wireX(f){ return fbStart+f*fretW; }
+    function dot(cx,cy,label){ return '<circle cx="'+cx+'" cy="'+cy+'" r="10" fill="var(--acc)"/>'+
+      '<text x="'+cx+'" y="'+(cy+3.4)+'" text-anchor="middle" font-family="'+MONO+'" font-size="9.5" font-weight="700" fill="#fff">'+label+'</text>'; }
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+q.name+' on '+T.label+'">';
+    s+='<rect x="'+fbStart+'" y="'+neckTop+'" width="'+(fretEnd-fbStart)+'" height="'+neckH+'" rx="6" fill="#f6efe0" stroke="#d8c79b" stroke-width="1.4"/>';
+    for(var f=1; f<=FR; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#b7bcc8" stroke-width="2.4"/>'; }
+    s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#efe7d2" stroke="#cdbf95" stroke-width="1"/>';
+    open.forEach(function(m,i){ var y=sy(i), th=(1.2+i*0.4).toFixed(1);
+      s+='<line x1="'+openX+'" y1="'+y+'" x2="'+fretEnd+'" y2="'+y+'" stroke="#8a8f9c" stroke-width="'+th+'"/>'; });
+    open.forEach(function(m,i){ var y=sy(i), pc=((m%12)+12)%12, r=role(pc);
+      if(r){ s+=dot(openX,y,r); }
+      else{ s+='<circle cx="'+openX+'" cy="'+y+'" r="10" fill="#fff" stroke="#c7cfdb" stroke-width="1.5"/>'+
+        '<text x="'+openX+'" y="'+(y+3.5)+'" text-anchor="middle" font-family="'+DISP+'" font-size="10" font-weight="700" fill="#9aa3b2">'+NAMES[pc]+'</text>'; }
+    });
+    open.forEach(function(m,i){ var y=sy(i);
+      for(var f2=1; f2<=FR; f2++){ var pc=((m+f2)%12+12)%12, r=role(pc); if(r) s+=dot(fx(f2),y,r); }
+    });
+    for(var fn=1; fn<=FR; fn++){ s+='<text x="'+fx(fn)+'" y="'+(neckTop+neckH+16)+'" text-anchor="middle" font-family="'+MONO+'" font-size="9" fill="#9aa3b2">'+fn+'</text>'; }
+    s+='<text x="'+openX+'" y="'+(neckTop+neckH+16)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" fill="#9aa3b2">open</text>';
+    return s+'</svg>';
+  }
+
+  // ---- card builder ----
+  function chordCard(root,q,diagram,opts){
+    opts=opts||{}; var nm=toneNames(root,q), top=q.fifth-q.third, qi=QUALS.indexOf(q);
+    var h='<div class="qcard" style="--acc:'+q.acc+';--tint:'+q.tint+'">'
+      +'<div class="qhead"><span class="qsym">'+root.name+q.sym+'</span>'
+      +'<div><div class="qname">'+q.name+'</div><div class="qsub">'+root.name+' '+q.name.toLowerCase()+'</div></div></div>'
+      +'<div class="kb">'+diagram+'</div>'
+      +'<div class="frow"><span class="flab">Notes</span><span class="fval notes">'+nm.join('&nbsp; – &nbsp;')+'</span></div>';
+    if(opts.build) h+='<div class="frow"><span class="flab">Build</span><span class="fval">'+thirdName(q.third)+' + '+thirdName(top)+' <em>('+[0,q.third,q.fifth].join(' · ')+' semitones)</em></span></div>';
+    if(opts.fifth) h+='<div class="frow"><span class="flab">Fifth</span><span class="fval">'+fifthName(q.fifth)+'</span></div>';
+    if(opts.feel) h+='<div class="feel">'+q.feel+'</div>';
+    h+='<button class="playq" data-qi="'+qi+'" data-root="'+ROOTS.indexOf(root)+'">▶ Hear '+root.name+q.sym+'</button>';
+    return h+'</div>';
+  }
+
+  // ---- render ----
+  var state={ rootIdx:0, inst:'guitar' };
+  var rootsEl=document.getElementById('roots'), instsEl=document.getElementById('insts'), tuningEl=document.getElementById('tuningcap');
+
+  ROOTS.forEach(function(r,i){ var b=document.createElement('button'); b.textContent=r.name;
+    b.addEventListener('click', function(){ state.rootIdx=i; renderRoots(); renderPiano(); renderNeck(); }); rootsEl.appendChild(b); });
+  function renderRoots(){ [].forEach.call(rootsEl.children, function(b,i){ b.classList.toggle('on', i===state.rootIdx); }); }
+
+  INSTS.forEach(function(it){ var b=document.createElement('button'); b.textContent=it.label;
+    b.addEventListener('click', function(){ state.inst=it.k; renderInsts(); renderNeck(); }); instsEl.appendChild(b); });
+  function renderInsts(){ [].forEach.call(instsEl.children, function(b,i){ b.classList.toggle('on', INSTS[i].k===state.inst); });
+    tuningEl.textContent='Tuning (low → high): '+tuningStr(state.inst); }
+
+  function renderPiano(){ var root=ROOTS[state.rootIdx];
+    document.getElementById('pianoGrid').innerHTML=QUALS.map(function(q){ return chordCard(root,q,keyboardSVG(root,q),{build:true,fifth:true,feel:true}); }).join(''); }
+  function renderSingle(){ var root=ROOTS[0]; // fixed C worked example
+    document.getElementById('singleGrid').innerHTML=QUALS.map(function(q){ return chordCard(root,q,singleStringSVG(root,q),{build:true}); }).join(''); }
+  function renderNeck(){ var root=ROOTS[state.rootIdx];
+    document.getElementById('neckGrid').innerHTML=QUALS.map(function(q){ return chordCard(root,q,fretboardSVG(state.inst,root,q),{build:true}); }).join(''); }
+
+  function renderCheat(){
+    document.getElementById('csbody').innerHTML=QUALS.map(function(q){ var top=q.fifth-q.third;
+      return '<tr><td class="csname" style="--rc:'+q.acc+';color:'+q.acc+'">'+q.name+'</td>'
+        +'<td>'+thirdName(q.third)+'</td><td>'+thirdName(top)+'</td>'
+        +'<td class="hi5">'+fifthName(q.fifth)+'</td>'
+        +'<td class="recipe">'+[0,q.third,q.fifth].join(' · ')+'</td></tr>';
+    }).join(''); }
+
+  document.addEventListener('click', function(e){ var b=e.target.closest('.playq'); if(!b) return;
+    ac(); playTriad(ROOTS[+b.dataset.root], QUALS[+b.dataset.qi]); });
+
+  renderRoots(); renderInsts(); renderPiano(); renderSingle(); renderNeck(); renderCheat();
+})();
+</script>
+</body>
+</html>
