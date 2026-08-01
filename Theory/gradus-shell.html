@@ -541,7 +541,66 @@ const COURSE = [
       }
     ]
   },
-  { title:'Module 1 — First Species', belt:'Yellow Belt', soon:true, blurb:'Note against note: one consonance against each note, up to the cadence.' },
+  {
+    title:'Module 1 — First Species', belt:'Yellow Belt — First Species',
+    lessons:[
+      {
+        num:'1.1', title:'The Whole of It',
+        teach:[
+          P(`You have raised your voice against one tune, in one mode. Now we make it a craft. First species — <b>note against note</b> — has few laws, but they are strict. Hold them all.`),
+          QA(`Name them, then, that I may keep them.`,
+             `Five. <b>One</b>: every meeting a consonance — no dissonance may sound. <b>Two</b>: begin on a perfect consonance — a unison, fifth, or octave. <b>Three</b>: end on the final, a unison or octave, carried home by a leading tone. <b>Four</b>: never enter a perfect consonance by direct motion, and never sound two perfect fifths or octaves in a row. <b>Five</b>: let thirds and sixths be your bread — the perfects are the bones, the imperfects the flesh.`),
+          P(`We begin in the plainest light — <b>C major</b>, the Ionian. Here the mode grants you a true leading tone already: <b>B</b> stands a half-step below C and leans home of itself. You need raise nothing; only find it, and rise B → C at the close.`),
+          P(`Set your voice, note for note, above “Three Blind Mice”. When it is done, ask me to correct it, and I will show you where it strays.`)
+        ],
+        ex:{ type:'counterpoint', exttl:'Note against note, in C major',
+             desc:'First species above “Three Blind Mice” in C major. Click above each note to place your voice; use the ♭ ♮ ♯ buttons to alter it. Every meeting a consonance, a perfect consonance to begin, the octave or unison to end — and the close carried home on the natural leading tone B → C. Then ask the Master to correct it.',
+             cf:[64,62,60,null,64,62,60,null,67,65,65,64,null,65,64,62,60],
+             cfLabel:'Cantus firmus — “Three Blind Mice” in C major', modeName:'C major' }
+      },
+      {
+        num:'1.2', title:'The Borrowed Lean',
+        teach:[
+          P(`Now the shadow. We write above <b>A minor</b> — the Aeolian — and here the mode is less kind. Its seventh, <b>G</b>, sits a whole tone below the final; too far to lean.`),
+          QA(`Then I must borrow, as with Dorian?`,
+             `Just so. At the close — and nowhere else — raise your G to <b>G♯</b>, so it stands a half-step beneath A and pulls hard into it. Select the note and press ♯. Every other note stays true to the mode; stray from it elsewhere and I will mark you.`),
+          P(`All else is as before: a consonance at every meeting, a perfect consonance to begin, the octave or unison to end, and no parallel perfects between. Set your voice above “Twinkle”, and raise the close yourself.`)
+        ],
+        ex:{ type:'counterpoint', exttl:'Raise the leading tone',
+             desc:'First species above “Twinkle” in A minor (Aeolian). The seventh, G, lies a whole tone below the final — at the close, select your G and press ♯ to make G♯, the leading tone. Every other note stays true to the mode. Then ask the Master to correct it.',
+             cf:[69,69,76,76,77,77,76,null,74,74,72,72,71,71,69],
+             cfLabel:'Cantus firmus — “Twinkle” in A minor (Aeolian)', modeName:'A minor' }
+      },
+      {
+        num:'1.3', title:'Another Ground',
+        teach:[
+          P(`A new ground, and a mode you have met: <b>D Dorian</b>. A different tune beneath you now — “Three Blind Mice” — but the same discipline above.`),
+          P(`Dorian, like the minor, wants its leading tone: its seventh is <b>C</b>, a whole tone below the final D. Raise it at the close — <b>C → C♯</b> — and let your voice rise into the D as the tune steps down to meet it.`),
+          QA(`Is there a secret to a good line?`,
+             `Contrary motion. When the ground rises, fall; when it falls, rise. It keeps the two voices free, and keeps you clear of the forbidden parallels without a thought. Lean on thirds and sixths, and save the perfect fifth and octave for the pillars — the beginning and the end.`),
+          P(`Set your voice above the mice, note for note.`)
+        ],
+        ex:{ type:'counterpoint', exttl:'A new ground in Dorian',
+             desc:'First species above “Three Blind Mice” in D Dorian. Favour contrary motion, lean on thirds and sixths, and raise the close yourself — C → C♯ — so your voice leans into the final D. Then ask the Master to correct it.',
+             cf:[65,64,62,null,65,64,62,null,69,67,67,65,null,67,65,64,62],
+             cfLabel:'Cantus firmus — “Three Blind Mice” in D Dorian', modeName:'D Dorian' }
+      },
+      {
+        num:'1.4', title:'The Bright Close',
+        teach:[
+          P(`One mode remains to try — <b>F Lydian</b>, the brightest. And here is a mercy: like the major, Lydian keeps a true leading tone of its own. Its seventh, <b>E</b>, already leans a half-step into F.`),
+          QA(`So I raise nothing at the close?`,
+             `Nothing. Simply find the E below the final and rise E → F. No sharp, no borrowing — Lydian gives freely what Dorian made you earn.`),
+          P(`This is your test of the whole craft. A consonance at every meeting; a perfect to begin, the final to end; the perfects approached with care and never doubled in parallel; thirds and sixths for the body of the line. Set your voice above “Twinkle” in Lydian, and close it cleanly.`),
+          NOTE(`Master this, and note-against-note is yours. Beyond lies the second species — two notes against one, and the first taste of a passing dissonance. But that is a later belt.`)
+        ],
+        ex:{ type:'counterpoint', exttl:'The bright close, in Lydian',
+             desc:'First species above “Twinkle” in F Lydian. Like the major, Lydian keeps its own leading tone — E leans naturally into F, so raise nothing. Consonance at every meeting, the perfects approached with care, the close on E → F. Your test of the whole craft. Then ask the Master to correct it.',
+             cf:[65,65,72,72,74,74,72,null,71,71,69,69,67,67,65],
+             cfLabel:'Cantus firmus — “Twinkle” in F Lydian', modeName:'F Lydian' }
+      }
+    ]
+  },
   { title:'Module 2 — Second Species', belt:'Orange Belt', soon:true, blurb:'Two against one: the passing tone, the first taste of dissonance.' },
   { title:'Module 3 — Third Species', belt:'Green Belt', soon:true, blurb:'Four against one: the running line, the nota cambiata.' },
   { title:'Module 4 — Fourth Species', belt:'Blue Belt', soon:true, blurb:'The suspension: dissonance prepared, then resolved.' },
@@ -1175,11 +1234,15 @@ function checkCounterpoint(cf, cpNotes, modeName){   // cpNotes: {step,acc}|null
     findings.push({ col:first, ok:false, msg:'Begin on a perfect consonance — a unison, fifth, or octave above the final.' });
   if(!isUnisonOctave(cp[last] - cf[last]))
     findings.push({ col:last, ok:false, msg:'End on the final itself — a unison or octave above the cantus firmus.' });
+  const finalPc = ((cf[last] % 12) + 12) % 12;
+  const white = [0, 2, 4, 5, 7, 9, 11];
+  const dia7Pc = white.includes(leadingPc) ? leadingPc : (finalPc + 10) % 12;   // the mode's own 7th (white key below the final)
+  const pcName = p => PC_NAMES[((p % 12) + 12) % 12].replace('#', '♯');
   const pcPen = ((cp[pen] % 12) + 12) % 12, pcLast = ((cp[last] % 12) + 12) % 12, rises = cp[last] - cp[pen] > 0;
-  if(pcPen === 0 && pcLast === 2 && rises)   // they left a plain C — the whole point is to raise it themselves
-    findings.push({ col:pen, ok:false, msg:'Your seventh is still a plain C — a whole tone below the final, too far to lean. Select it and press ♯ to raise it to C♯, the leading tone.' });
-  else if(!(pcPen === 1 && pcLast === 2 && rises))
-    findings.push({ col:pen, ok:false, msg:'The close wants the leading tone: your voice should rise a half-step from C♯ up to the final D, as the cantus firmus falls E → D.' });
+  if(dia7Pc !== leadingPc && pcPen === dia7Pc && pcLast === finalPc && rises)   // mode has no leading tone; they must raise it themselves
+    findings.push({ col:pen, ok:false, msg:`Your seventh is still a plain ${pcName(dia7Pc)} — a whole tone below the final, too far to lean. Select it and press ♯ to raise it to ${pcName(leadingPc)}, the leading tone.` });
+  else if(!(pcPen === leadingPc && pcLast === finalPc && rises))
+    findings.push({ col:pen, ok:false, msg:`The close wants the leading tone: your voice should rise a half-step from ${pcName(leadingPc)} up to the final ${pcName(finalPc)} as the cantus firmus steps down to meet it.` });
   for(let k = 0; k < idxs.length - 1; k++){   // motion into the perfects
     const i = idxs[k], j = idxs[k + 1];
     const cfDir = Math.sign(cf[j] - cf[i]), cpDir = Math.sign(cp[j] - cp[i]);
