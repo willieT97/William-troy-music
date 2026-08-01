@@ -629,7 +629,30 @@ const COURSE = [
       }
     ]
   },
-  { title:'Module 2 — Second Species', belt:'Orange Belt', soon:true, blurb:'Two against one: the passing tone, the first taste of dissonance.' },
+  {
+    title:'Module 2 — Second Species', belt:'Orange Belt — Second Species',
+    lessons:[
+      {
+        num:'2.1', title:'Two Against One',
+        teach:[
+          P(`First species you have mastered — one note against one. Now the counterpoint quickens: <b>two notes against one</b>. Against each whole note of the ground you set <b>two half notes</b>, and the line begins to move.`),
+          P(`You have played long enough with nursery rhymes; for the higher craft, take up a <b>true cantus firmus</b> — plain, stepwise, and grave, in the old style. This one is in D Dorian.`),
+          QA(`Two notes where there was one — do the old laws still hold?`,
+             `On the <b>strong beat</b>, yes: the first half note of each bar must be a <b>consonance</b>, exactly as before. But the <b>weak beat</b> — the second half note — is granted a new liberty.`),
+          P(`On that weak beat a <b>dissonance</b> may sound at last — but only as a <b>passing tone</b>: a note stepped <i>into</i> and stepped <i>out of</i> in the same direction, filling the gap between two consonances a third apart. It passes through the clash and is gone before the ear can protest.`),
+          QA(`And the opening, and the close?`,
+             `Begin with a <b>half rest</b>, then enter on a perfect consonance — a fifth or an octave — so your voice steps in alone. Close as ever: the leading tone on the last weak beat, rising into the final, which stands as a single whole note. Hear it now, and watch the three passing tones as they fall.`),
+          NOTE(`See how the counterpoint moves twice as fast as the ground, yet rests on a consonance at every strong beat. The dissonances live only on the weak beats, and only in passing. Soon you will write such a line yourself.`)
+        ],
+        ex:{ type:'secondDemo', exttl:'Two half notes against one whole',
+             desc:'A cantus firmus in D Dorian sits below in whole notes; above it runs a second-species counterpoint, two half notes to a bar. Every strong beat is a consonance; three weak beats pass through a dissonance by step. Hear it, and watch how the upper line moves twice as fast as the ground.',
+             cfLabel:'Cantus firmus in D Dorian (below), with a second-species counterpoint above.',
+             cf:[62,65,64,62,67,65,69,67,65,64,62],
+             cp:[69,74,69,67,72,71,69,76,71,69,71,72,74,76,71,69,71,72,73,74],
+             passing:[10,12,16] }
+      }
+    ]
+  },
   { title:'Module 3 — Third Species', belt:'Green Belt', soon:true, blurb:'Four against one: the running line, the nota cambiata.' },
   { title:'Module 4 — Fourth Species', belt:'Blue Belt', soon:true, blurb:'The suspension: dissonance prepared, then resolved.' },
   { title:'Module 5 — Fifth Species', belt:'Brown Belt', soon:true, blurb:'Florid counterpoint: all the species woven into one singing line.' }
@@ -719,6 +742,7 @@ function renderExercise(ex){
   if(ex.type === 'cantusFirmus') return `<div class="ex">${head}<div id="cfBox"></div></div>`;
   if(ex.type === 'modeReveal') return `<div class="ex">${head}<div id="mrBox"></div></div>`;
   if(ex.type === 'counterpoint') return `<div class="ex">${head}<div id="cpBox"></div></div>`;
+  if(ex.type === 'secondDemo') return `<div class="ex">${head}<div id="sdBox"></div></div>`;
   if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') return `<div class="ex">${head}<div id="phBox"></div></div>`;
   return `<div class="ex">${head}<div class="ph">${ex.phnote || 'Coming soon'}</div></div>`;
 }
@@ -732,6 +756,7 @@ function wireExercise(ex){
   else if(ex.type === 'cantusFirmus') mountCantusFirmus(ex);
   else if(ex.type === 'modeReveal') mountModeReveal(ex);
   else if(ex.type === 'counterpoint') mountCounterpoint(ex);
+  else if(ex.type === 'secondDemo') mountSecondDemo(ex);
   else if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') mountPerfectImperfect(ex);
 }
 
@@ -1375,6 +1400,65 @@ function drawCounterpoint(ex){
   el('cpClear').addEventListener('click', () => { cpNotes = ex.cf.map(() => null); cpSel = null; cpChecked = false; cpFindings = []; drawCounterpoint(ex); });
 }
 
+/* ===================== SECOND SPECIES (two-against-one demonstration) ===================== */
+// event plan for a cantus firmus of N whole notes: bar0 = half-rest + upbeat, bars 1..N-2 = down+up, last bar = whole
+function secondPlan(N){
+  const plan = [{ bar:0, type:'up' }];
+  for(let i = 1; i <= N - 2; i++){ plan.push({ bar:i, type:'down' }); plan.push({ bar:i, type:'up' }); }
+  plan.push({ bar:N - 1, type:'whole' });
+  return plan;
+}
+function svgSecond(cf, cp, passing){
+  const plan = secondPlan(cf.length), passSet = new Set(passing || []);
+  const y = s => 100 - 7 * s, lineSteps = [2, 4, 6, 8, 10];
+  const N = cf.length, LEFT = 38, barW = 66, right = 12, width = LEFT + N * barW + right;
+  const xDown = b => LEFT + b * barW + barW * 0.30, xUp = b => LEFT + b * barW + barW * 0.70;
+  let out = `<svg viewBox="0 0 ${width} 152" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">`;
+  out += `<text x="6" y="82" font-size="64" font-family="Georgia,serif" fill="#17140E">\u{1D11E}</text>`;
+  lineSteps.forEach(s => out += `<line x1="30" y1="${y(s)}" x2="${width - 8}" y2="${y(s)}" stroke="#17140E" stroke-width="1.6"/>`);
+  for(let b = 0; b <= N; b++){ const x = LEFT + b * barW; out += `<line x1="${x}" y1="${y(2)}" x2="${x}" y2="${y(10)}" stroke="#17140E" stroke-width="${b === 0 || b === N ? 1.8 : 1}" opacity="${b === 0 || b === N ? 1 : 0.45}"/>`; }
+  const note = (step, acc, x, color, half) => {
+    let o = '';
+    if(step <= 0) for(let k = 0; k >= step; k -= 2) o += `<line x1="${x - 10}" y1="${y(k)}" x2="${x + 10}" y2="${y(k)}" stroke="#17140E" stroke-width="1.4"/>`;
+    if(step >= 12) for(let k = 12; k <= step; k += 2) o += `<line x1="${x - 10}" y1="${y(k)}" x2="${x + 10}" y2="${y(k)}" stroke="#17140E" stroke-width="1.4"/>`;
+    if(acc) o += `<text x="${x - 14}" y="${y(step) + 5}" font-family="Georgia,serif" font-size="15" fill="${color}">${acc > 0 ? '♯' : '♭'}</text>`;
+    o += `<ellipse cx="${x}" cy="${y(step)}" rx="7" ry="5.2" fill="none" stroke="${color}" stroke-width="2.3"/>`;
+    if(half) o += `<line x1="${x + 6.6}" y1="${y(step) - 1}" x2="${x + 6.6}" y2="${y(step) - 23}" stroke="${color}" stroke-width="1.6"/>`;   // half-note stem (up)
+    return o;
+  };
+  for(let b = 0; b < N; b++) out += note(midiToDiatonicStep(cf[b]), 0, xDown(b), '#17140E', false);   // cantus firmus, whole notes
+  out += `<rect x="${xDown(0) - 6}" y="${y(6) - 5}" width="12" height="5" fill="#17140E"/>`;           // half rest at the very start
+  plan.forEach((ev, k) => {
+    const m = cp[k], step = midiToDiatonicStep(m), acc = m - stepToMidi(step);
+    const x = ev.type === 'up' ? xUp(ev.bar) : xDown(ev.bar), pink = passSet.has(k);
+    out += note(step, acc, x, pink ? '#FF4E86' : '#2438C8', ev.type !== 'whole');
+    const gi = genericInterval(m, cf[ev.bar]);
+    out += `<text x="${x}" y="142" font-family="Space Mono,monospace" font-size="9" text-anchor="middle" fill="${pink ? '#FF4E86' : '#6F6757'}">${gi}</text>`;
+  });
+  return out + `</svg>`;
+}
+function playSecond(cf, cp){
+  const plan = secondPlan(cf.length), ac = audio(), half = 0.5;
+  const start = () => {
+    const t = ac.currentTime + 0.06;
+    for(let b = 0; b < cf.length; b++) voice(cf[b], t + b * (half * 2), half * 2 * 0.97, 0.28);        // whole notes held
+    plan.forEach((ev, k) => {
+      const barStart = t + ev.bar * (half * 2);
+      const when = ev.type === 'up' ? barStart + half : barStart, dur = ev.type === 'whole' ? half * 2 : half;
+      voice(cp[k], when, dur * 0.95, 0.3);
+    });
+  };
+  if(ac.state === 'suspended') ac.resume().then(start).catch(start); else start();
+}
+function mountSecondDemo(ex){ drawSecondDemo(ex); }
+function drawSecondDemo(ex){
+  el('sdBox').innerHTML = `
+    <div style="overflow-x:auto; border:2px solid var(--ink); background:var(--paper); margin:2px 0 8px; padding:6px 4px 2px;">${svgSecond(ex.cf, ex.cp, ex.passing)}</div>
+    <div class="lab2">${ex.cfLabel} The three <b style="color:#FF4E86">passing tones</b> — the weak-beat dissonances — are marked in pink; every strong beat is a consonance.</div>
+    <div class="row" style="margin-top:12px"><button class="btn big" id="sdPlay">▶ Hear it — two half notes to a bar</button></div>`;
+  el('sdPlay').addEventListener('click', () => playSecond(ex.cf, ex.cp));
+}
+
 /* ----- cantus firmus browser (pick a nursery rhyme, see it, hear it) ----- */
 let cfIdx = 0;
 function mountCantusFirmus(ex){ cfIdx = 0; drawCantusFirmus(ex); }
@@ -1515,7 +1599,7 @@ function renderNav(){
       el('next').addEventListener('click', () => go(idx + 1));
     }
   } else {
-    slot.innerHTML = `<span class="endnote">End of the foundations. The five species await — wiring in next.</span>`;
+    slot.innerHTML = `<span class="endnote">The newest lesson — more of the higher species is being written. Return soon.</span>`;
   }
 }
 function go(i){ idx = Math.max(0, Math.min(LESSONS.length - 1, i)); renderLesson(); }
