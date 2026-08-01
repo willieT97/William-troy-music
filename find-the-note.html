@@ -84,6 +84,10 @@
 
   .tip{ font-family:var(--mono); font-size:.72rem; color:var(--muted); text-align:center; margin-top:14px; }
   .tip b{ color:var(--ink); }
+  .backlink{ text-align:center; margin-top:8px; }
+  .backlink a{ font-family:var(--mono); font-weight:700; font-size:.74rem; color:#2E77E6; text-decoration:none; border-bottom:2px solid transparent; }
+  .backlink a:hover{ border-bottom-color:#2E77E6; }
+  .backlink:empty{ display:none; }
   .foot{ margin-top:26px; text-align:center; font-family:var(--mono); font-size:.72rem; color:#6b6b6b; }
   .foot a{ color:var(--blue); text-decoration:none; }
   .foot a:hover{ text-decoration:underline; }
@@ -155,6 +159,7 @@
   </div>
 
   <p class="tip" id="tip"></p>
+  <p class="backlink" id="backlink"></p>
 
   <div class="foot">
     <p><a href="resources.html">&larr; Back to Resources</a></p>
@@ -238,16 +243,21 @@
   document.getElementById('pdfBtn').addEventListener('click', function(){ window.print(); });
 
   // ---- rendering ----
-  var diagram=document.getElementById('diagram'), tip=document.getElementById('tip'), printhead=document.getElementById('printhead');
+  var diagram=document.getElementById('diagram'), tip=document.getElementById('tip'), printhead=document.getElementById('printhead'), backlink=document.getElementById('backlink');
   function render(){ if(state.inst==='piano') renderPiano(); else renderFretboard(INSTR[state.inst]); updateText(); }
   function updateText(){
     var h=state.hi, label = state.inst==='piano' ? 'Piano' : INSTR[state.inst].label;
     var tuning = state.inst==='piano' ? '' : (' · '+INSTR[state.inst].tuning);
     var title = (h.kind==='scale') ? ('The '+disp(NAMES[((h.root%12)+12)%12])+' '+SCALES[h.type].name+' scale on the '+label) : ('The chromatic scale on the '+label);
     printhead.innerHTML='<h2>'+title+'</h2><p>Find the Note · williamtroymusic'+tuning+'</p>';
+    backlink.innerHTML='';
     if(h.kind==='none'){ tip.innerHTML='Every note is shown. Pick a note or a scale to highlight it — tap any key/fret to hear it.'; return; }
     if(h.kind==='scale'){ var rn=disp(NAMES[((h.root%12)+12)%12]), extra=state.showDeg?' as <b>scale degrees</b> (1 = root)':'';
-      tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.'; return; }
+      tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.';
+      // for the two diatonic scales the Circle of Fifths maps directly — offer a link back to that key
+      if(h.type==='major') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root%12)+12)%12)+'">See the key of '+rn+' major on the Circle of Fifths →</a>';
+      else if(h.type==='minor') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root+3)%12)+12)%12+'">See '+rn+' minor on the Circle of Fifths →</a>';
+      return; }
     var n=disp(NAMES[h.pc]);
     if(state.inst==='piano') tip.innerHTML='Every <b>'+n+'</b> on the keyboard is highlighted. Tap a key to hear it.';
     else tip.innerHTML='Tuning: <b>'+INSTR[state.inst].tuning+'</b>. Every <b>'+n+'</b> on the '+INSTR[state.inst].label.toLowerCase()+' is highlighted — tap any fret to hear the note.';
@@ -314,6 +324,15 @@
     var svg=diagram.querySelector('svg');
     svg.addEventListener('click', function(e){ var t=e.target.closest('[data-midi]'); if(!t) return; setNote(+t.dataset.pc); playNote(+t.dataset.midi); });
   }
+
+  // deep-link from the Circle of Fifths: ?scale=major&root=7 (or ?note=7, &inst=guitar)
+  (function(){
+    var q=new URLSearchParams(location.search), inst=q.get('inst'), scale=q.get('scale'), root=q.get('root'), note=q.get('note');
+    if(inst && (inst==='piano' || INSTR[inst])){ state.inst=inst;
+      [].forEach.call(tabs.children, function(x){ x.classList.toggle('on', x.dataset.inst===inst); }); }
+    if(scale && SCALES[scale] && root!==null){ var r=((+root)%12+12)%12; scaleRoot.value=r; scaleType.value=scale; setScale(r, scale); }
+    else if(note!==null){ setNote(((+note)%12+12)%12); }
+  })();
 
   render();
 })();

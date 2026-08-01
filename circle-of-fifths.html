@@ -57,6 +57,8 @@
   .chordgrid .ch.one .nm{ color:var(--hi); }
   .related{ font-family:var(--body); font-weight:700; font-size:.95rem; }
   .related b{ color:var(--blue); }
+  .golink{ display:inline-block; margin-top:8px; font-family:var(--body); font-weight:700; font-size:.85rem; color:var(--blue); text-decoration:none; border-bottom:2px solid transparent; }
+  .golink:hover{ border-bottom-color:var(--blue); }
   .hearbtn{ margin-top:16px; font-family:var(--disp); font-weight:600; font-size:.9rem; cursor:pointer; border:none; color:#fff;
     background:var(--blue); padding:10px 18px; border-radius:999px; box-shadow:0 3px 0 #1c48a3; }
   .hearbtn:active{ transform:translateY(3px); box-shadow:none; }
@@ -205,9 +207,9 @@
     var enh = k.altMaj ? (' <span class="rel">also written '+k.altMaj+' major (6♯)</span>') : '';
     var html='';
     html+='<div class="keyname">'+k.maj+' major'+enh+'<span class="rel">relative minor: '+k.min+' minor</span></div>';
-    html+='<div class="prow"><div class="plabel">Key signature</div><div class="stave">'+keySigStave(k)+'</div><div class="pval sigtext">'+keySig(k)+'</div></div>';
-    html+='<div class="prow"><div class="plabel">Scale</div><div class="scalechips">'+sc.map(function(n){ return '<span>'+n.name+'</span>'; }).join('')+'</div></div>';
-    html+='<div class="prow"><div class="plabel">Chords in this key</div><div class="chordgrid">'+ch.map(function(c,i){ return '<div class="ch'+(i===0?' one':'')+'"><div class="rn">'+CHR[i]+'</div><div class="nm">'+c+'</div></div>'; }).join('')+'</div></div>';
+    html+='<div class="prow"><div class="plabel">Key signature</div><div class="stave">'+keySigStave(k)+'</div><div class="pval sigtext">'+keySig(k)+'</div><a class="golink" href="note-names.html">Read notes on the staff →</a></div>';
+    html+='<div class="prow"><div class="plabel">Scale</div><div class="scalechips">'+sc.map(function(n){ return '<span>'+n.name+'</span>'; }).join('')+'</div><a class="golink" href="find-the-note.html?scale=major&root='+k.pc+'">See this scale on your instrument →</a></div>';
+    html+='<div class="prow"><div class="plabel">Chords in this key</div><div class="chordgrid">'+ch.map(function(c,i){ return '<div class="ch'+(i===0?' one':'')+'"><div class="rn">'+CHR[i]+'</div><div class="nm">'+c+'</div></div>'; }).join('')+'</div><a class="golink" href="chords.html">Learn to play these chords →</a></div>';
     html+='<div class="prow"><div class="plabel">Closely related keys</div><div class="related">'+rel.map(function(r){ return '<b>'+r+'</b>'; }).join(' · ')+'</div></div>';
     html+='<button class="hearbtn" id="hearScale">▶ Hear the scale</button>';
     panel.innerHTML=html;
@@ -217,7 +219,10 @@
 
   function select(i, sound){ sel=i; renderWheel(); renderPanel(); if(sound){ ac(); playChord(KEYS[i].pc); } }
 
-  select(0, false);
+  // deep-link: ?key=<pitch class 0-11> lands on that major key (used by Find the Note's back-link)
+  var _q=new URLSearchParams(location.search), _kq=_q.get('key'), _start=0;
+  if(_kq!==null){ var _pc=((+_kq)%12+12)%12, _i=KEYS.findIndex(function(k){ return k.pc===_pc; }); if(_i>=0) _start=_i; }
+  select(_start, false);
 })();
 </script>
 </body>
