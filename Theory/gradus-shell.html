@@ -451,6 +451,93 @@ const COURSE = [
              desc:'First species over “Twinkle” in D Dorian. Click above each note to place your voice; use the ♭ ♮ ♯ buttons to alter the selected note. Every meeting must be a consonance, the perfects approached with care, and the close carried home on a leading tone you raise yourself. Then ask the Master to correct it.',
              cf:[62,62,69,69,71,71,69,null,67,67,65,65,64,64,62],
              cfLabel:'Cantus firmus — “Twinkle” in D Dorian', modeName:'D Dorian' }
+      },
+      {
+        num:'M.3', title:'The Phrygian Mode',
+        teach:[
+          P(`We come to <b>Phrygian</b>. Take the white keys once more and let <b>E</b> be home: E F G A B C D, then E again. Its third is minor, as Dorian's was — but hear where its <b>second</b> falls: F, only a half-step above the final. The lowest second of any mode.`),
+          P(`That one crowded half-step at the very foot of the scale is the whole character of Phrygian — dark, grave, with a Spanish or eastern cast. Everything else it shares with the plain minor.`),
+          QA(`Then it too is the minor, bent by a single note?`,
+             `Just so. The natural minor — Aeolian — sets its second a whole tone above the final, F♯ over E. Phrygian drops it to F. One half-step lower, and the mood turns from sad to severe.`),
+          P(`Now its <b>close</b> — and here Phrygian stands alone. Every other mode that lacks a leading tone borrows one, raising its seventh to lean up into the final. Phrygian borrows nothing.`),
+          QA(`How then does it arrive?`,
+             `From above. It already owns a half-step at the top of the final: F leans <i>down</i> into E. So at the close the lower voice falls F → E while the upper rises to meet it, and the ear hears an arrival that leans the opposite way to all the rest.`)
+        ],
+        ex:{ type:'modeReveal', exttl:'Twinkle, tilted into Phrygian',
+             desc:'The same tune again, now with E for home. Hear it first in the plain minor, then in Phrygian — the second drops a half-step, and the tune turns grave and eastern. Then hear how Phrygian closes without borrowing any leading tone at all.',
+             modeLabel:'“Twinkle, Twinkle” in E Phrygian — the lowered second is marked.',
+             tune:[64,64,71,71,72,72,71,null,69,69,67,67,65,65,64],
+             pivot:[12,13],
+             dorianLabel:'Phrygian',
+             compare:{ label:'plain minor (Aeolian)', notes:[64,64,71,71,72,72,71,null,69,69,67,67,66,66,64] },
+             pivotText:'The only note that moves is the second — F♯ in the plain minor, F♮ in Phrygian. That single half-step, sitting right atop the final, is the whole of the difference, and it is what gives Phrygian its dark, Spanish cast. Play them back to back and let your ear catch the note that sinks.',
+             cadence:{ lower:[65,64], upper:[74,76],
+                       text:'Here Phrygian shows its strangeness. It borrows no leading tone, for it needs none: a half-step already sits above the final. The lower voice falls F → E — the lean coming from above, not below — while the upper rises D → E, and a major sixth opens to the octave. Every other mode reaches up to close; Phrygian alone falls home.' }
+        }
+      },
+      {
+        num:'M.4', title:'The Lydian Mode',
+        teach:[
+          P(`Now <b>Lydian</b>, the brightest of them all. White keys, with <b>F</b> for home: F G A B C D E. Its third is major — but hear its <b>fourth</b>: B, not the B♭ that plain F major would give. Raised a half-step, a tritone above the final.`),
+          P(`That single sharpened note is what makes Lydian shimmer. It seems to float, to strain upward, brighter even than the major it is built from — the sound of wonder and wide skies.`),
+          QA(`So it is the major, lifted by one note?`,
+             `Exactly. Sharpen the fourth of a major scale and you have Lydian; soften it back and you are home in plain major. One note is the whole of it.`),
+          P(`Its <b>close</b> asks nothing of you. Unlike Dorian, Lydian keeps a true leading tone of its own: E already stands a half-step below F and leans up naturally. So it cadences like the major — the seventh rising into the final — with no note raised by hand.`)
+        ],
+        ex:{ type:'modeReveal', exttl:'London Bridge, tilted into Lydian',
+             desc:'A new tune this time — “London Bridge”, on F. Hear it first in plain major, then in Lydian: one note in “falling down” lifts a half-step, and the whole bridge seems to float. Then hear its close, which needs no borrowing.',
+             modeLabel:'“London Bridge” in F Lydian — the raised fourth is marked.',
+             tune:[72,74,72,71,69,71,72,null,67,72,69,65],
+             pivot:[3,5],
+             dorianLabel:'Lydian',
+             compare:{ label:'plain major (Ionian)', notes:[72,74,72,70,69,70,72,null,67,72,69,65] },
+             pivotText:'The only note that moves is the fourth — B♭ in plain major, B♮ in Lydian. Raised a half-step, it stands a tritone above the final and gives Lydian its bright, floating shine. It falls on the words “falling down”; play both colours and hear that one note lift.',
+             cadence:{ lower:[67,65], upper:[76,77],
+                       text:'Lydian needs no borrowed leading tone — but for the opposite reason to Phrygian. Its seventh, E, already stands a half-step below F and leans up of its own accord. So it closes like the major: the lower voice falls G → F, the upper rises E → F, and the sixth opens to the octave. No note need be raised.' }
+        }
+      },
+      {
+        num:'M.5', title:'The Mixolydian Mode',
+        teach:[
+          P(`<b>Mixolydian</b> next. White keys, home on <b>G</b>: G A B C D E F. Major in almost every degree — its third is major, its sixth major — save one. Its <b>seventh</b> is lowered: F, not F♯.`),
+          P(`That soft seventh robs it of a leading tone but gives it an easy, open swing — the colour under a great deal of folk song, bagpipe tune, and the blues.`),
+          QA(`How does it stand against the major?`,
+             `By the seventh alone. Major sharpens F to F♯ so it leans hard into G; Mixolydian leaves it flat, a whole tone below. Bright as major, but the pull home is gone.`),
+          P(`And so, like Dorian and Aeolian, at the <b>close</b> it must borrow. Raise the seventh — F → F♯ — for that one moment, and it leans into the final as the others do.`)
+        ],
+        ex:{ type:'modeReveal', exttl:'Yankee Doodle, tilted into Mixolydian',
+             desc:'Twinkle sings no seventh, so we need another tune to show this mode. “Yankee Doodle”, on G, ends by climbing through its seventh — and there the colour tells. Hear it in plain major, then in Mixolydian, where that seventh drops. Then hear how it must borrow a leading tone to close.',
+             modeLabel:'“Yankee Doodle” in G Mixolydian — the lowered seventh is marked.',
+             tune:[67,67,69,71,67,71,69,null,67,67,69,71,69,null,67,67,69,71,72,71,69,67,null,65,62,64,65,67],
+             pivot:[23,26],
+             dorianLabel:'Mixolydian',
+             compare:{ label:'plain major (Ionian)', notes:[67,67,69,71,67,71,69,null,67,67,69,71,69,null,67,67,69,71,72,71,69,67,null,66,62,64,66,67] },
+             pivotText:'The note that moves is the seventh — F♯ in plain major, F♮ in Mixolydian. It sounds in the last phrase, the little climb home. Major sharpens it to lean into the final; Mixolydian leaves it flat, a whole tone below. Bright as major, yet its top is softened — the sound of a great deal of folk and blues.',
+             cadence:{ lower:[69,67], upper:[78,79],
+                       text:'Because that seventh is now a whole tone below G, it cannot lean home — so Mixolydian must borrow, as Dorian did. Raise the seventh, F → F♯: the lower voice falls A → G, the upper rises F♯ → G, and the sixth opens to the octave.' }
+        }
+      },
+      {
+        num:'M.6', title:'The Aeolian Mode',
+        teach:[
+          P(`Last, <b>Aeolian</b> — and this one you have known all your life, though not by name. White keys, home on <b>A</b>: A B C D E F G. It is the <b>natural minor</b> itself, plainest and gravest of the modes.`),
+          P(`Its sixth is low — F, not F♯ — and there the last light goes out. Where Dorian lifted that sixth to let a little brightness in, Aeolian lets it fall, and the shadow is complete.`),
+          QA(`Then Aeolian is Dorian, darkened?`,
+             `On a single note, yes. Dorian and Aeolian part on the sixth alone: Dorian's natural, Aeolian's flat. Lower that one note and the mode goes from wistful to wholly sad.`),
+          P(`Its <b>close</b>, like Dorian's and Mixolydian's, wants a leading tone it does not have — G sits a whole tone below A. Borrow one: raise G → G♯, and it pulls home.`),
+          NOTE(`With this you have met them all. Ionian — the plain major of your first lessons — and its five slants: Dorian, Phrygian, Lydian, Mixolydian, Aeolian. A seventh, Locrian, the old masters left aside, for its fifth above the final is false, and no song may rest on so unsteady a ground.`)
+        ],
+        ex:{ type:'modeReveal', exttl:'Twinkle, tilted into Aeolian',
+             desc:'Home once more to Twinkle, now on A — the plain minor itself. Hear it beside Dorian: the sixth sinks a half-step, and the last light goes out. Then hear its close, which borrows a leading tone as Dorian and Mixolydian do.',
+             modeLabel:'“Twinkle, Twinkle” in A Aeolian — the lowered sixth is marked.',
+             tune:[69,69,76,76,77,77,76,null,74,74,72,72,71,71,69],
+             pivot:[4,5],
+             dorianLabel:'Aeolian',
+             compare:{ label:'Dorian', notes:[69,69,76,76,78,78,76,null,74,74,72,72,71,71,69] },
+             pivotText:'This is the natural minor you have always known — and it parts from Dorian on the sixth alone. The sixth of Dorian, F♯, lets in a little light; Aeolian flattens it to F, and the shadow closes over. One note lower, and bright turns grave.',
+             cadence:{ lower:[71,69], upper:[80,81],
+                       text:'Like Dorian and Mixolydian, Aeolian wants for a leading tone — its seventh, G, sits a whole tone below A. Borrow one: raise G → G♯, and it leans hard into the final. The lower voice falls B → A, the upper rises G♯ → A, and the sixth opens to the octave.' }
+        }
       }
     ]
   },
