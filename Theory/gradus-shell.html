@@ -592,12 +592,40 @@ const COURSE = [
           QA(`So I raise nothing at the close?`,
              `Nothing. Simply find the E below the final and rise E → F. No sharp, no borrowing — Lydian gives freely what Dorian made you earn.`),
           P(`This is your test of the whole craft. A consonance at every meeting; a perfect to begin, the final to end; the perfects approached with care and never doubled in parallel; thirds and sixths for the body of the line. Set your voice above “Twinkle” in Lydian, and close it cleanly.`),
-          NOTE(`Master this, and note-against-note is yours. Beyond lies the second species — two notes against one, and the first taste of a passing dissonance. But that is a later belt.`)
+          NOTE(`A voice above the ground, in every colour — well done. But the craft has two faces, and one skill remains: next you will set your voice not above the tune, but <b>beneath</b> it.`)
         ],
         ex:{ type:'counterpoint', exttl:'The bright close, in Lydian',
              desc:'First species above “Twinkle” in F Lydian. Like the major, Lydian keeps its own leading tone — E leans naturally into F, so raise nothing. Consonance at every meeting, the perfects approached with care, the close on E → F. Your test of the whole craft. Then ask the Master to correct it.',
              cf:[65,65,72,72,74,74,72,null,71,71,69,69,67,67,65],
              cfLabel:'Cantus firmus — “Twinkle” in F Lydian', modeName:'F Lydian' }
+      },
+      {
+        num:'1.5', title:'Beneath the Song',
+        teach:[
+          P(`You have set your voice above the ground four times over. Now turn it about: this time the cantus firmus sings <b>above</b>, and you write <b>beneath</b> it — the lower voice.`),
+          QA(`Do the laws change, hanging below?`,
+             `Not one. Every meeting a consonance, a perfect to begin, the octave or unison to end, no parallel perfects, thirds and sixths for the body. What changes is only your view: now you look up at the tune, and reckon each interval downward from it.`),
+          P(`We are in <b>C major</b> again, the gentlest ground. Its leading tone is natural — the <b>B</b> a half-step below C — and now it is <i>your</i> voice, the lower, that must find it: rise B → C at the close while the tune steps down D → C to meet you.`),
+          P(`Click below each note of “Twinkle” to place your voice, and close it cleanly.`)
+        ],
+        ex:{ type:'counterpoint', below:true, exttl:'Write beneath the tune',
+             desc:'First species below “Twinkle” in C major — the cantus firmus sings above, your voice below. Click below each note to place it. Every meeting a consonance, a perfect to begin, the octave or unison to end — and your lower voice rises B → C into the close. Then ask the Master to correct it.',
+             cf:[72,72,79,79,81,81,79,null,77,77,76,76,74,74,72],
+             cfLabel:'Cantus firmus — “Twinkle” in C major', modeName:'C major' }
+      },
+      {
+        num:'1.6', title:'The Low Lean',
+        teach:[
+          P(`Once more beneath — and once more the mode withholds its leading tone. We are in <b>D Dorian</b>, and its seventh is <b>C</b>, a whole tone below the final.`),
+          P(`So do below what you learned to do above: at the close, raise your <b>C to C♯</b>, that it may lean a half-step up into the D. Select the note and press ♯. All else stays true to the mode.`),
+          QA(`And the shape of a good lower line?`,
+             `Contrary motion still serves you — when the tune climbs, sink; when it falls, rise. Beneath the ground the octave and the tenth are your friends; the fifth, use sparingly. Set your voice below “Three Blind Mice”, and raise the close yourself.`),
+          NOTE(`Above and below, in every mode — note-against-note is yours. Beyond lies the second species: two notes against one, and the first taste of a passing dissonance. But that is a later belt.`)
+        ],
+        ex:{ type:'counterpoint', below:true, exttl:'Beneath, in Dorian',
+             desc:'First species below “Three Blind Mice” in D Dorian. Your voice hangs beneath the tune; raise the close yourself — C → C♯ — so it leans up into the final D. Then ask the Master to correct it.',
+             cf:[77,76,74,null,77,76,74,null,81,79,79,77,null,79,77,76,74],
+             cfLabel:'Cantus firmus — “Three Blind Mice” in D Dorian', modeName:'D Dorian' }
       }
     ]
   },
@@ -1196,7 +1224,7 @@ function stepAccName(step, acc){
 }
 function genericInterval(cpMidi, cfMidi){
   const d = midiToDiatonicStep(cpMidi) - midiToDiatonicStep(cfMidi);
-  return d >= 0 ? d + 1 : null;                     // 0->unison(1), 2->3rd, 4->5th, 5->6th, 7->8ve
+  return Math.abs(d) + 1;                            // 0->unison(1), 2->3rd, 4->5th, 5->6th, 7->8ve (either voice on top)
 }
 function isConsonant(semi){ const m = ((semi % 12) + 12) % 12; return semi >= 0 && [0, 3, 4, 7, 8, 9].includes(m); }
 function isPerfect(semi){ const m = ((semi % 12) + 12) % 12; return m === 0 || m === 7; }   // unison/5th/8ve
@@ -1210,10 +1238,11 @@ function intervalName(semi){
   return (semi >= 12 && m !== 0) ? base + ' (compound)' : base;
 }
 function soundingIdx(cf){ return cf.map((v, i) => v == null ? -1 : i).filter(i => i >= 0); }
-function checkCounterpoint(cf, cpNotes, modeName){   // cpNotes: {step,acc}|null per column
+function checkCounterpoint(cf, cpNotes, modeName, below){   // cpNotes: {step,acc}|null per column; below = counterpoint under the cantus firmus
   modeName = modeName || 'the mode';
+  const side = below ? 'below' : 'above';
   const idxs = soundingIdx(cf), findings = [];
-  if(idxs.some(i => cpNotes[i] == null)) return [{ col:-1, ok:false, msg:'Place a note above every note of the cantus firmus before I judge the whole.' }];
+  if(idxs.some(i => cpNotes[i] == null)) return [{ col:-1, ok:false, msg:`Place a note ${side} every note of the cantus firmus before I judge the whole.` }];
   const cp = cf.map((v, i) => cpNotes[i] == null ? null : noteMidi(cpNotes[i]));   // derived MIDI, aligned to columns
   const first = idxs[0], last = idxs[idxs.length - 1], pen = idxs[idxs.length - 2];
   const leadingPc = (((cf[last] % 12) + 12) % 12 + 11) % 12;       // a semitone below the final
@@ -1225,15 +1254,17 @@ function checkCounterpoint(cf, cpNotes, modeName){   // cpNotes: {step,acc}|null
         findings.push({ col:i, ok:false, msg:`Note ${k + 1}: ${stepAccName(nn.step, nn.acc)} strays outside ${modeName}. Musica ficta allows one accidental only — the leading tone at the close; keep every other note natural to the mode.` });
     }
   });
-  idxs.forEach((i, k) => {                   // every meeting a consonance, and the voice stays above
-    const semi = cp[i] - cf[i];
-    if(semi < 0){ findings.push({ col:i, ok:false, msg:`Note ${k + 1}: your voice falls below the cantus firmus — keep it above.` }); return; }
+  const gap = i => below ? (cf[i] - cp[i]) : (cp[i] - cf[i]);   // interval as upper minus lower
+  idxs.forEach((i, k) => {                   // every meeting a consonance, and the voice stays on its side
+    if(below ? (cp[i] > cf[i]) : (cp[i] < cf[i])){
+      findings.push({ col:i, ok:false, msg:`Note ${k + 1}: your voice ${below ? 'rises above' : 'falls below'} the cantus firmus — keep it ${side}.` }); return; }
+    const semi = gap(i);
     if(!isConsonant(semi)) findings.push({ col:i, ok:false, msg:`Note ${k + 1}: ${intervalName(semi)} is a dissonance; in first species every meeting must be a consonance.` });
   });
-  if(cp[first] - cf[first] >= 0 && !isPerfect(cp[first] - cf[first]))
-    findings.push({ col:first, ok:false, msg:'Begin on a perfect consonance — a unison, fifth, or octave above the final.' });
+  if(gap(first) >= 0 && !isPerfect(gap(first)))
+    findings.push({ col:first, ok:false, msg:`Begin on a perfect consonance — a unison, fifth, or octave ${side} the final.` });
   if(!isUnisonOctave(cp[last] - cf[last]))
-    findings.push({ col:last, ok:false, msg:'End on the final itself — a unison or octave above the cantus firmus.' });
+    findings.push({ col:last, ok:false, msg:`End on the final itself — a unison or octave ${side} the cantus firmus.` });
   const finalPc = ((cf[last] % 12) + 12) % 12;
   const white = [0, 2, 4, 5, 7, 9, 11];
   const dia7Pc = white.includes(leadingPc) ? leadingPc : (finalPc + 10) % 12;   // the mode's own 7th (white key below the final)
@@ -1246,7 +1277,7 @@ function checkCounterpoint(cf, cpNotes, modeName){   // cpNotes: {step,acc}|null
   for(let k = 0; k < idxs.length - 1; k++){   // motion into the perfects
     const i = idxs[k], j = idxs[k + 1];
     const cfDir = Math.sign(cf[j] - cf[i]), cpDir = Math.sign(cp[j] - cp[i]);
-    const s0 = cp[i] - cf[i], s1 = cp[j] - cf[j];
+    const s0 = gap(i), s1 = gap(j);
     const direct = cfDir !== 0 && cpDir !== 0 && cfDir === cpDir;
     if(direct && isPerfect(s1) && ((s0 % 12) + 12) % 12 === ((s1 % 12) + 12) % 12){
       const nm = isUnisonOctave(s1) ? 'octaves' : 'fifths';
@@ -1311,7 +1342,7 @@ function drawCounterpoint(ex){
   const selName = hasSel ? stepAccName(cpNotes[cpSel].step, cpNotes[cpSel].acc) : '—';
   el('cpBox').innerHTML = `
     <div style="overflow-x:auto; border:2px solid var(--ink); background:var(--paper); margin:2px 0 6px; padding:6px 4px 2px;" id="cpWrap">${svgCounterpoint(ex.cf, cpNotes, cpFindings, cpChecked, cpSel)}</div>
-    <div class="lab2">${ex.cfLabel} — the lower voice is fixed. Click above a note to place your voice; click again to move it. The number under each pair is the interval.</div>
+    <div class="lab2">${ex.cfLabel} — the ${ex.below ? 'upper' : 'lower'} voice is fixed. Click ${ex.below ? 'below' : 'above'} a note to place your voice; click again to move it. The number under each pair is the interval.</div>
     <div class="row" style="margin-top:10px; align-items:center; gap:8px;">
       <span class="lab2" style="margin:0">Selected: <b style="color:var(--blue)">${selName}</b></span>
       <button class="btn" id="cpFlat" ${hasSel ? '' : 'disabled'} title="lower a half-step">♭ flat</button>
@@ -1332,7 +1363,7 @@ function drawCounterpoint(ex){
     const col = Math.floor((vx - CP_LEFT) / CP_SP);
     if(col < 0 || col >= ex.cf.length || ex.cf[col] == null) return;   // outside, or over the rest
     let step = Math.round((100 - vy) / 7);
-    step = Math.max(1, Math.min(14, step));
+    step = Math.max(ex.below ? -4 : 1, Math.min(14, step));
     cpNotes[col] = { step, acc: 0 }; cpSel = col; cpChecked = false; cpFindings = []; drawCounterpoint(ex);
   });
   const setAcc = a => { if(cpSel != null && cpNotes[cpSel] != null){ cpNotes[cpSel].acc = a; cpChecked = false; cpFindings = []; drawCounterpoint(ex); } };
@@ -1340,7 +1371,7 @@ function drawCounterpoint(ex){
   el('cpNat').addEventListener('click', () => setAcc(0));
   el('cpSharp').addEventListener('click', () => setAcc(1));
   el('cpPlay').addEventListener('click', () => playCounterpoint(ex.cf, cpNotes));
-  el('cpCheck').addEventListener('click', () => { cpFindings = checkCounterpoint(ex.cf, cpNotes, ex.modeName); cpChecked = true; drawCounterpoint(ex); });
+  el('cpCheck').addEventListener('click', () => { cpFindings = checkCounterpoint(ex.cf, cpNotes, ex.modeName, ex.below); cpChecked = true; drawCounterpoint(ex); });
   el('cpClear').addEventListener('click', () => { cpNotes = ex.cf.map(() => null); cpSel = null; cpChecked = false; cpFindings = []; drawCounterpoint(ex); });
 }
 
