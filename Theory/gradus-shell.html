@@ -650,6 +650,29 @@ const COURSE = [
              cf:[62,65,64,62,67,65,69,67,65,64,62],
              cp:[69,74,69,67,72,71,69,76,71,69,71,72,74,76,71,69,71,72,73,74],
              passing:[10,12,16] }
+      },
+      {
+        num:'2.2', title:'Your Turn, Twice Over',
+        teach:[
+          P(`You have heard it; now you write it. Here is a fresh cantus firmus in <b>D Dorian</b>, plain whole notes below. Above each, set <b>two half notes</b>.`),
+          QA(`Remind me of the shape of it.`,
+             `A half rest to open, then enter on a <b>fifth or an octave</b>. On each <b>strong beat</b>, a consonance. On each <b>weak beat</b>, a consonance — or a dissonance that merely <i>passes</i>, stepped into and out of in one direction. At the close, raise the seventh to <b>C♯</b> on the last weak beat, and rise into the final D, held whole.`),
+          P(`Click the <b>left half</b> of a bar for its downbeat, the <b>right half</b> for its upbeat. Lean on thirds and sixths; let the perfects be few. When it is set, ask me to correct it.`)
+        ],
+        ex:{ type:'counterpoint2', exttl:'Set two half notes to a bar',
+             desc:'Second species above a cantus firmus in D Dorian. Click the left half of a bar for the downbeat, the right half for the upbeat; use ♭ ♮ ♯ to alter the selected note. Strong beats consonant, weak beats consonant or passing, enter on a fifth or octave, and raise C → C♯ at the close. Then ask the Master to correct it.',
+             cf:[62,64,65,67,65,64,62], cfLabel:'Cantus firmus in D Dorian', modeName:'D Dorian' }
+      },
+      {
+        num:'2.3', title:'A Passing Line',
+        teach:[
+          P(`Once more, in the gentle light of <b>C major</b>. Here Ionian gives you a true leading tone — the <b>B</b> a half-step below C — so at the close you rise <b>B → C</b> with no sharp to raise.`),
+          P(`All else stands: a rest and a perfect entry; a consonance on every strong beat; on the weak beats, a consonance or a passing dissonance; the final held as a whole note. This time, try to work a <b>passing tone</b> or two into your line — a dissonance caught in stride between two consonances a third apart.`),
+          NOTE(`When this sits clean, the second species is yours. The third — four notes against one, a running line — waits beyond.`)
+        ],
+        ex:{ type:'counterpoint2', exttl:'Weave a passing tone',
+             desc:'Second species above a cantus firmus in C major. The leading tone is natural — rise B → C at the close, no sharp needed. Try to pass through a dissonance or two on the weak beats. Then ask the Master to correct it.',
+             cf:[60,62,64,65,64,62,60], cfLabel:'Cantus firmus in C major', modeName:'C major' }
       }
     ]
   },
@@ -743,6 +766,7 @@ function renderExercise(ex){
   if(ex.type === 'modeReveal') return `<div class="ex">${head}<div id="mrBox"></div></div>`;
   if(ex.type === 'counterpoint') return `<div class="ex">${head}<div id="cpBox"></div></div>`;
   if(ex.type === 'secondDemo') return `<div class="ex">${head}<div id="sdBox"></div></div>`;
+  if(ex.type === 'counterpoint2') return `<div class="ex">${head}<div id="cp2Box"></div></div>`;
   if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') return `<div class="ex">${head}<div id="phBox"></div></div>`;
   return `<div class="ex">${head}<div class="ph">${ex.phnote || 'Coming soon'}</div></div>`;
 }
@@ -757,6 +781,7 @@ function wireExercise(ex){
   else if(ex.type === 'modeReveal') mountModeReveal(ex);
   else if(ex.type === 'counterpoint') mountCounterpoint(ex);
   else if(ex.type === 'secondDemo') mountSecondDemo(ex);
+  else if(ex.type === 'counterpoint2') mountCounterpoint2(ex);
   else if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') mountPerfectImperfect(ex);
 }
 
@@ -1443,6 +1468,7 @@ function playSecond(cf, cp){
     const t = ac.currentTime + 0.06;
     for(let b = 0; b < cf.length; b++) voice(cf[b], t + b * (half * 2), half * 2 * 0.97, 0.28);        // whole notes held
     plan.forEach((ev, k) => {
+      if(cp[k] == null) return;
       const barStart = t + ev.bar * (half * 2);
       const when = ev.type === 'up' ? barStart + half : barStart, dur = ev.type === 'whole' ? half * 2 : half;
       voice(cp[k], when, dur * 0.95, 0.3);
@@ -1457,6 +1483,142 @@ function drawSecondDemo(ex){
     <div class="lab2">${ex.cfLabel} The three <b style="color:#FF4E86">passing tones</b> — the weak-beat dissonances — are marked in pink; every strong beat is a consonance.</div>
     <div class="row" style="margin-top:12px"><button class="btn big" id="sdPlay">▶ Hear it — two half notes to a bar</button></div>`;
   el('sdPlay').addEventListener('click', () => playSecond(ex.cf, ex.cp));
+}
+
+/* ----- interactive second species (write two half notes to a bar, then correct) ----- */
+const S2_LEFT = 38, S2_BARW = 66, S2_RIGHT = 12;
+function s2Width(N){ return S2_LEFT + N * S2_BARW + S2_RIGHT; }
+function s2xDown(b){ return S2_LEFT + b * S2_BARW + S2_BARW * 0.30; }
+function s2xUp(b){ return S2_LEFT + b * S2_BARW + S2_BARW * 0.70; }
+function svgSecond2(cf, cpN, findings, checked, sel){
+  const plan = secondPlan(cf.length), N = cf.length;
+  const flagged = new Set((findings || []).filter(f => !f.ok && f.ev >= 0).map(f => f.ev));
+  const y = s => 100 - 7 * s, lineSteps = [2, 4, 6, 8, 10], width = s2Width(N);
+  let out = `<svg viewBox="0 0 ${width} 152" style="width:100%;height:auto;display:block;cursor:pointer" preserveAspectRatio="xMidYMid meet">`;
+  out += `<rect x="0" y="0" width="${width}" height="152" fill="#fff" fill-opacity="0"/>`;
+  out += `<text x="6" y="82" font-size="64" font-family="Georgia,serif" fill="#17140E">\u{1D11E}</text>`;
+  lineSteps.forEach(s => out += `<line x1="30" y1="${y(s)}" x2="${width - 8}" y2="${y(s)}" stroke="#17140E" stroke-width="1.6"/>`);
+  for(let b = 0; b <= N; b++){ const x = S2_LEFT + b * S2_BARW; out += `<line x1="${x}" y1="${y(2)}" x2="${x}" y2="${y(10)}" stroke="#17140E" stroke-width="${b === 0 || b === N ? 1.8 : 1}" opacity="${b === 0 || b === N ? 1 : 0.4}"/>`; }
+  const drawN = (step, acc, x, color, half) => {
+    let o = '';
+    if(step <= 0) for(let k = 0; k >= step; k -= 2) o += `<line x1="${x - 10}" y1="${y(k)}" x2="${x + 10}" y2="${y(k)}" stroke="#17140E" stroke-width="1.4"/>`;
+    if(step >= 12) for(let k = 12; k <= step; k += 2) o += `<line x1="${x - 10}" y1="${y(k)}" x2="${x + 10}" y2="${y(k)}" stroke="#17140E" stroke-width="1.4"/>`;
+    if(acc) o += `<text x="${x - 14}" y="${y(step) + 5}" font-family="Georgia,serif" font-size="15" fill="${color}">${acc > 0 ? '♯' : '♭'}</text>`;
+    o += `<ellipse cx="${x}" cy="${y(step)}" rx="7" ry="5.2" fill="none" stroke="${color}" stroke-width="2.4"/>`;
+    if(half) o += `<line x1="${x + 6.6}" y1="${y(step) - 1}" x2="${x + 6.6}" y2="${y(step) - 23}" stroke="${color}" stroke-width="1.6"/>`;
+    return o;
+  };
+  for(let b = 0; b < N; b++) out += drawN(midiToDiatonicStep(cf[b]), 0, s2xDown(b), '#17140E', false);
+  out += `<rect x="${s2xDown(0) - 6}" y="${y(6) - 5}" width="12" height="5" fill="#17140E"/>`;
+  plan.forEach((ev, k) => {
+    const x = ev.type === 'up' ? s2xUp(ev.bar) : s2xDown(ev.bar), n = cpN[k];
+    if(n == null){ out += `<circle cx="${x}" cy="${y(6)}" r="3.2" fill="none" stroke="#C3B79E" stroke-width="1.3" stroke-dasharray="2.5 2.5"/>`; return; }
+    const pink = checked && flagged.has(k), color = pink ? '#FF4E86' : (k === sel ? '#2438C8' : '#17140E');
+    out += drawN(n.step, n.acc, x, color, ev.type !== 'whole');
+    out += `<text x="${x}" y="142" font-family="Space Mono,monospace" font-size="9" text-anchor="middle" fill="${pink ? '#FF4E86' : '#6F6757'}">${genericInterval(noteMidi(n), cf[ev.bar])}</text>`;
+  });
+  return out + `</svg>`;
+}
+function checkSecond(cf, cpN, modeName){
+  modeName = modeName || 'the mode';
+  const plan = secondPlan(cf.length), M = plan.length;
+  if(cpN.some(n => n == null)) return [{ ev:-1, ok:false, msg:'Place a note in every slot — two half notes to each bar — before I judge the whole.' }];
+  const cp = cpN.map(noteMidi), cfOf = k => cf[plan[k].bar], gap = k => cp[k] - cfOf(k);
+  const first = 0, last = M - 1, pen = M - 2;
+  const finalPc = ((cf[cf.length - 1] % 12) + 12) % 12, leadPc = (finalPc + 11) % 12;
+  const white = [0, 2, 4, 5, 7, 9, 11], dia7 = white.includes(leadPc) ? leadPc : (finalPc + 10) % 12;
+  const pcName = p => PC_NAMES[((p % 12) + 12) % 12].replace('#', '♯');
+  const findings = [];
+  cpN.forEach((n, k) => {                              // stray accidentals — only the cadential leading tone
+    if(n.acc !== 0){
+      const pc = ((noteMidi(n) % 12) + 12) % 12;
+      if(!(k === pen && pc === leadPc)) findings.push({ ev:k, ok:false, msg:`${stepAccName(n.step, n.acc)} strays outside ${modeName}. Only the cadential leading tone may be raised; keep every other note true to the mode.` });
+    }
+  });
+  plan.forEach((ev, k) => {                            // stay above; strong beats consonant; weak beats consonant or passing
+    if(gap(k) < 0){ findings.push({ ev:k, ok:false, msg:'Here your voice falls below the cantus firmus — keep it above.' }); return; }
+    const s = gap(k);
+    if(ev.type === 'down' || ev.type === 'whole'){
+      if(!isConsonant(s)) findings.push({ ev:k, ok:false, msg:`On the strong beat, ${intervalName(s)} is a dissonance — every downbeat must be a consonance.` });
+    } else if(ev.type === 'up' && k !== first){
+      if(!isConsonant(s)){
+        const prev = cp[k - 1], next = cp[k + 1];
+        const passing = Math.abs(cp[k] - prev) <= 2 && Math.abs(next - cp[k]) <= 2 && (cp[k] - prev) * (next - cp[k]) > 0;
+        if(!passing) findings.push({ ev:k, ok:false, msg:`On the weak beat, ${intervalName(s)} is a dissonance that does not pass — a weak-beat dissonance must be stepped into and out of in the same direction, filling a third.` });
+      }
+    }
+  });
+  if(gap(first) >= 0 && !isPerfect(gap(first)))
+    findings.push({ ev:first, ok:false, msg:'Enter on a perfect consonance — a fifth or an octave above the final.' });
+  if(!isUnisonOctave(gap(last)))
+    findings.push({ ev:last, ok:false, msg:'End on the final — a unison or octave above the cantus firmus, held as a whole note.' });
+  const pcPen = ((cp[pen] % 12) + 12) % 12, pcLast = ((cp[last] % 12) + 12) % 12, rises = cp[last] - cp[pen] > 0;
+  if(dia7 !== leadPc && pcPen === dia7 && pcLast === finalPc && rises)
+    findings.push({ ev:pen, ok:false, msg:`Your leading tone is still a plain ${pcName(dia7)}. Select it and press ♯ to raise it to ${pcName(leadPc)}, so it leans up into the final.` });
+  else if(!(pcPen === leadPc && pcLast === finalPc && rises))
+    findings.push({ ev:pen, ok:false, msg:`The close wants the leading tone on the last weak beat: ${pcName(leadPc)} rising a half-step into the final ${pcName(finalPc)}.` });
+  const par = (k, back) => {
+    if(k - back < 0) return false;
+    const s = gap(k), s0 = gap(k - back);
+    const cfd = Math.sign(cfOf(k) - cfOf(k - back)), cpd = Math.sign(cp[k] - cp[k - back]);
+    return cfd !== 0 && cpd !== 0 && cfd === cpd && isPerfect(s) && ((s % 12) + 12) % 12 === ((s0 % 12) + 12) % 12;
+  };
+  for(let k = 1; k < M; k++){
+    if(par(k, 1) || par(k, 2)){
+      const nm = isUnisonOctave(gap(k)) ? 'octaves' : 'fifths';
+      findings.push({ ev:k, ok:false, msg:`Parallel ${nm} — two perfect ${nm} of the same kind in succession are forbidden, even a beat apart.` });
+    }
+  }
+  if(!findings.length) findings.push({ ev:-1, ok:true, msg:'Clean. Every strong beat rests on a consonance, each dissonance merely passes, and the close leans home on the leading tone. A fine second species, student.' });
+  return findings;
+}
+let cp2Notes = [], cp2Checked = false, cp2Findings = [], cp2Sel = null;
+function mountCounterpoint2(ex){ cp2Notes = secondPlan(ex.cf.length).map(() => null); cp2Checked = false; cp2Findings = []; cp2Sel = null; drawCounterpoint2(ex); }
+function renderCp2Feedback(){
+  if(!cp2Checked) return '';
+  if(cp2Findings.length === 1 && cp2Findings[0].ok) return `<div class="fb ok">${cp2Findings[0].msg}</div>`;
+  return `<div class="lab2" style="margin-bottom:6px">The Master's corrections:</div>` +
+    cp2Findings.slice(0, 8).map(f => `<div class="fb ${f.ok ? 'ok' : 'no'}" style="min-height:0;margin:5px 0">${f.msg}</div>`).join('');
+}
+function drawCounterpoint2(ex){
+  const hasSel = cp2Sel != null && cp2Notes[cp2Sel] != null;
+  const selName = hasSel ? stepAccName(cp2Notes[cp2Sel].step, cp2Notes[cp2Sel].acc) : '—';
+  el('cp2Box').innerHTML = `
+    <div style="overflow-x:auto; border:2px solid var(--ink); background:var(--paper); margin:2px 0 6px; padding:6px 4px 2px;" id="cp2Wrap">${svgSecond2(ex.cf, cp2Notes, cp2Findings, cp2Checked, cp2Sel)}</div>
+    <div class="lab2">${ex.cfLabel} — the whole notes are fixed. Two half notes to a bar: click the <b>left half</b> of a bar for its downbeat, the <b>right half</b> for its upbeat. The dotted circles mark the empty slots.</div>
+    <div class="row" style="margin-top:10px; align-items:center; gap:8px;">
+      <span class="lab2" style="margin:0">Selected: <b style="color:var(--blue)">${selName}</b></span>
+      <button class="btn" id="cp2Flat" ${hasSel ? '' : 'disabled'} title="lower a half-step">♭ flat</button>
+      <button class="btn" id="cp2Nat" ${hasSel ? '' : 'disabled'} title="natural">♮ natural</button>
+      <button class="btn" id="cp2Sharp" ${hasSel ? '' : 'disabled'} title="raise a half-step">♯ sharp</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn big" id="cp2Play">▶ Hear both voices</button>
+      <button class="btn ink" id="cp2Check">Correct my work</button>
+      <button class="btn" id="cp2Clear">Clear</button>
+    </div>
+    <div id="cp2Feedback" style="margin-top:14px">${renderCp2Feedback()}</div>`;
+  const svg = el('cp2Wrap').querySelector('svg');
+  svg.addEventListener('click', e => {
+    const rect = svg.getBoundingClientRect(), scale = rect.width / s2Width(ex.cf.length);
+    if(!scale) return;
+    const vx = (e.clientX - rect.left) / scale, vy = (e.clientY - rect.top) / scale, N = ex.cf.length, M = 2 * N - 2;
+    const bar = Math.floor((vx - S2_LEFT) / S2_BARW);
+    if(bar < 0 || bar >= N) return;
+    let ev;
+    if(bar === 0) ev = 0;
+    else if(bar === N - 1) ev = M - 1;
+    else { const xin = vx - (S2_LEFT + bar * S2_BARW); ev = 1 + 2 * (bar - 1) + (xin > S2_BARW / 2 ? 1 : 0); }
+    let step = Math.round((100 - vy) / 7); step = Math.max(1, Math.min(14, step));
+    cp2Notes[ev] = { step, acc:0 }; cp2Sel = ev; cp2Checked = false; cp2Findings = []; drawCounterpoint2(ex);
+  });
+  const setAcc = a => { if(cp2Sel != null && cp2Notes[cp2Sel] != null){ cp2Notes[cp2Sel].acc = a; cp2Checked = false; cp2Findings = []; drawCounterpoint2(ex); } };
+  el('cp2Flat').addEventListener('click', () => setAcc(-1));
+  el('cp2Nat').addEventListener('click', () => setAcc(0));
+  el('cp2Sharp').addEventListener('click', () => setAcc(1));
+  el('cp2Play').addEventListener('click', () => playSecond(ex.cf, cp2Notes.map(noteMidi)));
+  el('cp2Check').addEventListener('click', () => { cp2Findings = checkSecond(ex.cf, cp2Notes, ex.modeName); cp2Checked = true; drawCounterpoint2(ex); });
+  el('cp2Clear').addEventListener('click', () => { cp2Notes = secondPlan(ex.cf.length).map(() => null); cp2Sel = null; cp2Checked = false; cp2Findings = []; drawCounterpoint2(ex); });
 }
 
 /* ----- cantus firmus browser (pick a nursery rhyme, see it, hear it) ----- */
