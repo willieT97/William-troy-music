@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="/analytics.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Blues Theory — Music Arcade</title>
@@ -85,6 +86,9 @@
   .bar.V{ border-color:#f0d6cf; background:#fdefec; } .bar.V .nm{ color:var(--hi); }
   .bar.cur{ box-shadow:0 0 0 3px var(--note); transform:translateY(-2px); }
   .barlegend{ font-family:var(--mono); font-size:.66rem; color:var(--muted); text-align:center; margin-top:12px; }
+  .slashwrap{ background:#fff; border-radius:14px; box-shadow:0 6px 18px rgba(20,30,60,.10); padding:14px 16px; margin-top:12px; overflow-x:auto; }
+  .slashwrap svg{ display:block; max-width:100%; }
+  .slashnote{ font-family:var(--mono); font-size:.66rem; color:var(--muted); text-align:center; margin-top:10px; }
 
   .approaches{ display:grid; gap:14px; margin-top:16px; }
   .approach{ background:#fff; border-radius:14px; box-shadow:0 6px 18px rgba(20,30,60,.10); border-left:5px solid var(--ac); padding:15px 18px 16px; }
@@ -162,15 +166,31 @@
   <!-- 12 BAR -->
   <section id="s-twelvebar">
     <h2 class="sec"><span class="n">4</span> · The 12-bar blues</h2>
-    <div class="lead"><p>Almost every blues you'll ever jam on is <b>twelve bars</b> long and repeats. It's built from just the I, IV and V chords in a fixed pattern — three four-bar lines. The last bar is the <b>turnaround</b> that spins you back to the top.</p></div>
-    <div class="bars" id="bars"></div>
-    <p class="barlegend">Each cell is one bar (four beats). <b>Common variations:</b> a "quick change" to IV in bar 2, and swapping bar 12 between I and V.</p>
+    <div class="lead"><p>Almost every blues you'll ever jam on is <b>twelve bars</b> long and repeats. It's built from just the I, IV and V chords in a fixed pattern — three four-bar lines, written here in <b>slash notation</b>. The last bar is the <b>turnaround</b> that spins you back to the top.</p></div>
+    <div class="picker" style="margin-top:12px">
+      <span class="lab">Show the chords as</span>
+      <div class="roots" id="labtoggle">
+        <button data-mode="names">Chord names</button>
+        <button data-mode="roman">Roman numerals</button>
+      </div>
+    </div>
+    <div class="slashwrap" id="slash12"></div>
+    <p class="slashnote"><b>Common variations:</b> a "quick change" to IV in bar 2, and swapping bar 12 between I and V. Change the key up top and the chart rewrites itself.</p>
     <p style="text-align:center"><button class="playq" id="play12" style="--acc:var(--blue)">▶ Play the 12-bar</button></p>
+  </section>
+
+  <!-- MINOR 12 BAR -->
+  <section id="s-minorblues">
+    <h2 class="sec"><span class="n">5</span> · The minor 12-bar blues</h2>
+    <div class="lead"><p>Swap the mood from bittersweet to properly dark and you get the <b>minor blues</b>. Same twelve-bar frame, but now the <b>i</b> and <b>iv</b> chords are <b>minor 7ths</b>, and the turnaround borrows a <b>♭VI7</b> falling to a dominant <b>V7</b> — the aching "Thrill Is Gone" sound. The V stays dominant so it still pulls home. It uses the same chord / Roman toggle above.</p></div>
+    <div class="slashwrap" id="slash12min"></div>
+    <p class="slashnote">Solo with the <b>minor blues scale</b> on the tonic — it fits the whole progression.</p>
+    <p style="text-align:center"><button class="playq" id="play12min" style="--acc:var(--blue)">▶ Play the minor 12-bar</button></p>
   </section>
 
   <!-- SOLOING -->
   <section id="s-solo">
-    <h2 class="sec"><span class="n">5</span> · Ways to solo over it</h2>
+    <h2 class="sec"><span class="n">6</span> · Ways to solo over it</h2>
     <div class="lead"><p>Because the whole progression lives in one key, there are several honest ways to improvise — from dead simple to properly sophisticated. Most players grow through them in roughly this order.</p></div>
     <div class="approaches">
       <div class="approach" style="--ac:#1F9D55">
@@ -284,7 +304,7 @@
     pc=(root.pc+iv)%12, natPc=LETTERPC[letter], acc=((pc-natPc+6)%12+12)%12-6; return letter+accSym(acc); }); }
 
   // ---- render ----
-  var state={ rootIdx:0 };
+  var state={ rootIdx:0, roman:false };
   var rootsEl=document.getElementById('roots');
   function set(id,h){ document.getElementById(id).innerHTML=h; }
   ROOTS.forEach(function(r,i){ var b=document.createElement('button'); b.textContent=r.name;
@@ -310,38 +330,101 @@
       +'<div class="frow"><span class="flab">Notes</span><div class="chips">'+chips+'</div></div>'
       +'<button class="playq" data-chord="'+chordRoot.pc+'">▶ Hear it</button></div>'; }
 
-  var BARS=['I','I','I','I','IV','IV','I','I','V','IV','I','V'];
-  function renderBars(){ var root=ROOTS[state.rootIdx], iv=noteAt(root,3,5), v=noteAt(root,4,7);
-    var nameOf={ 'I':root.name+'7', 'IV':iv.name+'7', 'V':v.name+'7' };
-    set('bars', BARS.map(function(rn,i){ return '<div class="bar '+rn+'" data-bar="'+i+'"><div class="rn">'+rn+'7</div><div class="nm">'+nameOf[rn]+'</div></div>'; }).join('')); }
+
+  // ---- 12-bar in slash notation (VexFlow); reusable across charts, chord symbols + key drawn manually ----
+  var charts={};   // hostId -> {geom:[], hl:rect}
+  function render12Slash(hostId, chords, keyLabel){
+    var host=document.getElementById(hostId); host.innerHTML='';
+    if(!window.Vex){ host.innerHTML='<p class="slashnote">Slash notation needs an internet connection to load the notation library.</p>'; return; }
+    var VF=Vex.Flow;
+    var clefW=46, measW=150, rowH=84, topY=26, totalW=clefW+4*measW+8, totalH=topY+3*rowH+18;
+    var r=new VF.Renderer(host, VF.Renderer.Backends.SVG); r.resize(totalW, totalH); var ctx=r.getContext();
+    var labels=[], geom=[], firstTop=null;
+    for(var row=0; row<3; row++){
+      var y=topY+row*rowH, x=0;
+      for(var i=0;i<4;i++){
+        var idx=row*4+i, first=(i===0), w=first?clefW+measW:measW;
+        var st=new VF.Stave(x, y, w);
+        if(first){ st.addClef('treble'); if(row===0) st.addTimeSignature('4/4'); }
+        else st.setBegBarType(VF.Barline.type.NONE);
+        st.setEndBarType(i===3 ? VF.Barline.type.END : VF.Barline.type.SINGLE);
+        st.setContext(ctx).draw();
+        if(row===0 && i===0) firstTop=st.getYForLine(0);
+        var notes=[0,1,2,3].map(function(){ return new VF.StaveNote({ keys:['b/4'], duration:'q', type:'s', stem_direction:1 }); });
+        var voice=new VF.Voice({ num_beats:4, beat_value:4 }); voice.addTickables(notes);
+        var startX=st.getNoteStartX(); new VF.Formatter().joinVoices([voice]).format([voice], (x+w)-startX-14);
+        voice.draw(ctx, st);
+        labels.push({ x:startX-2, y:st.getYForLine(0)-11, text:chords[idx] });
+        geom[idx]={ x:x, y:st.getYForLine(0)-19, w:w, h:(st.getYForLine(4)-st.getYForLine(0))+27 };
+        x += w;
+      }
+    }
+    var svg=host.querySelector('svg'), NS='http://www.w3.org/2000/svg';
+    var hl=document.createElementNS(NS,'rect'); hl.setAttribute('rx','6'); hl.setAttribute('fill','#D6E6FB'); hl.setAttribute('opacity','0');
+    svg.insertBefore(hl, svg.firstChild);
+    labels.forEach(function(l){ var t=document.createElementNS(NS,'text');
+      t.setAttribute('x', l.x.toFixed(1)); t.setAttribute('y', l.y.toFixed(1));
+      t.setAttribute('font-family','Fredoka, sans-serif'); t.setAttribute('font-size','15'); t.setAttribute('font-weight','700'); t.setAttribute('fill','#2A3242');
+      t.textContent=l.text; svg.appendChild(t); });
+    if(keyLabel && firstTop!=null){ var kt=document.createElementNS(NS,'text');
+      kt.setAttribute('x','3'); kt.setAttribute('y',(firstTop-24).toFixed(1));
+      kt.setAttribute('font-family','Fredoka, sans-serif'); kt.setAttribute('font-size','12'); kt.setAttribute('font-weight','700'); kt.setAttribute('fill','#6b7488');
+      kt.textContent=keyLabel; svg.appendChild(kt); }
+    svg.setAttribute('viewBox','0 0 '+totalW+' '+totalH); svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    svg.removeAttribute('height'); svg.setAttribute('width','100%'); svg.style.height='auto';
+    charts[hostId]={ geom:geom, hl:hl };
+  }
 
   function renderAll(){
     set('minbluesDia', scaleCard(MINB,'min'));
     set('majbluesDia', scaleCard(MAJB,'maj'));
     var root=ROOTS[state.rootIdx], iv=noteAt(root,3,5), v=noteAt(root,4,7);
     set('chordsDia', chord7Card(root,'I',false)+chord7Card(iv,'IV',true)+chord7Card(v,'V',false));
-    renderBars();
+    render12();
   }
+  function majorProgression(){ var root=ROOTS[state.rootIdx], iv=noteAt(root,3,5), v=noteAt(root,4,7);
+    var I ={name:root.name+'7', roman:'I7',  pc:root.pc, ints:[0,4,7,10]};
+    var IV={name:iv.name+'7',   roman:'IV7', pc:iv.pc,   ints:[0,4,7,10]};
+    var V ={name:v.name+'7',    roman:'V7',  pc:v.pc,    ints:[0,4,7,10]};
+    return [I,I,I,I, IV,IV,I,I, V,IV,I,V]; }
+  function minorProgression(){ var root=ROOTS[state.rootIdx], iv=noteAt(root,3,5), v=noteAt(root,4,7), bVI=noteAt(root,5,8);
+    var i ={name:root.name+'m7', roman:'i7',   pc:root.pc, ints:[0,3,7,10]};
+    var iv2={name:iv.name+'m7',  roman:'iv7',  pc:iv.pc,   ints:[0,3,7,10]};
+    var bv ={name:bVI.name+'7',  roman:'♭VI7', pc:bVI.pc,  ints:[0,4,7,10]};
+    var v2 ={name:v.name+'7',    roman:'V7',   pc:v.pc,    ints:[0,4,7,10]};
+    return [i,i,i,i, iv2,iv2,i,i, bv,v2,i,v2]; }
+  function labelFor(c){ return state.roman ? c.roman : c.name; }
+  function render12(){ var root=ROOTS[state.rootIdx];
+    render12Slash('slash12', majorProgression().map(labelFor), 'Key of '+root.name);
+    render12Slash('slash12min', minorProgression().map(labelFor), 'Key of '+root.name+'m'); }
+
+  var labtoggleEl=document.getElementById('labtoggle');
+  [].forEach.call(labtoggleEl.children, function(b){ b.addEventListener('click', function(){ state.roman=(b.dataset.mode==='roman'); renderLabToggle(); render12(); }); });
+  function renderLabToggle(){ [].forEach.call(labtoggleEl.children, function(b){ b.classList.toggle('on', (b.dataset.mode==='roman')===state.roman); }); }
 
   // play handlers
   document.addEventListener('click', function(e){ var b=e.target.closest('.playq'); if(!b) return;
-    if(b.id==='play12') return; ac();
+    if(b.id==='play12'||b.id==='play12min') return; ac();
     if(b.dataset.scale){ playScale(ROOTS[state.rootIdx], b.dataset.scale==='min'?MINB:MAJB); }
     else if(b.dataset.chord!==undefined){ playChord(+b.dataset.chord); }
   });
 
   var playing=false;
-  function highlightBar(i){ [].forEach.call(document.querySelectorAll('#bars .bar'), function(el){ el.classList.toggle('cur', +el.dataset.bar===i); }); }
-  document.getElementById('play12').addEventListener('click', function(){ if(playing) return; playing=true; ac();
-    var root=ROOTS[state.rootIdx], romanPc={ 'I':root.pc, 'IV':(root.pc+5)%12, 'V':(root.pc+7)%12 };
-    var t0=ac().currentTime+0.06, bar=1.25;
-    BARS.forEach(function(rn,i){ var pc=romanPc[rn], t=t0+i*bar;
-      [0,4,7,10,12].forEach(function(iv,j){ tone(48+pc+iv, t+j*0.025, bar*0.92, 0.11); });
-      setTimeout(function(){ highlightBar(i); }, Math.max(0,(t-ac().currentTime)*1000)); });
-    setTimeout(function(){ highlightBar(-1); playing=false; }, (t0+BARS.length*bar-ac().currentTime)*1000+120);
-  });
+  function highlightBar(hostId, i){ var c=charts[hostId]; if(!c||!c.hl) return;
+    if(i<0 || !c.geom[i]){ c.hl.setAttribute('opacity','0'); return; }
+    var g=c.geom[i]; c.hl.setAttribute('x',g.x.toFixed(1)); c.hl.setAttribute('y',g.y.toFixed(1));
+    c.hl.setAttribute('width',g.w.toFixed(1)); c.hl.setAttribute('height',g.h.toFixed(1)); c.hl.setAttribute('opacity','1'); }
+  function playProgression(hostId, prog){ if(playing) return; playing=true; ac();
+    var beat=0.6, bar=beat*4, t0=ac().currentTime+0.06;   // 4 strums per bar, ~100 bpm
+    prog.forEach(function(c,i){ var tb=t0+i*bar;
+      for(var b=0;b<4;b++){ var t=tb+b*beat;
+        c.ints.concat([12]).forEach(function(iv,j){ tone(48+c.pc+iv, t+j*0.02, beat*0.85, 0.1); }); }
+      setTimeout(function(){ highlightBar(hostId,i); }, Math.max(0,(tb-ac().currentTime)*1000)); });
+    setTimeout(function(){ highlightBar(hostId,-1); playing=false; }, (t0+prog.length*bar-ac().currentTime)*1000+150); }
+  document.getElementById('play12').addEventListener('click', function(){ playProgression('slash12', majorProgression()); });
+  document.getElementById('play12min').addEventListener('click', function(){ playProgression('slash12min', minorProgression()); });
 
-  renderRoots(); renderAll();
+  renderRoots(); renderLabToggle(); renderAll();
 })();
 </script>
 </body>
