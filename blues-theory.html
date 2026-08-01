@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blues Theory — Music Arcade</title>
+<meta name="description" content="How the blues works — its history, the major and minor blues scales and the blue note, the dominant 7th chords and where the blue note comes from, the 12-bar form, and four ways to solo over it. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F8; --ink:#2A3242; --muted:#6b7488; --line:#cfd6e2;
+    --blue:#2657C4; --blue-tint:#E3EBFB; --hi:#E6462F; --gold:#E0922A; --note:#2E77E6;
+    --disp:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .wrap{ max-width:940px; margin:0 auto; padding:22px 16px 70px; }
+  section[id]{ scroll-margin-top:16px; }
+
+  .tabs{ display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--disp); font-weight:600; font-size:.82rem; text-decoration:none; color:var(--ink);
+    background:#fff; padding:8px 18px; border-radius:999px; box-shadow:0 3px 0 rgba(42,50,66,.12); transition:transform .12s; }
+  .tabs a:hover{ transform:translateY(-2px); }
+  .tabs a.cur{ background:var(--blue); color:#fff; box-shadow:0 3px 0 #1c48a3; }
+
+  header.top{ text-align:center; margin-bottom:6px; }
+  .kicker{ display:inline-block; font-family:var(--disp); font-weight:600; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); background:var(--blue-tint); padding:5px 14px; border-radius:999px; }
+  h1{ font-family:var(--disp); font-weight:700; font-size:clamp(1.9rem,6vw,2.9rem); margin:.45rem 0 .2rem; }
+  .lede{ max-width:58ch; margin:.3rem auto 0; color:var(--muted); font-weight:600; }
+
+  .sec{ font-family:var(--disp); font-weight:700; font-size:clamp(1.4rem,4.6vw,1.95rem); text-align:center; margin:46px 0 0; }
+  .sec .n{ color:var(--blue); }
+  .lead{ max-width:62ch; margin:12px auto 0; font-size:.99rem; line-height:1.64; }
+  .lead p{ margin:0; } .lead p + p{ margin-top:11px; }
+  .lead b{ color:var(--ink); } .lead .em{ color:var(--note); font-weight:700; }
+
+  .picker{ text-align:center; margin-top:20px; }
+  .picker .lab{ font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:8px; }
+  .roots{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .roots button{ font-family:var(--disp); font-weight:600; font-size:.95rem; padding:7px 12px; border-radius:10px;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; min-width:42px; transition:transform .1s; }
+  .roots button:hover{ transform:translateY(-2px); }
+  .roots button.on{ background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 3px 0 #1c48a3; }
+
+  .bluehist{ margin-top:16px; padding:22px 24px; background:#22305A; border-radius:16px; box-shadow:0 10px 26px rgba(20,30,60,.22); }
+  .bluehist .h{ font-family:var(--disp); font-weight:700; font-size:1.1rem; color:#F2C14E; display:flex; gap:9px; align-items:center; margin-bottom:10px; }
+  .bluehist p{ margin:0; font-size:.98rem; line-height:1.68; color:#dbe2f2; }
+  .bluehist p + p{ margin-top:11px; }
+  .bluehist b{ color:#fff; }
+
+  .scard{ margin-top:16px; background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); border-top:5px solid var(--acc); padding:16px 18px 18px; }
+  .duo{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+  .duo .scard{ margin-top:0; }
+  .qhead{ display:flex; align-items:center; gap:12px; }
+  .qsym{ font-family:var(--disp); font-weight:700; font-size:1.3rem; color:#fff; background:var(--acc); border-radius:12px; padding:6px 14px; min-width:52px; text-align:center; }
+  .qname{ font-family:var(--disp); font-weight:700; font-size:1.2rem; line-height:1; }
+  .qsub{ font-family:var(--mono); font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
+  .kb{ margin:14px 0 8px; }
+  .kbsvg{ display:block; width:100%; height:auto; }
+  .frow{ display:flex; gap:8px; align-items:baseline; margin-top:8px; flex-wrap:wrap; }
+  .flab{ font-family:var(--mono); font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); flex:none; width:52px; padding-top:4px; }
+  .chips{ display:flex; gap:5px; flex-wrap:wrap; }
+  .chips span{ font-family:var(--disp); font-weight:700; font-size:1rem; background:var(--tint); color:var(--acc); padding:3px 10px; border-radius:8px; }
+  .chips span.blue{ background:#DCE9FB; color:var(--note); }
+  .playq{ margin-top:14px; font-family:var(--disp); font-weight:600; font-size:.85rem; cursor:pointer; border:none; color:#fff;
+    background:var(--acc); padding:9px 16px; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.18); }
+  .playq:active{ transform:translateY(3px); box-shadow:none; }
+
+  .chords3{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:16px; }
+  .chords3 .scard{ margin-top:0; }
+  .callout{ margin-top:16px; padding:16px 20px; background:#EAF1FD; border:1.5px solid #cfe0fb; border-left:5px solid var(--note); border-radius:12px; }
+  .callout p{ margin:0; font-size:.98rem; line-height:1.6; } .callout b{ color:var(--note); }
+
+  .bars{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:16px; }
+  .bar{ border:2px solid var(--line); border-radius:10px; padding:12px 6px; text-align:center; background:#fff; transition:transform .1s, box-shadow .1s; }
+  .bar .rn{ font-family:var(--mono); font-size:.6rem; color:var(--muted); }
+  .bar .nm{ font-family:var(--disp); font-weight:700; font-size:1.12rem; margin-top:2px; }
+  .bar.I{ border-color:#c9d6f2; background:#eef3fd; } .bar.I .nm{ color:var(--blue); }
+  .bar.IV{ border-color:#cfe6d6; background:#eef7f1; } .bar.IV .nm{ color:#1F9D55; }
+  .bar.V{ border-color:#f0d6cf; background:#fdefec; } .bar.V .nm{ color:var(--hi); }
+  .bar.cur{ box-shadow:0 0 0 3px var(--note); transform:translateY(-2px); }
+  .barlegend{ font-family:var(--mono); font-size:.66rem; color:var(--muted); text-align:center; margin-top:12px; }
+
+  .approaches{ display:grid; gap:14px; margin-top:16px; }
+  .approach{ background:#fff; border-radius:14px; box-shadow:0 6px 18px rgba(20,30,60,.10); border-left:5px solid var(--ac); padding:15px 18px 16px; }
+  .approach .an{ display:inline-block; font-family:var(--mono); font-weight:700; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:#fff; background:var(--ac); padding:3px 8px; border-radius:6px; }
+  .approach h3{ font-family:var(--disp); font-weight:700; font-size:1.12rem; margin:8px 0 5px; }
+  .approach p{ margin:0; font-size:.94rem; line-height:1.55; color:#444; }
+  .approach .best{ font-family:var(--mono); font-size:.72rem; color:var(--muted); margin-top:7px; }
+  .approach .best b{ color:var(--ink); }
+
+  .explore{ margin-top:30px; text-align:center; }
+  .explore .lab{ font-family:var(--mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:10px; }
+  .explore a{ display:inline-block; margin:4px 10px; font-family:var(--body); font-weight:700; font-size:.9rem; color:var(--blue); text-decoration:none; border-bottom:2px solid transparent; }
+  .explore a:hover{ border-bottom-color:var(--blue); }
+  .tip{ font-family:var(--mono); font-size:.72rem; color:var(--muted); text-align:center; margin-top:24px; }
+  .tip b{ color:var(--ink); }
+  .foot{ margin-top:26px; text-align:center; font-family:var(--mono); font-size:.72rem; color:#6b6b6b; }
+  .foot a{ color:var(--blue); text-decoration:none; } .foot a:hover{ text-decoration:underline; }
+  @media print{ .tabs,.tip,.foot,.playq,.picker,.explore{ display:none !important; } body{ background:#fff; } .scard,.bluehist,.callout,.approach{ box-shadow:none; border:1px solid #ddd; } }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html" class="cur" aria-current="page">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header class="top">
+    <span class="kicker">Reference · blues theory</span>
+    <h1>Blues Theory</h1>
+    <p class="lede">Where the blue note comes from, the scales and 7th chords that carry it, the 12-bar form everyone jams on, and four ways to solo over it.</p>
+  </header>
+
+  <div class="picker">
+    <span class="lab">Blues in the key of — every diagram &amp; the 12-bar follow it</span>
+    <div class="roots" id="roots"></div>
+  </div>
+
+  <!-- HISTORY -->
+  <section id="s-history">
+    <h2 class="sec"><span class="n">1</span> · A short history</h2>
+    <div class="bluehist">
+      <div class="h"><span aria-hidden="true">🎙️</span> Born in the Deep South</div>
+      <p>The blues grew up in African American communities of the Deep South around the end of the 1800s — out of <b>work songs, field hollers, spirituals and call-and-response</b> singing, with roots reaching back to West African musical traditions. Its voice was expressive and vocal: notes bent and slid between the fixed pitches of European instruments, landing "in the cracks." Those bent pitches became the <b>blue notes</b>.</p>
+      <p>In the 1910s <b>W. C. Handy</b> helped publish the blues to a wider audience; the <b>Mississippi Delta</b> gave us its rawest early form, and when players moved north the electric <b>Chicago blues</b> was born. From there the blues became the taproot of nearly everything that followed — <b>jazz, R&amp;B, rock &amp; roll and soul</b> all grew from it.</p>
+    </div>
+  </section>
+
+  <!-- BLUE NOTE & SCALES -->
+  <section id="s-scales">
+    <h2 class="sec"><span class="n">2</span> · The blue note &amp; the blues scales</h2>
+    <div class="lead">
+      <p>A <b>blue note</b> is a note sung or bent a little lower than the major scale expects — most often the <b>♭3</b>, and also the <b>♭5</b> and <b>♭7</b>. On a piano or fret you can't bend, so you play the flattened note instead. Two scales package the blue notes for you:</p>
+      <p>The <b>minor blues scale</b> is the minor pentatonic with the <b>♭5</b> slipped in (its blue note). The <b>major blues scale</b> is the major pentatonic with the <b>♭3</b> slipped in (its blue note). Same trick — take a friendly five-note scale and add the one note that gives it grit. (The blue note is shown in blue.)</p>
+    </div>
+    <div class="duo"><div id="minbluesDia"></div><div id="majbluesDia"></div></div>
+  </section>
+
+  <!-- 7TH CHORDS -->
+  <section id="s-chords">
+    <h2 class="sec"><span class="n">3</span> · 7th chords &amp; where the blue note comes from</h2>
+    <div class="lead">
+      <p>Blues harmony runs on <b>dominant 7th chords</b> — a major triad plus a <b>♭7</b> on top (C7 = C–E–G–B♭). The three chords of a blues are all dominant 7ths: the <b>I7</b>, the <b>IV7</b> and the <b>V7</b>.</p>
+      <p>Here's the beautiful trick. The chords are <b>major</b>, but the melody leans on the <b>minor</b> ♭3 blue note. Over the I7 (which contains a major 3rd), a singer bends toward the ♭3 — and that note isn't random: it's the <span class="em">♭7 of the IV chord</span>. In C, the ♭3 is E♭, and E♭ is exactly the 7th of F7 (the IV). The blue note is borrowed from the IV7 and rubbed against the I. That major-vs-minor tension <i>is</i> the blues.</p>
+    </div>
+    <div class="chords3" id="chordsDia"></div>
+    <div class="callout"><p><b>Follow the blue note:</b> the <span style="color:var(--note);font-weight:700">blue</span> key in the <b>IV7</b> above is the ♭7 of that chord — and the same pitch is the ♭3 (blue note) back in the home key.</p></div>
+  </section>
+
+  <!-- 12 BAR -->
+  <section id="s-twelvebar">
+    <h2 class="sec"><span class="n">4</span> · The 12-bar blues</h2>
+    <div class="lead"><p>Almost every blues you'll ever jam on is <b>twelve bars</b> long and repeats. It's built from just the I, IV and V chords in a fixed pattern — three four-bar lines. The last bar is the <b>turnaround</b> that spins you back to the top.</p></div>
+    <div class="bars" id="bars"></div>
+    <p class="barlegend">Each cell is one bar (four beats). <b>Common variations:</b> a "quick change" to IV in bar 2, and swapping bar 12 between I and V.</p>
+    <p style="text-align:center"><button class="playq" id="play12" style="--acc:var(--blue)">▶ Play the 12-bar</button></p>
+  </section>
+
+  <!-- SOLOING -->
+  <section id="s-solo">
+    <h2 class="sec"><span class="n">5</span> · Ways to solo over it</h2>
+    <div class="lead"><p>Because the whole progression lives in one key, there are several honest ways to improvise — from dead simple to properly sophisticated. Most players grow through them in roughly this order.</p></div>
+    <div class="approaches">
+      <div class="approach" style="--ac:#1F9D55">
+        <span class="an">Approach 1</span>
+        <h3>One scale, all the way through</h3>
+        <p>Take the <b>minor blues scale</b> on the key's root and use it over all three chords for the whole 12 bars. Because the chords are all dominant 7ths in one key, that single scale "works" everywhere — the friction of its ♭3 and ♭5 against the major chords is the point. This is the classic blues-rock sound and the fastest way to start playing.</p>
+        <p class="best"><b>Best for:</b> getting going, rock and blues-rock, big expressive bends.</p>
+      </div>
+      <div class="approach" style="--ac:#2657C4">
+        <span class="an">Approach 2</span>
+        <h3>Follow the chord tones</h3>
+        <p>Forget scales for a moment and <b>target the notes of whatever chord is sounding right now</b> — the root, 3rd, 5th and ♭7 of C7, then F7, then G7 (arpeggios). Landing on a chord tone on the strong beats sounds "inside" and horn-like, and it makes the changes obvious to the listener. This is how jazz and vocal-style blues players outline the harmony.</p>
+        <p class="best"><b>Best for:</b> a melodic, "singing the changes" sound; slower blues.</p>
+      </div>
+      <div class="approach" style="--ac:#E0922A">
+        <span class="an">Approach 3</span>
+        <h3>Change scale with every chord</h3>
+        <p>Treat each dominant 7th as its own tiny key. Play a <b>Mixolydian or blues scale built on each chord's root</b> as the chords move — C over C7, F over F7, G over G7. It's more work and more to track, but every note now fits its chord, giving a smooth, "each chord gets its own colour" sound.</p>
+        <p class="best"><b>Best for:</b> jazz blues, making each change speak.</p>
+      </div>
+      <div class="approach" style="--ac:#7A3FB0">
+        <span class="an">Approach 4</span>
+        <h3>One scale, spiced with chord tones</h3>
+        <p>The pro compromise: stay mostly in <b>one blues scale</b> for its unmistakable feel, but bend toward the current chord — add the <b>major 3rd</b> when the I chord wants it, hit the IV chord's ♭7 (the blue note) when it comes round, and resolve to chord tones at the ends of phrases. You keep the identity of one scale while honouring the harmony. This is how most great blues solos actually work.</p>
+        <p class="best"><b>Best for:</b> everything — the sound most seasoned players settle on.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="explore">
+    <span class="lab">Keep exploring</span>
+    <a href="scale-theory.html">The scales in full →</a>
+    <a href="chord-theory.html">How chords are built →</a>
+    <a href="circle-of-fifths.html">Keys &amp; the I–IV–V →</a>
+    <a href="find-the-note.html">Find these notes on your instrument →</a>
+  </section>
+
+  <p class="tip">Tip: the <span style="color:var(--note);font-weight:700">blue</span> note is the flavour; the dominant 7th chords are the frame. Learn both and you can play the blues in any key.</p>
+
+  <div class="foot">
+    <p><a href="resources.html">&larr; Back to Resources</a></p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var DISP="'Fredoka',system-ui,sans-serif", MONO="'Space Mono',monospace";
+  var LETTERS=['C','D','E','F','G','A','B'];
+  var LETTERPC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  function accSym(a){ return a===0?'':a>0?'♯'.repeat(a):'♭'.repeat(-a); }
+
+  var ROOTS=[
+    {name:'C',  letter:'C', pc:0},  {name:'D♭', letter:'D', pc:1},  {name:'D',  letter:'D', pc:2},
+    {name:'E♭', letter:'E', pc:3},  {name:'E',  letter:'E', pc:4},  {name:'F',  letter:'F', pc:5},
+    {name:'F♯', letter:'F', pc:6},  {name:'G',  letter:'G', pc:7},  {name:'A♭', letter:'A', pc:8},
+    {name:'A',  letter:'A', pc:9},  {name:'B♭', letter:'B', pc:10}, {name:'B',  letter:'B', pc:11}
+  ];
+  function noteAt(root, ls, semis){ var li=LETTERS.indexOf(root.letter), letter=LETTERS[(li+ls)%7], pc=((root.pc+semis)%12+12)%12,
+    natPc=LETTERPC[letter], a=((pc-natPc+6)%12+12)%12-6; return {letter:letter, pc:pc, name:letter+accSym(a)}; }
+
+  // blues scales — blueIdx marks the added blue note
+  var MINB={ name:'Minor blues', acc:'#B5462F', tint:'#F7E1DA', ints:[0,3,5,6,7,10], lst:[0,2,3,4,4,6], degs:['1','♭3','4','♭5','5','♭7'], blueIdx:3 };
+  var MAJB={ name:'Major blues', acc:'#1F9D55', tint:'#DEF3E6', ints:[0,2,3,4,7,9],  lst:[0,1,2,2,4,5], degs:['1','2','♭3','3','5','6'],  blueIdx:2 };
+
+  // ---- audio ----
+  var actx=null;
+  function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+  function freq(m){ return 440*Math.pow(2,(m-69)/12); }
+  function tone(m, when, dur, gain){ var a=ac(), o=a.createOscillator(), g=a.createGain();
+    o.type='triangle'; o.frequency.value=freq(m);
+    g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(gain||0.14,when+0.012); g.gain.exponentialRampToValueAtTime(0.0001,when+dur);
+    o.connect(g); g.connect(a.destination); o.start(when); o.stop(when+dur+0.03); }
+  function playScale(root,sc){ var t=ac().currentTime+0.03, base=60+root.pc, ns=sc.ints.map(function(i){return base+i;}); ns.push(base+12);
+    ns.forEach(function(m,i){ tone(m, t+i*0.17, 0.42, 0.15); }); }
+  function playChord(pc){ var t=ac().currentTime+0.03; [0,4,7,10,12].forEach(function(iv,j){ tone(60+pc+iv, t+j*0.03, 1.4, 0.12); }); }
+
+  // ---- piano keyboard (labels sit on black keys) ----
+  var WHITE={0:1,2:1,4:1,5:1,7:1,9:1,11:1};
+  function isWhite(m){ return !!WHITE[((m%12)+12)%12]; }
+  function keySVG(root, items){
+    var KW=26, KH=104, BW=15, BH=64, PADX=8, TOP=8;
+    var rootMidi=60+root.pc, maxIv=0; items.forEach(function(it){ if(it.iv>maxIv) maxIv=it.iv; });
+    var start=rootMidi; while(!isWhite(start)) start--;
+    var end=rootMidi+Math.max(maxIv,12); while(!isWhite(end)) end++;
+    var whites=[]; for(var m=start;m<=end;m++){ if(isWhite(m)) whites.push(m); }
+    function wxi(i){ return PADX+i*KW; }
+    function cxm(mm){ return isWhite(mm) ? wxi(whites.indexOf(mm))+KW/2 : wxi(whites.indexOf(mm-1))+KW; }
+    var hit={}; items.forEach(function(it){ hit[rootMidi+it.iv]=it; });
+    var W=PADX*2+whites.length*KW, H=TOP+KH+8, my=TOP+KH-16, by=TOP+BH-15;
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' diagram">';
+    whites.forEach(function(wm,i){ var it=hit[wm], fill= it ? (it.blue?'#DCE9FB':'var(--tint)') : '#fff';
+      s+='<rect x="'+wxi(i)+'" y="'+TOP+'" width="'+KW+'" height="'+KH+'" rx="3" fill="'+fill+'" stroke="#c7cfdb" stroke-width="1"/>'; });
+    whites.forEach(function(wm,i){ if(i===whites.length-1)return; if(whites[i+1]-wm===2){ var bm=wm+1, it=hit[bm], fill= it ? (it.blue?'var(--note)':'var(--acc)') : '#2a3242';
+      s+='<rect x="'+(wxi(i)+KW-BW/2)+'" y="'+TOP+'" width="'+BW+'" height="'+BH+'" rx="2" fill="'+fill+'"/>'; }});
+    items.forEach(function(it){ var m=rootMidi+it.iv, x=cxm(m), col=it.blue?'var(--note)':'var(--acc)';
+      if(isWhite(m)){
+        s+='<circle cx="'+x+'" cy="'+my+'" r="9" fill="'+col+'"'+(it.root?' stroke="#fff" stroke-width="2"':'')+'/>';
+        s+='<text x="'+x+'" y="'+(my+3.2)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" font-weight="700" fill="#fff">'+it.label+'</text>';
+      } else {
+        if(it.root) s+='<circle cx="'+x+'" cy="'+by+'" r="7.5" fill="none" stroke="#fff" stroke-width="1.6"/>';
+        s+='<text x="'+x+'" y="'+(by+3.2)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" font-weight="700" fill="#fff">'+it.label+'</text>';
+      }
+    });
+    return s+'</svg>';
+  }
+
+  function scaleItems(sc){ var a=sc.ints.map(function(iv,i){ return {iv:iv, label:sc.degs[i], blue:(i===sc.blueIdx), root:(i===0)}; });
+    a.push({iv:12, label:'1', root:true}); return a; }
+  function scaleNames(root,sc){ return sc.ints.map(function(iv,i){ var li=LETTERS.indexOf(root.letter), letter=LETTERS[(li+sc.lst[i])%7],
+    pc=(root.pc+iv)%12, natPc=LETTERPC[letter], acc=((pc-natPc+6)%12+12)%12-6; return letter+accSym(acc); }); }
+
+  // ---- render ----
+  var state={ rootIdx:0 };
+  var rootsEl=document.getElementById('roots');
+  function set(id,h){ document.getElementById(id).innerHTML=h; }
+  ROOTS.forEach(function(r,i){ var b=document.createElement('button'); b.textContent=r.name;
+    b.addEventListener('click', function(){ state.rootIdx=i; renderRoots(); renderAll(); }); rootsEl.appendChild(b); });
+  function renderRoots(){ [].forEach.call(rootsEl.children, function(b,i){ b.classList.toggle('on', i===state.rootIdx); }); }
+
+  function scaleCard(sc, key){ var root=ROOTS[state.rootIdx], nm=scaleNames(root,sc);
+    var chips=nm.map(function(n,i){ return '<span'+(i===sc.blueIdx?' class="blue"':'')+'>'+n+'</span>'; }).join('');
+    return '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'
+      +'<div class="qhead"><span class="qsym">'+root.name+'</span><div><div class="qname">'+sc.name+'</div><div class="qsub">'+root.name+' '+sc.name.toLowerCase()+'</div></div></div>'
+      +'<div class="kb">'+keySVG(root, scaleItems(sc))+'</div>'
+      +'<div class="frow"><span class="flab">Notes</span><div class="chips">'+chips+'</div></div>'
+      +'<button class="playq" data-scale="'+key+'">▶ Hear it</button></div>'; }
+
+  function chord7Card(chordRoot, romanLabel, blueSeventh){ var tones=[
+      {ls:0,semis:0,deg:'1',root:true}, {ls:2,semis:4,deg:'3'}, {ls:4,semis:7,deg:'5'}, {ls:6,semis:10,deg:'♭7',blue:blueSeventh}];
+    var items=tones.map(function(t){ return {iv:t.semis, label:t.deg, root:t.root, blue:t.blue}; });
+    var chips=tones.map(function(t){ var n=noteAt(chordRoot,t.ls,t.semis).name; return '<span'+(t.blue?' class="blue"':'')+'>'+n+'</span>'; }).join('');
+    return '<div class="scard" style="--acc:#46536A;--tint:#E9ECF2">'
+      +'<div class="qhead"><span class="qsym">'+romanLabel+'</span>'
+      +'<div><div class="qname">'+chordRoot.name+'7</div><div class="qsub">dominant 7th</div></div></div>'
+      +'<div class="kb">'+keySVG(chordRoot, items)+'</div>'
+      +'<div class="frow"><span class="flab">Notes</span><div class="chips">'+chips+'</div></div>'
+      +'<button class="playq" data-chord="'+chordRoot.pc+'">▶ Hear it</button></div>'; }
+
+  var BARS=['I','I','I','I','IV','IV','I','I','V','IV','I','V'];
+  function renderBars(){ var root=ROOTS[state.rootIdx], iv=noteAt(root,3,5), v=noteAt(root,4,7);
+    var nameOf={ 'I':root.name+'7', 'IV':iv.name+'7', 'V':v.name+'7' };
+    set('bars', BARS.map(function(rn,i){ return '<div class="bar '+rn+'" data-bar="'+i+'"><div class="rn">'+rn+'7</div><div class="nm">'+nameOf[rn]+'</div></div>'; }).join('')); }
+
+  function renderAll(){
+    set('minbluesDia', scaleCard(MINB,'min'));
+    set('majbluesDia', scaleCard(MAJB,'maj'));
+    var root=ROOTS[state.rootIdx], iv=noteAt(root,3,5), v=noteAt(root,4,7);
+    set('chordsDia', chord7Card(root,'I',false)+chord7Card(iv,'IV',true)+chord7Card(v,'V',false));
+    renderBars();
+  }
+
+  // play handlers
+  document.addEventListener('click', function(e){ var b=e.target.closest('.playq'); if(!b) return;
+    if(b.id==='play12') return; ac();
+    if(b.dataset.scale){ playScale(ROOTS[state.rootIdx], b.dataset.scale==='min'?MINB:MAJB); }
+    else if(b.dataset.chord!==undefined){ playChord(+b.dataset.chord); }
+  });
+
+  var playing=false;
+  function highlightBar(i){ [].forEach.call(document.querySelectorAll('#bars .bar'), function(el){ el.classList.toggle('cur', +el.dataset.bar===i); }); }
+  document.getElementById('play12').addEventListener('click', function(){ if(playing) return; playing=true; ac();
+    var root=ROOTS[state.rootIdx], romanPc={ 'I':root.pc, 'IV':(root.pc+5)%12, 'V':(root.pc+7)%12 };
+    var t0=ac().currentTime+0.06, bar=1.25;
+    BARS.forEach(function(rn,i){ var pc=romanPc[rn], t=t0+i*bar;
+      [0,4,7,10,12].forEach(function(iv,j){ tone(48+pc+iv, t+j*0.025, bar*0.92, 0.11); });
+      setTimeout(function(){ highlightBar(i); }, Math.max(0,(t-ac().currentTime)*1000)); });
+    setTimeout(function(){ highlightBar(-1); playing=false; }, (t0+BARS.length*bar-ac().currentTime)*1000+120);
+  });
+
+  renderRoots(); renderAll();
+})();
+</script>
+</body>
+</html>
