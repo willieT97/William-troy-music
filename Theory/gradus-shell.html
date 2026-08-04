@@ -676,7 +676,29 @@ const COURSE = [
       }
     ]
   },
-  { title:'Module 3 — Third Species', belt:'Green Belt', soon:true, blurb:'Four against one: the running line, the nota cambiata.' },
+  {
+    title:'Module 3 — Third Species', belt:'Green Belt — Third Species',
+    lessons:[
+      {
+        num:'3.1', title:'The Running Line',
+        teach:[
+          P(`The line quickens again. Where second species set two notes to a bar, third species sets <b>four</b> — four running quarter notes against each whole note of the ground. This is the <b>running line</b>.`),
+          QA(`And the dissonances — more freedom still?`,
+             `More, but ordered. The <b>first quarter</b> of each bar must be a consonance, the pillar of the beat. The other three may be dissonant — as <b>passing tones</b>, stepped into and out of, just as before.`),
+          P(`But third species grants one new figure, and a strange one: the <b>nota cambiata</b>, the "changing note." From a consonance, step down onto a dissonance — then, instead of resolving it by step, <b>leap away a third</b> to a consonance, and step on. The dissonance is quit by a leap, the one place the old rules allow it.`),
+          QA(`Why permit such a thing?`,
+             `Because the ear, hearing the leap, forgives the clash — the figure was sung so often it became an idiom of its own. You will hear it below, marked in gold; the passing tones are marked in pink.`),
+          P(`Begin with a rest — a quarter rest now — then enter on a perfect consonance. Close on the leading tone and the final. Hear how the counterpoint runs four to the bar.`)
+        ],
+        ex:{ type:'thirdDemo', exttl:'Four quarter notes against one whole',
+             desc:'A cantus firmus in D Dorian below; above it, four quarter notes to a bar — the running line. Every first quarter is a consonance; the others pass through dissonance by step, save one gold note: the nota cambiata, a dissonance quit by a downward leap of a third. Passing tones are pink. Hear how the upper voice runs four to the bar.',
+             cfLabel:'Cantus firmus in D Dorian (below), with a third-species counterpoint above.',
+             cf:[62,64,65,67,65,64,62],
+             cp:[69,65,69,67,72,74,76,74,72,71,69,71,72,74,72,69,74,72,69,71,72,71,73,74],
+             passing:[5,9,12], cambiata:[14] }
+      }
+    ]
+  },
   { title:'Module 4 — Fourth Species', belt:'Blue Belt', soon:true, blurb:'The suspension: dissonance prepared, then resolved.' },
   { title:'Module 5 — Fifth Species', belt:'Brown Belt', soon:true, blurb:'Florid counterpoint: all the species woven into one singing line.' }
 ];
@@ -767,6 +789,7 @@ function renderExercise(ex){
   if(ex.type === 'counterpoint') return `<div class="ex">${head}<div id="cpBox"></div></div>`;
   if(ex.type === 'secondDemo') return `<div class="ex">${head}<div id="sdBox"></div></div>`;
   if(ex.type === 'counterpoint2') return `<div class="ex">${head}<div id="cp2Box"></div></div>`;
+  if(ex.type === 'thirdDemo') return `<div class="ex">${head}<div id="tdBox"></div></div>`;
   if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') return `<div class="ex">${head}<div id="phBox"></div></div>`;
   return `<div class="ex">${head}<div class="ph">${ex.phnote || 'Coming soon'}</div></div>`;
 }
@@ -782,6 +805,7 @@ function wireExercise(ex){
   else if(ex.type === 'counterpoint') mountCounterpoint(ex);
   else if(ex.type === 'secondDemo') mountSecondDemo(ex);
   else if(ex.type === 'counterpoint2') mountCounterpoint2(ex);
+  else if(ex.type === 'thirdDemo') mountThirdDemo(ex);
   else if(ex.type === 'ph' && ex.subtype === 'perfectImperfect') mountPerfectImperfect(ex);
 }
 
@@ -1619,6 +1643,68 @@ function drawCounterpoint2(ex){
   el('cp2Play').addEventListener('click', () => playSecond(ex.cf, cp2Notes.map(noteMidi)));
   el('cp2Check').addEventListener('click', () => { cp2Findings = checkSecond(ex.cf, cp2Notes, ex.modeName); cp2Checked = true; drawCounterpoint2(ex); });
   el('cp2Clear').addEventListener('click', () => { cp2Notes = secondPlan(ex.cf.length).map(() => null); cp2Sel = null; cp2Checked = false; cp2Findings = []; drawCounterpoint2(ex); });
+}
+
+/* ===================== THIRD SPECIES (four-against-one demonstration) ===================== */
+// bar0 = quarter-rest + beats 2,3,4; bars 1..N-2 = beats 1,2,3,4; last bar = whole note
+function thirdPlan(N){
+  const plan = [{ bar:0, beat:2 }, { bar:0, beat:3 }, { bar:0, beat:4 }];
+  for(let i = 1; i <= N - 2; i++) for(let b = 1; b <= 4; b++) plan.push({ bar:i, beat:b });
+  plan.push({ bar:N - 1, beat:'w' });
+  return plan;
+}
+const T_LEFT = 38, T_BARW = 86, T_RIGHT = 12;
+function t3Width(N){ return T_LEFT + N * T_BARW + T_RIGHT; }
+function t3x(bar, beat){ return T_LEFT + bar * T_BARW + T_BARW * ((beat - 0.5) / 4); }   // beat 1..4
+function svgThird(cf, cp, passing, cambiata){
+  const plan = thirdPlan(cf.length), passSet = new Set(passing || []), cambSet = new Set(cambiata || []);
+  const y = s => 100 - 7 * s, lineSteps = [2, 4, 6, 8, 10], N = cf.length, width = t3Width(N);
+  let out = `<svg viewBox="0 0 ${width} 152" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">`;
+  out += `<text x="6" y="82" font-size="64" font-family="Georgia,serif" fill="#17140E">\u{1D11E}</text>`;
+  lineSteps.forEach(s => out += `<line x1="30" y1="${y(s)}" x2="${width - 8}" y2="${y(s)}" stroke="#17140E" stroke-width="1.6"/>`);
+  for(let b = 0; b <= N; b++){ const x = T_LEFT + b * T_BARW; out += `<line x1="${x}" y1="${y(2)}" x2="${x}" y2="${y(10)}" stroke="#17140E" stroke-width="${b === 0 || b === N ? 1.8 : 1}" opacity="${b === 0 || b === N ? 1 : 0.4}"/>`; }
+  const drawN = (step, acc, x, color, kind) => {   // kind 'q' = filled quarter + stem, 'w' = hollow whole
+    let o = '';
+    if(step <= 0) for(let k = 0; k >= step; k -= 2) o += `<line x1="${x - 9}" y1="${y(k)}" x2="${x + 9}" y2="${y(k)}" stroke="#17140E" stroke-width="1.3"/>`;
+    if(step >= 12) for(let k = 12; k <= step; k += 2) o += `<line x1="${x - 9}" y1="${y(k)}" x2="${x + 9}" y2="${y(k)}" stroke="#17140E" stroke-width="1.3"/>`;
+    if(acc) o += `<text x="${x - 13}" y="${y(step) + 5}" font-family="Georgia,serif" font-size="14" fill="${color}">${acc > 0 ? '♯' : '♭'}</text>`;
+    o += `<ellipse cx="${x}" cy="${y(step)}" rx="6.4" ry="5" fill="${kind === 'q' ? color : 'none'}" stroke="${color}" stroke-width="${kind === 'q' ? 1.5 : 2.2}"/>`;
+    if(kind === 'q') o += `<line x1="${x + 6}" y1="${y(step) - 1}" x2="${x + 6}" y2="${y(step) - 20}" stroke="${color}" stroke-width="1.5"/>`;
+    return o;
+  };
+  for(let b = 0; b < N; b++) out += drawN(midiToDiatonicStep(cf[b]), 0, t3x(b, 1), '#17140E', 'w');
+  const rx = t3x(0, 1);   // quarter rest at the opening
+  out += `<path d="M${rx - 3},${y(8.6)} L${rx + 3},${y(7.4)} L${rx - 2},${y(6)} L${rx + 3},${y(4.8)}" fill="none" stroke="#17140E" stroke-width="1.8" stroke-linejoin="round"/>`;
+  plan.forEach((ev, k) => {
+    const m = cp[k], step = midiToDiatonicStep(m), acc = m - stepToMidi(step);
+    const x = ev.beat === 'w' ? t3x(ev.bar, 1) : t3x(ev.bar, ev.beat);
+    const color = cambSet.has(k) ? '#E0912B' : (passSet.has(k) ? '#FF4E86' : '#2438C8');
+    out += drawN(step, acc, x, color, ev.beat === 'w' ? 'w' : 'q');
+    out += `<text x="${x}" y="142" font-family="Space Mono,monospace" font-size="8" text-anchor="middle" fill="${cambSet.has(k) ? '#E0912B' : (passSet.has(k) ? '#FF4E86' : '#6F6757')}">${genericInterval(m, cf[ev.bar])}</text>`;
+  });
+  return out + `</svg>`;
+}
+function playThird(cf, cp){
+  const plan = thirdPlan(cf.length), ac = audio(), q = 0.26;
+  const start = () => {
+    const t = ac.currentTime + 0.06;
+    for(let b = 0; b < cf.length; b++) voice(cf[b], t + b * (q * 4), q * 4 * 0.97, 0.26);
+    plan.forEach((ev, k) => {
+      if(cp[k] == null) return;
+      const barStart = t + ev.bar * (q * 4);
+      const when = ev.beat === 'w' ? barStart : barStart + (ev.beat - 1) * q, dur = ev.beat === 'w' ? q * 4 : q;
+      voice(cp[k], when, dur * 0.92, 0.3);
+    });
+  };
+  if(ac.state === 'suspended') ac.resume().then(start).catch(start); else start();
+}
+function mountThirdDemo(ex){ drawThirdDemo(ex); }
+function drawThirdDemo(ex){
+  el('tdBox').innerHTML = `
+    <div style="overflow-x:auto; border:2px solid var(--ink); background:var(--paper); margin:2px 0 8px; padding:6px 4px 2px;">${svgThird(ex.cf, ex.cp, ex.passing, ex.cambiata)}</div>
+    <div class="lab2">${ex.cfLabel} <b style="color:#FF4E86">Passing tones</b> are pink; the one <b style="color:#E0912B">nota cambiata</b> — a dissonance quit by a downward leap of a third — is gold. Every first quarter is a consonance.</div>
+    <div class="row" style="margin-top:12px"><button class="btn big" id="tdPlay">▶ Hear it — four quarter notes to a bar</button></div>`;
+  el('tdPlay').addEventListener('click', () => playThird(ex.cf, ex.cp));
 }
 
 /* ----- cantus firmus browser (pick a nursery rhyme, see it, hear it) ----- */
