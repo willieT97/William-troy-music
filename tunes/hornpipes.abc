@@ -1,0 +1,60 @@
+% Irish session tunes — settings sourced from thesession.org (community
+% transcriptions; the tunes themselves are traditional / public domain).
+% Add more by pasting X:… blocks below, then rerun tunes/build-manifest.sh
+
+X:83
+T:The Rights Of Man
+R:hornpipe
+M:4/4
+L:1/8
+K:Eminor
+|:GA|B2A2 G2F2|EFGA B2ef|gfed edBd|cBAG A2GA|
+ BcAB GAFG|EFGA B2ef|gfed Bgfg|e2 E2 E2:|
+ |:ga|babg efga|babg egfe|d^cde fefg|afdf a2gf|
+ edef gfga|bgaf gfef|gfed Bgfg|e2 E2 E2:|
+
+X:475
+T:King Of The Fairies
+R:hornpipe
+M:4/4
+L:1/8
+K:Edorian
+|:B,2|EDEF GFGA|B2B2 G2GA|B2E2 EFGE|FGFE D2B,2|
+ EDEF GFGA|BAGB d3c|B2E2 GFE_E|E6:|
+ |:d2|e2e2 Bdef|gagf e3f|e2B2 BABc|dedc BcdB|
+ e2B2 Bdef|gagf efed|Bdeg fedf|e6 ef|
+ g3e f3d|edBc d3e|dBAF GABc|dBAF GFED|
+ B,2E2 EFGA|B2e2 edef|e2B2 BAGF|E6:|
+
+X:49
+T:The Harvest Home
+R:hornpipe
+M:4/4
+L:1/8
+K:Dmajor
+|:AF|DAFA DAFA|defe dcBA|eAfA gAfA|(3efe (3dcB AGFE|
+ DAFA DAFA|defe dcBA|eAfA gfec|d2 f2 d2:|
+ |:cd|eAAA fAAA|gAfA eAAA|eAfA gAfA|(3efe (3dcB (3ABA (3GFE|
+ DAFA DAFA|defe dcBA|eAfA gfec|d2 f2 d2:|
+
+X:651
+T:The Boys Of Bluehill
+R:hornpipe
+M:4/4
+L:1/8
+K:Dmajor
+|:FA|BA FA D2 FA|BA (3Bcd e2 de|fa gf eg fe|df ed B2 dB|
+ BA FA D2 FA|BA (3Bcd e2 de|fa gf eg fe|d2 f2 d2:|
+ |:fg|af df a2 g2|ef ga b2 ag|fa gf eg fe|df ed B2 dB|
+ BA FA D2 FA|BA (3Bcd e2 de|fa gf eg fe|d2 f2 d2:|
+
+X:30
+T:Off To California
+R:hornpipe
+M:4/4
+L:1/8
+K:Gmajor
+|:GFGB AGED|GBdg e2df|gfgd edBG|ABAG E2DE|
+ G2GB AGED|GBdg e2df|gfgd edBG|ABAF G4:|
+ |:gfeg fedf|edef edBd|gfgd edBG|ABAG EDEF|
+ GFGB AGED|GBdg e2df|gfgd edBG|ABAF G4:|

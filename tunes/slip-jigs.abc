@@ -1,0 +1,36 @@
+% Irish session tunes — settings sourced from thesession.org (community
+% transcriptions; the tunes themselves are traditional / public domain).
+% Add more by pasting X:… blocks below, then rerun tunes/build-manifest.sh
+
+X:10
+T:The Butterfly
+R:slip jig
+M:9/8
+L:1/8
+K:Eminor
+|:B2E G2E F3|B2E G2E FED|B2E G2E F3|B2d d2B AFD:|
+ |:B2d e2f g3|B2d g2e dBA|B2d e2f g2a|b2a g2e dBA:|
+ |:B3 B2A G2A|B3 BAB dBA|B3 B2A G2A|B2d g2e dBA:|
+
+X:52
+T:The Kid On The Mountain
+R:slip jig
+M:9/8
+L:1/8
+K:Eminor
+|:EFE FEF G2 F|E3 cBA BGE|EFE FED G2 A|BAG FAG FED:|
+ |:BGB AFA G2 D|GAB dge dBA|BGB AFA G2 A|BAG FAG FED:|
+ |:gfg efe e2 f|gfg efg afd|gfg efe e2 a|bag fag fed:|
+ |:eBB e2f g2f|eBB efg afd|eBB e2f g2a|bag fag fed:|
+ |:edB dBA G2D|GAB dge dBA|edB dBA G2A|BAG FAG FED:|
+
+X:750
+T:A Fig For A Kiss
+R:slip jig
+M:9/8
+L:1/8
+K:Edorian
+G2B E2B BAG|F2A D2A AGF|G2B E2B BAG|B/c/dB AGF DEF|
+ G2B E2B BAG|F2A D2A AGF|G2B E2B BAG|B/c/dB AGF E3||
+ g2e g2e edB|f2d dcd fed|g2e g2e edB|dBG GBd e2f|
+ g2e g2e edB|f2d dcd fed|gfe fed ecA|B/c/dB AGF E2F||

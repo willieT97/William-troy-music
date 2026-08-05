@@ -1,0 +1,180 @@
+% Irish session tunes — settings sourced from thesession.org (community
+% transcriptions; the tunes themselves are traditional / public domain).
+% Add more by pasting X:… blocks below, then rerun tunes/build-manifest.sh
+
+X:55
+T:The Kesh
+R:jig
+M:6/8
+L:1/8
+K:Gmajor
+|:G3 GAB|A3 ABd|edd gdd|edB dBA|
+ GAG GAB|ABA ABd|edd gdd|BAF G3:|
+ |:B2B d2d|ege dBA|B2B dBG|ABA AGA|
+ BAB d^cd|ege dBd|gfg aga|bgg g3:|
+
+X:71
+T:Morrison's
+R:jig
+M:6/8
+L:1/8
+K:Edorian
+|:E3 B3|EBE AFD|EDE B3|dcB AFD|
+ E3 B3|EBE AFD|G3 FGA|dAG FED:|
+ Bee fee|aee fee|Bee fee|a2g fed|
+ Bee fee|aee fee|gfe d2A|BAG FGA|
+ Bee fee|aee fee|Bee fee|faf def|
+ g3 gfe|def g2d|edc d2A|BAG FED|
+
+X:9
+T:Banish Misfortune
+R:jig
+M:6/8
+L:1/8
+K:Dmixolydian
+|:fed cAG|A2d cAG|F2D DED|FEF GFG|
+ AGA cAG|AGA cde|fed cAG|Ad^c d3:|
+ |:f2d d^cd|f2g agf|e2c cBc|e2f gfe|
+ f2g agf|e2f gfe|fed cAG|Ad^c d3:|
+ |:f2g e2f|d2e c2d|ABA GAG|F2F GED|
+ c3 cAG|AGA cde|fed cAG|Ad^c d3:|
+
+X:108
+T:Out On The Ocean
+R:jig
+M:6/8
+L:1/8
+K:Gmajor
+|:D2B BAG|BdB A2B|GED G2A|B2B AGE|
+ D2B BAG|BdB A2B|GED G2A|1 BGE G2E:|2 BGE GBd||
+ |:e2e edB|ege edB|d2B def|gfe dBA|
+ G2A B2d|ege dBA|GED G2A|1 BGE GBd:|2 BGE G3||
+
+X:106
+T:The Swallowtail
+R:jig
+M:6/8
+L:1/8
+K:Adorian
+|:cBA eAA|cBA edc|BGG dGG|gfe dcB|
+ cBA eAA|cBA e2f|gfe dcB|cBA A2d:|
+ efg a2b|a2b age|efg a2b|age g2d|
+ efg a2b|a2b age|gfe dcB|cBA A2d:|
+
+X:19
+T:The Connaughtman's Rambles
+R:jig
+M:6/8
+L:1/8
+K:Dmajor
+|:FAA dAA|BAA dAG|FAA dfe|dBB BAG|
+ FAA dAA|BAA def|gfe dfe|1 dBB BAG:|2 dBB B3||
+ |:fbb faf|fed ede|fbb faf|fed e3|
+ fbb faf|fed def|gfe dfe|1 dBB B3:|2 dBB BAG||
+
+X:5
+T:The Blarney Pilgrim
+R:jig
+M:6/8
+L:1/8
+K:Dmixolydian
+|:DED DEG|A2A ABc|BAG AGE|GEA GED|
+ DED DEG|A2A ABc|BAG AGE|GED D3:|
+ ded dBG|AGA BGE|ded dBG|AGA GAB|
+ g2e dBG|AGA BGE|B2G AGE|GED D3:|
+ A2D B2D|A2D ABc|BAG AGE|GEA GED|
+ ADD BDD|ADD ABc|BAG AGE|GED D3:|
+
+X:60
+T:The Lilting Banshee
+R:jig
+M:6/8
+L:1/8
+K:Adorian
+|:EAA EAA|BAB G2A|Bee edB|def gfg|
+ eAA eAA|BAB G2A|Bee edB|dBA A3:|
+ eaa age|dBA G2A|Bee edB|def gfg|
+ eaa age|dBA G2A|Bee edB|dBA A3:|
+
+X:62
+T:The Lark In The Morning
+R:jig
+M:6/8
+L:1/8
+K:Dmajor
+|:AFA AFA|BGB BdB|AFA AFA|fed BdB|
+ AFA AFA|BGB BdB|def afe|dBB BdB:|
+ |:def afe|bff afe|def afe|dBB BdB|
+ def afe|bff afe|g2e f2d|edB BdB:|
+ |:dff fef|fef fef|dff fef|edB BdB|
+ dff fef|fef def|g2e f2d|edB BdB:|
+ |:Add fdd|edd fdd|Add fdd|edB BdB|
+ Add fdd|edB def|g2e f2d|edB BdB:|
+
+X:12
+T:The Cliffs Of Moher
+R:jig
+M:6/8
+L:1/8
+K:Adorian
+|:a3 bag|eaf ged|c2A BAG|EFG ABd|
+ eaa bag|eaf ged|c2A BAG|EFG A3:|
+ e2e dBA|e2e dBA|GAB dBA|GAB dBd|
+ e2e dBA|e2e dBA|GAB dBA|EFG A3|
+ efe dBA|efe dBA|GAB dBA|GAB dBd|
+ efe ded|cec BeB|GAB dBA|EFG A3|
+
+X:15
+T:Calliope House
+R:jig
+M:6/8
+L:1/8
+K:Dmajor
+|:dAA fAA|eAA fAA|Bee e2d|efe dBA|FAA A2F|
+ A2B d2e|1 f2f fed|e3 e2A:|2 f2f edc|d3 efg||
+ |:a2a faa|eaa faa|g2g fgf|efe dBA|FAA A2F|
+ A2B d2e|1 f2f fed|e3 efg:|2 f2f edc|d3 d3||
+
+X:111
+T:Tripping Up The Stairs
+R:jig
+M:6/8
+L:1/8
+K:Dmajor
+|:FAA GBB|FAd fed|cBc ABc|dfe dAG|
+ FAA GBB|FAd fed|c2c ABc|dfe d2A:|
+ dBB fBB|dBB fed|cAA eAA|efe edc|
+ dBB fBB|fgf fed|cBc ABc|dfe d3:|
+
+X:92
+T:The Irish Washerwoman
+R:jig
+M:6/8
+L:1/8
+K:Gmajor
+|:BGG DGG|BGB dcB|cAA EAA|cAc edc|
+ BGG DGG|BGB dcB|cBc Adc|BGG G3:|
+ |:BGG DGG|BGB BAG|AFF DFF|AFA AGF|
+ EGG DGG|CGG B,GG|cBc Adc|BGG G3:|
+
+X:76
+T:My Darling Asleep
+R:jig
+M:6/8
+L:1/8
+K:Dmajor
+|:fdd cAA|BGG A2G|FAA def|gfg eaa|
+ fdd cAA|BGG A2G|FAA def|gec d3:|
+ |:FAA Add|FAA BGG|FAA def|gfg eaa|
+ fdd cAA|BGG A2G|FAA def|gec d3:|
+
+X:702
+T:The Blackthorn Stick
+R:jig
+M:6/8
+L:1/8
+K:Gmajor
+|:d|gfg ege|dBG AGE|DGG FGA|BGB A2 d|
+ gfg age|dBG AGE|DGG FGA|BGG G2:|
+ |:d|edd gdd|edd gdd|e2 e gfg|edB A2 d|
+ gfg age|dBG AGE|DGG FGA|BGG G2:|

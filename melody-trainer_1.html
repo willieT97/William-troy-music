@@ -223,6 +223,23 @@
   }
   textarea:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
   .loadrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .tunesearch{width:100%;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;padding:9px 12px;
+    border:2px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);margin-bottom:10px}
+  .tunesearch:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .tunelist{max-height:320px;overflow-y:auto;border:2px solid var(--ink);border-radius:8px;background:#fffdf7}
+  .tunelist .grp{position:sticky;top:0;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--paper);background:var(--ink);padding:5px 12px}
+  .tunelist .tunerow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 12px;
+    cursor:pointer;border-top:1px solid rgba(23,20,14,.08)}
+  .tunelist .tunerow:hover{background:#efe7d3}
+  .tunelist .tunerow .tn{font-weight:600;font-size:14px}
+  .tunelist .tunerow .tk{font-family:'Space Mono',monospace;font-size:11px;color:#8a8577;white-space:nowrap}
+  .tunelist .tunerow.cur{background:var(--blue);color:var(--paper)}
+  .tunelist .tunerow.cur .tk{color:rgba(244,238,226,.85)}
+  .tunelist .none{padding:14px 12px;font-family:'Space Mono',monospace;font-size:12px;color:#8a8577}
+  .pastewrap{margin-top:12px}
+  .pastewrap summary{cursor:pointer;font-family:'Space Mono',monospace;font-size:12px;color:var(--ink);padding:4px 0}
+  .pastewrap textarea{margin-top:8px}
 
   .toggle{
     font-family:'Space Mono',monospace;
@@ -449,14 +466,16 @@
   </div>
 
   <div class="card">
-    <h2>Load a tune · ABC notation</h2>
-    <div class="fbmeta">Paste ABC from thesession.org, or type your own. Repeats play once through; graces, slurs and ornaments are ignored.</div>
-    <div class="loadrow">
-      <select id="presetSel" aria-label="Example tunes"></select>
-      <button class="primary" id="loadBtn">Load tune</button>
-    </div>
-    <textarea id="abcIn" spellcheck="false" aria-label="ABC notation input"></textarea>
-    <div class="statusline" id="loadStatus"><span class="dot"></span><span id="loadStatusText">Pick an example or paste your own ABC, then hit Load.</span></div>
+    <h2>Load a tune</h2>
+    <div class="fbmeta">The <b>50 most-played tunes</b> on thesession.org — search and pick one, or paste your own ABC. Ornaments are stripped; repeats play once through.</div>
+    <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search tunes — name or type…" aria-label="Search tunes" autocomplete="off">
+    <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
+    <details class="pastewrap">
+      <summary>Paste your own ABC</summary>
+      <textarea id="abcIn" spellcheck="false" aria-label="ABC notation input"></textarea>
+      <div class="loadrow"><button class="primary" id="loadBtn">Load pasted ABC</button></div>
+    </details>
+    <div class="statusline" id="loadStatus"><span class="dot"></span><span id="loadStatusText">Pick a tune from the list, or paste your own ABC.</span></div>
   </div>
 
   <div class="card tips">
@@ -465,7 +484,7 @@
     <p><span class="k">02</span>&nbsp; Let each note ring cleanly. For repeated notes just pluck again — the attack re-arms the listener.</p>
     <p><span class="k">03</span>&nbsp; Quiet room helps. If your instrument sits in another octave, tick <em>any octave counts</em>.</p>
     <p><span class="k">04</span>&nbsp; <em>Hear this note</em> and <em>Play the tune</em> pause the judging, so the speaker won't accidentally play the tune for you.</p>
-    <p><span class="k">05</span>&nbsp; Guitar reads the octave clef — the little 8 under the treble clef. Same positions on the stave, sounds an octave lower, and the listener expects the guitar octave automatically.</p>
+    <p><span class="k">05</span>&nbsp; Guitar and tenor banjo read the octave clef — the little 8 under the treble clef. Same positions on the stave, sounds an octave lower, and the listener expects that octave automatically.</p>
     <p><span class="k">06</span>&nbsp; ABC support covers single melody lines: keys and modes, 4/4 · 3/4 · 2/4 · 6/8 · 9/8 and friends, dotted rhythms (<em>a&gt;b</em>), triplets <em>(3abc</em>, ties, rests. Not yet: 1st/2nd endings, chords-in-melody, grace notes.</p>
   </div>
 
@@ -836,7 +855,7 @@ let pinned = null;
 const INSTRUMENTS = {
   uke:   {label:"ukulele",     tuning:[67,60,64,69],       names:["G","C","E","A"],          shift:0,   clef8:false},
   guitar:{label:"guitar",      tuning:[40,45,50,55,59,64], names:["E","A","D","G","B","E"],  shift:-12, clef8:true},
-  banjo: {label:"tenor banjo", tuning:[43,50,57,64],       names:["G","D","A","E"],          shift:0,   clef8:false},
+  banjo: {label:"tenor banjo", tuning:[43,50,57,64],       names:["G","D","A","E"],          shift:-12, clef8:true},
   piano: {label:"piano",       keyboard:true,              shift:0,   clef8:false}
 };
 function iShift(){ return INSTRUMENTS[inst].shift; }
@@ -1637,13 +1656,72 @@ $("scoreBox").addEventListener("click", e=>{
   renderFretboard(pinned);
 });
 
-const sel = $("presetSel");
-PRESETS.forEach((p,i)=>{
-  const o = document.createElement("option");
-  o.value = i; o.textContent = p.name;
-  sel.appendChild(o);
+/* ---- tune library: the bundled Irish tunes + the built-in examples ---- */
+const LIBRARY = [];
+const escHtml = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const abcField = (blk, L) => { const m = blk.match(new RegExp('^'+L+':(.*)','m')); return m ? m[1].trim() : ''; };
+function splitBundle(txt){
+  const out=[]; let cur=null;
+  txt.split(/\r?\n/).forEach(line=>{
+    if(/^X:/.test(line)){ if(cur) out.push(cur); cur=line+"\n"; }
+    else if(cur!==null){ cur+=line+"\n"; }
+  });
+  if(cur) out.push(cur);
+  return out;
+}
+const TYPE_ORDER  = {reel:1,jig:2,"slip jig":3,hornpipe:4,polka:5,slide:6,waltz:7,barndance:8,strathspey:9,march:10,mazurka:11,"three-two":12};
+const TYPE_PLURAL = {reel:"Reels",jig:"Jigs","slip jig":"Slip jigs",hornpipe:"Hornpipes",polka:"Polkas",slide:"Slides",waltz:"Waltzes",barndance:"Barndances",strathspey:"Strathspeys",march:"Marches",mazurka:"Mazurkas","three-two":"Three-twos",example:"Examples"};
+const typeLabel = t => TYPE_PLURAL[t] || (t.charAt(0).toUpperCase()+t.slice(1)+"s");
+
+function renderTuneList(q){
+  const box = $("tuneList"); q = (q||"").trim().toLowerCase();
+  const items = LIBRARY.filter(t => !q || t.name.toLowerCase().includes(q) || t.type.includes(q));
+  if(!items.length){ box.innerHTML = '<div class="none">No tunes match that search.</div>'; return; }
+  const groups = {}; items.forEach(t => { (groups[t.type] = groups[t.type] || []).push(t); });
+  const order = Object.keys(groups).sort((a,b)=>{
+    const oa = a==="example" ? 99 : (TYPE_ORDER[a]||50), ob = b==="example" ? 99 : (TYPE_ORDER[b]||50);
+    return oa-ob || a.localeCompare(b);
+  });
+  let h = "";
+  order.forEach(type=>{
+    h += '<div class="grp">'+typeLabel(type)+" · "+groups[type].length+"</div>";
+    groups[type].forEach(t=>{
+      h += '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+'</span><span class="tk">'+escHtml(t.key||"")+"</span></div>";
+    });
+  });
+  box.innerHTML = h;
+}
+function loadTuneObj(t, row){
+  $("abcIn").value = t.abc;
+  const parsed = parseABC(t.abc);
+  if(parsed.error){ setLoadStatus(parsed.error, "err"); return; }
+  installTune(parsed);
+  const w = parsed.warnings;
+  setLoadStatus('Loaded “'+parsed.title+'” — '+PLAYABLE_TOTAL+" notes, "+NBARS+" bars, "+KEY.label+"."+(w.length?" ⚠ "+w.join(" "):""), w.length?"":"live");
+  $("tuneList").querySelectorAll(".tunerow.cur").forEach(r=>r.classList.remove("cur"));
+  if(row) row.classList.add("cur");
+}
+$("tuneList").addEventListener("click", e=>{
+  const row = e.target.closest(".tunerow"); if(!row) return;
+  loadTuneObj(LIBRARY[+row.dataset.i], row);
 });
-sel.addEventListener("change", ()=>{ $("abcIn").value = PRESETS[sel.value].abc; });
+$("tuneSearch").addEventListener("input", e=> renderTuneList(e.target.value));
+
+async function loadLibrary(){
+  PRESETS.forEach(p => LIBRARY.push({ name:p.name.replace(/\s*\(.*\)$/,""), type:"example", key:"", abc:p.abc }));
+  try{
+    const man = await (await fetch("tunes/manifest.json")).json();
+    for(const file of man){
+      let txt; try{ txt = await (await fetch("tunes/"+file)).text(); }catch(e){ continue; }
+      splitBundle(txt).forEach(block=>{
+        if(!/^X:/m.test(block)) return;
+        LIBRARY.push({ name:abcField(block,"T")||"Untitled", type:(abcField(block,"R")||"other").toLowerCase(), key:abcField(block,"K"), abc:block });
+      });
+    }
+  }catch(e){ /* no manifest (e.g. offline) — the examples still show */ }
+  renderTuneList("");
+}
+loadLibrary();
 
 /* boot with Twinkle */
 $("abcIn").value = PRESETS[0].abc;

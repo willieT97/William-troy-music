@@ -1,0 +1,25 @@
+% Irish session tunes — settings sourced from thesession.org (community
+% transcriptions; the tunes themselves are traditional / public domain).
+% Add more by pasting X:… blocks below, then rerun tunes/build-manifest.sh
+
+X:441
+T:John Ryan's
+R:polka
+M:2/4
+L:1/8
+K:Dmajor
+dd B/c/d/B/|AF ED|dd B/c/d/B/|AF E2|
+ dd B/c/d/B/|AF Ad|fd ec|d2 d2||
+ fd de/f/|gf ed|fd de/f/|gf a2|
+ fd de/f/|gf ed|fd ec|d2 d2||
+
+X:1075
+T:The Britches Full Of Stitches
+R:polka
+M:2/4
+L:1/8
+K:Dmajor
+|:d>e fd|ed fd|d>e fd|edB2|
+ d>e fd|ed fa|d>e dB|BA A2:|
+ |:~a2af|ed ef|~a2af|edb2|
+ ~a2af|ed ef|d>e dB|BA A2:|
