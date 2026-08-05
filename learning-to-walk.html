@@ -76,6 +76,17 @@
   .ex .exd{ font-size:.95rem; color:#3a352a; margin:0 0 16px; }
   .drillp{ font-family:var(--mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--amber); margin:-6px 0 12px; }
   .drillp:empty{ display:none; }
+  .vlabel{ font-family:var(--disp); font-weight:700; font-size:1rem; margin:16px 0 7px; }
+  .vlabel:first-of-type{ margin-top:2px; }
+  .vtag{ font-family:var(--mono); font-weight:400; font-size:.56rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); border:1px solid var(--muted); padding:1px 6px; margin-left:6px; vertical-align:2px; }
+  .durrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 12px; }
+  .durlbl{ font-family:var(--mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-right:2px; }
+  .durbtn{ display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:.72rem; letter-spacing:.02em; cursor:pointer; padding:6px 11px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
+  .durbtn .dico{ width:15px; height:20px; }
+  .durbtn em{ font-style:normal; color:var(--muted); font-size:.62rem; margin-left:3px; }
+  .durbtn:active{ transform:translate(2px,2px); box-shadow:none; }
+  .durbtn.cur{ background:var(--ink); color:var(--paper); box-shadow:2px 2px 0 var(--pink); }
+  .durbtn.cur em{ color:#c9c2b2; }
   .bwbox{ background:#FFFDF5; border:2px solid var(--ink); overflow-x:auto; padding:6px 4px; }
   .bwbox svg{ display:block; }
 
@@ -217,6 +228,34 @@ function compNote(midi, t, dur){
   if(ep){ try{ ep.play(midi, t, { duration:dur, gain:0.55, destination:masterBus }); return; }catch(e){} }
   epSynth(midi, t, dur);
 }
+
+/* steel-string acoustic guitar for the bluegrass jam (soundfont), loaded lazily */
+let gtr = null, gtrLoading = null;
+function getGtr(){
+  if(gtr) return Promise.resolve(gtr);
+  if(gtrLoading) return gtrLoading;
+  if(!window.Soundfont) return Promise.resolve(null);
+  gtrLoading = window.Soundfont.instrument(audio(), 'acoustic_guitar_steel', { soundfont:'MusyngKite', destination:masterBus })
+    .then(p => { gtr = p; return p; }).catch(() => null);
+  return gtrLoading;
+}
+function pluckSynth(midi, t, dur, gain){ voice(midi, t, Math.min(dur, 0.45), (gain||0.4)*0.5, 'triangle'); }  // fallback pluck
+function gtrNote(midi, t, dur, gain){
+  if(gtr){ try{ gtr.play(midi, t, { duration:dur, gain, destination:masterBus }); return; }catch(e){} }
+  pluckSynth(midi, t, dur, gain);
+}
+/* a guitar chord voicing rooted on the chord root, spanning ~an octave */
+function guitarVoicing(ch){
+  const root = 48 + ch.rootPc, v = [root];
+  ch.tones.forEach(pc => { if(pc !== ch.rootPc) v.push(root + ((pc - ch.rootPc + 12) % 12)); });
+  v.push(root + 12);
+  return v.sort((a,b) => a - b);
+}
+/* one strum: roll the notes low→high (down) or high→low (up) */
+function strumChord(midis, t, dur, up){
+  const order = up ? [...midis].reverse() : midis;
+  order.forEach((m,i) => gtrNote(m, t + i*0.013, dur, up ? 0.34 : 0.42));
+}
 /* play a single bass note right now — used when a note is placed on the staff */
 function hearNote(midi){
   const ac = audio();
@@ -248,7 +287,7 @@ const byOfDI = di => BY0 - (di - 18) * BSTEP;
 const BLINES = [18,20,22,24,26];            // G2 B2 D3 F3 A3
 function bassLayout(ex){
   const npb = ex.notesPerBar, bars = ex.chart.length;
-  const beatW = npb <= 1 ? 78 : npb === 2 ? 58 : 40;
+  const beatW = ex.beatW || (npb <= 1 ? 78 : npb === 2 ? 58 : 40);
   const barW = beatW * npb, leftPad = 46;
   return { npb, bars, beatW, barW, leftPad, W: leftPad + bars*barW + 18,
            slotX:(bar,beat)=> leftPad + bar*barW + (beat+0.5)*beatW };
@@ -257,6 +296,15 @@ function ledgersB(x, di){
   let s = '', LX = 12;   // wider than the notehead (whole note rx=9) so the ledger pokes out on both sides
   if(di > 26) for(let d=28; d<=di; d+=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)}" x2="${x+LX}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.4"/>`;
   if(di < 18) for(let d=16; d>=di; d-=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)}" x2="${x+LX}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.4"/>`;
+  return s;
+}
+/* a properly-stemmed notehead: whole = open no stem, half = open + stem, quarter = filled + stem */
+function noteGlyph(x, y, di, dur, col){
+  if(dur >= 4) return `<ellipse cx="${x}" cy="${y}" rx="9" ry="5.8" fill="#FFFDF5" stroke="${col}" stroke-width="2.7"/>`;   // whole
+  const up = di < 22, sx = up ? x+6.6 : x-6.6, sy2 = up ? y-26 : y+26;
+  let s = `<line x1="${sx}" y1="${up?y-1:y+1}" x2="${sx}" y2="${sy2}" stroke="${col}" stroke-width="2.2"/>`;
+  if(dur === 2) s += `<ellipse cx="${x}" cy="${y}" rx="7" ry="5.4" fill="#FFFDF5" stroke="${col}" stroke-width="2.4"/>`;        // half
+  else s += `<ellipse cx="${x}" cy="${y}" rx="6.4" ry="5" transform="rotate(-16 ${x} ${y})" fill="${col}"/>`;                  // quarter
   return s;
 }
 function drawBass(ex, notes, opts){
@@ -270,26 +318,44 @@ function drawBass(ex, notes, opts){
   for(let b=0; b<=L.bars; b++){ const x = L.leftPad + b*L.barW; s += `<line x1="${x}" y1="${byOfDI(26)}" x2="${x}" y2="${byOfDI(18)}" stroke="#17140E" stroke-width="${b===0||b===L.bars?2.2:1.3}"/>`; }
   ex.chart.forEach((sym,b) => { const x = L.leftPad + b*L.barW + L.barW/2; s += `<text x="${x}" y="26" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="18" fill="#2438C8">${sym}</text>`; });
   // notes / placeholders
-  for(let b=0; b<L.bars; b++) for(let k=0; k<L.npb; k++){
-    const i = b*L.npb + k, x = L.slotX(b,k), di = notes[i];
-    if(di == null){
-      if(!opts.static) s += `<circle cx="${x}" cy="${byOfDI(21)}" r="6" fill="none" stroke="#8a8577" stroke-width="1.4" stroke-dasharray="2 3"/>`;
-      continue;
+  if(ex.seq){
+    // explicit note sequence with real durations (a note = {bar, beat, dur, di})
+    ex.seq.forEach(n => {
+      const x = n.dur >= 4 ? (L.leftPad + n.bar*L.barW + L.barW/2) : L.slotX(n.bar, n.beat), y = byOfDI(n.di);
+      s += ledgersB(x, n.di) + noteGlyph(x, y, n.di, n.dur, '#17140E');
+    });
+  } else {
+    for(let b=0; b<L.bars; b++) for(let k=0; k<L.npb; k++){
+      const i = b*L.npb + k, x = L.slotX(b,k), di = notes[i];
+      if(di == null){
+        if(!opts.static) s += `<circle cx="${x}" cy="${byOfDI(21)}" r="6" fill="none" stroke="#8a8577" stroke-width="1.4" stroke-dasharray="2 3"/>`;
+        continue;
+      }
+      const y = byOfDI(di); s += ledgersB(x, di);
+      let col = '#17140E';
+      if(opts.given && opts.given[i]) col = '#2438C8';                    // given chord-skeleton note
+      else if(opts.marks){ const m = opts.marks[i]; col = m === true ? '#1F9D55' : m === 'free' ? '#2438C8' : m === false ? '#c0392b' : '#17140E'; }
+      else if(i === opts.sel) col = '#2438C8';
+      if(ex.whole) s += `<ellipse cx="${x}" cy="${y}" rx="9" ry="5.8" fill="#FFFDF5" stroke="${col}" stroke-width="2.7"/>`;   // open whole note
+      else s += `<ellipse cx="${x}" cy="${y}" rx="6.4" ry="5" transform="rotate(-16 ${x} ${y})" fill="${col}"/>`;
     }
-    const y = byOfDI(di); s += ledgersB(x, di);
-    let col = '#17140E';
-    if(opts.given && opts.given[i]) col = '#2438C8';                    // given chord-skeleton note
-    else if(opts.marks){ const m = opts.marks[i]; col = m === true ? '#1F9D55' : m === 'free' ? '#2438C8' : m === false ? '#c0392b' : '#17140E'; }
-    else if(i === opts.sel) col = '#2438C8';
-    if(ex.whole) s += `<ellipse cx="${x}" cy="${y}" rx="9" ry="5.8" fill="#FFFDF5" stroke="${col}" stroke-width="2.7"/>`;   // open whole note
-    else s += `<ellipse cx="${x}" cy="${y}" rx="6.4" ry="5" transform="rotate(-16 ${x} ${y})" fill="${col}"/>`;
   }
   s += `</svg>`;
   return s;
 }
 function playBass(ex, notes){
-  const ac = audio(), spb = 60/96, run = () => {
+  const ac = audio(), spb = 60/(ex.bpm || 96), run = () => {
     const t0 = ac.currentTime + 0.12, npb = ex.notesPerBar;
+    if(ex.seq){
+      if(ex.comp === 'strum'){                                             // bluegrass: guitar strums quarter notes
+        ex.chart.forEach((sym,b) => { const v = guitarVoicing(chordParse(sym));
+          for(let beat=0; beat<4; beat++) strumChord(v, t0 + (b*4+beat)*spb, spb*0.9, beat%2===1); });
+      } else {
+        ex.chart.forEach((sym,b) => { const ch = chordParse(sym); ch.tones.forEach(pc => compNote(48 + pc, t0 + b*4*spb, 4*spb*0.96)); });
+      }
+      ex.seq.forEach(n => bassNote(naturalMidi(n.di), t0 + (n.bar*4 + n.beat)*spb, n.dur*spb*0.95));
+      return;
+    }
     ex.chart.forEach((sym,b) => {
       const ch = chordParse(sym);
       ch.tones.forEach(pc => compNote(48 + pc, t0 + b*4*spb, 4*spb*0.96));    // comp the chord
@@ -307,17 +373,47 @@ function playBass(ex, notes){
 }
 
 /* ===================== EXERCISES ===================== */
+const DUR_ICON = {
+  4:`<svg class="dico" viewBox="0 0 16 22" aria-hidden="true"><ellipse cx="8" cy="14" rx="5.6" ry="3.7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`,
+  2:`<svg class="dico" viewBox="0 0 16 22" aria-hidden="true"><line x1="12.3" y1="14" x2="12.3" y2="2" stroke="currentColor" stroke-width="1.7"/><ellipse cx="8" cy="14" rx="5" ry="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`,
+  1:`<svg class="dico" viewBox="0 0 16 22" aria-hidden="true"><line x1="12.3" y1="14" x2="12.3" y2="2" stroke="currentColor" stroke-width="1.7"/><ellipse cx="8" cy="14" rx="5" ry="3.5" fill="currentColor"/></svg>`
+};
 let bw = null;   // active bassWrite state
 function renderExercise(ex){
   const head = `<div class="exh">${ex.exh||'The bandstand'}</div><div class="exttl">${ex.exttl}</div><p class="exd">${ex.desc}</p>`;
-  if(ex.type === 'bassDemo') return `<div class="ex">${head}<div class="bwbox" id="demoBox"></div><div class="row"><button class="btn blue" id="demoPlay">&#9654; Hear it</button></div><div class="hint">${ex.hint||''}</div></div>`;
+  if(ex.type === 'bassDemo'){
+    if(ex.variants){
+      let inner = '';
+      ex.variants.forEach((v,i) => {
+        inner += `<div class="vlabel">${v.label}${v.tag?` <span class="vtag">${v.tag}</span>`:''}</div><div class="bwbox" id="demoBox${i}"></div><div class="row"><button class="btn blue" id="demoPlay${i}">&#9654; Hear it</button></div>`;
+      });
+      return `<div class="ex">${head}${inner}<div class="hint">${ex.hint||''}</div></div>`;
+    }
+    return `<div class="ex">${head}<div class="bwbox" id="demoBox"></div><div class="row"><button class="btn blue" id="demoPlay">&#9654; Hear it</button></div><div class="hint">${ex.hint||''}</div></div>`;
+  }
   if(ex.type === 'bassWrite') return `<div class="ex">${head}<div class="drillp" id="bwDrill"></div><div class="bwbox" id="bwBox"></div><div class="row"><button class="btn blue" id="bwPlay">&#9654; Play</button><button class="btn" id="bwCheck">Check</button><button class="btn" id="bwClear">Clear</button></div><div class="fb" id="bwFb"></div><div class="row" id="bwNextRow" hidden><button class="btn ink" id="bwNext">Next chart →</button></div><div class="hint">${ex.hint||''}</div></div>`;
+  if(ex.type === 'bassFree') return `<div class="ex">${head}
+    <div class="durrow"><span class="durlbl">Note length:</span>
+      <button class="durbtn" data-dur="4" id="dur4">${DUR_ICON[4]}<span>whole <em>4</em></span></button>
+      <button class="durbtn" data-dur="2" id="dur2">${DUR_ICON[2]}<span>half <em>2</em></span></button>
+      <button class="durbtn cur" data-dur="1" id="dur1">${DUR_ICON[1]}<span>quarter <em>1</em></span></button>
+    </div>
+    <div class="bwbox" id="bwBox"></div>
+    <div class="row"><button class="btn blue" id="bwPlay">&#9654; Play</button><button class="btn" id="bwCheck">Check</button><button class="btn" id="bwClear">Clear</button></div>
+    <div class="fb" id="bwFb"></div><div class="hint">${ex.hint||''}</div></div>`;
   return `<div class="ex">${head}</div>`;
 }
 function wireExercise(ex){
   if(ex.type === 'bassDemo'){
-    el('demoBox').innerHTML = drawBass(ex, ex.answer, { static:true });
-    el('demoPlay').addEventListener('click', () => playBass(ex, ex.answer));
+    if(ex.variants){
+      ex.variants.forEach((v,i) => {
+        el('demoBox'+i).innerHTML = drawBass(v, v.answer, { static:true });
+        el('demoPlay'+i).addEventListener('click', () => playBass(v, v.answer));
+      });
+    } else {
+      el('demoBox').innerHTML = drawBass(ex, ex.answer, { static:true });
+      el('demoPlay').addEventListener('click', () => playBass(ex, ex.answer));
+    }
   }
   if(ex.type === 'bassWrite'){
     const charts = ex.charts || [ex.chart];
@@ -328,6 +424,20 @@ function wireExercise(ex){
     el('bwCheck').addEventListener('click', checkBass);
     el('bwClear').addEventListener('click', clearBW);
     el('bwNext').addEventListener('click', () => { if(bw.chartIdx < bw.charts.length-1) loadChart(bw.chartIdx+1); });
+  }
+  if(ex.type === 'bassFree'){
+    bf = { ex, bars: ex.chart.map(()=>[]), dur:1, checked:false, frozen:false, marks:null };
+    if(ex.comp === 'strum') getGtr();                        // warm the guitar for the jam
+    drawFreeBox();
+    el('bwBox').addEventListener('click', onFreeClick);
+    document.querySelectorAll('.durbtn').forEach(b => b.addEventListener('click', () => {
+      if(bf.frozen) return;
+      bf.dur = +b.dataset.dur;
+      document.querySelectorAll('.durbtn').forEach(x => x.classList.toggle('cur', x===b));
+    }));
+    el('bwPlay').addEventListener('click', () => playBass(Object.assign({}, ex, { seq: freeSeq() }), null));
+    el('bwCheck').addEventListener('click', checkFree);
+    el('bwClear').addEventListener('click', clearFree);
   }
 }
 function loadChart(k){
@@ -344,7 +454,9 @@ function loadChart(k){
   drawBW();
   el('bwFb').textContent = ''; el('bwFb').className = 'fb';
   el('bwNextRow').hidden = true;
-  el('bwDrill').textContent = bw.charts.length > 1 ? `Chart ${k+1} of ${bw.charts.length}` : '';
+  const parts = bw.baseEx.parts;
+  el('bwDrill').textContent = bw.charts.length > 1
+    ? (parts && parts[k] ? `${parts[k]} — ${k+1} of ${bw.charts.length}` : `Chart ${k+1} of ${bw.charts.length}`) : '';
 }
 function clearBW(){ bw.notes = bw.baseNotes.slice(); bw.checked = false; bw.frozen = false; el('bwFb').textContent=''; el('bwFb').className='fb'; el('bwNextRow').hidden = true; drawBW(); }
 function drawBW(){ el('bwBox').innerHTML = drawBass(bw.ex, bw.notes, Object.assign({ given: bw.given }, bw.checked ? { marks: bw.marks } : {})); }
@@ -402,12 +514,89 @@ function checkBass(){
     if(bw.solved.every(Boolean)){
       fb.textContent = ex.win || 'That’s it. Solid.'; fb.className = 'fb ok'; bassOk = true; renderNav();
     } else {
-      fb.textContent = (ex.winEach || 'Nailed it.') + ' Here’s another chart — hit Next.'; fb.className = 'fb ok';
+      const isPart = !!ex.parts;
+      fb.textContent = (ex.winEach || 'Nailed it.') + (isPart ? ' On to the next line — hit Next.' : ' Here’s another chart — hit Next.'); fb.className = 'fb ok';
+      el('bwNext').textContent = isPart ? 'Next line →' : 'Next chart →';
       el('bwNextRow').hidden = false;
     }
   }
   else if(!allFilled){ fb.textContent = 'Fill in every empty slot, then check again.'; fb.className = 'fb no'; }
   else { fb.textContent = ex.fail || 'Not quite — the red notes need fixing. Click to move them, then check again.'; fb.className = 'fb no'; }
+}
+
+/* ===================== FREE-RHYTHM BASS EDITOR (bassFree) ===================== */
+let bf = null;   // active bassFree state
+function freeSeq(){ const out = []; bf.bars.forEach((notes,bar) => notes.forEach(n => out.push({ bar, beat:n.beat, dur:n.dur, di:n.di }))); return out; }
+function drawFreeBox(){ el('bwBox').innerHTML = drawFree(bf.ex); }
+function drawFree(ex){
+  const L = bassLayout(ex), W = L.W, H = 150;
+  let s = `<svg id="bwStaff" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  const x0 = 8, x1 = W - 8;
+  // faint beat guides (quarter grid) inside each bar
+  for(let b=0; b<L.bars; b++) for(let k=1; k<4; k++){ const gx = L.leftPad + b*L.barW + k*L.beatW; s += `<line x1="${gx}" y1="${byOfDI(26)}" x2="${gx}" y2="${byOfDI(18)}" stroke="#cfc7b2" stroke-width="1" stroke-dasharray="2 4"/>`; }
+  BLINES.forEach(d => { const y = byOfDI(d); s += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#17140E" stroke-width="1.3"/>`; });
+  s += `<text x="12" y="${byOfDI(24)+7}" font-family="Georgia,serif" font-size="40" fill="#17140E">\u{1D122}</text>`;
+  for(let b=0; b<=L.bars; b++){ const x = L.leftPad + b*L.barW; s += `<line x1="${x}" y1="${byOfDI(26)}" x2="${x}" y2="${byOfDI(18)}" stroke="#17140E" stroke-width="${b===0||b===L.bars?2.2:1.3}"/>`; }
+  ex.chart.forEach((sym,b) => { const x = L.leftPad + b*L.barW + L.barW/2; s += `<text x="${x}" y="26" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="18" fill="#2438C8">${sym}</text>`; });
+  bf.bars.forEach((notes,bar) => notes.forEach(n => {
+    const x = n.dur >= 4 ? (L.leftPad + bar*L.barW + L.barW/2) : L.slotX(bar, n.beat), y = byOfDI(n.di);
+    let col = '#17140E';
+    if(bf.checked && bf.marks){ const m = bf.marks[bar+'_'+n.beat]; col = m===true ? '#1F9D55' : m==='free' ? '#2438C8' : m===false ? '#c0392b' : '#17140E'; }
+    s += ledgersB(x, n.di) + noteGlyph(x, y, n.di, n.dur, col);
+  }));
+  return s + `</svg>`;
+}
+function onFreeClick(e){
+  if(!bf || bf.frozen) return;
+  const svg = el('bwStaff'), rect = svg.getBoundingClientRect(), L = bassLayout(bf.ex);
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  let bar = Math.floor((x - L.leftPad) / L.barW); bar = Math.max(0, Math.min(L.bars-1, bar));
+  let beat = Math.round((x - L.leftPad - bar*L.barW) / L.beatW - 0.5); beat = Math.max(0, Math.min(3, beat));
+  const dur = bf.dur; beat = Math.min(beat, 4 - dur);                       // keep the note inside the bar
+  let di = 18 + Math.round((BY0 - y)/BSTEP); di = Math.max(14, Math.min(28, di));
+  const b = bf.bars[bar], start = beat, end = beat + dur;
+  const same = b.find(n => n.beat===beat && n.dur===dur && n.di===di);
+  if(same){ bf.bars[bar] = b.filter(n => n !== same); }                     // click the same note again to remove it
+  else {
+    bf.bars[bar] = b.filter(n => n.beat + n.dur <= start || n.beat >= end); // drop anything it overlaps
+    bf.bars[bar].push({ beat, dur, di }); bf.bars[bar].sort((a,c)=>a.beat-c.beat);
+    hearNote(naturalMidi(di));
+  }
+  if(bf.checked){ bf.checked = false; el('bwFb').textContent=''; el('bwFb').className='fb'; }
+  drawFreeBox();
+}
+function clearFree(){ bf.bars = bf.ex.chart.map(()=>[]); bf.checked=false; bf.frozen=false; el('bwFb').textContent=''; el('bwFb').className='fb'; drawFreeBox(); }
+function checkFree(){
+  if(!bf || bf.frozen) return;
+  const ex = bf.ex, flat = freeSeq(), marks = {};
+  // every bar must be filled contiguously to 4 beats
+  let filled = true;
+  bf.bars.forEach(notes => {
+    const sorted = [...notes].sort((a,c)=>a.beat-c.beat); let cover = 0, ok = true;
+    sorted.forEach(n => { if(n.beat !== cover) ok = false; cover = n.beat + n.dur; });
+    if(cover !== 4) ok = false; if(!ok) filled = false;
+  });
+  let badDownbeat = false, badOther = false;
+  flat.forEach((n,gi) => {
+    const ch = chordParse(ex.chart[n.bar]), pc = naturalMidi(n.di) % 12; let mark;
+    if(n.beat === 0){ mark = pc === ch.rootPc; if(!mark) badDownbeat = true; }          // downbeat = root
+    else if(ch.tones.includes(pc)){ mark = true; }                                      // chord tone anywhere
+    else {                                                                              // off-chord: ok only as a passing step
+      const prev = flat[gi-1], next = flat[gi+1];
+      if(prev && next){ const pm=naturalMidi(prev.di), nm=naturalMidi(next.di), m=naturalMidi(n.di), lo=Math.min(pm,nm), hi=Math.max(pm,nm);
+        mark = (m>lo && m<hi && hi-m<=2 && m-lo<=2) ? 'free' : false; }
+      else mark = false;
+      if(mark === false) badOther = true;
+    }
+    marks[n.bar+'_'+n.beat] = mark;
+  });
+  const pass = filled && flat.length > 0 && !badDownbeat && !badOther;
+  bf.marks = marks; bf.checked = true; drawFreeBox();
+  const fb = el('bwFb');
+  if(pass){ fb.textContent = ex.win || 'That’s a bassline. Solid.'; fb.className = 'fb ok'; bf.frozen = true; bassOk = true; renderNav(); }
+  else if(!filled){ fb.textContent = 'Fill every bar all the way through — the note lengths in each bar have to add up to four beats.'; fb.className = 'fb no'; }
+  else if(badDownbeat){ fb.textContent = 'Start every bar on its root — that’s your foundation. Fix the red downbeats.'; fb.className = 'fb no'; }
+  else { fb.textContent = 'A note that’s not in the chord only works as a passing step between two others. Fix the red ones.'; fb.className = 'fb no'; }
 }
 let bassOk = false;
 
@@ -459,25 +648,53 @@ const COURSE = [
         { html:"Country and folk live right here: <b>root on beat one, fifth on beat three</b>. Boom… chuck. Boom… chuck. Give it a listen." },
       ], ex:{ type:'bassDemo', exttl:'Root & fifth — the two-feel', desc:'Root on one, fifth on three, over G — C — D — G. That two-feel is the heartbeat of a thousand country songs.',
         chart:['G','C','D','G'], notesPerBar:2,
-        answer:[ diAt('G',2),diAt('D',3), diAt('C',3),diAt('G',3), diAt('D',3),diAt('A',3), diAt('G',2),diAt('D',3) ],
-        hint:'Two notes a bar: the root, then its fifth up top. Strong and open — it never sounds “wrong.”' } },
+        answer:[ diAt('G',2),diAt('D',3), diAt('C',3),diAt('G',2), diAt('D',3),diAt('A',2), diAt('G',2),diAt('D',3) ],
+        hint:'Two notes a bar: the root, then its fifth. Notice the fifth sits sometimes above the root, sometimes below — whatever keeps the line snug. More on that soon.' } },
     { num:'2.2', title:'Play root and fifth', teach:[
         { html:"Your turn. Same chart idea: <b>C, F, G, C</b>. Two notes in each bar." },
         { html:"Beat one, drop the <b>root</b>. Beat three, drop the <b>fifth</b> — five letters up from the root. C→G, F→C, G→D, C→G." },
-        { html:"Octave's your business — put the fifth up high or down low, long as it's the right letter. Fill it in." },
-      ], ex:{ type:'bassWrite', rule:'rootFifth', exttl:'Root, then fifth', desc:'Two slots per bar. Root on the first, fifth on the second. Then play it back and hear that two-feel.',
+        { html:"The fifth can go <b>above</b> the root or <b>below</b> it — either octave, long as it's the right letter. Pick whatever's comfy for now; next lesson I'll show you how to choose. Fill it in." },
+      ], ex:{ type:'bassWrite', rule:'rootFifth', exttl:'Root, then fifth', desc:'Two slots per bar. Root on the first, fifth on the second — above or below, your call. Then play it back and hear that two-feel.',
         chart:['C','F','G','C'], notesPerBar:2,
         win:'There it is — root and fifth, steady as a rocking chair. That’s the two-feel.',
         fail:'Check the red ones: first note is the root, second is the fifth (five letters up).',
-        hint:'Fifths: C→G, F→C, G→D. Any octave. First slot root, second slot fifth.' } },
-    { num:'2.3', title:'Walking up to the V', teach:[
+        hint:'Fifths: C→G, F→C, G→D. Above or below — any octave. First slot root, second slot fifth.' } },
+    { num:'2.3', title:'Keep it close', teach:[
+        { html:"Quick one, but it separates the pros from the rest. That fifth can sit <b>above</b> the root or <b>below</b> it — same note name, same job. So which do you pick?" },
+        { html:"Golden rule: <b>keep your line close</b>. A bass that leaps all over sounds nervous and loses the pocket. Look at where you are and where the next chord's heading, then grab the fifth — high or low — that stays <em>nearest</em>." },
+        { html:"Watch over <b>C – F – C – G</b>. First I'll snatch the fifth above every single time, like a rookie — hear it jump around. Then I'll pick the closest one instead." },
+        { t:'qa', q:"Why does the smooth one barely move?", a:"Because half the time the fifth you play is <em>already</em> sitting on the next chord's root. C's fifth is G — and here's a G chord coming. F's fifth is C — and there's the C. Play 'em low and your hand hardly budges. That's the trick." },
+      ], ex:{ type:'bassDemo', exttl:'Above or below?', desc:'Same roots, same fifths, both times — only the octave of the fifth changes. Hear the difference between leaping up for every fifth and picking the one that stays close.',
+        hint:'Same roots in both. In the smooth version C’s fifth (G) drops below to land right where the next G root lives, and F’s fifth (C) is the next C root — so the line barely moves.',
+        variants:[
+          { label:'Fifth above, every time', tag:'leaps around', chart:['C','F','C','G'], notesPerBar:2,
+            answer:[ diAt('C',3),diAt('G',3), diAt('F',2),diAt('C',3), diAt('C',3),diAt('G',3), diAt('G',2),diAt('D',3) ] },
+          { label:'Pick the closest fifth', tag:'stays home', chart:['C','F','C','G'], notesPerBar:2,
+            answer:[ diAt('C',3),diAt('G',2), diAt('F',2),diAt('C',3), diAt('C',3),diAt('G',2), diAt('G',2),diAt('D',3) ] },
+        ] } },
+    { num:'2.4', title:'Walking up to the V', teach:[
         { html:"Here's the first taste of <em>walking</em>. Instead of jumping from one chord to the next, you <b>step</b> there — one note at a time, up the scale." },
-        { html:"Classic move: you're sitting on the <b>I</b> chord (C), and the <b>V</b> chord (G) is coming. So you walk up — C, D, E, F — and land on <b>G</b> right as the chord changes. Feels like the music's pulling you along." },
-        { html:"That's the whole idea of a walking bass in miniature. Give it an ear — hear how those steps lead your feet straight to the V." },
-      ], ex:{ type:'bassDemo', exttl:'The walk-up', desc:'Over the last bar of C, step up the scale — C, D, E, F — and arrive on G exactly when the V chord lands.',
+        { html:"Classic move: you're sitting on the <b>I</b> chord (C), and the <b>V</b> chord (G) is coming. So you walk up — C, D, E, F — and land on the <b>G</b> right above, exactly as the chord changes. The steps carry you straight up to it." },
+        { html:"Then settle onto the V with a two-feel — that high <b>G</b> held for two beats, then its fifth <b>D</b> just below, held for two more. Give it an ear: four quick steps up, then you arrive." },
+      ], ex:{ type:'bassDemo', exttl:'The walk-up', desc:'Four steps up the C bar — C, D, E, F — landing on the G above as the V lands. Then a settled two-feel: G held, then the D below.',
         chart:['C','G'], notesPerBar:4,
-        answer:[ diAt('C',3),diAt('D',3),diAt('E',3),diAt('F',3), diAt('G',2),diAt('B',2),diAt('D',3),diAt('B',2) ],
-        hint:'Beats 1–4 of the C bar walk C–D–E–F, then the downbeat of the G bar lands on G. Those in-between notes are your first passing tones.' } },
+        seq:[
+          { bar:0, beat:0, dur:1, di:diAt('C',3) }, { bar:0, beat:1, dur:1, di:diAt('D',3) },
+          { bar:0, beat:2, dur:1, di:diAt('E',3) }, { bar:0, beat:3, dur:1, di:diAt('F',3) },
+          { bar:1, beat:0, dur:2, di:diAt('G',3) }, { bar:1, beat:2, dur:2, di:diAt('D',3) },
+        ],
+        hint:'The C bar walks up C–D–E–F (quarter notes) and lands on the G above — the ascending line only makes sense arriving on the high G, not dropping to a low one. Then G and its fifth D, a minim each.' } },
+    { num:'2.5', title:'Your first jam', teach:[
+        { html:"Well, look at you. You've <b>arrived at your first jam.</b> Case open, bass out — pull up next to me in the circle." },
+        { html:"Somebody just called a tune: <b>“Wildwood Flower.”</b> Old as the hills, everybody here knows it. Fiddle's gonna kick it off. You? <b>You need to get your bassline together</b> — the whole thing, top to bottom." },
+        { html:"This one's <b>your</b> line. You pick the notes <em>and</em> the rhythms — <b>whole notes, half notes, quarters</b>, however the tune moves you. A plain root-and-fifth two-feel holds it down just fine." },
+        { html:"But you learned to <b>walk up to the V</b> — so when that <b>D</b> chord's coming, try stepping up to it in quarter notes. Root on every downbeat, keep it close, fill each bar. Tap a note length, drop it on the staff." },
+        { t:'qa', q:"What if I clam a note in front of everybody?", a:"You keep <em>going</em>. Nobody stops a jam for one wrong note — land on the root next beat and it's like it never happened. That's the real secret of playing with folks. Count it off." },
+      ], ex:{ type:'bassFree', exttl:'Get your bassline together', bpm:150, comp:'strum',
+        desc:'“Wildwood Flower,” a traditional country tune — the whole thing, your line. Pick a note length (whole, half, or quarter), then click the staff. Root on every downbeat; fill each bar to four beats. Hit Play and the band kicks in — fast bluegrass, guitar driving it.',
+        chart:['G','G','C','G','G','D','G','G'], notesPerBar:4, beatW:36,
+        win:'Listen to that — a whole tune, front to back, and it’s YOUR line. Roots holding it down, and if you walked up into that D? Chef’s kiss. You’re a bass player now. Welcome to the jam, kid.',
+        hint:'Pick a length (whole/half/quarter), then click. Root on each downbeat. Two-feel = root + fifth (G→D, C→G, D→A). Walk up to the D with quarters if you’re feeling it. Click a note again to remove it.' } },
   ]},
 
   { title:'Module 3 — Outlining the Chord', belt:'Orange Belt', lessons:[
@@ -576,7 +793,7 @@ function renderNav(){
   el('prev').disabled = (idx === 0);
   const slot = el('nextslot');
   if(idx < LESSONS.length - 1){
-    const gated = L.ex && L.ex.type === 'bassWrite' && !bassOk;
+    const gated = L.ex && (L.ex.type === 'bassWrite' || L.ex.type === 'bassFree') && !bassOk;
     if(gated) slot.innerHTML = `<span class="endnote">Nail the exercise, then walk on →</span>`;
     else { slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`; el('next').addEventListener('click', () => go(idx+1)); }
   } else {
