@@ -72,6 +72,33 @@
   .status.live .dot{ background:var(--green); animation:blink 1.2s infinite; }
   @keyframes blink{ 50%{ opacity:.3; } }
 
+  /* ---- game ---- */
+  .seg{ display:inline-flex; border:2px solid var(--ink); box-shadow:3px 3px 0 rgba(23,20,14,.9); }
+  .seg button{ box-shadow:none; border:0; border-right:2px solid var(--ink); padding:9px 15px; }
+  .seg button:last-child{ border-right:0; }
+  .seg button.on{ background:var(--ink); color:var(--paper); }
+  .gkey{ font-family:var(--mono); font-size:14px; margin:16px 0 4px; }
+  .gkey b{ color:var(--blue); font-size:16px; }
+  .slots{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 18px; }
+  .slot{ min-width:54px; border:2px solid var(--ink); background:var(--paper); padding:5px 8px 7px; text-align:center; cursor:pointer; }
+  .slot .pos{ font-family:var(--mono); font-size:10px; color:#8a8577; }
+  .slot .val{ font-family:var(--disp); font-weight:700; font-size:1.2rem; line-height:1.1; min-height:1.25em; }
+  .slot.active{ outline:3px solid var(--blue); outline-offset:2px; }
+  .slot.right{ background:#d8f0df; } .slot.wrong{ background:#ffdbe4; }
+  .slot .ans{ font-family:var(--mono); font-size:10px; color:#1f7a45; }
+  .slot.wrong .ans{ color:#c22a52; }
+  .scorebox{ background:#fffdf7; border:2px solid var(--ink); overflow-x:auto; padding:8px 4px 6px; margin:14px 0 12px; }
+  .scorebox svg{ display:block; cursor:pointer; }
+  .palettelbl{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#6b6555; margin-bottom:7px; line-height:1.6; }
+  .palette{ display:flex; flex-wrap:wrap; gap:6px; }
+  .palette button{ padding:8px 13px; font-family:var(--disp); font-weight:700; font-size:1rem; text-transform:none; letter-spacing:0; }
+  .scoreline{ font-family:var(--mono); font-size:15px; margin-top:16px; }
+  .scoreline b{ color:var(--blue); }
+  .stats{ display:flex; gap:10px; margin:16px 0 4px; }
+  .stat{ flex:1; text-align:center; border:2px solid var(--ink); background:var(--paper); padding:8px 6px; box-shadow:3px 3px 0 rgba(23,20,14,.9); }
+  .statnum{ display:block; font-family:var(--disp); font-weight:800; font-size:1.5rem; line-height:1; color:var(--blue); }
+  .statlbl{ display:block; font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:#6b6555; margin-top:5px; }
+
   .note{ font-family:var(--mono); font-size:12px; color:#6b6555; margin-top:18px; line-height:1.8; }
   .foot{ margin-top:34px; font-family:var(--mono); font-size:12px; color:#6b6555; text-align:center; }
   .foot a{ color:var(--blue); text-decoration:none; }
@@ -91,14 +118,56 @@
   </nav>
 
   <header>
-    <div class="eyebrow">Harmonic ear training · prototype</div>
+    <div class="eyebrow">Harmonic ear training</div>
     <h1>Chorale Ear Trainer</h1>
-    <p class="lede">Train your ear on real four-part harmony. Right now this is the <b>listening room</b> — pick a J.S. Bach chorale and hear it (or just its opening). Naming the chords by ear comes next.</p>
+    <p class="lede">Train your ear on real four-part harmony. Hear a few bars of a J.S. Bach chorale, then <b>name the chords</b> you hear in Roman numerals — the harder cousin of the arcade chord quiz. All public domain.</p>
   </header>
 
+  <div class="card game">
+    <h2>Name the chords</h2>
+    <div class="sub">Hear one bar of a Bach chorale. Some chords are shown and labelled to orient you — the ones you name are <b>blanked out on the score</b>, so you have to identify them by ear. Click a chord to hear that beat.</div>
+
+    <div class="row">
+      <label class="fld">Level
+        <span class="seg" id="levelSeg">
+          <button data-level="easy" class="on">Easy</button>
+          <button data-level="medium">Medium</button>
+          <button data-level="hard">Hard</button>
+          <button data-level="pro">Pro</button>
+        </span>
+      </label>
+      <div class="meta" id="levelDesc" style="align-self:flex-end">Name only the tonic (I) and dominant (V) chords.</div>
+    </div>
+    <div class="row">
+      <button class="play" id="newRound">&#9834; New bar</button>
+      <button class="ghost" id="gPlay">&#9654; Play</button>
+      <button class="ghost" id="gTonic">&#9834; Hear tonic</button>
+      <button id="gCheck">Check</button>
+      <button class="ghost" id="gReveal">Reveal</button>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat"><span class="statnum" id="stStreak">0</span><span class="statlbl">streak</span></div>
+      <div class="stat"><span class="statnum" id="stBest">0</span><span class="statlbl">best streak</span></div>
+      <div class="stat"><span class="statnum" id="stAcc">&ndash;</span><span class="statlbl">accuracy</span></div>
+    </div>
+
+    <div id="gameArea" hidden>
+      <div class="gkey" id="gKey"></div>
+      <div class="scorebox" id="scoreBox"></div>
+      <div class="palettelbl">Click a “?” chord to hear it, then pick the Roman numeral you hear — revealed on the staff when you check</div>
+      <div class="palette" id="palette"></div>
+      <div class="palettelbl" id="invLbl" style="margin-top:12px;display:none">…and its inversion (figured bass)</div>
+      <div class="palette" id="invPalette" style="display:none"></div>
+      <div class="scoreline" id="gScore"></div>
+    </div>
+
+    <div class="status" id="gStatus" style="margin-top:16px"><span class="dot"></span><span id="gStatusText">Press “New round” to begin.</span></div>
+  </div>
+
   <div class="card">
-    <h2>Listening room</h2>
-    <div class="sub">Bach's chorales are the classic harmony textbook — clear, one chord at a time. All public domain.</div>
+    <h2>Browse the chorales</h2>
+    <div class="sub">Bach's chorales are the classic harmony textbook — clear, one chord at a time. All public domain. Explore any of them here.</div>
 
     <div class="row">
       <label class="fld" style="flex:1; min-width:240px">Chorale
@@ -238,6 +307,299 @@ $('choraleSel').addEventListener('change', e => {
   stopAll(); if(playTimer) clearTimeout(playTimer); setPlaying(false);
   $('statusText').textContent = 'Ready.';
 });
+
+/* ===================== GAME: fill in the chords (1 bar, grand staff) ===================== */
+const MAJOR_PAL = ['I','ii','iii','IV','V','vi','viio'];
+const MINOR_PAL = ['i','iio','III','iv','v','V','VI','VII','viio'];
+const LEVELS = {
+  easy:   { label:'Easy',   diatonicOnly:true,  blank:'tonicDom', minBlank:1, inversion:false, desc:'Name only the tonic (I) and dominant (V) chords.' },
+  medium: { label:'Medium', diatonicOnly:true,  blank:'some',     minBlank:2, inversion:false, desc:'Name the diatonic chords — a few are given to help.' },
+  hard:   { label:'Hard',   diatonicOnly:false, blank:'all',      minBlank:3, inversion:false, desc:'Name every chord in the bar, chromatic ones included.' },
+  pro:    { label:'Pro',    diatonicOnly:false, blank:'all',      minBlank:2, inversion:true,  desc:'Name every chord and its inversion (figured bass).' },
+};
+let level = 'easy';
+const isTonic = (r,mode) => r === (mode==='minor' ? 'i' : 'I');
+const isDom = r => r === 'V';   // easy uses the clear major dominant only
+let game = {};
+
+/* --- progress: streak of correct chords, best (persisted), session accuracy --- */
+const BEST_KEY = 'wtm_chorale_best';
+let stats = { streak:0, best: parseInt(localStorage.getItem(BEST_KEY)) || 0, correct:0, total:0 };
+function renderStats(){
+  $('stStreak').textContent = (stats.streak>=3 ? '🔥 ' : '') + stats.streak;
+  $('stBest').textContent = stats.best;
+  $('stAcc').innerHTML = stats.total ? Math.round(100*stats.correct/stats.total) + '%' : '&ndash;';
+}
+
+/* --- geometry: a grand staff (treble E4..F5 = di30..38, bass G2..A3 = di18..26) --- */
+const SC_LEFT = 58, SC_PXQ = 74;                       // px per quarter (1 bar = roomy)
+const STEP = 6, Y0 = 74;                               // E4 (di30) bottom treble line at Y0
+const LTRS = ['C','D','E','F','G','A','B'];
+const LSEMI = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
+const diAt = (L,o) => o*7 + LTRS.indexOf(L);
+const yOfDI = di => Y0 - (di - 30) * STEP;
+const MAJ_FIFTHS = {0:0,7:1,2:2,9:3,4:4,11:5,6:6,1:-5,8:-4,3:-3,10:-2,5:-1};
+const keyPreferFlat = ch => (MAJ_FIFTHS[ch.mode==='minor' ? (ch.tonicPc+3)%12 : ch.tonicPc] || 0) < 0;
+function spellMidi(midi, flat){
+  const pc = ((midi%12)+12)%12;
+  const white = {0:'C',2:'D',4:'E',5:'F',7:'G',9:'A',11:'B'}[pc];
+  if(white) return { di: diAt(white, Math.floor(midi/12)-1), acc:0 };
+  if(flat){ const L = {1:'D',3:'E',6:'G',8:'A',10:'B'}[pc]; return { di: diAt(L, Math.floor((midi+1)/12)-1), acc:-1 }; }
+  const L = {1:'C',3:'D',6:'F',8:'G',10:'A'}[pc];         return { di: diAt(L, Math.floor((midi-1)/12)-1), acc:1 };
+}
+const beatXAbs = q => (game.leftPad || SC_LEFT) + (q - game.startQ) * SC_PXQ;
+/* --- key signatures --- */
+const TREBLE_SHARP_DI = [38,35,39,36,33,37,34];   // F C G D A E B (bass = these − 14)
+const TREBLE_FLAT_DI  = [34,37,33,36,32,35,31];   // B E A D G C F
+const SHARPS_SEQ = 'FCGDAEB', FLATS_SEQ = 'BEADGCF';
+const keyFifths = ch => MAJ_FIFTHS[ch.mode==='minor' ? (ch.tonicPc+3)%12 : ch.tonicPc] || 0;
+function keySigMap(fifths){
+  const m = { C:0,D:0,E:0,F:0,G:0,A:0,B:0 }, seq = fifths>=0 ? SHARPS_SEQ : FLATS_SEQ, v = fifths>=0 ? 1 : -1;
+  for(let i=0;i<Math.abs(fifths);i++) m[seq[i]] = v;
+  return m;
+}
+const accGlyph = a => a<=-2 ? '𝄫' : a===-1 ? '♭' : a===1 ? '♯' : a>=2 ? '𝄪' : '♮';
+const diForLetter = (L, midi, acc) => diAt(L, Math.round((midi - acc - LSEMI[L])/12) - 1);
+function spellMidiKey(midi, sig, prefFlat){
+  const pc = ((midi%12)+12)%12; let best = null;
+  for(const L of LTRS){
+    let acc = pc - LSEMI[L]; if(acc>6) acc-=12; if(acc<-6) acc+=12;
+    if(Math.abs(acc) > 2) continue;
+    const covered = acc === (sig[L]||0);
+    const score = (covered?0:10) + Math.abs(acc)*3 + (prefFlat ? (acc>0?2:0) : (acc<0?2:0));
+    if(!best || score < best.score) best = { acc, covered, di: diForLetter(L, midi, acc), score };
+  }
+  return { di: best.di, drawAcc: best.covered ? null : best.acc };
+}
+const led = (x,y) => `<line x1="${x-8}" y1="${y}" x2="${x+8}" y2="${y}" stroke="#17140E" stroke-width="1.1"/>`;
+function ledgersFor(x, di){
+  let s = '';
+  if(di > 38) for(let d=40; d<=di; d+=2) s += led(x, yOfDI(d));
+  else if(di < 18) for(let d=16; d>=di; d-=2) s += led(x, yOfDI(d));
+  else if(di >= 27 && di <= 29) s += led(x, yOfDI(28));   // middle-C ledger
+  return s;
+}
+function sampleChord(ch, q){
+  const out = [];
+  ch.voices.forEach(v => { for(const [m,o,d] of v){ if(o-1e-6 <= q && q < o+d-1e-6){ out.push(m); break; } } });
+  return [...new Set(out)].sort((a,b)=>a-b);
+}
+const gStatus = t => { $('gStatusText').textContent = t; };
+
+function newRound(){
+  if(!CHORALES.length) return;
+  const cfg = LEVELS[level];
+  for(let tries=0; tries<200; tries++){
+    const ch = CHORALES[Math.floor(Math.random()*CHORALES.length)];
+    const mo = ch.measureOffsets, bpb = ch.meter[0]*4/ch.meter[1];
+    const pickup = (mo.length>1 && (mo[1]-mo[0]) < bpb-1e-6) ? 1 : 0;
+    if(ch.measures - 1 < pickup) continue;
+    const bar = pickup + Math.floor(Math.random()*(ch.measures - 1 - pickup + 1));
+    const startQ = mo[bar], endQ = (bar+1 < mo.length) ? mo[bar+1] : ch.quarters;
+    const beats = ch.beats.filter(b => b[0] >= startQ-1e-6 && b[0] < endQ-1e-6);
+    // candidate chords for this level: clean, and diatonic if the level requires it
+    const cand = beats.filter(b => b[3]===1 && (cfg.diatonicOnly ? b[4]===1 : true));
+    if(cand.length < 2) continue;
+    // which candidates are blank (to name) vs given (scaffold)
+    let blankSet;
+    if(cfg.blank === 'tonicDom') blankSet = new Set(cand.map((b,i)=>i).filter(i => isTonic(cand[i][1],ch.mode) || isDom(cand[i][1])));
+    else if(cfg.blank === 'all')  blankSet = new Set(cand.map((_,i)=>i));
+    else { const nB = Math.max(cfg.minBlank, Math.ceil(cand.length*0.6)); blankSet = new Set([...cand.keys()].sort(()=>Math.random()-0.5).slice(0, nB)); }
+    if(blankSet.size < cfg.minBlank) continue;
+    const slots = cand.map((b,i) => ({ q:b[0], roman:b[1], inv:b[2], given: !blankSet.has(i) }));
+    const answers = {}, invAnswers = {};
+    slots.forEach((sl,i) => { if(sl.given){ answers[i] = sl.roman; if(cfg.inversion) invAnswers[i] = sl.inv; } });
+    // roman palette
+    let pal = ch.mode==='minor' ? [...MINOR_PAL] : [...MAJOR_PAL];
+    if(cfg.blank === 'tonicDom') pal = [ch.mode==='minor'?'i':'I', 'V'];
+    if(!cfg.diatonicOnly){ slots.forEach(sl => { if(!sl.given && !pal.includes(sl.roman)) pal.push(sl.roman); }); pal = [...new Set(pal)]; }
+    const firstBlank = slots.findIndex(sl => !sl.given);
+    game = { chorale:ch, bar, startQ, endQ, allBeats:beats.map(b=>b[0]), slots, answers, invAnswers,
+             active: firstBlank<0 ? 0 : firstBlank, checked:false, revealed:false, cfg, pal,
+             leftPad: 44 + Math.abs(keyFifths(ch))*8 + 14 };
+    const nBlank = slots.filter(sl=>!sl.given).length;
+    $('gKey').innerHTML = `Key: <b>${ch.key}</b> &nbsp;<span style="color:#8a8577">· ${ch.id.toUpperCase()} · <b style="color:#2438C8">${cfg.label}</b> · ${nBlank} to name</span>`;
+    renderPalette(); renderScore(); $('gScore').textContent = '';
+    $('gameArea').hidden = false;
+    gStatus('Name the “?” chords — click one to hear it. Use “Hear tonic” to find the key.');
+    gamePlay();
+    return;
+  }
+  gStatus('No suitable bar at this level — press New bar again.');
+}
+function renderScore(){
+  const g = game, ch = g.chorale;
+  const fifths = keyFifths(ch), sig = keySigMap(fifths), prefFlat = fifths < 0;
+  const W = Math.round(g.leftPad + (g.endQ - g.startQ)*SC_PXQ + 26);
+  const x0 = 10, x1 = W - 8;
+  const TREB = [30,32,34,36,38], BASS = [18,20,22,24,26];
+  let s = `<svg id="scoreSvg" width="${W}" height="215" viewBox="0 0 ${W} 215" xmlns="http://www.w3.org/2000/svg">`;
+  TREB.concat(BASS).forEach(d => { const y = yOfDI(d); s += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#17140E" stroke-width="1.3"/>`; });
+  // left connector + clefs
+  s += `<line x1="${x0}" y1="${yOfDI(38)}" x2="${x0}" y2="${yOfDI(18)}" stroke="#17140E" stroke-width="2"/>`;
+  s += `<text x="14" y="${yOfDI(32)+21}" font-family="Georgia,serif" font-size="54" fill="#17140E">\u{1D11E}</text>`;
+  s += `<text x="16" y="${yOfDI(24)+8}" font-family="Georgia,serif" font-size="40" fill="#17140E">\u{1D122}</text>`;
+  // key signature (both staves)
+  const ksDI = fifths>=0 ? TREBLE_SHARP_DI : TREBLE_FLAT_DI, ksGlyph = fifths>=0 ? '♯' : '♭';
+  for(let i=0;i<Math.abs(fifths);i++){
+    const kx = 44 + i*8;
+    s += `<text x="${kx}" y="${yOfDI(ksDI[i])+5}" font-family="Georgia,serif" font-size="17" fill="#17140E">${ksGlyph}</text>`;
+    s += `<text x="${kx}" y="${yOfDI(ksDI[i]-14)+5}" font-family="Georgia,serif" font-size="17" fill="#17140E">${ksGlyph}</text>`;
+  }
+  // barlines (start/end)
+  [g.startQ, g.endQ].forEach((q,i) => { const x = i===0 ? x0 : beatXAbs(g.endQ)-4; s += `<line x1="${x}" y1="${yOfDI(38)}" x2="${x}" y2="${yOfDI(18)}" stroke="#17140E" stroke-width="${i?2.4:1.3}"/>`; });
+  s += `<line id="scCursor" x1="0" y1="${yOfDI(38)-8}" x2="0" y2="${yOfDI(18)+8}" stroke="#2E77E6" stroke-width="2.5" opacity="0.5" style="display:none"/>`;
+  // one block chord (all voices) per beat — but the chords you're naming are hidden (ear training)
+  const blankQs = new Set(g.slots.filter(sl => !sl.given).map(sl => sl.q));
+  g.allBeats.forEach(q => {
+    const x = beatXAbs(q);
+    if(!g.checked && blankQs.has(q)){                 // redact the chord being answered
+      const top = yOfDI(38)-4, bot = yOfDI(18)+4;
+      s += `<rect x="${x-11}" y="${top}" width="22" height="${bot-top}" rx="3" fill="#d9d2c2" opacity="0.5"/>`;
+      s += `<text x="${x}" y="${yOfDI(28)+7}" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="22" fill="#8a8577">?</text>`;
+      return;
+    }
+    sampleChord(ch, q).forEach(m => {
+      const sp = spellMidiKey(m, sig, prefFlat), y = yOfDI(sp.di);
+      s += ledgersFor(x, sp.di);
+      if(sp.drawAcc !== null) s += `<text x="${x-13}" y="${y+5}" font-family="Georgia,serif" font-size="16" fill="#17140E">${accGlyph(sp.drawAcc)}</text>`;
+      s += `<ellipse cx="${x}" cy="${y}" rx="5.2" ry="4.1" transform="rotate(-16 ${x} ${y})" fill="#17140E"/>`;
+    });
+  });
+  // Roman-numeral boxes under the scored beats
+  const slotY = yOfDI(18) + 18, slotH = 30, slotW = 44;
+  const inv = g.cfg.inversion;
+  g.slots.forEach((sl,i) => {
+    const x = beatXAbs(sl.q), sx = x - slotW/2, given = sl.given;
+    const ansVal = (g.answers[i] != null) ? (g.answers[i] + (inv ? (g.invAnswers[i]||'') : '')) : '';
+    const ok = g.answers[i] === sl.roman && (!inv || (g.invAnswers[i]||'') === (sl.inv||''));
+    let fill = '#F4EEE2', stroke = '#17140E', sw = 2, col = '#17140E';
+    if(given){ fill = '#ece6d8'; stroke = '#c9c2b0'; col = '#8a8577'; }
+    else if(g.checked){ fill = ok ? '#d8f0df' : '#ffdbe4'; }
+    else if(i===g.active){ stroke = '#2E77E6'; sw = 3; }
+    s += `<rect x="${sx}" y="${slotY}" width="${slotW}" height="${slotH}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+    if(ansVal) s += `<text x="${x}" y="${slotY+21}" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700" font-size="15" fill="${col}">${ansVal}</text>`;
+    if(g.checked && !given && !ok) s += `<text x="${x}" y="${slotY+slotH+12}" text-anchor="middle" font-family="'Space Mono',monospace" font-size="11" fill="#c22a52">${sl.roman + (inv ? sl.inv : '')}</text>`;
+  });
+  s += `</svg>`;
+  $('scoreBox').innerHTML = s;
+}
+function onScoreClick(e){
+  const svg = $('scoreSvg'); if(!svg || !game.slots) return;
+  const x = e.clientX - svg.getBoundingClientRect().left;
+  let best = 1e9, idx = -1;
+  game.slots.forEach((s,i) => { const d = Math.abs(beatXAbs(s.q) - x); if(d < best){ best = d; idx = i; } });
+  if(idx < 0 || best > SC_PXQ*0.6) return;
+  if(!game.checked && !game.slots[idx].given){ game.active = idx; renderScore(); }
+  playBeatChord(game.slots[idx].q);
+}
+$('scoreBox').addEventListener('click', onScoreClick);
+
+const INV_OPTS = [['','root'],['6','6'],['64','6/4'],['7','7'],['65','6/5'],['43','4/3'],['42','4/2']];
+function renderPalette(){
+  const box = $('palette'); box.innerHTML = '';
+  game.pal.forEach(r => { const b = document.createElement('button'); b.textContent = r; b.addEventListener('click', () => assign(r)); box.appendChild(b); });
+  const invBox = $('invPalette'), invLbl = $('invLbl');
+  if(game.cfg.inversion){
+    invLbl.style.display = ''; invBox.style.display = ''; invBox.innerHTML = '';
+    INV_OPTS.forEach(([v,lab]) => { const b = document.createElement('button'); b.textContent = lab; b.addEventListener('click', () => assignInv(v)); invBox.appendChild(b); });
+  } else { invLbl.style.display = 'none'; invBox.style.display = 'none'; }
+}
+function assign(r){
+  if(game.checked || !game.slots) return;
+  const sl = game.slots[game.active]; if(!sl || sl.given) return;
+  game.answers[game.active] = r;
+  if(!game.cfg.inversion){                          // non-pro: auto-advance to next blank
+    let n = game.active + 1;
+    while(n < game.slots.length && (game.slots[n].given || game.answers[n] != null)) n++;
+    if(n < game.slots.length) game.active = n;
+  }
+  renderScore();
+}
+function assignInv(v){
+  if(game.checked || !game.slots || !game.cfg.inversion) return;
+  const sl = game.slots[game.active]; if(!sl || sl.given) return;
+  game.invAnswers[game.active] = v;
+  renderScore();
+}
+function checkAnswers(){
+  if(!game.slots || game.checked) return;
+  game.checked = true;
+  let right = 0, total = 0;
+  game.slots.forEach((s,i) => {
+    if(s.given) return;
+    total++;
+    const ok = game.answers[i] === s.roman && (!game.cfg.inversion || (game.invAnswers[i]||'') === (s.inv||''));
+    if(ok) right++;
+    if(!game.revealed){                              // Reveal doesn't count toward stats
+      stats.total++;
+      if(ok){ stats.correct++; stats.streak++; if(stats.streak > stats.best){ stats.best = stats.streak; try{ localStorage.setItem(BEST_KEY, stats.best); }catch(e){} } }
+      else stats.streak = 0;
+    }
+  });
+  renderStats();
+  $('gScore').innerHTML = `Score: <b>${right} / ${total}</b> &nbsp;<span style="color:#8a8577">— click a chord to hear it</span>`;
+  gStatus(right === total ? 'All correct — nice ear!' : 'Marked — click a chord to hear it again.');
+  renderScore();
+}
+function revealAll(){
+  if(!game.slots) return;
+  game.revealed = true;   // giving up: breaks the streak, doesn't count
+  stats.streak = 0; renderStats();
+  game.slots.forEach((s,i) => { if(!s.given){ game.answers[i] = s.roman; if(game.cfg.inversion) game.invAnswers[i] = s.inv; } });
+  checkAnswers();
+}
+function playTonic(){
+  if(!game.chorale) return;
+  const ac = audio(), root = 60 + (game.chorale.tonicPc % 12);
+  const chord = [root, root + (game.chorale.mode==='minor' ? 3 : 4), root + 7];
+  const run = () => { const t = ac.currentTime + 0.05; chord.forEach(m => sound(m, t, 1.2, 0.5)); };
+  if(ac.state==='suspended') ac.resume().then(()=>withPiano(run)).catch(()=>withPiano(run)); else withPiano(run);
+}
+function playBeatChord(q){
+  const ac = audio();
+  const midis = sampleChord(game.chorale, q);
+  const cur = $('scCursor'); if(cur){ const x = beatXAbs(q); cur.setAttribute('x1',x); cur.setAttribute('x2',x); cur.style.display=''; setTimeout(()=>{ if(cur) cur.style.display='none'; }, 850); }
+  const run = () => { const t = ac.currentTime + 0.05; midis.forEach(m => sound(m, t, 1.0, 0.5)); };
+  if(ac.state==='suspended') ac.resume().then(()=>withPiano(run)).catch(()=>withPiano(run)); else withPiano(run);
+}
+let cursorRAF = null;
+function gamePlay(){
+  const ac = audio(), spq = 60 / (+$('tempo').value || 72);
+  const run = () => {
+    stopAll(); if(cursorRAF) cancelAnimationFrame(cursorRAF);
+    const t0 = ac.currentTime + 0.15;
+    // play each beat as a fresh block chord (re-articulated) so every chord is clearly heard
+    game.allBeats.forEach((q,i) => {
+      const next = (game.allBeats[i+1] != null) ? game.allBeats[i+1] : game.endQ;
+      const dur = (next - q) * spq, t = t0 + (q - game.startQ) * spq;
+      sampleChord(game.chorale, q).forEach(m => sound(m, t, Math.max(0.1, dur*0.96), 0.5));
+    });
+    const cur = $('scCursor'); if(cur) cur.style.display = '';
+    (function frame(){
+      const q = game.startQ + (ac.currentTime - t0)/spq;
+      if(ac.currentTime < t0){ cursorRAF = requestAnimationFrame(frame); return; }
+      if(q >= game.endQ){ if(cur) cur.style.display='none'; cursorRAF=null; return; }
+      if(cur){ const x = beatXAbs(q); cur.setAttribute('x1',x); cur.setAttribute('x2',x); }
+      cursorRAF = requestAnimationFrame(frame);
+    })();
+  };
+  if(ac.state==='suspended') ac.resume().then(()=>withPiano(run)).catch(()=>withPiano(run)); else withPiano(run);
+}
+
+$('newRound').addEventListener('click', newRound);
+$('gPlay').addEventListener('click', () => { if(game.slots) gamePlay(); });
+$('gTonic').addEventListener('click', playTonic);
+$('gCheck').addEventListener('click', checkAnswers);
+$('gReveal').addEventListener('click', revealAll);
+$('levelSeg').addEventListener('click', e => {
+  const b = e.target.closest('[data-level]'); if(!b) return;
+  level = b.dataset.level;
+  [...$('levelSeg').children].forEach(x => x.classList.toggle('on', x===b));
+  $('levelDesc').textContent = LEVELS[level].desc;
+  if(game.slots) newRound();
+});
+renderStats();   // show the saved best on load
 
 (async function boot(){
   try{

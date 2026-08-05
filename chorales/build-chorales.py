@@ -10,8 +10,47 @@ measures, voices:[SATB][ [midi, offset, dur], ... ] }  (offset/dur in quarter
 notes, ties stripped). Bach died 1750, so these are public domain worldwide.
 """
 import json, os, re, sys
-from music21 import corpus
+from music21 import corpus, chord as m21chord, roman
 from music21.corpus import chorales
+
+MAJOR_PAL = {"I","ii","iii","IV","V","vi","viio"}
+MINOR_PAL = {"i","iio","III","iv","v","V","VI","VII","viio"}
+
+def analyze_beats(voices, k, meter, measure_offsets, quarters, mode):
+    """One vertical sonority per quarter-beat -> Roman numeral vs the key.
+    Returns [ [q, roman, invFig, clean(0/1), diatonic(0/1)], ... ]
+      invFig = figured-bass inversion suffix ('', '6', '64', '7', '65', '43', '42')."""
+    pal = MINOR_PAL if mode == "minor" else MAJOR_PAL
+    mo = list(measure_offsets) + [quarters]
+    offs = []
+    for i in range(len(measure_offsets)):
+        q = mo[i]
+        while q < mo[i+1] - 1e-6:
+            offs.append(round(q, 4)); q += 1.0
+    out = []
+    for q in offs:
+        midis = []
+        for v in voices:
+            for m, o, d in v:
+                if o - 1e-6 <= q < o + d - 1e-6:
+                    midis.append(m); break
+        uniq = sorted(set(midis))
+        if len(uniq) < 2:
+            out.append([q, "", "", 0, 0]); continue
+        ch = m21chord.Chord(uniq)
+        try:
+            rn = roman.romanNumeralFromChord(ch, k); ra = rn.romanNumeralAlone
+        except Exception:
+            out.append([q, "", "", 0, 0]); continue
+        clean = 1 if (ch.isTriad() or ch.isSeventh()) else 0
+        diat = 1 if ra in pal else 0
+        is7 = ch.isSeventh()
+        try: inv = rn.inversion()
+        except Exception: inv = 0
+        invfig = ({0:"7",1:"65",2:"43",3:"42"}.get(inv, "7") if is7
+                  else {0:"",1:"6",2:"64"}.get(inv, ""))
+        out.append([q, ra, invfig, clean, diat])
+    return out
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT  = os.path.join(HERE, "chorales.json")
@@ -52,6 +91,8 @@ def build_one(fn):
         "quarters": round(float(end), 4),
         "measures": len(measure_offsets),
         "measureOffsets": measure_offsets,
+        "beats": analyze_beats(voices, k, [ts.numerator, ts.denominator] if ts else [4, 4],
+                               measure_offsets, round(float(end), 4), k.mode),
         "voices": voices,
     }
 
