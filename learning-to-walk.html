@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js" defer></script>
 <style>
   :root{
     --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
@@ -187,8 +188,41 @@ function voice(midi, t, dur, peak, type){
   g.connect(masterBus || ac.destination);
   o1.start(t); o2.start(t); o1.stop(t+dur+0.05); o2.stop(t+dur+0.05);
 }
-const bassNote = (midi,t,dur) => voice(midi, t, dur, 0.42, 'sine');
-const compNote = (midi,t,dur) => voice(midi, t, dur, 0.10, 'triangle');
+const bassNote = (midi,t,dur) => voice(midi, t, dur, 0.42, 'sine');   // synth upright bass — unchanged
+
+/* smooth electric piano for the chords: sampled Rhodes (soundfont), loaded lazily */
+let ep = null, epLoading = null;
+function getEP(){
+  if(ep) return Promise.resolve(ep);
+  if(epLoading) return epLoading;
+  if(!window.Soundfont) return Promise.resolve(null);
+  epLoading = window.Soundfont.instrument(audio(), 'electric_piano_1', { soundfont:'MusyngKite', destination:masterBus })
+    .then(p => { ep = p; return p; }).catch(() => null);
+  return epLoading;
+}
+/* fallback electric-piano-ish voice (offline / before the samples load): soft attack + a bell tine */
+function epSynth(midi, t, dur){
+  const ac = audio(), f0 = mtof(midi);
+  const out = ac.createGain(); out.connect(masterBus || ac.destination);
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.linearRampToValueAtTime(0.11, t+0.02);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.35);
+  const c = ac.createOscillator(); c.type='sine'; c.frequency.value = f0; c.connect(out);
+  const b = ac.createOscillator(), bg = ac.createGain(); b.type='sine'; b.frequency.value = f0*4;
+  bg.gain.setValueAtTime(0.16, t); bg.gain.exponentialRampToValueAtTime(0.001, t+0.22);
+  b.connect(bg); bg.connect(out);
+  c.start(t); b.start(t); c.stop(t+dur+0.4); b.stop(t+dur+0.4);
+}
+function compNote(midi, t, dur){
+  if(ep){ try{ ep.play(midi, t, { duration:dur, gain:0.55, destination:masterBus }); return; }catch(e){} }
+  epSynth(midi, t, dur);
+}
+/* play a single bass note right now — used when a note is placed on the staff */
+function hearNote(midi){
+  const ac = audio();
+  const go = () => bassNote(midi, ac.currentTime + 0.01, 0.55);
+  if(ac.state === 'suspended') ac.resume().then(go).catch(go); else go();
+}
 
 /* ===================== MUSIC HELPERS ===================== */
 const LSEMI = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 }, LTRS = ['C','D','E','F','G','A','B'];
@@ -220,9 +254,9 @@ function bassLayout(ex){
            slotX:(bar,beat)=> leftPad + bar*barW + (beat+0.5)*beatW };
 }
 function ledgersB(x, di){
-  let s = '';
-  if(di > 26) for(let d=28; d<=di; d+=2) s += `<line x1="${x-9}" y1="${byOfDI(d)}" x2="${x+9}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.2"/>`;
-  if(di < 18) for(let d=16; d>=di; d-=2) s += `<line x1="${x-9}" y1="${byOfDI(d)}" x2="${x+9}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.2"/>`;
+  let s = '', LX = 12;   // wider than the notehead (whole note rx=9) so the ledger pokes out on both sides
+  if(di > 26) for(let d=28; d<=di; d+=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)}" x2="${x+LX}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.4"/>`;
+  if(di < 18) for(let d=16; d>=di; d-=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)}" x2="${x+LX}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.4"/>`;
   return s;
 }
 function drawBass(ex, notes, opts){
@@ -327,6 +361,7 @@ function onBwClick(e){
   let di = 18 + Math.round((BY0 - y)/BSTEP);
   di = Math.max(12, Math.min(30, di));
   bw.notes[slot] = di;
+  hearNote(naturalMidi(di));                                                                  // hear the note you just placed
   if(bw.checked){ bw.checked = false; el('bwFb').textContent=''; el('bwFb').className='fb'; }  // editing clears the last marks
   drawBW();
 }
@@ -561,6 +596,7 @@ function buildToc(){
 }
 
 /* ===================== INIT ===================== */
+document.addEventListener('pointerdown', () => { audio(); getEP(); }, { once:true });   // warm the electric piano on first touch
 el('speech').addEventListener('click', advance);
 el('tocBtn').addEventListener('click', () => el('toc').classList.toggle('hidden'));
 el('prev').addEventListener('click', () => go(idx-1));
