@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chorale Ear Trainer — Music Arcade</title>
+<meta name="description" content="Listen to J.S. Bach chorales and (soon) name the harmony by ear. Public-domain harmonic dictation. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js" defer></script>
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --green:#1F9D55;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{ background:var(--paper); color:var(--ink); font-family:var(--body); line-height:1.5;
+    -webkit-font-smoothing:antialiased; position:relative; overflow-x:hidden; }
+  .blob{ position:fixed; border-radius:50%; filter:blur(70px); opacity:.14; z-index:0; pointer-events:none; }
+  .blob.b1{ background:var(--blue); width:44vw; height:44vw; top:-12%; left:-10%; }
+  .blob.b2{ background:var(--pink); width:40vw; height:40vw; bottom:-14%; right:-8%; }
+  .wrap{ max-width:820px; margin:0 auto; padding:22px 20px 90px; position:relative; z-index:1; }
+
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink); padding:8px 15px; border:2px solid var(--ink);
+    background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); transition:transform .08s, background .12s; }
+  .tabs a:hover{ background:#fff; }
+  .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+  .tabs a.cur{ background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--green); }
+
+  header{ margin-bottom:24px; }
+  .eyebrow{ font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--blue); }
+  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(2.1rem,7vw,3.3rem); line-height:1; letter-spacing:-.01em; margin:6px 0 10px; }
+  .lede{ max-width:60ch; font-size:1.02rem; color:#3a352b; }
+  .lede b{ color:var(--blue); }
+
+  .card{ background:var(--paper); border:2px solid var(--ink); box-shadow:5px 5px 0 rgba(23,20,14,.9);
+    padding:20px; margin-bottom:22px; }
+  .card h2{ font-family:var(--disp); font-weight:700; font-size:1.35rem; margin-bottom:6px; }
+  .sub{ font-family:var(--mono); font-size:12.5px; color:#6b6555; margin-bottom:16px; line-height:1.8; }
+
+  .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .row + .row{ margin-top:14px; }
+  label.fld{ display:flex; flex-direction:column; gap:5px; font-family:var(--mono); font-size:11px;
+    letter-spacing:.08em; text-transform:uppercase; color:#6b6555; }
+  select, input[type=number]{ font-family:var(--body); font-size:1rem; color:var(--ink); background:var(--paper);
+    border:2px solid var(--ink); padding:9px 11px; }
+  select{ min-width:260px; }
+  select:focus, input:focus{ outline:3px solid var(--blue); outline-offset:2px; }
+
+  button{ font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+    cursor:pointer; color:var(--ink); background:var(--paper); border:2px solid var(--ink);
+    padding:11px 18px; box-shadow:3px 3px 0 rgba(23,20,14,.9); transition:transform .08s; }
+  button:hover{ background:#fff; }
+  button:active{ transform:translate(3px,3px); box-shadow:none; }
+  button:disabled{ opacity:.5; cursor:default; box-shadow:none; }
+  button.play{ background:var(--blue); color:var(--paper); }
+  button.play:hover{ background:#1c2ea6; }
+  button.stop{ background:var(--pink); color:var(--paper); }
+  button.ghost{ background:var(--paper); }
+
+  .meta{ font-family:var(--mono); font-size:13px; color:#3a352b; margin-top:2px; }
+  .meta b{ color:var(--blue); font-weight:700; }
+  .pill{ display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.05em; text-transform:uppercase;
+    background:var(--green); color:var(--paper); padding:2px 9px; border:2px solid var(--ink); }
+  .status{ font-family:var(--mono); font-size:12.5px; color:#6b6555; margin-top:14px; display:flex; align-items:center; gap:8px; }
+  .status .dot{ width:9px; height:9px; border-radius:50%; background:#c7c0b0; }
+  .status.live .dot{ background:var(--green); animation:blink 1.2s infinite; }
+  @keyframes blink{ 50%{ opacity:.3; } }
+
+  .note{ font-family:var(--mono); font-size:12px; color:#6b6555; margin-top:18px; line-height:1.8; }
+  .foot{ margin-top:34px; font-family:var(--mono); font-size:12px; color:#6b6555; text-align:center; }
+  .foot a{ color:var(--blue); text-decoration:none; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html">Resources</a>
+    <a href="training.html" class="cur" aria-current="page">Training</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header>
+    <div class="eyebrow">Harmonic ear training · prototype</div>
+    <h1>Chorale Ear Trainer</h1>
+    <p class="lede">Train your ear on real four-part harmony. Right now this is the <b>listening room</b> — pick a J.S. Bach chorale and hear it (or just its opening). Naming the chords by ear comes next.</p>
+  </header>
+
+  <div class="card">
+    <h2>Listening room</h2>
+    <div class="sub">Bach's chorales are the classic harmony textbook — clear, one chord at a time. All public domain.</div>
+
+    <div class="row">
+      <label class="fld" style="flex:1; min-width:240px">Chorale
+        <select id="choraleSel" aria-label="Choose a chorale"></select>
+      </label>
+      <label class="fld">Tempo (♩)
+        <input type="number" id="tempo" value="72" min="40" max="140" style="width:88px">
+      </label>
+    </div>
+
+    <div class="meta" id="meta"></div>
+
+    <div class="row" style="margin-top:16px">
+      <button class="play" id="playAll">&#9654; Play chorale</button>
+      <button class="ghost" id="playOpen">&#9654; Play opening (4 bars)</button>
+      <button class="stop" id="stopBtn" disabled>&#9632; Stop</button>
+    </div>
+
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Pick a chorale and press play.</span></div>
+  </div>
+
+  <p class="note">Chorales: J.S. Bach (d. 1750) — public domain worldwide, sourced from the <b>music21</b> corpus and played here on a sampled grand piano. This is the foundation for a harmonic-dictation game: hear four bars, then fill in the chords.</p>
+
+  <div class="foot">
+    <p><a href="training.html">&larr; back to Training</a></p>
+  </div>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let CHORALES = [], cur = null;
+
+/* ===================== AUDIO (sampled piano + synth fallback) ===================== */
+const mtof = m => 440 * Math.pow(2, (m-69)/12);
+let actx = null, masterBus = null;
+function audio(){
+  if(!actx || actx.state==='closed'){
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    const comp = actx.createDynamicsCompressor();
+    comp.threshold.value=-16; comp.knee.value=24; comp.ratio.value=3; comp.attack.value=0.003; comp.release.value=0.25;
+    const mg = actx.createGain(); mg.gain.value=0.9; comp.connect(mg); mg.connect(actx.destination);
+    masterBus = comp;
+  }
+  if(actx.state==='suspended') actx.resume().catch(()=>{});
+  return actx;
+}
+let piano = null, pianoLoading = null;
+function getPiano(){
+  if(piano) return Promise.resolve(piano);
+  if(pianoLoading) return pianoLoading;
+  if(!window.Soundfont) return Promise.resolve(null);
+  pianoLoading = window.Soundfont.instrument(audio(), 'acoustic_grand_piano', { soundfont:'MusyngKite', destination:masterBus })
+    .then(p => { piano = p; return p; }).catch(() => null);
+  return pianoLoading;
+}
+let scheduled = [];
+function synthVoice(midi, t, dur, peak){
+  const ac = audio();
+  const parts = [[1,1],[2,0.5],[3,0.25],[4,0.12],[5,0.06]], B = 0.0006, f0 = mtof(midi);
+  const out = ac.createGain(); out.connect(masterBus || ac.destination);
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.linearRampToValueAtTime(peak, t+0.006);
+  out.gain.exponentialRampToValueAtTime(peak*0.3, t+0.3);
+  out.gain.exponentialRampToValueAtTime(0.0001, t+Math.max(dur,0.35)+0.35);
+  parts.forEach(([n,a]) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.value = f0*n*Math.sqrt(1+B*n*n);
+    g.gain.setValueAtTime(a, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.14,(dur+0.4)/(1+(n-1)*0.7)));
+    o.connect(g); g.connect(out); o.start(t); o.stop(t+dur+0.7);
+    scheduled.push(o);
+  });
+}
+function sound(midi, t, dur, level){
+  if(piano){ try{ const n = piano.play(midi, t, { duration:dur, gain:level, destination:masterBus }); if(n) scheduled.push(n); return; }catch(e){} }
+  synthVoice(midi, t, dur, level*0.4);
+}
+function stopAll(){
+  const t = audio().currentTime;
+  if(piano){ try{ piano.stop(); }catch(e){} }
+  scheduled.forEach(n => { try{ n.stop(t); }catch(e){} });
+  scheduled = [];
+}
+
+/* ===================== PLAYBACK ===================== */
+let playTimer = null;
+function setPlaying(on){
+  $('stopBtn').disabled = !on;
+  $('status').classList.toggle('live', on);
+  $('statusText').textContent = on ? 'Playing…' : (cur ? 'Ready.' : 'Pick a chorale.');
+}
+function withPiano(fn){
+  if(piano || !window.Soundfont){ fn(); return; }
+  $('statusText').textContent = 'Loading piano…';
+  getPiano().finally(fn);
+}
+function playRange(ch, startQ, endQ){
+  const ac = audio();
+  const spq = 60 / (+$('tempo').value || 72);
+  const run = () => {
+    stopAll(); if(playTimer) clearTimeout(playTimer);
+    const t0 = ac.currentTime + 0.15;
+    ch.voices.forEach(v => v.forEach(([midi, off, dur]) => {
+      if(off >= startQ - 1e-6 && off < endQ - 1e-6){
+        const len = Math.min(dur, endQ - off) * spq;
+        sound(midi, t0 + (off - startQ)*spq, Math.max(0.05, len*0.98), 0.5);
+      }
+    }));
+    setPlaying(true);
+    playTimer = setTimeout(() => setPlaying(false), ((endQ - startQ)*spq + 0.6)*1000);
+  };
+  const ac2 = audio();
+  if(ac2.state==='suspended') ac2.resume().then(()=>withPiano(run)).catch(()=>withPiano(run)); else withPiano(run);
+}
+function openingEnd(ch){
+  const mo = ch.measureOffsets || [];
+  // 4 bars from the first *full* bar (skip a pickup if bar 0 is short)
+  const pickup = mo.length>1 && (mo[1]-mo[0]) < (ch.meter[0]*4/ch.meter[1]) - 1e-6;
+  const startIdx = pickup ? 1 : 0;
+  const endIdx = startIdx + 4;
+  return { startQ: mo[startIdx] ?? 0, endQ: mo[endIdx] ?? ch.quarters };
+}
+
+$('playAll').addEventListener('click', () => { if(cur) playRange(cur, 0, cur.quarters); });
+$('playOpen').addEventListener('click', () => { if(!cur) return; const r = openingEnd(cur); playRange(cur, r.startQ, r.endQ); });
+$('stopBtn').addEventListener('click', () => { stopAll(); if(playTimer) clearTimeout(playTimer); setPlaying(false); });
+$('tempo').addEventListener('change', () => {});
+
+/* ===================== LOAD ===================== */
+function showMeta(ch){
+  const bars = ch.measures, m = ch.meter;
+  $('meta').innerHTML = `<span class="pill">Bach</span> &nbsp; Key <b>${ch.key}</b> &nbsp;·&nbsp; ${m[0]}/${m[1]} &nbsp;·&nbsp; ${bars} bars`;
+}
+$('choraleSel').addEventListener('change', e => {
+  cur = CHORALES[+e.target.value]; showMeta(cur);
+  stopAll(); if(playTimer) clearTimeout(playTimer); setPlaying(false);
+  $('statusText').textContent = 'Ready.';
+});
+
+(async function boot(){
+  try{
+    const data = await (await fetch('chorales/chorales.json?t=' + Date.now())).json();
+    CHORALES = data.chorales || [];
+  }catch(e){ $('statusText').textContent = 'Could not load the chorale collection.'; return; }
+  const sel = $('choraleSel');
+  CHORALES.forEach((ch, i) => {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = `${ch.id.toUpperCase()} · ${ch.key} · ${ch.meter[0]}/${ch.meter[1]}`;
+    sel.appendChild(o);
+  });
+  if(CHORALES.length){ cur = CHORALES[0]; showMeta(cur); $('statusText').textContent = 'Ready.'; }
+})();
+</script>
+</body>
+</html>
