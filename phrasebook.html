@@ -249,6 +249,7 @@
         <label>Enter</label>
         <div class="row" style="gap:8px">
           <button class="btn sm" id="restBtn">Add rest</button>
+          <button class="btn sm" id="tieBtn" title="Tie the selected note to the next note of the same pitch">Tie &#8994;</button>
           <button class="btn sm warn" id="undoBtn">Undo</button>
           <button class="btn sm warn" id="clearBtn">Clear</button>
         </div>
@@ -515,6 +516,14 @@ function renderScore(ph, opts){
     cum += DUR_BEATS[n.dur] || 1;
   });
   if(ph.notes.length){ const bx = noteX(ph.notes.length-1) + NOTE_DX*0.55; s += `<line x1="${bx}" y1="${TOPY()}" x2="${bx}" y2="${BOTY()}" stroke="#17140E" stroke-width="2.4"/>`; }
+  // ties (same-pitch, adjacent)
+  ph.notes.forEach((n,i) => {
+    const m = ph.notes[i+1];
+    if(n.tie && m && !n.rest && !m.rest && n.dstep===m.dstep && n.alt===m.alt){
+      const y = yOfDI(renderNote(n,k,md).di), x1 = noteX(i)+8, x2 = noteX(i+1)-8;
+      s += `<path d="M${x1},${y+7} Q${(x1+x2)/2},${y+16} ${x2},${y+7}" fill="none" stroke="#17140E" stroke-width="1.6"/>`;
+    }
+  });
   return s;
 }
 
@@ -531,6 +540,7 @@ function drawEditor(){
   svg.innerHTML = renderScore({ keyIdx:dispKey, mode, ts, notes, chords }, { sel, playIdx, showChords:chordsOn, width:W });
   drawDegrees(W);
   drawWheel();
+  $('tieBtn').classList.toggle('on', sel>=0 && !!(notes[sel] && notes[sel].tie));
 }
 function drawDegrees(W){
   const box = $('degrees'); box.style.width = W+'px';
@@ -567,11 +577,16 @@ $('staff').addEventListener('click', e => {
   const y = (e.clientY - rect.top) * (168 / rect.height);
   let hit = -1, best = 24;
   notes.forEach((n,i) => { const d = Math.abs(noteX(i) - x); if(d < best){ best = d; hit = i; } });
-  if(hit >= 0 && x < noteX(notes.length-1) + NOTE_DX*0.6){ sel = hit; drawEditor(); syncChordInput(); return; }
+  if(hit >= 0 && x < noteX(notes.length-1) + NOTE_DX*0.6){
+    sel = hit;
+    if(!notes[hit].rest) previewNote(renderNote(notes[hit], keyIdx, mode).midi);
+    drawEditor(); syncChordInput(); return;
+  }
   let di = diAt('E',4) + Math.round((Y0 - y)/STEP);
   di = Math.max(DI_MIN, Math.min(DI_MAX, di));
-  notes.push({ dstep: di - tRefDI(keyIdx), alt:0, dur:curDur });
-  sel = notes.length - 1;
+  const nn = { dstep: di - tRefDI(keyIdx), alt:0, dur:curDur };
+  notes.push(nn); sel = notes.length - 1;
+  previewNote(renderNote(nn, keyIdx, mode).midi);
   drawEditor(); syncChordInput();
 });
 $('durGrp').addEventListener('click', e => {
@@ -585,12 +600,18 @@ function setAcc(target){
   const n = notes[sel], di = tRefDI(keyIdx) + n.dstep;
   const degIdx = ((n.dstep%7)+7)%7, octOff = Math.floor(n.dstep/7);
   n.alt = (naturalMidiOfDI(di) + target - tMidi(keyIdx)) - (MODES[mode][degIdx] + 12*octOff);
+  previewNote(renderNote(n, keyIdx, mode).midi);
   drawEditor();
 }
 $('accFlat').addEventListener('click', () => setAcc(-1));
 $('accNat').addEventListener('click',  () => setAcc(0));
 $('accSharp').addEventListener('click',() => setAcc(1));
 $('restBtn').addEventListener('click', () => { notes.push({rest:true, dur:curDur}); sel=notes.length-1; drawEditor(); });
+$('tieBtn').addEventListener('click', () => {
+  if(sel<0 || !notes[sel] || notes[sel].rest) return;
+  notes[sel].tie = !notes[sel].tie;
+  drawEditor();
+});
 $('undoBtn').addEventListener('click', () => {
   if(!notes.length) return;
   const removed = notes.length-1; notes.pop();
@@ -674,15 +695,34 @@ function sound(midi, t, dur, level){
   if(piano){ try{ piano.play(midi, t, { duration:dur, gain:level, destination:masterBus }); return; }catch(e){} }
   synthVoice(midi, t, dur, level*0.34);
 }
+/* play a single note when it's clicked / edited, and warm the piano for next time */
+function previewNote(midi){
+  const ac = audio();
+  const go = () => sound(midi, ac.currentTime + 0.015, 0.6, 0.9);
+  if(ac.state==='suspended') ac.resume().then(go).catch(go); else go();
+  getPiano();
+}
+/* fold tied same-pitch notes into one sounding note (the later ones don't re-articulate) */
+function tiePlan(ph){
+  const plan = ph.notes.map(n => ({ articulate:true, beats: DUR_BEATS[n.dur]||1 }));
+  for(let i=ph.notes.length-1; i>=1; i--){
+    const prev = ph.notes[i-1], cur = ph.notes[i];
+    if(prev.tie && !prev.rest && !cur.rest && prev.dstep===cur.dstep && prev.alt===cur.alt){
+      plan[i].articulate = false;
+      plan[i-1].beats += plan[i].beats;
+    }
+  }
+  return plan;
+}
 function buildTimeline(ph, keyList, t0, spb, audible){
-  const timeline = []; let t = t0;
+  const timeline = []; let t = t0; const plan = tiePlan(ph);
   keyList.forEach(k => {
     const events = []; let tt = t;
     ph.notes.forEach((n,i) => {
       const len = (DUR_BEATS[n.dur]||1)*spb;
       events.push({ i, t:tt, endT:tt+len });
       if(audible){
-        if(!n.rest) sound(renderNote(n, k, ph.mode).midi, tt, len*0.95, 0.9);
+        if(!n.rest && plan[i].articulate) sound(renderNote(n, k, ph.mode).midi, tt, plan[i].beats*spb*0.98, 0.9);
         const ch = ph.chords.find(c => c.at===i);
         if(ch && chordsOn){ const rootPc=(KEYS[k].pc + ch.semis)%12; chordTones(ch.quality).forEach(iv => sound(48+rootPc+iv, tt, Math.min(len*1.6, spb*3), 0.32)); }
       }
@@ -821,11 +861,12 @@ function renderNotebook(){
 
 /* =========================== BOOT =========================== */
 function seedDemo(){
+  // "The Lick" — the famous jazz cliché: D E F G E C D over a ii–V–I in C
   keyIdx = 0; mode = 'ionian'; ts = { num:4, den:4 };
   notes = [
     {dstep:1,alt:0,dur:'e'},{dstep:2,alt:0,dur:'e'},{dstep:3,alt:0,dur:'e'},{dstep:4,alt:0,dur:'e'},
-    {dstep:3,alt:0,dur:'q'},{dstep:2,alt:0,dur:'q'},
-    {dstep:0,alt:0,dur:'h'}
+    {dstep:2,alt:0,dur:'q'},{dstep:0,alt:0,dur:'q'},
+    {dstep:1,alt:0,dur:'h'}
   ];
   chords = [ {at:0, ...parseChord('Dm7')}, {at:4, ...parseChord('G7')}, {at:6, ...parseChord('Cmaj7')} ];
   sel = -1;
