@@ -234,6 +234,12 @@
   .tunelist .tunerow:hover{background:#efe7d3}
   .tunelist .tunerow .tn{font-weight:600;font-size:14px}
   .tunelist .tunerow .tk{font-family:'Space Mono',monospace;font-size:11px;color:#8a8577;white-space:nowrap}
+  .tunelist .otag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+    padding:1px 6px 0;border-radius:99px;vertical-align:middle;border:1.5px solid var(--ink);white-space:nowrap}
+  .tunelist .otag.ir{background:#dde4ff;color:#2438C8}
+  .tunelist .otag.am{background:#ffe6c9;color:#a8542a}
+  .tunelist .otag.jz{background:#e9ddf6;color:#6b3fa0}
+  .tunelist .tunerow.cur .otag{border-color:var(--paper);background:transparent;color:var(--paper)}
   .tunelist .tunerow.cur{background:var(--blue);color:var(--paper)}
   .tunelist .tunerow.cur .tk{color:rgba(244,238,226,.85)}
   .tunelist .none{padding:14px 12px;font-family:'Space Mono',monospace;font-size:12px;color:#8a8577}
@@ -467,7 +473,7 @@
 
   <div class="card">
     <h2>Load a tune</h2>
-    <div class="fbmeta">The <b>50 most-played tunes</b> on thesession.org — search and pick one, or paste your own ABC. Ornaments are stripped; repeats play once through.</div>
+    <div class="fbmeta"><b>Irish session</b> (thesession.org), <b>American fiddle</b> (jimsrootsandblues.com) and <b>trad jazz &amp; blues</b> (Public Domain Song Anthology) tunes — search by name, type or tradition, or paste your own ABC. Ornaments are stripped; repeats play once through.</div>
     <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search tunes — name or type…" aria-label="Search tunes" autocomplete="off">
     <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
     <details class="pastewrap">
@@ -616,7 +622,7 @@ function parseABC(src){
   s = s.replace(/![^!\s][^!]*!/g,"").replace(/\+[a-z]+\+/g,"");
   if(/(\||\[)\s*[12]/.test(s)) w1("end","1st/2nd ending markers ignored — both endings play in sequence.");
   s = s.replace(/(\||\[)\s*([12])([\s,.-]*)/g, (m,p)=> p==="|" ? "|" : "");
-  s = s.replace(/\[(?:[A-Za-z]):[^\]]*\]/g,"");
+  s = s.replace(/\[(?:[A-Za-z]):[^\]]*\]/g, m => /^\[K:/i.test(m) ? m : "");  /* keep inline [K:] key changes */
   if(/\|:|:\|/.test(s)) w1("rep","Repeat marks treated as plain barlines — the tune plays once through.");
 
   const baseUnits = (Lnum/Lden) * meterDen;   /* default note, in 1/den units */
@@ -625,6 +631,7 @@ function parseABC(src){
   const notes = [];
   let onset = 0, bar = 0, measureAcc = {}, pendingBroken = 0;
   let tripletLeft = 0, pendingChord = null;
+  let curKey = key;   /* tracks inline [K:] changes; header `key` drives the scale display */
 
   const S = s;
   let k = 0;
@@ -656,7 +663,7 @@ function parseABC(src){
     }else if(pKey in measureAcc){
       acc = measureAcc[pKey];
     }else{
-      acc = key.accMap[L];
+      acc = curKey.accMap[L];
     }
 
     const t = {
@@ -708,6 +715,17 @@ function parseABC(src){
     if(ch===")"){ k++; continue; }
     if(ch==="-"){ if(notes.length) notes[notes.length-1].tieNext = true; k++; continue; }
     if(ch===">" || ch==="<"){ pendingBroken = ch===">" ? 1 : -1; k++; continue; }
+
+    /* inline key change [K:...] — honour it so mid-tune modulations spell correctly */
+    if(ch==="[" && /^\[K:/i.test(S.slice(k, k+3))){
+      const e = S.indexOf("]", k);
+      if(e > k){
+        const nk = parseKey(S.slice(k+3, e).trim());
+        if(nk){ curKey = nk; measureAcc = {}; }
+        k = e+1;
+        continue;
+      }
+    }
 
     /* chord-in-melody [CEG] — keep the first note, warn */
     if(ch==="[" && /[_^=A-Ga-g]/.test(S[k+1]||"")){
@@ -1669,13 +1687,13 @@ function splitBundle(txt){
   if(cur) out.push(cur);
   return out;
 }
-const TYPE_ORDER  = {reel:1,jig:2,"slip jig":3,hornpipe:4,polka:5,slide:6,waltz:7,barndance:8,strathspey:9,march:10,mazurka:11,"three-two":12};
-const TYPE_PLURAL = {reel:"Reels",jig:"Jigs","slip jig":"Slip jigs",hornpipe:"Hornpipes",polka:"Polkas",slide:"Slides",waltz:"Waltzes",barndance:"Barndances",strathspey:"Strathspeys",march:"Marches",mazurka:"Mazurkas","three-two":"Three-twos",example:"Examples"};
+const TYPE_ORDER  = {reel:1,jig:2,"slip jig":3,hornpipe:4,polka:5,slide:6,waltz:7,barndance:8,strathspey:9,march:10,mazurka:11,"three-two":12,blues:20,jazz:21,rag:22};
+const TYPE_PLURAL = {reel:"Reels",jig:"Jigs","slip jig":"Slip jigs",hornpipe:"Hornpipes",polka:"Polkas",slide:"Slides",waltz:"Waltzes",barndance:"Barndances",strathspey:"Strathspeys",march:"Marches",mazurka:"Mazurkas","three-two":"Three-twos",blues:"Blues",jazz:"Jazz",rag:"Rags",example:"Examples"};
 const typeLabel = t => TYPE_PLURAL[t] || (t.charAt(0).toUpperCase()+t.slice(1)+"s");
 
 function renderTuneList(q){
   const box = $("tuneList"); q = (q||"").trim().toLowerCase();
-  const items = LIBRARY.filter(t => !q || t.name.toLowerCase().includes(q) || t.type.includes(q));
+  const items = LIBRARY.filter(t => !q || t.name.toLowerCase().includes(q) || t.type.includes(q) || (t.origin||"").toLowerCase().includes(q));
   if(!items.length){ box.innerHTML = '<div class="none">No tunes match that search.</div>'; return; }
   const groups = {}; items.forEach(t => { (groups[t.type] = groups[t.type] || []).push(t); });
   const order = Object.keys(groups).sort((a,b)=>{
@@ -1686,7 +1704,10 @@ function renderTuneList(q){
   order.forEach(type=>{
     h += '<div class="grp">'+typeLabel(type)+" · "+groups[type].length+"</div>";
     groups[type].forEach(t=>{
-      h += '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+'</span><span class="tk">'+escHtml(t.key||"")+"</span></div>";
+      const oc = t.origin==="American fiddle" ? "am" : t.origin==="Irish session" ? "ir" : t.origin==="Trad jazz" ? "jz" : "";
+      const ol = oc==="am" ? "American" : oc==="ir" ? "Irish" : oc==="jz" ? "Jazz" : "";
+      const ot = oc ? ' <span class="otag '+oc+'">'+ol+'</span>' : "";
+      h += '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+ot+'</span><span class="tk">'+escHtml(t.key||"")+"</span></div>";
     });
   });
   box.innerHTML = h;
@@ -1708,14 +1729,15 @@ $("tuneList").addEventListener("click", e=>{
 $("tuneSearch").addEventListener("input", e=> renderTuneList(e.target.value));
 
 async function loadLibrary(){
-  PRESETS.forEach(p => LIBRARY.push({ name:p.name.replace(/\s*\(.*\)$/,""), type:"example", key:"", abc:p.abc }));
+  PRESETS.forEach(p => LIBRARY.push({ name:p.name.replace(/\s*\(.*\)$/,""), type:"example", origin:"", key:"", abc:p.abc }));
   try{
-    const man = await (await fetch("tunes/manifest.json")).json();
+    const bust = "?t=" + Date.now();     // always read the current library, not a stale cache
+    const man = await (await fetch("tunes/manifest.json" + bust)).json();
     for(const file of man){
-      let txt; try{ txt = await (await fetch("tunes/"+file)).text(); }catch(e){ continue; }
+      let txt; try{ txt = await (await fetch("tunes/" + file + bust)).text(); }catch(e){ continue; }
       splitBundle(txt).forEach(block=>{
         if(!/^X:/m.test(block)) return;
-        LIBRARY.push({ name:abcField(block,"T")||"Untitled", type:(abcField(block,"R")||"other").toLowerCase(), key:abcField(block,"K"), abc:block });
+        LIBRARY.push({ name:abcField(block,"T")||"Untitled", type:(abcField(block,"R")||"other").toLowerCase(), origin:abcField(block,"O")||"Irish session", key:abcField(block,"K"), abc:block });
       });
     }
   }catch(e){ /* no manifest (e.g. offline) — the examples still show */ }

@@ -65,7 +65,7 @@ def main():
         fname, meter = TYPE_META.get(ttype, (re.sub(r"[^a-z]+", "-", ttype.lower()) + ".abc", "4/4"))
         try:
             s = fetch(f"https://thesession.org/tunes/{tid}?format=json")["settings"][0]
-            block = (f"X:{tid}\nT:{name}\nR:{ttype}\nM:{meter}\nL:1/8\n"
+            block = (f"X:{tid}\nT:{name}\nR:{ttype}\nO:Irish session\nM:{meter}\nL:1/8\n"
                      f"K:{s['key']}\n{clean_body(s['abc'])}\n")
         except Exception as e:
             skipped.append((tid, name, str(e)))

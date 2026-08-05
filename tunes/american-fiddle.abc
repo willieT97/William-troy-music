@@ -1,0 +1,732 @@
+% American fiddle tunes — ABC collected from Jim's Roots & Blues
+% (jimsrootsandblues.com). Only the plainly-Traditional settings are
+% included; settings citing a copyrighted book, a CC licence, or a
+% named modern composer were skipped. The tunes are traditional
+% American fiddle tunes (public domain).
+
+X:1
+T:Soldier's Joy
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+|:FG||"D"AFDF AFDF|A2 d2 d2 cB|AFDF AFDF|"A"G2E2 E2 FG|
+|"D"AFDF AFDF|A2 d2 d2 de|fafd "A"egec|"D"d2f2d2:|
+|:de||fdAd fagf|"G"edcd efge| "D"fdAd fgaf|"A"edcB A2 de|
+|"D"fdAd fagf|"G"edcd efge|"D"fafd "A"egec|"D"d2f2 d2:|
+P:Alternate B
+|:de||"D"fefg abaf|"G"edef gfeg| "D"fefg abaf|"A"edcB A2 de|
+|"D"fefg abaf|"G"edef gfeg|"D"fedf "A"edce|"D"d2dd d2:|
+
+X:2
+T:Arkansas Traveler
+O:American fiddle
+R:reel
+M:2/4
+L:1/4
+C:Traditional
+K:D
+|: "D"D/F/E/D/ "G"B,B,/B,/ | "D"A,A, DD/D/ | "A"EE FF/D/ | E/F/E/D/ B,A, | "D"D/F/E/D/ "G"B,B,/B,/ |
+"D"A,A, DD/D/ | "D"d/c/d/A/ "G"B/d/A/G/ |[1 "D"F/D/"A"E/C/ "D"Dz :|[2 "D"F/D/"A"E/C/ "D"Df/g/||
+|: "D"a/g/f/a/ "G"g/f/e/g/ | "D"f/e/d/f/ "A"eA | "D"dd/d/ "A"ee/e/ | "D"f/e/d/f/ "A"ef/g/ |
+"D"a/g/f/a/ "G"g/f/e/g/ | "D"f/e/d/f/ "A"eA | "D"d/c/d/A/ "G"B/d/A/G/ |[1 "D"F/D/"A"E/F/ "D"Df/g/ :|[2 "D"F/D/"A"E/F/ "D"D2 |]
+
+X:3
+T:Old Joe Clark
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:A
+|:"A"e2ef g2f2|efed cAcd|ecef gfgf|"E"e2 ef e2 cd|
+"A"e2ef g2 (3fgf|efed cBAB|cBAc "E"BAGB|"A"(A2 A)A A4  :|]
+"A"E2|:A2 AB cBcd|efed cB A2|A2 AB cB A2|"G **"([B4=G4][B4G4]) |
+"A"A2 AB ABcd|efed cBAB|cBAc "E"BAGB|[1"A"A4-A2 E2:|[2 "A"A2 AB A4|]
+"** option"=GFGA BA G2|
+
+X:4
+T:Blackberry Blossom
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:G
+P:A Part
+ef |: "G"gabg "D"fgaf | "C"efge "G"dBGB | "C"cdec "G"BcdB |
+"A"A^cef "D"d2 ef | "G"gabg "D"fgaf | "C"efge "G"dBAB |
+"C"cBcd "G"efge |[1 "D"dBAF "G"G2 ef:|[2 "D"dBAF "G"G2 FG||
+P:B Part
+|:"Em"E2e2 d2e2 | E2e2 dBAG | E2e2 d2e2 | "B7"efge dBAG | "Em"E2e2 d2e2 |
+E2e2 d2ef | "C"gfed "G"BAGB |[1 "D"AGFA "G"G2FD:|[2 "D"AGFA "G"G2ef|]
+P:Fancier Tony Rice B Part
+|:"Em"EGeB dBeB | EGeB dBAG | EGeB dBef | "B7"gabg edBG |
+"Em"EGeB dBeB | EGeB dBAB | "C"cBcd "G"efge |[1 "D"dBAF "G"G2FG:|[2 "D"dBAF "G"G4|]
+
+X:5
+T:Whiskey Before Breakfast
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+|: "D"DEFG A2 AA| ABAG FDEF | "G"G2 BG "D"F2 AF | "A"EDEF GFEF |
+"D"DEFG A2 AA | ABAG FDEF | "G"G2 BG "D"F2 AF | "A"EDEF "D"D2 DD :|
+|: "D"DFAc d2 cd | efed cB A2 | "Em"e2 ef e2 ef | "A"gfed cABc |
+"D"d2 fd "A"c2 ec | "G"BABc "D"dBAF | "G"G2 BG "D"F2 AF | "A"EDEF "D"D2 D2 :|
+
+X:6
+T:The Redhaired Boy
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Amix
+AF|"A"E2A2 ABcd|efec "D"d2cd|"A"e2A2 ABcA|"G"BGEF G2 AG|
+"A"E2A2 ABcd|efec "D"d2cd|"A"eaab ag"E"ed|"A"c2A2A2:|
+|:ef|"G"gfga gfef|gfec "D"d2cd|"A"edcB ABcA|"G"BGEF G2AG|
+"A"E2AG A2 cd|efec "D"d2cd|"A"eaab ag"E"ed|"A"c2 A2 A2:|
+
+X:7
+T:Billy In The Lowground
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Cmaj
+G,B,|:"C"CB,CD EGAB|cBcd cAG2|"Am"A2Ac AGEG|e2eg edc2|
+"C"CB,CD EGAB|cBcd cAG2|"Am"A2Ac AGED|"G"FEDB, "C"C2- C2 :|
+|: "C"eg2ag2 ed | cBcd c2G2|"F"ea2ea3 a- | abag edcd||
+"C"eg2ag2 ed|cBcd c2G2|"Am"ABAG EGAB|"G"cAGE "C"C4 :|
+
+X:8
+T:Fisher's Hornpipe
+O:American fiddle
+R:hornpipe
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+|: (3ABc |"D" dAFA "G" GBAG | "D" FDFD "G" GBAG | "D" FEDF "G" GBAG | "D" FGAF "A" E2 (3ABc |
+"D"dAFD "G"GBAG | "D" FDFD "G" GBAG | "D" FGAd "A"cdec | "D"dBAF D2:|
+|: cd |"A" ecAc egfe | "D" fdAd fagf | "A" ecAc egfe | "E"d2 B2 "A"A2 A^A |
+"G" BGDG BdcB | "D" AFDF A2 A^A | "G" BGBd "A" cABc | "D"d6:|
+
+X:9
+T:The Devil's Dream
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Amaj
+e |:"A"agae agae |agae fedc |"Bm"dfBf dfBf | "Bm"dfBf "E"agfe |
+"A"agae agae |agae fedc |"Bm"Bcde gfed | "E"ceBe "A"A2 ze:|
+|:"A"ceAe ceAe |ceAe fedc |"Bm"dfBf dfBf | "Bm"dfBf "E"agfe |
+"A"ceAe ceAe |ceAe fedc |"Bm"Bcde gfed | "E"ceBe "A"A2 ze:|
+
+X:10
+T:Turkey in the Straw
+O:American fiddle
+R:reel
+M:4/4
+L:1/4
+C:Traditional
+K:G
+P:A Part
+B/2A/2 | "G"G/2F/2G/2A/2 G/2D/2B,/2C/2 | D/2E/2D/2B,/2 DG/2A/2 | BB B/2A/2G/2A/2 | "D"BA AB/2A/2|
+"G"G/2F/2G/2A/2 G/2D/2B,/2C/2 | D/2E/2D/2B,/2 DG/2A/2 | B/2de/2 d/2B/2G/2A/2 | "D"B/G/A/F/ "G"G :|
+P:B Part
+G/2A/2 | "G"B/2dB/2 dd | B/2dB/2 d2 | "C"c/2ec/2 ee | c/2ec/2 e e/f/ |
+"G"gg dd | B/2dB/2 "D"AG/2A/2 | "G"B/2de/2 d/2B/2G/2A/2 | "D"B/G/A/F/ "G"G :|
+
+X:11
+T:Bill Cheatham
+O:American fiddle
+R:reel
+M:C|
+L:1/8
+C:Traditional
+K:A
+GF || "A"E2c2 c4 | cBAc BAFE | "D"F2d2 d4 | fgaf  ecBA |
+"A"E2c2 c4 | cBAc BABc | "D"dcde fgaf | "E"ecBc "A"A2 :|
+cd || "A"ecea "D"fdfa | "E"gefg "A"a2eg | "A"agae "D"fgaf | "A"ecBA "E"B2cd |
+"A"ecea "D"fdfa | "E"gefg "A"a2eg | "A"agae "D"fgaf | "E"ecBc "A"A2  :|
+
+X:12
+T:Cumberland Gap
+O:American fiddle
+R:reel
+M:C|
+L:1/8
+C:Traditional
+K:D
+P:A Part
+"D"A,A,B,2 D2E2 | F2A2"G"[B2D][BD]A | "D"BBA2 BBA2 | "A"AFE2 "D"D2B,2 |
+"D"A,A,B,2 D2E2 | F2A2"G"[B2D][BD]A | "D"BBA2 BBA2 | "A"AFE2 "D"D4 :|
+P:B Part
+"A"{d}e4 {d}e2de | "D"fed2 B2BA | "G"BABc dBAB | "D"dBAF D2 d2 :|
+P:C Part (crooked)
+"D"fffg fedA | "G"B2BA B2e2 | "D"fffg fedA | "G"B2BA B2BA | "D"dAdA dBAB |
+"A"dBAF "D"D4 :|
+
+X:13
+T:Sally Goodin
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:A
+|: "A"AcBc A2AB | cABA EFAB | cBcB ABAF | "E"ECEA "A"FA3 |
+"A"AcBc A2 AB | cABA EFAB | cecB ABAF | "E"ECEA "A"FA3:|
+|: "A"ABcd e2 cd | efed c2 cd | efed cBAc | "E"BAGB "A"A4 |
+"A"ABcd e^def | ga=gf edce | ae=gf edcd | "E"efed "A"cB A2:|
+
+X:14
+T:Forked Deer
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:D
+P:A Part
+Ac |: "D"defg agfa | "G"gfeg "A"fedc | "D"defg agfa |
+"G"gfed "A"cBAc | "D"defg agfa | "G"gfeg "A"fedc |
+"D"dAFD "G"GBAG | [1 "A"AF (3EFE "D"D2 Ac:|[2 "A"AF (3EFE "D"D4||
+P:B Part
+|: "A"{^G}[A2A2][A2A2] [A2c2] [Ac][Ac] | BcBA [F2A2]E2 | {^G}[A2A2][A2A2] [A2c2] Bc | "D"dBAF (3EFE D2 |
+"A"{^G}[A2A2][A2A2] [A2c2] [Ac][Ac] | BcBA [F2A2]E2 | "D"dAFD "G"GBAG | "A"AF (3EFE "D"D4:|
+
+X:15
+T:Mississippi Sawyer
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+fg |: "D" a2 af a2 af | af a2 b2 a2 | "G" g2 ef g2 ef | gf g2 a2 g2 | "D" f2 fg fedc |
+defg a2 ef | "A" gfed cABc |1 "D" d2 f2 d2 fg :|2 d2 de d2 fe ||
+|: "D" d2 fe d2 fe | defg a4 | "A" e2 c2 A2 c2 | ABcd efec | "D" d2 fe d2 fe |
+defg a2 ef | "A" gfed cABc |1 "D" d2 f2 d2 fe :|2 "D" d2 f2 d2 ||
+
+X:16
+T:Cherokee Shuffle
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Amaj
+P:Part A
+|:"A"A2AA A2AB |cBAF E2 EF | A2AB cde2 | "F#m"f2ff f4 |
+"D"f2g2 a2f2 | "A"efed cBAB | cBAc "E"BAG2 |"A"A2AA A4 :|
+P:Part B
+|:"D"f2g2 a2f2 | "A"efed cBA2 | "D"f2g2 a2b2 | "A"c'2c'c' c'4 |
+"D"f2g2 a2f2 | "A"efed cBAB | cBAc BAce | "F#m"f2ff f2fg |
+"D"afed "E"cABc | [1 "A"A2a2 g2=g2 :| [2 "A"A2AA A4 |]
+
+X:17
+T:Saint Anne's Reel
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+Ad|:"D" f2fg fedB| A2F2F2A2 |"G" B2GA BcdB|"D"A2F2 F2de|
+f2fg fedB| A2F2F2A2 |"G" B2d2 "A"cdec|1 "D" d2de d2de:|2 "D" d2de d2ag|]
+|:"D" f2d2 defg | "Em" a2gf g2gf | "A" edcB Aceg|"D"b2a2 a2g2|
+"Bm"f2d2 defg|"Em"a2gf g2gf|"A"edcB ABce|1"D"f2f2 d2ag:|2"D"f2"A"d2"D"d2z2|]
+
+X:18
+T:Temperance Reel
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Gmaj
+|:(3DEF|"G"G2 GF GABc|d2ge dBAc|"Em"BEED EFGA |BGAF "D"GFED|
+"G"G2 GF GABc|d2ge dBAc|"Em"BEED EFGA |"(G)"BG"D"AF "G"G2:||
+|:"Em"Beed e2ef| geaf gfed| "D"Add^c d2de | fdaf gfed|
+"Em"Beed e2ef| geaf gfed|BEED EFGA|"D"BGAF "G"G2:||
+
+X:19
+T:Liberty
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+ag |:"D" f2 A2 f2 A2|fefg fedf|"G" g2 B2 g2 B2|gfga gfeg|
+"D" f2 A2 f2 A2|fefg fedf|"G" gfed "A" cABc|[1"D" dfec d2fg:|[2 "D"dfec d4 ||
+|:"D"A2AB AGFE|DFAd f2d2|A2AB AFED|"A"A,2C2 E2G2|"D"A2AB AGFE|
+DFAd fdef|"A"gfed cABc|1 "D"dBAF D2FG:|2 "D"dfec d4|]
+
+X:20
+T:Over The Waterfall
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+de||"D"f2a2 gfe2 | d2 B2 A2de | f2a2 "A"gfe2 | "D"[d2F][dF][dF] [d2F]de |
+f2a2 gfe2 | d2 B2 A2 AB | "C"=c2cc B2A2 | "G"[G2B,][GB,][GB,][G2B,]:|
+FG || "D"A4 "G"B4 | "D"ABAG F2FG | "D"A2 G2 "A"F2 E2 | "D"D2DDD2 FG |
+"D"A4 "G"B4 | "D"ABAG F2FG | A2d2 "A"cde2 |"D"[d2F][dF][dF] [d2F] :|
+
+X:21
+T:June Apple
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:A
+P:A Section
+|: eg ||"A"ageg ageg|aged cdef|"G"gfef gfef|gagf e2 eg|
+"A"ageg ageg|aged cBAF|"G"GFGA BAGB|[1 "A"A3 B A2 :|[2 "A"A6 ||
+P:B Section
+|:"A"ee || e2 d2 c2 AB | cdef gfeF | [1"G"GFGA BABc | "D"d6:| [2 "G"GFGA BAGB|"A"A6 |]
+
+X:22
+T:Big Sciota
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:G
+x DF |: "G"GFGB AGAc | BAGB AGEF | GFGB AGAc | ABBc B2DF |
+GFGA Bcd=f | "C"edcB cdeg | "D"fedB cBAc| [1 "G"B2G2G2 DF:|[2 "G"B2G2G2 ||
+|: ef | "G"gfga bage | "D"faab (a2 a2) | faab agfe | "C"deef e2 ef |
+gfed edBA | "Em"deee efge | "D"dcBG AFAc | "G"B2 G2 G2 :|
+
+X:23
+T:Cold Frosty Morning
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Am
+P:A Part
+|:"Am"EGAB A4 | cBcd e4 | "G"G2BA G2BA | GABc d4 |
+"Am"EGAB A4 | cBcd e4 | cBA2 "G"BAG2 | "Am"A4A4 :|
+P:B Part
+|:"Am"ega2 a4 | abag e2d2 | "G"efg2 g4 | g2d2 e4 |
+"Am"A2AA "C"c2Bc | "D"dcd2 "Am"e2A2 | cBA2 "G"BAG2 | "Am"A4A4 :|
+
+X:24
+T:The Kitchen Girl
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Amix
+P:A Part
+|:"A" [c4a4] "G"[B4g4] | "A"efed cAcd | ecef "G"gaba | "E"^g2 e2 e2 ef | "A" [c4a4] "G"[B4g4]|
+"A"efed cAcd | efgd "E"efed |[1 "A"c2 A2 A2 ef:|[2 "A"c2 A2 A2 AB||
+P:B Part
+|:[K: Amin]"Am" c2 Ac "G"BAGB|"Am"ABAG E2 EG|A2 B2 c2 d2|"E"[B4e4] [B4e4]|"Am"cBAc "G"BAGB|
+"Am"ABAG EGAB|c2 Ac "E"BAGB|[1 "Am"A2 AA A2 AB:|[2 "Am"A2 AA A4||
+P:Alternate A Part
+|:[K:Amix]"A"abaf "G"gagg | "A"efed cdef | g2 d2 "E"efed|[1 "A"c2A2A2 eg:|[2 "A"c2A2A2 A2 ||
+
+X:25
+T:Eighth Of January
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+P:A Part
+|:de | "D"fefg fedf | "G"efed B2 cd | "A"edef edBc | "D"dBAF D2:||
+P:B Part
+|:DE | "D"[F2A2][A2A2] [A3A3] F | ABAF EDDE | FAAF AAAB | "A"AFEF "D"D2:|
+P: Alternate high B part
+|:de | "D"[A2f2] [A2a2] [A3a3] f | [Aa][Ab][Aa][Af] [Ae][Dd][Dd]e | f[A2a2]f[A2a2] ab | "A"[Aa]fec"D"[F2d2]:|
+
+X:26
+T:Buffalo Gals
+O:American fiddle
+R:reel
+M:C|
+L:1/8
+C:Traditional
+K:A
+|: "A"A2A2 c2ee | f2ee c4 | "E7"e2dd B2e2 | "A" f2ee c4 \
+|  "A"A2A2 c2ee | f2ee c4 | "E7"e2ee dcB2 | "A"A8 :|
+|: "A"a2g2 f2e2 | f2ee c4 | "E7"e2dd B2e2 | "A" f2ee c4 \
+|  "A"a2g2 f2e2 | f2ee c4 | "E7"e2ee dcB2 | "A"A8 :|
+
+X:27
+T:Grey Eagle
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:A
+cB ||"A"A2 FA ECA,C | EFAc BABc | A2 FA ECA,C | EFAc "E"eAce |
+"A"A2 FA ECA,C | EFAc (3BcB Ac | "E"eAce dcBG |[1 EGBd "A"cA :| [2 EGBc "A"A2af:|
+"A"ecAe cAeA|"D"fdAd fgaf|"A"edce ecAF |"E"EGBc dBGB|
+"A"AecA ecAc|"D"dABd faeg|"A"abga "E"(3faf ed |[1 "A"ce"E"Bc "A"A2af:|["A"ce"E"Bc "A"A2:|]
+
+X:28
+T:Rickett's Hornpipe
+O:American fiddle
+R:hornpipe
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+Ac|"D" dcdA FAdf|"A" edcB A2g2| "D" fgaf "Em" gfed | "A" edcB Agfe|
+"D" dcdA FAdf| "A" edcB A2 g2| "D" fafd"A"egec| "D" d2 f2 d2:|
+|:fg|"D" afaf d2 ga | "Em"bgbg e2 fg|"D" afba "Em"gfed |"A" edcB Agfe|
+"D"dcdA FAdf|"A" edcB A2g2 |"D"fafd"A"egec|"D" d2 f2 d2:|
+
+X:29
+T:Sailor's Hornpipe
+O:American fiddle
+R:hornpipe
+M:4/4
+L:1/8
+C:Traditional
+K:Gmaj
+gf |: "G" g2G2G2dc | Bdgf gbag | "A" a2A2A2ag |
+"D"fed^cd2ef | "G" gfed edcB | "C" cBAG "A"GFED |
+"D" EGFA GBAc |1 "G" B2G2G2 gf :|2 "G" B2G2G2 dc||
+|: "G" Bdgd Bdgd | "C" e2c2c2ed | "A" ^ceae ^ceae |
+"D" f2d2d2  ef | "G" gfed edcB | "C" cBAG "A"AGFE |
+"D" DGFA GBAc |1 "G" BAGF G2 dc:| [2 "G" BAGF G4 ||
+
+X:30
+T:Boil The Cabbage Down
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Amaj
+AB |: "A"c2 cc c2 cc | "D"d2 dd d2 dd | "A"c2 cc c2 cc | "E7"B2 BB B2 AB |
+|"A"c2 cc c2 cc | "D"d2 dd d2 dd | "A"c2 cc "E7"B2 BB | "A"A2 AA A2 :|
+Ac |: "A"e2 ef e2 c2 | "D"e2 ef e2 c2 | "A"e2 ef e2 c2 | "E7"B2 Bc B2 AB |
+|"A"c2 cc c2 cc | "D"d2 dd d2 dd | "A"c2 cc "E7"B2 BB | "A"A2 AA A2 :|
+
+X:31
+T:Flop-Eared Mule
+O:American fiddle
+R:reel
+M:2/4
+L:1/8
+C:Traditional
+K:G
+P:A Part
+|: ga | "G"[b4d] [g4B] | dedc BAGE | "D"DEFG AGFA | "G"GABc d2ga |
+"G"bgba gage | dedc BAGE | "D"DEFG AGFA | "G"G2[GB,][GB,] [G2B,] :|
+P:B Part
+K:D
+|: FG | "D"A2FGA2FG | ABAG FEDB, | "A"A,CEF GECE | "D"DEFG A2 FG |
+  "D"A2FGA2FG | ABAG FEDB, | "A"A,B,CD EGFE |[1"D"D6FG :|[2 "D"D2C2=C "D7"ga ||
+P:(alternate B Part)
+K:D
+|: fg |"D"a2f2 a2f2 | abag fedB | "A"ABcd edce | "D"defg a2af |
+a2f2 a2f2 | abag fedB | "A"ABcd edce | "D"J[d6f] z2 :|
+
+X:32
+T:Beaumont Rag
+O:American fiddle
+R:rag
+M:4/4
+L:1/8
+C:Traditional
+K:D
+P:A Part
+"A"gfgf e2ed | cdcB A4 | "D"=f^f=f^f dBAd | BAFG A4 |
+"A"EFGA- ABAG | EFGA- ABAF | "D"DEFG ABAF | BAF(A A4) ||
+"A"gfgf e2ed | cdcB ABcA | "D"=f^f=f^f dBAd | BAFE DE=F^F |
+"G"GFGA Bcde | "D"fedB A2gf | "A"edcB ABce | "D"d4c2B2 |]
+P:B Part
+"A"ABcA BcAB | cABc- cABc | "D"ABdA BdAB | dABd- ddcB |
+"A"ABcA BcAB | cABc- cABc | "D Stop"dDFG- y^GABA | dABd- ddcB |
+"A"ABcA BcAB | cABc- cABc | "D"ABdA BdAB | dABd- dABA |
+"G"GFGA Bcde | "D"fedB A2gf | "A"edcB ABce | "D"d8 |
+
+X:33
+T:Speed The Plough
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Amaj
+E|:"A"ABcd efec|eaec efec|"D"dfdB "A"cecA|"Bm"FBBA "E"GBBc|
+   "A"ABcd efec|eaga faec|"D"decd "A"BcAB|[1 "Bm"FA"E"GB "A"A2 A:|
+[2 "Bm"FA"E"GB "A"A2 (3efg |:"A"a2ag aAce|aAgA fAeA|"D"dfdB "A"cecA|
+"Bm"FBBA "E"GBBe|"A"(3cBA eA fAeA| fgaf ecAc| "D"decd "A"BcAB |
+[1 "Bm"FA"E"GB "A"A2 (3efg :|[2 "Bm"FA"E"GB "A"A2 AE |]
+
+X:34
+T:Katy Hill
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:G
+P:A Part
+"G"[d2g][dg][dg] bgba | gbag efg2 | [d2g][dg][dg] bgag | edBd efg2 |
+[d2g][dg][dg] bgba | gbag efga | gedB AGEG | [1 "D"DEGB "G"AF G2:|[2 "D"DEGB "G"AGz2 ||
+P:B Part
+"G"BAGB AGEG | DEGA Bdef | gedB AGEG | DEGB AGEG |
+BAGB AGEG | DEGA Bdef | gedB AGEG |[1 "D"DEGB "G"AG z2 :| [2 "D"DEGA "G"G2 z2 |]
+
+X:35
+T:Dusty Miller
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:A
+Z:Jim Kendrick from "The Music of Bill Monroe 3 / 1958-69"
+P:A Part
+|:A,"A"A,A,=C A,A,A,A, | A,A,DE GED=C | A,CDE EGGA | A"E"BcB c"A"BA2 |
+  A,"A"A,A,=C A,A,A,A, | A,A,DE GED=C | A,CDE EGGA | A"E"BcB c"A"BA2 :|
+P:B Part
+|:"A"faaa aaae | ceef "G"=gfgf | "A"ecce aeaf |"E"efed "A"cA A2 |
+     faaa aaae | ceef "G"=gfgf | "A"bfae =gegf | "E"efed "A"cAA2:|
+
+X:36
+T:Stoney Point
+O:American fiddle
+R:reel
+M:C
+L:1/8
+C:Traditional
+K:G
+P:Part A
+((3DEF) |: "G"G2ge d2ed | B2ge dcBA | G2ge d2ed | BAGB "D"AGEF |
+"G"G2ge d2ed | B2ge dcBA | G2ge d2 ea | [1 "D"fgaf "G"g2((3DEF):| [2 "D"fgaf "G"gfed||
+P:Part B
+|: "Em"e2ee e2eg | "D"fgaf gfed | "Em"e2ee e2eg | "D"fgaf "G"g4:|
+P:Part C
+|: "G"gfga bgfe | "D"fefg afed | "G"gfga bgeg | "D"fgaf "G"g4:|
+
+X:37
+T:Squirrel Hunters
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:G
+ |:"Em"{d}e2-ed B2Bd | efed B2 BA | "G"GABc d2 dc | dAcA B^cd_e |
+"Em"e3d BABd | efed BcBA | "G"GABc dABd | "D"A6 {d}(e2 :|
+ |:"Em"e)deg a2ag | edef g2BA | "G"GABc d2 dB | dAcA B^cde |
+"Em"edeg abag | edef geBA | "G"GABc dABd |"D"A6 {d}(e2:|
+
+X:38
+T:Cattle in the Cane
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Amix
+P:A Part
+AB|: "A" ceef edcd | ecef ged=c | "G" BGB=c dedB |
+GBeB dBAG | "A"ceee efed | cAcd eafa |
+"G"(3f=gf ec (3B=cB AF |[1 "E"(3EFG AB "A"A2 AB :| [2 "E"(3EFG AB "A"A2E2 :|
+P:B Part
+K:A minor
+"Am" A2 A2 A,2 A,B, | CEDC A,G, (3A,CA, | "C" G,CA,B, CDEG | ABcd edcB |
+"Am" ce (3BcB ABAG | EGED CEDC | "C"ECEG EDCE | "E"DCB,C "Am" A,2 GA ||
+"Am" A A,3 A,2 A,B, | CEDC A,G, (3A,CA, | "C" G,CA,B, CDEG | ABcd edcB |
+"Am" cdea gbag | ege^d =dcAG | "C" EGcG BcAG | "E" EDCB, [A2E2A,2] [A2E2A,2] |]
+
+X:39
+T:Breakin' Up Christmas
+O:American fiddle
+R:reel
+M:C|
+L:1/8
+C:Traditional
+K:A
+|: "A"efed c2cc | BABA c2cc | efed c2cc | "E"BcBA "A"F2FF |
+   "A"efed c2cc | BABA c2cc | e2fe afed | "E"cABc "A"A2AA :|
+|: "A"E2FE A2AA | BABA c2cc | E2FE A2AA | "E"BcBA "A"F2FF |
+  "A"E2FE A2AA | BABA c2cc | e2fe afed | "E"cABc "A"A4  :|
+
+X:40
+T:Bonaparte Crossing the Rhine
+O:American fiddle
+R:reel
+M:C
+L:1/8
+C:Traditional
+K:D
+P:A Part
+FG|: "D"ABAF A2de| fefa d2dc| "G"BcdB "D"AFED| "A"E2EF E2FG|
+    "D"ABAF A2de| fefa d2dc| "G"BcdB "D"AF"A"EF |[1 "D"D2DE D2FG :|[2 "D"D2DE D2de ||
+P:B Part
+    "D"fefg a2aA| "G"BABc "D"d3A| "G"BcdB "D"AFDF| "A"E2EF E2FG|
+    "D"ABAF A2de| fefa d2dc| "G"BcdB "D"AF"A"EF|[1 "D"D2DE D2de :|[2 D2DE D2 |]
+
+X:41
+T:Goodbye Liza Jane
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:A
+P:A Part
+|: EE F2 G2 | "A"{G}[A2A2]AA "E"B2 BB | "A"cABc "D"d2[df][df] |"A"{c}A2 A2 AAAA |
+"E"{=G}^G2 [E2B2] F2 G2 | "A"{G}[A2A2]AA "E"B2 BB | "A"cABc d2 "D"[df][df] | "A"efed "E"cABc | "A"A2 :|
+P:B Part
+|: "A"{G}[AA]A AAAA | [A2e2] [Ae][Ae] "D"[A2f2][A2e2] | {=c}"A"^c2e2 [ec]eee | [A2e2] [Ae][Ae] "D"B2 =c2 |
+"A"[e2c2][ec][ec] [ec][ec][ec][ec] | [A2e2][Ae][Ae]"D"[A2f2][A2e2] | "A"{=c}^c2 e2 eeAB | cBAc "E"BAGB |  "A"A2 :|
+
+X:42
+T:Back Up and Push
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:C
+P:A Part
+e dc |: "F"d2 ([A2F] [AF])e dc | "C"[c2e] ([c2G][cG]) GA_B | "G"[=B2G] [g3  B]gag | "C"([e2c][e3c])edc |
+"F"d2 ([A2F] [AF])edc | "C"c2 (G2  G)G A_B | "G"[=B2G][g3B]ged |[1 "C"([c4E] [cE])edc :|[2 "C"([c4E] [cE])cde ||
+P:B Part
+"F"f3g fdc2 | A4f4 | "C"e3f edc2 | G4 c3e | "G"e2d2 B2G2 | F2G2 B2d2 | "C"[c4E][B4E] | "C7"[_B2E]c2 d2e2 |
+"F"f3g fdc2  | A4 f4 | "C"e3f edc2 | G4 c3e | "G"e2d2 B2G2 | e2d2 B2G2 | "C"[c4E]- [cE]CDE ||
+[P:C Part  (shuffle)]"F"F/F/c/F/ F/d/F/F/ c/F/F/d/ F/F/c/F/ | "C"E/E/c/E/ E/d/E/E/ c/E/E/d/ E/E/c/E/ |
+"G"B/B/g/B/ B/a/B/B/ g/B/B/a/ B/B/g/B/ |[1 "C"c/c/g/c/ c/a/c/c/ b/c/c/a/ c/c/g/c/ :|[2 "C"[E2c][E2c][E2c]"to beginning"||
+
+X:43
+T:Tennessee Wagoner
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:C
+gf |: "C"ec2B c2cB | cdef g2BA | "G"G2GA BAGF | GABc d2gf |
+"C"ec2B c2cB | cdef g2ef | "G"gfga gfed |[1 "C"ec2B c2gf :|[2 "C"ec2B c4||
+|: "C"C3,D E2G2 | cBcd cAGE | "G"[B,2D]B,B, [G,2D]G,G, | DEGA BAGE |
+"C"C3,D E2G2 | cBcd edef | "G"gfga gfed | "C"ec2B c2c2 :|
+
+X:44
+T:Duck River
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+P:Part A
+xA,B, | "D"D2 DD EDDD|F2 A2 A2 Ad|"G"B2 Ad B2 AG |"D"F2 FF "A"EDB,A,|
+"D"A,B,DD EDDD|F2 A2 A2 Ad|"G"B2 Ad B2 AG|"D"FD"A"EC "D"D2:|
+P:Part B
+"D"faaa a2 ag|fddd d2 dd|"G"b2 bb b2 ba|"A"geee e2 ee|
+"D"faaa a2 ag|fddd d2 AB|d2 AB d2 AG|"D"FD"A"EC "D"D2 D2:|
+
+X:45
+T:Camp Chase
+O:American fiddle
+R:reel
+M:2/4
+L:1/8
+C:Traditional
+K:A
+P:A part
+|:x(3EFG |"A"A2 cA BAcA | EFAc BAFA | E2 EF EDCD |
+[1"E"EFAB "A"A2:| [2 "E"EFAB "A"A2 cd ||[P:B part]"A"e2 fg a2 e2 | c2 af edcd |
+"E"e2 (3fga b2 e2 | d2 bg edcd |"A"ea2 ec2 a2 | agfe dcBA |
+"D"[F4d4] "A"[E4c4] | ABcA BAFA | E2 EF EDCD | "E"EFAB "A"A4 |]
+
+X:46
+T:Boston Boy
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:C
+P:A Part
+G,B, |: "C"CB,CD EFGE | "F"FEFG FED^F | "G"G^FGA BcdB  | "C"cdcA GFED |
+CB,CD EFGE | "F"FEFG FED^F | "G"G^FGA BcdB | [1 "C"c2 [Ec][Ed][E2c] G,B, :| [2 "C" c2 [Ec][Ed] [E2c][de]e ||
+P:B Part
+|:"C"eged cdef | gega gedc | "G"BcBA GABc |  "C"d([Ec][Ec])d [E2c] cd  |
+eged cdef | gega gedc | "G"BcBA GABc | [1 "C"d([Ec][Ec])d [E2c] cd :| [2 "C"c2[Ec][Ed] [E4c] |]
+
+X:47
+T:Georgia Boys
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Gmaj
+DG|:"G"B4 B3c | d2(B2 B2) G2 | B3d B3G | (3ABA G4 D2|
+B4 B3c | d2(B2 B2) GB | "D"ABAG FDEF | [1 "G"G6 GA:|[2 "G"G4 B2d2 ||
+|:"G"g4 g3e | d2B2 (3BcB G2 | g4 g3a | "Em"bag4 ef
+"G"g2b2 a3g | e2d4 (3BcB | "D" ABAG ADEF |[1 "G"G6 Bd:|[2 "G"G6 GA||
+
+X:48
+T:Goin' Up Caney
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Gmaj
+|:"G"G2 ed B2 ee | gfee BddB | G2 ed BddB | "D"cBAG "G"EGGG |
+G2 ed Bdef | gfed B2 dB | G2 ed BddB| [1 "D"cBAG "G"E2DE:|
+[2 "D"cBAG "G"BABd|:"Em"J[e2e2][e2e2][e2e2][e2e2]| "C"eged "G"Bdde | "Em"e2 ged2 BG|
+"G"ABAG EGGB | "Em"J[e2e] [ee]d [e2e] [ee]d | "C"eged "G"Bdde | [1 efge dc_B=B |
+"D"GBAG "G"EGBd:| [2 "G"efge dBGA | "D"BGAG "G"E2 [G,2G2] ||
+
+X:49
+T:The New Five Cents
+O:American fiddle
+R:reel
+M:4/4
+L:1/8
+C:Traditional
+K:Dmaj
+P:A
+FE|: "D" D2f2 f2d2 | "G" e2g2 BcdB | "D" A2d2 f2d2 | "A" ^deee A2FE |
+"D" D2f2 f2d2 | "G" eged BdcB |"D" A2GD "A"FDE2 |[1"D" D2DD DFEF:|[2 "D" D2DD DddB ||
+P:B
+|:"D" A2FF FddB | A2=F^F FddB | AEEF FD^GA | "A" EEEE EddB |
+"D" A2F2 Fdcd | "G" B2B2 dcBA | "A"ABcc Agfe |[1 "D"cddd dddB :|[2 "D"d2[d2F] [dF][dF][d2F] |]
+
+X:50
+T:Sally Growler's Hornpipe
+O:American fiddle
+R:hornpipe
+M:4/4
+L:1/8
+C:Traditional
+K:G
+|:de |"G"gbfa gdBG |"C"cBce "G"dBGD | "C"EGce "G"DGBd | "A"^cbag "D"d^def |
+"G"gbfa gdBG | "C"cBce "G"dBGD | "C"EGce "G"DGBd | "D"cAFD "G"G2:|
+|:ef |"G"gdBd GBdg | bgdg Bdgb | "D"afdf Adfa | c'afd ^cdef |
+"G"gdBd GBdg | bgdg Bdgb |"D" c'afd ^cdef |"G" g2 b2 g2:|

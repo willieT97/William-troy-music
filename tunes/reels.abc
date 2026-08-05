@@ -5,6 +5,7 @@
 X:27
 T:Drowsy Maggie
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Edorian
@@ -15,6 +16,7 @@ K:Edorian
 X:1
 T:Cooley's
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Edorian
@@ -26,6 +28,7 @@ K:Edorian
 X:182
 T:The Silver Spear
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -37,6 +40,7 @@ A|:FA (3AAA BAFA|dfed BddA|FA (3AAA BAFA|dfed (3BdB AG|
 X:64
 T:The Maid Behind The Bar
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -48,6 +52,7 @@ K:Dmajor
 X:8
 T:The Banshee
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Gmajor
@@ -59,6 +64,7 @@ K:Gmajor
 X:116
 T:The Wind That Shakes The Barley
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -70,6 +76,7 @@ A2AB AFED|B2BA BcdB|A2AB AFED|gfed BcdB|
 X:248
 T:Tam Lin
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dminor
@@ -81,6 +88,7 @@ K:Dminor
 X:73
 T:The Musical Priest
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Bminor
@@ -92,6 +100,7 @@ K:Bminor
 X:42
 T:The Gravel Walks
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Adorian
@@ -105,6 +114,7 @@ K:Adorian
 X:98
 T:The Sally Gardens
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Gmajor
@@ -116,6 +126,7 @@ K:Gmajor
 X:68
 T:The Mountain Road
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -127,6 +138,7 @@ F2 AF BFAF|F2 AF EFDE|F2 AF BFAF|G2 FG EFDE|
 X:103
 T:Saint Anne's
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -138,6 +150,7 @@ K:Dmajor
 X:74
 T:The Mason's Apron
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Amajor
@@ -155,6 +168,7 @@ K:Amajor
 X:197
 T:The Star Of Munster
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Adorian
@@ -166,6 +180,7 @@ K:Adorian
 X:20
 T:The Cup Of Tea
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Edorian
@@ -180,6 +195,7 @@ K:Edorian
 X:72
 T:The Merry Blacksmith
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -191,6 +207,7 @@ K:Dmajor
 X:208
 T:The Congress
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Adorian
@@ -202,6 +219,7 @@ K:Adorian
 X:113
 T:Toss The Feathers
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Edorian
@@ -212,6 +230,7 @@ K:Edorian
 X:2
 T:The Bucks Of Oranmore
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -229,6 +248,7 @@ A2FA A2dB|A2FA BEE2|A2FA A2Bd|egfd edBd|
 X:69
 T:The Morning Dew
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Edorian
@@ -242,6 +262,7 @@ K:Edorian
 X:118
 T:The Wise Maid
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Dmajor
@@ -253,6 +274,7 @@ K:Dmajor
 X:75
 T:Miss McLeod's
 R:reel
+O:Irish session
 M:4/4
 L:1/8
 K:Gmajor

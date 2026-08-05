@@ -1,0 +1,798 @@
+% Trad jazz & blues — melodies from The Public Domain Song Anthology
+% (David Berger & Chuck Israels), released CC0 / public domain. Converted
+% from the anthology's MusicXML lead sheets. All tunes are US public domain.
+
+X:1
+T:St. Louis Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:W. C. Handy
+K:G
+|:"G7" BdBG-"^D¨7" G4 |"C""^C7" z ^D EG"C7" _B2 AG- |"G" G8- |"G7" G6 z2 | "C""^C7" z E GA- A4 |
+ z ^D EG"C7" _B2 AG- |"G""^G""^Am7" G8- |"^Bm7" G6"^B¨º" z2 | "D7" FAFD- D4 |"^C7" z2 _BB B2 AG- |
+"G""^G" G8- |1"^A7" G4"^D7" z4 :|2 "G" (G4) z d dd |:[K:Gmin]"Gm" d d3- d4 |
+"Cm" z2 c^c d"C#dim" B3 |"D7" A8- | "D7" A6 cc |"^Am7€5" c c2 c- c4 |"^D7" z2 c^c d B3 |1
+"Gm" G8- |1 "Gm" G4 z2 dd :|2"Gm" G4"A7" A4 |"D7" d4 z2 B=B ||
+[K:G]"G""^G7" G2"^D7/A" ^AB"^G7" G2"^D7/A" AB | "G""^G7" G2"^D7/A" (^AB)"^G7" (G^A)"^D7/A"BG- |
+"^G""^Am7""^Bm7""^Am7" G8- |"G7""^G7""^F7" G4"^Em7" z2"^G7/D" (^AB) |"C""^C7" =A2 GE G2 A_B |
+"C" A2 (GE) (GA)_BG- |"G""^Am7" G8- |"^Bm7" G4"^B¨7" z2"G#dim" (^AB) |"D7""^Am7" d2 (^AB) DABC- |
+"D7""^D7" C(^AB)D- D(AB)G- |"G""^G""^B¨º" G8- |"^Am7" G4"^D7" z2 d2 ||"G7" d2 c2 _B2 GG |
+"C7" d2 c2 _B2 GG- |"G" G8- |"G7" G4 z2 GG |"C7" d2 cc _B G2 d- |  d2 c2 _B2 GG- |"G""^Am7" G8- |
+"^Bm7" G4"^B¨7" z2"G#dim" ^G2 |"D7" A2 F2 D D3 |
+"C7""^Known as the father of the blues, W.C. Handy was also an important publisher of music by other Black composers,and was instrumental in promoting female singers of the time like Bessie Smith. “St. Louis Blues” was so popular,Handy was able to convince RCA to produce a film of the same name starring Smith." z _B BB B2 AG- |
+"G" G8- | G8 |]
+
+X:2
+T:Memphis Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:W. C. Handy
+K:F
+"C7""^Gm7""^Verse" z c _cB-"^C7" B=c G2 |"^Gm7" z c _cB-"^C7" B=c G2 |"F" FA^GA- AG A2 |
+ FA^GA- AG"F#dim" A2 |"C7""^Gm7" z c _cB-"^C7" B=c =G2 |"C7""^Gm7" z c _cB-"^C7" B=c"Em7b5" G2 |
+"A""^A7" A"Dm/A"A"Adim"A"A7"A- A"Adim"A"A7" A2 |"A" A"Dm/A"A"Adim"A"A7"A- A"Adim"A"A7" A2 |
+"D7" DE^FD EFDE |  ^FDEF- FDEF |"G7" GA=BG ABGA | =BGAB- BGAB | "C7""^Gm7" z c _c_B-"^C7" B=c G2 |
+"^Gm7" z c _cB-"^C7" B=c G2 |"F" F4- F A2 =C |  F4- FC"F#dim"D^D |"C7" E c2 B- BcBG |
+"F" ^GAGA"Bb""^B¨7" F D3 | "F" F6 AC | F4"F7" z d ^de |:[K:Bb]"Bb""^Chorus" f2 ^cd- dBGF |
+"Bb" DFGB- B=c^cd | f2 ^cd- d2 B2 |"Bb7" _A4- Ad^cd | "Eb" f _f2 e- e3 B | ^cdcd B G3 |"Bb" B8 |
+ B4- B3 B |"F7" d _d2 c- c3 c |"Eb" ^c=dcd B G3 |1 "Bb""^B¨" B2"^Bº" df"^Cm7" (dB)"^F7"(GF) |
+"^B¨""^Eº" B4"^B¨/F" z d e=e :|2"Bb" B8 | z8 |]
+
+X:3
+T:Beale Street Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:W. C. Handy
+K:Bb
+|:"Bb" z2 B2 F2 ^F2 |"^E¨" (G^F)(G_A) G2 D=F- |"^B¨7" F8- | F6"Bb7" z2 | "Eb""^E¨7" z2 B2 ^F2 G2 |
+ B^FGB G2 EB- |"Bb" B8- |"Bb""^B¨7" B4 z D E=E | "Bb/F""^Cm7" F2 F6 |
+"F7""^F7" z F GA (3(G_AG) FB- |"Bb""^G7&5" B8-"F7" |1"Bb""^C7" B4"^F7" z4 :|2
+"Bb""^C7" z4"^F7" z d3 |: "Bb" dBGB- B"^E¨7" f3 |"^B¨" dBGB- B"^B¨7" B2 B |
+"Eb""^E¨7" B"^D¨7" B2"Bb/D" A-"F7/C""^C7" A-A"Bb"G-G |
+"Bb/F""^F/A" c"C7/G" c2"F7" c- c"F7#5""^A7" ^c3 |"Bb""^B¨7" dBGB-"Bb7" B f3 |
+"Eb" feGB-"C7/G""^Eº" B(B"Gb7"c)^c | "Bb/F" dB=c^c"F7""^C7" dB(=c^c) |1
+"Bb""^F7" dB"F7"(GF)"Bb" B d3"F7" :|2"Bb""^F7" dB"F7"GF"Bb" BB"Eb""^B¨7&5"BB |: [K:Eb]"Eb" B B7 |
+"Bb7""^B7" z (_G G)G G"^B¨7" F2 E- |"Eb7""^E¨" E8- | E4"^E¨7" z B BB | "Ab" B A7 |
+ z E FE"Ab7""^B7" _G2"^B¨7" FE- |"Eb""^A¨" E8- |"^E¨/G" E4"^G¨º" z B, C^C |
+"Bb/F""^B¨7/F" D B2 A"Fm" A3 z |1"Ebm/Bb""^B7" z _G2 G"Bb7" G"^B¨7" F2 E- |"Eb7""^E¨" E8- |
+"Eb7" E4 z B BB :|2
+"Ebm/Bb""^\"Beale Street Blues,\" by father of the blues, W. C. Handy, was a major hit. Royalty agreements like those of today were not common, but Handy managed to earn a reported  2,857 for a recording of the tune. Named after a famous center of black music in Memphis, Tennessee, it reference the same place James Baldwin names in his novel \"If Beale Street CouldTalk.\" To learn more about Handy, see the Further Reading section.""^B7" z _G GG"Bb7" G"^B¨7" F2 E- |
+"Eb""^E¨" E8- | E4 z4 |]
+
+X:4
+T:Aunt Hagar's Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:W. C. Handy
+K:F
+"F7""^Verse" z f fc _e c3 | z f fc _e c3 | z f fc _e c3 | A8 | "Bb""^B¨7" z ^c dF B D3 |
+"C7""^E¨9" z A"^A¨m7" B=B"^Gm7" =cG"^C7&5"^GA- |"F""^F""^B¨" A8 |"^Am7""^D7€9" z8 |
+"Bb""^Gm7" z ^c dF B D3 |"C7""^C7" z A B=B =cG^GA |"F""^F""^F7""^B¨""^B¨m" F8 |
+"F""^F""^C7""^F" z8 | "F7" c8 | _edc^G AF z2 | c8 | _edc^G AF z2 | "Bb7" z F F=G _A G3 |
+"^Bº" z F FG _A G3 |"F""^F/C" z ^G =AG"A7/E""^B¨m" AGAG |"D7""^Am7" AcA^F-"^D7" F4 |
+"G7" =F F2 F- F4 |"C7" z E DE DEDC |"F" F2 z2"^D7&9" F2 z2 |"G7" DE"C7"DC"F" F2"C7""^Chorus" C2 |
+"F""^F" F2"^F/E¨" A2"Bb""^B¨/D" B2"Bdim""^D¨7" =B2 |
+"F7""^Am7€5" cA"Bb""^D7€9"_B"Bdim"=B"C7""^Gm7" cG"^C7"^GA |"F""^F" F2"Db7""^E7" _A4"C7""^E¨7" =G2 |
+"F""^Dm7""^D¨7" F6"F7""^Cm7""^B7€5" F2 | "F""^B¨7" f2 f2"Ab7""^A¨7" (_e c3) |
+"Db""^D¨7" _d2 _A2"Gm7b5" _B"Db7b5" =B3 |"C""^Gm7" c8"Dm""D#dim""C/E" |
+"F""^C7" z4"F#dim""Gm" z2"C7" cc | "F" f2 f2"F7""^F7/A" _e c2 c |
+"Db""^B¨m7" _d2 _A2"^A¨m6" _B2"Db7" =B2 |"C""^Gm7" c2 c4"Db""^D¨7" _A2 |"C""^C7" G6"C7" =AG |
+"F" F2"F7""^E¨9" A2"Bb""^D7&5" B2"Db7""^D¨9" =B2 |"F""^F/C" c2 G^G"C7""^C7" AcA=G |
+"F""^B¨" F2"Db7""^Bº" _A4"C7""^C7" G2 |"F""^F" F6 z2 |]
+
+X:5
+T:Yellow Dog Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:W. C. Handy
+K:D
+"^Verse" d dd ||"D""^D7" d d3- d4 |"G""^G7" z (^A B)d"^A7" B(^EF)=A- |"D""^D""^E¨9" A8- |
+"D7""^D9" A4 z d dd | "G""^G7" d d3- d4 |"G" z (^A B)d B G3 |"D""^D""^G7" D8- |
+"^D" D4"^B7" z2 z ^A | "E7" B B2 B- B4 | z2 ^G2 F2 E2 |"A""^A""^E7/B" A8 |
+"^A/C#" z2"^F7" A2"E7""^E7" _A2"A7""^A7" G2 | "D""^D7""^Chorus" F6"D7" F2 |
+"G/D""^G/D" G4"Bb7/D""^B¨7/D" ^G4 |"D""^D" z A"^G7" Bd-"^D" d(B A2) |"D7" F4"^E¨7" =F"^D9" E3 |
+"G7" z D E=F- F2 E2 |"^G#º" z D E=F- F2 D2 |"D7""^D/A""^G" D8 |"^D/F#""^Fº" z8 |
+"A7""^Em7" A E2 E-"^B¨7€5" E4 |"^A7" z ^E FE F"^G7" D3 |"D""^D""^G7" D4"^D""^G7" z4 |"^D" z8 |]
+
+X:6
+T:Careless Love
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Traditional/W.C. Handy
+K:F
+"F" A3"^D¨7" F |"C7" E"^F#º" C"^C7" B, G |"F""^B¨7" F4- |"^Am7" F3"^Gm7" G |
+"F" (A3"Gm7""^B¨7" B) |"Am7" c c"D7" d c |"Gm7""^D¨7" G4- |"C7" G3 ^G | "F" A3"Cm7" B |
+"F7" c3"F7#5""^A7" ^c |"Bb" d/ d3/2- d/d/ B |"Bdim""^D¨7" F3 G | "F/C""^F" A3"^D¨7" F |
+"C7""^C7" E C E G |"F""^F""^F7""^B¨""^B¨m" F4- |"^F" F4 |]
+
+X:7
+T:Frankie And Johnny
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Leighton & Leighton/Shields
+K:C
+"C" CEGA-"G7#5" AG A2 |"C" C"^A¨7" C3-"^G7" C4 |"^C" z C EG"G7#5" AGEC- |
+"C""^Gm7" C6"C7""^G¨7€5" z C | "F" FGAc- cd A2 |"^F#º" c c3- c2 AB |
+"F""^C/G" c2 cc"F#dim""^F7" B2 AG- |"C/G""^Em7" G2 E2"A7" E _E2 D- | "D7""^A¨7€5" D8 |
+"G7" z A"^E¨7" AA"^D7" A"^G7&5" G3 |"C" C8-"C7/Bb""Adim""Fm6" |"C/G" C4"Ab7""G7" z4 |]
+
+X:8
+T:Make Me A Pallet On The Floor
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Traditional Blues
+K:G
+"C7" E G2 E | G G A ^A |"G" B4- |"G7""^Dm7" B3"^G7" z | "C7" E G2 E | G G A ^A |"G""^G""^G#º" B4- |
+"^Am7" B2"^D7" G G | "G" B2 B B |"B7" A2 B A |"C" G G2 E |"C#dim" G4 | "G/D" B"^Em7" B2 G |
+"D7""^Am7" D D"^D7" A F |"G" G4 | z4 |]
+
+X:9
+T:St. James Infirmary
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:American Folk Song
+K:F
+ DF ||"Dm" A3 A/A/"A7""^Em7€5" G"^A7" G2 A |"Dm" F D3- D4 |"^Bm7€5" A2 Ad-"Bb7" d2 BA- |
+"A7""^Em7€5" A6"^A7" DF | "Dm" A A2 A/A/"A7""^Em7€5" G3"^A7" A |"Dm" F D3-"^Bm7" D2 DF- |
+"Bb7" F2 FE-"A7" E2 ED- |"Dm" D6 DF | "Dm" A3 A/A/"A7""^Em7€5" G3"^A7" A |"Dm" F D3- D3 D |
+"^Bm7€5" A2 Ad-"Bb7" d2 BA- |"A7""^Em7€5" A6"^A7" DF | "Dm" A3 A"A7""^Em7€5" G3"^A7" A |
+"Dm" F D3-"^Bm7" D2 D/D/D/D/ |"Bb7" F3 D/F/"A7" E2 ED- |"Dm" D6 |]
+
+X:10
+T:Nobody Knows You
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Jimmie Cox
+K:F
+"^Verse" C2 ||"F" A2 AA"A7" G2 GG |"D7" ^F2 FD-"^A¨7€5" D4 |"Gm" dddc-"D7" c c2 c |
+"Gm" B2 BG-"^D¨7€5" G4 | "Bb" dd (3ddd"Bdim" e d3 |"F/C" cccA-"D7" A4 |"G7" AAAA- A4 |
+"G7b5""^Dm7" A"^D¨7" F2 G-"C7" G2 z C | "F" A2 AG-"A7" G2 GG |"D7" ^F2 FD-"^A¨7€5" D3 D |
+"Gm" dddd"D7" c3 c |"Gm" B2 BG-"^D¨7€5" G2"^B7€5" (3z FF | "Bb" dddd"Bdim" e2 dd |
+"F/C" cccA-"D7" A2 (3DAD |"G7" A A2 D AA- (3ADF |"G7b5""^Dm7" A"^D¨7" F2 G-"C7" G4 |
+"F""^Chorus" A4"A7" G3 A |"D7" ^F4 D4 |"Gm" z d2 d"D7" c2 c2 |"Gm" B8 | "Bb" z d2 d"Bdim" e d3 |
+"F/C" z c2 c"D7" c A3 |"G7" z A2 A A4 |"C7""^Gm7" z D AD"^C7" A G2 C | "F" A2 AA"A7" G G2 G |
+"D7" ^F2 FD- D4 |"Gm" z B2 B"D7" AAAA |"Gm" G A2 B- B4 | "Bb" z F dd"Bdim" e3 d |
+"F/C" c2 cA-"D7" A3 D |"G7" A2 FD AA- (3AFD |"C7""^G7" A2"^G¨7" AF-"F" F2 z2 |]
+
+X:11
+T:Ain't Nobody's Biz-ness
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Grainger & Robbins
+K:Bb
+"Bb""^Verse" d^cdB"D7" c=BcA |"Gm" _BABd"D7" A4 | "G7" z G A=B"Dm7" A2"G7" G2 |"Cm" c4"G7" d4 |
+"Cm" edec"G7" d^cd=B | "Cm/Eb""^E¨" =cdc_B"C/E""^Eº" G4 |"C7""^Cm/F" z c =Bc"^C7" dc_BG |
+"Gb6""^G¨7" B4"F7""^F7" A4 | "Bbdim""^B¨""^Chorus" ^c2"Bb" d4 d2 |"D7""^Am7€5" =c2 d2"^D7" c d3 |
+"Gm" c2 B4"Bb7/F" B2 |"Eb" B2 c2"Edim" B c3 | "Bb/F" B2 G2"Gm7""^D¨7" G2"Dbdim" G2 |
+"Cm7""^Cm7" G"F7" A3"^F7" G2 F2 |"Bb" B8 | z8 |]
+
+X:12
+T:A Good Man Is Hard To Find
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Eddie Green
+K:C
+ G^G ||"A7" A4- AE^DE | A4- AE^DE |"D7" A4- A=D^CD | "D7" A6 ^A2 |"G7" B2 =A2 G B2 G |
+ A G2 B- B2 G2 | "C" c^GA^F =G^DED | EGE=D C2 G"E7"^G | "A7" A4- AE^DE | A4- AE^DE |
+"D7" A4- A=D^CD | "D7" A4- A^G"^G7"AB |"C""^F" c2 c2"D#dim""^F#º" B2 A2 |
+"C/E""^C/G" G2"Ab7/Eb" ^G2"Dm7""^A7" A2"G7" =G2 | "C""^D7" cAGE"Fm" E"C" C3 |
+"C""^E7" cAGE"Fm" (D"C" C3) |"^A7" cCD^D E c3 | "F#dim""^D7" ^D"C" E2 C- C2"C/E" G"Ab7/Eb"^G |
+"D7" A2 B2 A2 B2 |"G7" A2 B2 A2 G2 | "C" c8- | c4 z2 |]
+
+X:13
+T:Dallas Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Wand/Garrett
+K:Bb
+"Bb/F" F2"Gdim" _F2"F7/A" E2 |:"Bb" D =F2"^Gm7" d2 F2 _F |"F7""^Cm7" E2 =F2"^F7" c d2 B- |
+"Bb""^B¨""^Dm7€5" B4-"^E¨" Bc"^Eº"BA |"Bb7""^Fm7" _A4-"^B¨7" ABAF |"Eb""^E¨" ^F G2 B- B2 Bc |
+"Eb7""^Eº" _d c2 B- B2 G2 |"Bb""^B¨" B4-"^A7" B^C"^A¨7"=DF |"^Gm7" B6"^Bº" d^c |
+"F7""^C7" d =c2 F- F2 d^c |"^F7" d=cAF c d2 B- |"Bb""^B¨""^D¨º" B4-"F7""^Cm7" Bd"^F7"^cd |1
+"Bb" B2"Bb/F" F2"Gdim" _F2"F7/A" E2 :|2"Bb" B4 z4 |]
+
+X:14
+T:Tishomingo Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Spencer Williams
+K:G
+ d2 ||"G" dBBB"G7""^G7&5" B A3 |"C""^C7" z G GG G E3 |"G" D8- |"G7" D6 z2 |
+"C""^C7" z G AG"C7" _B A3 |"Eb7""^E¨7" z G AG _B A3 |"G" G8- | G6"G#dim" z2 || "D7" FAFE D2 E2 |
+ F A2 A- A2"D+""^A¨7" ^A2 |"G""^G" BdB=A"^C7" G2"D" A2 |
+"G""^G" B"^C7" d2"^Bm7" d- d2"Bbdim""^B¨º" z2 | "D""^D7/A" F A2 A-"^F#m7""^F7" A4"Dm/F" |
+"A7""^Em7" G A2 A-"^E¨7" A4"Eb7" |"D""^Bm7" dD^DE"^B¨º" FA"A7"FE |"D""^Am7" =D2 z2"^A¨7" z2 d2 ||
+"G" dBBB"G7""^B7" B A3 |"C""^C" z G GG"^C#º" G E3 |"G""^G/D""^A¨7" D8- |"G7""^G7" D6 z2 |
+"C""^C7" z G AG A G3 | z G AG A"C7" ^A3 |"B7""^F#m7€5" B8 |"^F7" z4 z2 GA || "G" B6 B2 |
+"B7" A4 A4 |"Em" G2 G2 G A3 |"Eb7" _B6 z2 | "G/D""^G/D" z d dd"^G#º" d =B3 |
+"D7""^Am7" z d dd"^D7" d A3 |"A7""^A7" ^ABAB"D7""^Am7" d"^A¨7" B3 |"G""^G" G4 z2 |]
+
+X:15
+T:Wabash Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/4
+C:Meinken/Ringle
+K:Eb
+"Bb7""^Fm7" B4- |"^B¨7" B F A/ G3/2 |"Eb""^E¨""^D7" E4- |"^D¨7" E3"Edim""^C7" G | "Bb7""^Fm7" B4- |
+"^B¨7" B F A/ G3/2 |"Eb""^E¨""^D¨7" E4- |"^B¨m7" E3"Eb7""^E¨7" e | "Ab""^A¨7" e4- | e f e/ c3/2 |
+"Eb""^D¨7" B4- |"^C7" B3 B | "B7""^F#m7" _c4- |"^B7" c _G A =A |"Bb7""^Fm7" B4- |"^B¨7" B3 z |
+"Bb7""^Fm7" B4- |"^B¨7" B F A/ G3/2 |"Eb""^E¨""^D7" E4- |"^D¨7" E3"Edim""^C7" z | "Bb7""^Fm7" B4- |
+"^B¨7" B F A/ G3/2 |"Eb""^E¨""^D¨7" E4- |"^B¨m7" E2"^E¨7" z"Eb7" e | "Ab" e4- |"^Aº" e f e/ c3/2 |
+"Eb""^E¨/B¨""^Bº" B4- |"^Cm7" B3"Edim""^Eº" G | "Bb7""^Fm7" B4- |"^B¨7" B F A/ G3/2 |"Eb" E4- |
+ E3 z |]
+
+X:16
+T:Wang Wang Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Mueller, Johnson, Busse/Wood
+K:F
+|:"F""^Dm7" A8 |"C7""^Gm7""^C7" G8 |"F""^F""^Dm7" F8- |"^Gm7" FCDE"^C7" FGAB | "F""^F""^Dm7" c8 |
+"C7""^Gm7""^C7" B8 |"F""^F""^F#º" A8 |"^Gm7" z C"^C7" DE"^Bm7€5" FG"^B¨m"AB | "F""^Am7" c8 |
+"Abdim""^A¨m7" _c4"C7/G""^Gm7" B4 |"F""^Fmaj7" A2"Gm7""^Gm7" B2"G#dim""^G#m7" =B2"F/A""^Am7" =c2 |
+"Bb""^B¨maj7" d2"Am7""^Am7" c2"Abdim""^A¨m7" =B2"Gm7""^Gm7" _B2 | "G7""^Dm7""^G7" A8 |1
+"Db7""^A¨m7""^D¨7" _A8 |"C7""^Gm7""^D¨7" G8 |"^Gm7""^C7" z8 :|2
+"C7""_This tune was given its unusual title in the hopes of boosting sales. As Al Rose recounts in “I Remember Jazz,” Gussie Miller chose the title because of the public interest in orientalism and all the things the blues in 1920. The song was indeed a hit and more than 350 recordings have been made.""^D¨7""^C7" G8 |
+"F" F8 | z8 |]
+
+X:17
+T:Sugar Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Williams/Fletcher
+K:C
+"C" c A2 G-"^D¨7" G4 |"C7""^C7" cc_BA G A2 G |"G7" =B A2 G- G3 A |"G7" B2 AD G A2 ^A |
+ B B2 d- d2 BG |"Dm7" A B2 A-"G7" A2 GA |"C7" c2 _B2"^D¨7" G2 _E2 |"^C7" =EGEC-"^F#º" C4 |
+"C7""^C7" c2 _BA G A2 G |"C7" c _B2 G- G2 EE |"^Gm7" D2 E2"^C7" D C3 |"F" A6"A7""Dm" DD |
+"F" DDDA-"F#dim" A2 AB |"C/G" c2"E7" B2"A7" A2 G2 |"D7" ^GAGA"G7" A =G3 |
+"C" c2"E7" B2"A7" A E2 G | "D7" ^GAGA"G7" A =G3 |"C" c8 |]
+
+X:18
+T:The Jazz Me Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Tom Delaney
+K:Eb
+"Eb" G^FGB"^Fm7/B¨" cBGE |"^E¨" G"^Fm7" A2 B-"^Gm7" B2"^A¨7" B,2 |"^G7" G^FGA"^C7" B=AB=B |
+"F7" c =F2 F-"Bb7" F2 _B,B, |"Eb" G^FGB"^Fm7/B¨" cB(GE) |"^E¨" G"^D¨7" A2 B-"^C7" B2 cd |
+"G+""^F7" e=B"Ab"cB"Eb""^Cm7" _BGFE |"F7""^B7" F"^B¨7" G2"Bb7" E-"Eb""^E¨" E2 _B,2 ||
+"Eb" (G^F)GB"^Fm7/B¨" cBGE | "Eb""^E¨" G"^Fm7" A2 B-"^Gm7" B2"^A¨7" z2 |"^G7" G^FGA"^C7" B=AB=B |
+"F7" c =F2 F-"Bb7" F2 _B,2 | "Eb" G^FGB"^Fm7/B¨" cBGE |"^E¨" G"^D¨7" A2 B-"^C7" B2 cd |
+"G+""^F7" e=B"Ab"cB"Eb""^Cm7" _BGFE | "F7""^B7" F"^B¨7" G2"Bb7" E-"Eb""^E¨" E2 z2 ||
+"Bb7""^Fm7" B B2 B-"^B¨7" BF B2 |"Bbdim""^Gm7€5" B B2 B-"^C7€9" BG B2 |
+"Bb7""^F7" d2"Bbm7""^E¨7/G" _d2"F7/A""^A¨7" c2"^B7" F2 |"Bb""^B¨7" B4"G7""^G7" =B4 ||
+"C7" c3 G- G4 |"C7" z =B cB cB(cB) | "F7" c3 G- G4 | c3 G- G2 F2 |"Bb7""^Fm7" BBcF"^B¨7" BB(cF) |
+"Bb7""^Fm7" B c2 B-"^B¨7" BBcd |"Eb""^E¨" e2 cB"^Eº" cB G2 |
+"F7""^Fm7" F"^E¨" G2 B-"Bb7""^D7&5" B=A"^D¨7"B=B || "C7" c3 G- G4 | z =B cB cBcB |"F7" c3 G- G4 |
+ c3 G- G2 z2 |"Eb""^E¨/B¨" z G GG G4 |"Eb""^Bº" z G GG G4 | "F7""^Cm7" GFGF GFGF |
+"C7/E""^D¨7" B B2 B-"^C7" B=AB=B |"F7""^F7" c2 c2"Cm/G""^C7&5" c2"F7/A" c2 |
+"Bb7""^F7" c d2 c-"^B¨7&5" c2 B2 |"Eb""^E¨" e8- | e4 z4 |]
+
+X:19
+T:Tin Roof Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Mares, Rappolo, Pollack, Stitzel, Brunies/Melrose
+K:Bb
+ =E2 |:"Bb" F_F_ED"^A¨7" (=F_F)(ED) |"^Gm7" =F2 B,D-"^G¨7&5" D4 |
+"^B¨/F" F_F"^E"ED"^E¨6" (=F_F)"^E¨m6"(ED) | "Bb7""^Fm7" =F2 B,D-"^E7" D4 |
+"Eb""^E¨" BA_AG"^D¨7" (B=A)(_AG) |"^Cm7" B2 EG-"^F7&5" G4 | "Bb" F_F(ED)"^A¨7" =F_F(ED) |
+"G7""^Dm7€5" =F2 B,G-"^D¨7" G2 (GG-) |"C7""^C7" G8- | "F7""^Cm7" FFGB"^F7" _d2 cB- |1
+"Bb""^B¨""^G7&5" B8 |"^C7" z4"^F7" z2 =E2 :|2"Bb" (B8 || z8) |]
+
+X:20
+T:Farewell Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/4
+C:Mares, Rappolo & Schoebel
+K:G
+"G" d4 | e d"Edim""^E¨7" _d"D7" c |"G" B4- | B3 z | "G" d4 | e d"Edim""^E¨7" _d"D7" c |"G" B4- |
+ B3 z | "E7" d4 | d4 |"Am" e4 |"Eb7" g4 | "G7" d4 | e d"Edim""^E¨7" _d"D7" c |"G" B4- |
+ B3!fine! z | "G7" =F4 | =F E D/^F/ E | D4 | z4 | "G7" =F4 | =F E D/F/ E | D4 | z4 | "E7" E4 | B4 |
+"Am" A4 |"Eb7" G4 | "G7" =F4 | =F E (D/F/) E |"G" D4"G#dim" |"D7"!D.C.! z4 |]
+
+X:21
+T:Buddy Bolden's Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Jelly Roll Morton
+K:Eb
+ G ||"Eb" B B3"F#dim" =A2"Bb7/F" _AA |"Eb" G G2 F-"Eb9" F3"^E¨7&5" E |"Ab6" F E2 E"Adim" _G E3 |
+"Eb/Bb" =G^FGE-"Eb7" E3"^A7€5" E |"Ab6" (3=FFE- EE"Adim" _G E3 |"Eb/Bb" =G^F"^D¨7€5"GB-"C7" B3 D |
+"Bb" =F"Gb7" ^F3"C7" G2"F7" =AB- |"Bb7""^Fm7" B6"^B¨7" z G ||"Eb" B B2 =A-"Gbdim" A2"Bb7/F" _AA |
+"Eb" G G2 F-"Eb9" F4 |"Ab6" FFFE"Adim" (3_GGF EE |"Eb/Bb" =G2 GE-"Eb7""^A7€5" E4 |
+"Ab6" FFFE"Adim" (3_GGF EE |"Eb/Bb" =G2"^D¨7€5" GB-"C7" B2 G2 | "F7" E C3"Bb7" _GF/E/"^A¨7" FE |
+"Eb" E6 z |]
+
+X:22
+T:Singin' The Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Robinson & Conrad/Lewis & Young
+K:Eb
+ e2 e2 e2 ||"Fm7" ecec- c4- |"Bb7" c2 ec B^FGc- |"Eb""^Fm7" c8- |"^Gm7" c2 c2"^G¨º" c2 c2 |
+"Fm7" cAcA- A4- |"Bb7" A2 c^c dcBG- |"Eb""^A¨m" G8- |"^E¨" G2 G2 ^F2 G2 | "G7" d4 =B =A3 |
+"^Dm7" G4"^A¨7" _G"^G7" F3 |"C7" =E=GBd- d4- | d2 c2 =B c3 | "F7" e4 ^F G3 |"^Cm7" d4"^B7€5" =F4 |
+"Bb7""^B¨7""^A¨7" B8- |"^Gm7" B6"^G¨º" e2 | "Fm7" ecec- c4- |"Bb7" c2 ec B^FGc- |"Eb""^A¨7" c8- |
+"^E¨" c2 c2 =B2 c2 | "C7""^Gm7€5" _d_BG=E-"^C7" E4- |"^Gm7€5" E2 _d2"^C7" c2 G2 |
+"Fm""^Fm" F4-"^C7" FGAG |"^Fm" F2 F2 =E2 F2 | "Ab" _e2 z2 z2 e2 |"Adim" e2 z2 z2 e2 |
+"Eb/Bb" e2 c^F GBcB |"C7""^Gm7€5" _d2 cB-"^C7€9" B4 | "F7" =AcAF- F4- |
+"Bb7""^Fm7" F2 ec"^B¨7" dcBe- |"Eb" e8 | z2 |]
+
+X:23
+T:When The Saints
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Spiritual
+K:F
+ F A B ||"F""^C7&5" c4- |"^F" c F A B |"^F""^C7&5" c4- |"^F" c F A B | "F" c2"^E¨7" A2 |
+"G7""^Dm7" F2"^G7" A2 |"C7""^Gm7""^D¨7" G4- |"^C7" G A A G | "F" F3 F |"F7""^F7/E¨" A2 c c |
+"Bb""^B¨/D" c B3- |"Bbm""^B¨m/D¨" B2 A B | "F""^F/C" c2"Dm7""^D7" A2 |"G7""^G7" F2"C7""^C7" G2 |
+"F""^F" F4 | z |]
+
+X:24
+T:Down By The Riverside
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Spiritual
+K:G
+"^D7" B/^A/ ||"G" B"^Em7" D2 E |"^Am7" G/ G B/-"^D7" B z |"^G" z B B3/2 ^A/ |"^Em7" B/ =A G/- G2 |
+"D7""^Am7" z A A3/2 ^G/ |"^D7" A/ =G F/- F2 |"G""^G" z B"^Em7" B3/2 ^A/ |
+"^Am7" B/ =A G/-"^D7sus4" G B/^A/ | "G" B"^Em7" D2 E |"^Am7" G/ G B/-"^D7" B z |
+"^G" z B"^F7" B3/2 ^A/ |"^Em7" B/ =A G/-"^E¨7" G2 | "D7""^Am7" A A2 c |"^D7" B2 A2 |"G""^G" G4 |
+"G7""^Dm7" z G"^G7" A B/B/ | "C""^C7" c/ c c/- c c | c c"^C#º" G A/A/ |"G""^G" B/ B B/-"^F7" B A |
+"^Em7" G G"^E¨7" G G/G/ | "D7""^Am7" A/ A3/2- A2 |"G/D""^D7" G2"D7" A2 |"G""^G""^C#m7€5" B4 |
+"G7""^Dm7" z G"^G7" A B/B/ | "C""^C7" c/ c c/- c c | c c"^C#º" G A/A/ |"G""^G" B/ B B/-"^F7" B A |
+"^Em7" G"G7" G"^E¨7" G G |
+"D7""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section.""^Am7" A2 c2 |
+"G/D""^D7" B2"D7" A2 |"G" G4- | G2 z2 |]
+
+X:25
+T:Just A Closer Walk With Thee
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Spiritual
+K:Bb
+"Bb" F3"^D7" ^F"^E¨7" GD"^Dm7"=F"Dbdim""^D¨m7"_F |"Cm7" E8"F7" |
+"^Cm7" c3"^G¨7" B"^F7" A"^B7"F"^E¨7"GB |"Bb""^B¨" (G"^B7" F3-"^B¨""^A¨7" F4) |
+"Bb""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section.""^Gm7" d3"^G¨º" d"Bb7""^Fm7" dB"^E9"cd |
+"Eb""^E¨" (c"^E¨m" B3-"Edim" B2)"^C#º" BG |"Bb/F""^Dm7" F2"^Gm7" F2"F7""^Cm7" F2"^F7" GA |
+"Bb""^B¨" B8 |]
+
+X:26
+T:Oh, Didn't He Ramble
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:W. C. Handy
+K:G
+|:"G" (D3 E)"^C7" G4 |"^G" (B3 A/B/) G3 G |"^A7" BBBG"D7""^D7" A4 |
+"G""^A7" BBBG"D7""^D7" AD (3DEB, |"G""^G" (D3 E)"^C7" G4 |"^G" (B3 A/B/)"^Cm" G3 B |
+"G""^Bm7" dd"^Em7"BG"Am7""^A7" EG"D7""^D7"AB |1"G""^G""^Cm" G4"D7""^G" z D (3DEB, :|2"G" G4 z4 |]
+
+X:27
+T:(The Original) Second Line
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:New Orleans March
+K:Bb
+|:"Bb" B, D F z | B, D/F/ z/ F/ F/F/ | B, D F z | B, D/F/ z/ F/ F/F/ | "Eb7" E G B z |
+ E G/B/ z/ B/ B/B/ |"Bb" B, D F z | B, D/F/ z F/F/ | "F7" F F/F/ F F/F/ | F/ E3/2 D C |
+"Bb" B, z/ ^C/ D/F/ G |1 B z z/ F/ F/F/ :|2  B z z/"^Send-off" F/ G ||"Bb" B z B z | z B B z |
+ B B B B | z B B z | "Eb7" sB sB sB sB |[I:repeat 1 1] z4 |"Bb" sB sB sB sB |[I:repeat 1 1] z4 |
+"F7" sB sB sB sB |[I:repeat 1 1] z4 |"Bb" sB sB sB sB |[I:repeat 1 1] z4 |]
+
+X:28
+T:High Society
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Porter Steele
+K:C
+ G2 ||"C" E4- | E2"G7#5" G2 |"C" c4- | c2"G7#5" G2 | "C" E3 ^D | E2"F7" A2 |"C" G4 |
+ z2 z"C#dim" E | "G7/D""^Dm7""^G7" F4- |"^Dm7" F2"D#dim""^D#º" ^F2 |"C/E""^Em7""^B¨7" G4- |
+"^Am7" G2"Am7" c c | "D7""^E¨7" A3 A |"^D7" A2 d2 |"Dm7""^Dm7""^A¨7" d4 |"G7" z2"G7#5" G2 |
+"C" E4- | E2"G7#5" G2 |"C" c4- | c2"G7#5" G2 | "C" E3 ^D | E2"F7" A2 |"C" G4 | z2"C7" G G |
+"F" A3 A |"F#dim" B2 c2 |"C/G" e4"E7/G#" |"A7" z2 G ^G | "D7" A2 A2 |"G7" B2 e2 |"C" c4- | c2 |]
+
+X:29
+T:That's A Plenty
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Lew Pollack
+K:Dmin
+|:"Dm" d2 ^c2 d2 c2 | d2 ^cd- dc=c_c |"^E¨7" B2 A2 B2 A2 | B2 AB- BAGF |
+"A7""^Em7€5" E2 BA-"^A7€5" A4 |"^B¨7€5" E2 BA-"^E¨7€5" A4 |1"Dm" D^CDE"^Bm7€5" FE"^B¨7"D^D |
+"A7""^Em7€5" E^DEA-"^E¨7€5" A4 :|2 "A7""^Em7€5" A^GAB"^A7" A=GFE |"Dm""^Dm" D8 ||
+"C7""^D¨7" B2 G2 B2 G2 |"^Gm7" B2 GB-"^C7" B2 c2 | "F""^Dm" A2 F2"^DmŒ„Š7" A2 F2 |
+"^Dm7" A2 FA-"^Dm6" A2"F#dim" A2 |"C7""^Gm7" B2 G2 B2 G2 |"^D¨7" B2 GB-"^C7" Bcde |
+"F""^F" fAB=B"^Dm7" cFG^G |"^G7" AFD_D"^C7" C2 =D2 ||"C7""^D¨7" B2 G2 B2 G2 |
+"^Gm7" B2 GB-"^C7" B2 c2 | "F""^Dm" A2 F2"^DmŒ„Š7" A2 F2 |"F7""^Dm7" A2 FA-"^Dm6" A2"^F#º" A2 |
+"Bb""^Gm7" f4"Bdim""^G#º" d4 |"F/C""^Am7" c4"D7""^A¨7" d4 | "Gm7" c=Bcd"C7" c_BAG |"F" F2 z2 z4 |]
+
+X:30
+T:Tiger Rag
+O:Trad jazz
+R:rag
+M:2/2
+L:1/4
+C:Edwards, Larocca, Ragas, Sbarbaro/DaCosta
+K:Bb
+"Bb" z B2 B | B2 d"^B7" z |"^B¨" z B2 B | B2 d"^B7" z | "Bb" z B2 B | B2"^Bº" d z |
+"F7""^F7" z A2 A | A2 F"^Bº" z | "F7" z A2 A | A2 c"^Bº" z |"^F7" z A2 A | A2 c"^Bº" z |
+"F7" z A2 A | A2 c"^B7" z |"Bb" B"^Break" D E =E | F/F/ ^F G A | "Bb" z B2 B | B2 d"^B7" z |
+"^B¨" z B2 B | B2 d"^B7" z | "Bb""^B¨7" B4- |"Bb7""^Fm7" B B/c/-"^B¨7&5" c/B/ c |"Eb""^E¨" B4 |
+"^E7" z4 | "Eb7" z _d2 d |"Edim" _d2 B z |"Bb/F" z =d2 d |"G7" d2 =B z | "C7" z d c _B |
+"F7" c/ d f/-"^Cm7" f"^B7" _d |"Bb""^B¨" B4 | z4 |]
+
+X:31
+T:Livery Stable Blues
+O:Trad jazz
+R:blues
+M:4/4
+L:1/8
+C:Lopez & Nunez/Lee
+K:Eb
+"Eb" z e dc B^F G2 | z e dc B^F G2 | z e dc B^FGG | "Eb""^E¨7" E D2 _D-"Eb7" D2 z2 |
+"Ab7" z C EF _GF E2 |"^Aº" z C EF"Adim" _G F2 E- | "Eb/Bb""^E¨/B¨" E2 =G^F"^Bº" G =F2 =E- |
+"C7" E2 c=B c_B G2 |"F7" G _G2 F- F2 z2 | "Bb7" z ^F =GF GBG=F |"Eb" E8 | z8 |]
+
+X:32
+T:At The Jazz Band Ball
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:La Rocca & Shields
+K:Bb
+ (3FGA |:"Bb" B B2 G"^Cm7" B B2 G |"^C#º" B B2 B"^B¨/D" d2"^A¨7€5" (3DE^F |
+"Gm" G G2 D"^Gm/F" G G2 D |"^Em7€5" G"^E¨7" G2 B-"^D7&5" B2"Bdim" z2 |
+"F7""^Cm7" z F G^G"^F7" A =G2 F |"Bb""^B¨" (3BBA"Edim" (3GGF"Bb/F""^Bº" G2"F#dim" F2 |
+"C7" =E2 G2"^G¨7" d _d3 |"F7""^Cm7" c2 z2"^B7€5" z2 (3FGA | "Bb" B B2 G"^Cm7" B B2 G |
+"^C#º" B B2 B"^B¨/D" d2"^A¨7€5" (3DE^F |"Gm" G G2 D"^Gm/F" G G2 D |
+"^Em7€5" G"^E¨7" G2 B-"^D7&5" B2"Bdim" z2 | "C7" z c2 d cB G2 | z c2 d cB G2 |1
+"C7/G""^Am7" c2 c2"Gb7b5""^A¨7" c2 c2 |"F7""^Gm7" c2"^G¨7€5" z2"^Cm7" z2"^B7€5" (3FGA :|2
+"F7""^Cm7" z2 f2"^F7" d2 c2 |"Bb" B2 z2 z2"^A¨7" (3BA_A |:"G7" G2 =B2 d B3 | G6 (3G_GF |
+"C7" =E2 =G2 B G3 | d6 z2 |"F7" cdcc- cAcA | dcAF- F2 z2 | "Bb" F^FG^G A_A=G_G |1
+"Bb" =F2 B2"A7" =A2"Ab7" _A2 :|2"Bb" F2"F7""^B7€5" F2"Bb" B2 x2 |]
+
+X:33
+T:Bugle Call Rag
+O:Trad jazz
+R:rag
+M:4/4
+L:1/8
+C:Petis, Meyers, Schoebel
+K:Bb
+ FF ||"Bb""^(Break)" BFBd B2 BB | dBdf d2 Bd | f2 d2 B A2 _A | z2"Bb7" b6 | "Eb7" b2 z2 z4 |
+ z2 b6 |"Bb" b2 z2"^E¨7" z4 |"^Dm7" z2"Dbdim" b6 | "Cm7" b2 z2 z4 |"Cm7/F" z2 b6- |
+"Bb" b2 g2"^D¨º" b g2 b |"Bb7""^Cm7" z2 BB"^B7€5" _dB d2 |: "Eb7" _d c2 c- c4 | z2 BB _dB c2 |
+"Bb" c B2 B-"^A+" B4 |"^Dm7€5/A¨" z2 BB"^G7" _dB d2 | "F7""^Cm7" _d c2 c- c4 |"^F7" z2 BB _dB c2 |
+"Bb" c B2 B-"^G¨7" B4 |1"Bb7""^Fm7" z2 BB"^E7" _dB d2 :|2"Bb" z8 |]
+
+X:34
+T:12Th Street Rag
+O:Trad jazz
+R:rag
+M:4/4
+L:1/8
+C:Euday L. Bowman
+K:Eb
+"Bb7" B=ABc B2 z2 | B=ABc B2 z2 | B B2 B"^F#7" c2"^B7" ^c2 |"^B¨7" d2 z2 z4 |
+"Eb" edce"^Fm7" dced |"^E¨/G" cedc"^G¨º" ed c2 |"^Fm7" edce"^B¨7" dced |
+"^Fm7" c2 z2"^B¨7""^Eº" z4 | "Bb9""^Fm7" edce"^B¨7" dced |"^Fm7" cedc"^B¨7" ed c2 |
+"Eb""^E¨" edce"^B¨7" dced |"^E¨" c2 z2 z4 |1 "Eb" edce"^Fm7" dced |"^E¨/G" cedc"^G¨º" ed c2 |
+"^Fm7" edce"^B¨7" dced |"^Fm7" c2 z2"^B¨7""^Bº" z4 | "C7" G3 F-"^F7" F4 |"^C7" d3 c-"^F7" c4 |
+"Bb7""^B¨7" B2"^Break" z2 z4 | z4 z B c2 :|2 "Eb" e2 z2 z e3 |"Eb7/G" _d2 z2 z d3 |
+"Ab" c2 z2 z c3 |"B7" =B2 z2 z4 || "Eb""^Gm7" z _B2 B"Cm7""^G¨7" cc e2 |"F7" g3 f-"Bb7" f4 |
+"Eb" e2 Bc z B G2 | E2 z2 z4 |]
+
+X:35
+T:Down Home Rag
+O:Trad jazz
+R:rag
+M:2/2
+L:1/8
+C:Wilbur Sweatman
+K:Eb
+|:"Eb" EFGE"Fm7""^D¨7" FGEF |"Eb/G""^Cm7" GEFG"Abm""^B7&5" EF G2 |
+"Eb""^B¨m7" EF"^Am7€5"GE"Fm7""^Dm7" FG"Eb/G""^G7&5"EF |
+"F7/A""^Cm7" GE"F7#5""^F7"G"Bb7""^B¨7"F- F4 | "Eb" EFGE"Fm7""^D¨7" FGEF |
+"Eb/G""^Cm7" GEFG"Abm""^B7&5" EF G2 |"Eb""^B¨m7" EF"^A¨maj7"GE"Fm7""^G7" FG"Eb""^Cm7"EF |
+"F7" GE"Bb7"F"Eb"E- E e2 c :| "Eb6" e4-"^Cm7" e c2 B |"^Fm7" cB"^E7"GE-"^E¨" E e2 c |
+"^E¨" e4-"^G¨7€5" e c2 B |"^Fm7" cBGF-"Bb7""^B¨7sus4" F e2 c | "Eb6" e4-"^A7&9" e c2 B |
+"^A¨maj7" cBGE-"^D¨7" E2"Abm" GF |"Eb/G""^E¨" EF"^A¨maj7"GE"Abm""^D¨7" FG"^Cm7"EF |
+"F7/A""^Fm7" GE"Bb7""^B¨7"F"Eb""^E¨"E- E2 z2 |]
+
+X:36
+T:Alexander's Ragtime Band
+O:Trad jazz
+R:rag
+M:4/4
+L:1/8
+C:Irving Berlin
+K:F
+ ^G AG ||"F" A4- A^GAG | A6 A^G |"C7""^G7" A2 =G2"^C7" E2 C2 |
+"F""^F""^Gm7" F4"F7""^G#º" z ^c"^F7/A" dc | "Bb" d4- d^cdc | d6 d^c | d2 B2 F2 B2 | d6"Bdim" AB |
+"F/C" ccdA c2 dA | ccdA c2"Bb" z2 |"F/A" F2 AC"^E¨7" F2 AC |"Dm7" FFAC"^A¨7" F2 z2 |
+"G7""^Dm7" G2 G4 A2 |"G7" =B2 G2 A2"^G#º" B2 |"C7""^Am7""^A¨7" c8 |"Gm7" _BA G2"C7" z ^G AG |
+"F" A4- A^GAG | A6 A^G |"C7""^G7" A2 =G2"^C7" E2 C2 |"F""^F""^Gm7" F4"F7""^G#º" z ^c"^F7/A" dc |
+"Bb" d4- d^cdc | d6 d^c | d2 B2 F2 B2 | d4"Bdim" z A B=B | "F7" c2 c2 c2 A2 |
+"^Cm7" G2 F2"^G¨7" A2"^F7" G2 |"Bb" F4 f4 |"Bdim" d2 f2- f=BcB | "F/C" c4-"^B¨" c=BcB |
+"D7""^Am7" c6"^A¨º" d^c |"Gm7" d2 =c2"C7" A2 G2 |"F" F4 z4 |]
+
+X:37
+T:Charleston
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Johnson/Mack
+K:Bb
+"Bb" F2 z F- F4 |"D7/A" ^F2 z F- F4 |"G7" G2 z G- G^F G2 | d2 z G- G4 | "C7" G2 z d- d4 |
+"F7" G2 z d-"^E¨º" d4 |"Gm7/D" G2 z B-"^D¨º" B4"Dbdim" |"F7" AcAG- GAG_G | "Bb" F2 z F- F4 |
+"D7/A" ^F2 z F- F4 |"G7" G2 z G- G^F G2 |"C9" d2 z d- d4 | "F/A""^F" z A AA- AG F2 |
+"A7""^Em7€5" z G GG-"^A7" GF =E2 |"D7" z A AA-"^D¨º" AG ^F2 |"F7" z A AA- AG"^B7€5" =F2 |
+"Bb" F2 z F- F4 |"D7/A" ^F2 z F- F4 |"G7" G2 z G- G^F G2 | d2 z G- G2 GG | "C7" G2 z d- d^c d2 |
+"F7" G2 z d- d4 |"Gm7/D" G2 z B-"^D¨º" B2"Dbdim" B2 |"F7" AcAG- G2 F2 | "Gm" B2 z B-"^G¨7" B4 |
+"Bb7""^Fm7" z2 c2-"^B¨7" cB c2 |"Eb" B2 z B-"^Eº" B4 |"F#7""^B¨/F" z2 Bc-"^F#7" cB"^E¨m" c2 |
+"Gm7/D" G2 z G- G4"Dbdim" |"F7""^Cm7" z F GA-"^F7" AG F2 |"Bb" B8"Bb7""Ebm6" |"Bb" z8 |]
+
+X:38
+T:Runnin' Wild
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Gibbs/Grey & Wood
+K:Bb
+ F F2 F- ||"Bb""^B¨""^B7" F8-"F7" |"Bb""^B¨" F4"^B7" F F2 F- |"Bb""^B¨""^B7" F8-"F7" |
+"Bb7""^B¨7" F4"^E7" B B2 B- | "Eb""^E¨7""^E7" B8-"Bb7" |"Eb""^E¨7" B4 B B2 F- |
+"Bb""^B¨""^B7" F8-"F7" |"Bb""^B¨" F4"^Bº" F F2 c- | "Cm7""^Cm7""^G¨7" c8-"F7" |
+"Cm7""^F7" c4"D7""^Am7€5" c"^D7" d2 B- |"Gm""^Gm""^GmŒ„Š7" B8-"Cm7" |
+"Gm""^Gm7" B4"Gm7""^D¨º" B c2 A- | "F/C" A4"^C7€9" A B2 G- |
+"C7""^G/B""^B¨m" G4"^Am7" G"^A¨7" c2 c- |"Cm7""^Gm7""^G¨7€5" c8- |"F7""^F7" c4"^B7€5" F F2 F- |
+"Bb""^B¨""^B7" F8-"F7" |"Bb""^B¨" F4"^B7" F F2 F- |"Bb""^B¨""^B7" F8-"F7" |
+"Bb7""^B¨7" F4"^E7" B B2 B- | "Eb""^E¨7""^E7" B8-"Bb7" |"Eb""^E¨7" B4 B c2 d- |
+"D""^Am7€5""^D7" d8"G""G#dim" |"D""^Dm7€5/G" z2 d2"G7" d2 d2 | "C9""^Cm7" d4"^G¨7" c4 |
+"F7""^F7" z2 d2"^E¨m" d c3 |"Bb""^Dm7""^A¨7" F8-"F7" |"Bb""^G7" F4"Bdim" F F2 F- |
+"Cm7""^Cm7" F8"F7" |"Gb7""^G¨7" c4"F7""^F7" d4 |"Bb""^B¨" B8 | z4 |]
+
+X:39
+T:Shim-me-sha-wabble
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Spencer Williams
+K:Eb
+"Eb" G B3-"Cm7""^Eº" B4 |"F7" F c3"Bb7" F B3 |"Eb" G B3-"Cm7""^Eº" B4 |"F7" F c3"Bb7" F B3 |
+"Eb" G B3-"^D¨7" B=A"Cm7""^Cm7"Bc |"Gm""^Gm7" d d2 d-"^C7" d4 |
+"D7""^Bm7€5" d2"^B¨7" d2"^Am7€5" d2"^A¨7" d2 |"Gm""^Gm" d"^G¨º" d2"D7/F#" d-"Bb7""^B¨7" d2 z2 |
+"Eb" G B3-"Cm7""^Eº" B4 |"F7" F c3"Bb7" F B3 |"Eb" G B3-"Cm7""^Eº" B4 |"F7" F c3"Bb7" F B3 |
+"Eb" G B2 B-"Eb/Db""^D¨7" B2 AG |"C7" BAGB-"Abm6/Cb" B2 AA |
+"Eb/Bb" GF"^G¨7"EG-"F7""^F7" GE"Bb7""^B¨7" F2 |"Eb""^E¨" E2 z2 z4 |]
+
+X:40
+T:I Wish I Could Shimmy Like
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:A. J. Piron
+K:Eb
+"^Eº" B2 |:"Bb7""^Fm7" FFGB-"^B¨7" BBAF |"Cm6""^F7" G _G2"B7""Bb7" F-"^B¨7" F2 B2 |
+"Eb""^E¨" BBcB"Eb7""^E¨7/G" e _d3 |"^A¨m6" B G2 E-"^E¨/G""^G¨º" E4 |
+"Bb7""^Fm7" z =B cB"^B¨7" cc B2 | "Bb7""^Fm7" c =B2"^B¨7" c- c4 |"Eb""^E¨" z _B cB"^E¨7/G" cBcB |
+"^A¨" c"^A¨m" _c2 B-"^Gm7""^Eº" B4 ||"Bb7""^Fm7" z F GB-"^B¨7" BA F2 |
+"Cm6""^F7" G _G2"B7" F-"Bb7""^B¨7" F4 |"Eb""^B¨m7" BBcB"Eb7""^E¨7" e_dB=G |
+"Eb7""^B¨m7" B G2 E-"^E¨7""^A7€5" E4 | "Ab" c=Bcd-"Adim" d2 cd |"Eb/Bb" edc_B-"C7" BG^FG |
+"Fm7""^Fm7" AB"Fm7b5"AB"Bb7""^B¨7" G =F3 |1"Eb""^E¨" E6"Edim""Bb7""^Eº" B2 :|2
+"Eb" E2"G7" d2"C7" c4 || "B7" _GEGE"Bb7" G F2 E- |"Eb" E8 |]
+
+X:41
+T:Ballin' The Jack
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Smith/Burris
+K:Bb
+"G7" dd=BB G2 A2 | d =B2 G- G2 A_A |"C7" GG=AA _B2 AG |  BBAA G2 z2 |"F7" FFGG A2 GF |
+ c A2 F- F2 d^c |"Bb" d^cdB"D7/A""^Am7" =c=BcA | "Eb7" _BAG"D7"A- A2 z2 ||"G7" dd=BB G2 A2 |
+ d =B2 G- G2 A_A |"C7" GG=AA _B2 AG |  B A2 G- G2 Bc |"Gb7" _d2 B2 d2 B2 |
+"Bb/F" =d"F#dim" c2"Gm" B-"^Gm7" B2"G7""^D¨7" G2 |"Cm""^E¨" c2"^Dº" d2"^Cm7" e2"Ebm/Gb""^G¨7" c2 |
+"F7" d^cd"Bb"B- B2 z2 |]
+
+X:42
+T:Some Of These Days
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Shelton Brooks
+K:G
+ B/ ^A/B/ ||"B7""^F#m7€5""^C7" =A4- |"^B7" A B/B/- B A |"Em""^Em" G2"^B¨7" E2- |
+"^A7" E B"^D¨7" ^A B | "B7""^F#m7€5""^C7" =A4- |"^B7" A B/B/- B A |"Em""^Em" G2 E2- | E E ^D E |
+"E7""^E7&5" c2 c2- | c B ^G E |"A7" B2 B2- | B E F G | "A7""^Em7" B2 B2- |"^A7" B A/A/ e A |
+"D7""^Am7" d4- |"^D7" d d d B | "G7""^Dm7" G2 G2- |"^G7" G d d e |"C""^C" c2"^G¨7" c2- |
+"^F7" c c c c | "E7""^Bm7€5" B2 B2- |"^E7" B B B c |"Am""^Am" A4- | A E ^D E |
+"C#dim""^C#m7€5" e2 e2- |"^F#7" e e ^d e |"G/D""^G" =d2"^F7" B2- |"^E7" B d/e/-"^G#º" e/d/B/G/ |
+"A7" B2 B2 |"D7" z B/d/- d/B/ A |"G" G4 | z4 |]
+
+X:43
+T:After You've Gone
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Creamer/Layton
+K:C
+"F" Acde- e4 |"Fm6" z d ed e d3 |"C" EGAB-"^F7" B4 |"Em7" z A BA"A7" B A3 | "D7" A e2 e- e4 |
+"G7" A d2 d- d4 |"C" z G AG"^A7" _BGAG |"^D7" c E2 G-"C7""^G7""^G¨7" G4 | "F" Acde- e4 |
+"Fm6" z d ed e d3 |"C" EGAB-"^F7" B4 |"Em7" z A BA"A7" B A3 | "Dm" f4"A7" e4 |
+"Dm" d^GAe-"Fm6" e2 d2 |"C" z ^d ec"E7" =d^cdB |"Am7" =c^DEB-"D7" B2 A2 | "C/G" Ac=de-"^A7" e4 |
+"G7""^Dm7" z F GB"^A¨7" d2"^G7" e2 |"C" c8- | c8 |]
+
+X:44
+T:Indiana
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+K:G
+ D G B ||"G""^F7" d4 |"^E7" z e"E7" d B |"A7" A2 E2- | E2 F G | "D7""^Am7" B3 F |"^D7" B2 A2 |
+"G" G4 |"^G7" z G F"G7" =F | "C" E G c2- | c2"C#dim" E2 |"G""^G/D" D G"^F7" B2- |"^E7" B2 B c |
+"A7" ^c B F2- | F2 E2 |"D7""^E¨7" A4 |"^D7" z D G B | "G""^F7" d4 |"^E7" z e"E7" d B |"A7" A2 E2- |
+ E2 F G | "D7""^F#m7€5" B3 F |"^B7€9" B2 A2 |"Em""^Em7" G4 |"Eb7""^B7&5" z2 G A |
+"G""^Em" B ^A B G |"B7""^F#m7€5" =A B"^B7€9" A F |"Em" G2 E2- |"C#dim" E z F E | "G/D" D2 G B |
+"D7""^Am7" d A"^D7" c B |"G" G4- | G z z2 |]
+
+X:45
+T:'Way Down Yonder
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Layton/Creamer
+K:F
+"C7""^Gm7" c c2 c- cA c2 |"^C7" A A2 A- A4 |"F""^F" z2 GE"^B¨7" (GE) G2 |"^Am7" E E2 E-"^A¨º" E4 |
+"F""^Gm7" z2 DE"^Gm7/C" FG A2 |"C7""^C7/G" c4"^F#º" c4 |"^Gm7" z2 d2"^C7" d"^C7&5" d2 A- |
+"F""^F" A6"^F#º" z2 | "C7""^Gm7" c c2 c- cA c2 |"^C7" A A2 A- A4 |"F""^F" z2 GE"^B¨7" GE G2 |
+"^Am7" E E2 E-"^Dm7""^D¨m7" E4 | "F7""^Cm7" _E2 z2 z F GA |"^F7" c2 A2 G F2 G- |
+"Bb""^B¨" G4-"^F7&5" GFAF |"^B¨""^A7""^A¨7" G8 | "G7" G2 z2 z A =Bc | d2 =B2 A G2 c- |
+"C7""^Gm7" c4-"^F#º" ccdA |"^Gm7""^C7" c8 | "F" c c2 c- cA c2 |"Bm7b5" d d2 d-"^E7" d4 |
+"F/C""^Am7" c c2 c- cA c2 |"Db7" _d8 | "C7""^F" c c2 c-"^F#º" c=d A2 |"^Gm7" c4"^C7" A4 |
+"F""^F" F8 | z8 |]
+
+X:46
+T:Rose Room
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Hickman/Williams
+K:Ab
+ E2 E2 =E2 ||"Bb7" F4 c4 |"Eb7""^B¨m7" z E F^F"^E¨7" G c2 G |"Ab""^A¨º" B8 |"^A¨" A8 |
+"Ab7""^E¨m7" A8- |"^A¨7" AAB=B c f2 c |"Db""^D¨º" e8 |"^D¨" d8 | "Gb7" d8- | d2 AB d A2 B |
+"Ab""^G7""^G¨7" c8 |"F7" E8 | "Bb7" =D4 D4- | D2 FG AB c2 |"Eb7""^Fm7""^E7" B8 |
+"^E¨7" z2 E2 E2 =E2 | "Bb7" F4 c4 |"Eb7""^B¨m7" z E F^F"^E¨7" G c2 G |"Ab""^A¨º" B8 |"^A¨" A8 |
+"Ab7""^E¨m7" A8- |"^A¨7" AAB=B c f2 c |"Db""^D¨º" e8 |"^D¨" d8 | "Gb7" d4 d4- | d2 AB d A2 B |
+"Ab""^G7""^G¨7" c8 |"F7" e2 E2 E2 =E2 | "Bb7" F4 c4 |"Eb7""^B¨m7" z E F^F"^E¨7" G e2 c |"Ab" A8 |
+ z8 |]
+
+X:47
+T:Whispering
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Schonberger/Schonberger
+K:Eb
+"Eb" e2 d e | f e d e |"Cdim""^Am7" d4 |"^D7" c4 | "Eb" B2 =A B | c B"^D7&9" =A B |"C7""^D¨7" _A4 |
+"^C7" G4 | "F7" G2 F G | c G F G |"Bb7""^Fm7" G4 |"^B7""^B¨7sus4" F4 | "Eb""^Am7€5" E2"^A¨m" F G |
+"^Gm7" B2"^G¨º" c d |"Bb7""^Fm7" c2 B d |"^B¨7sus4" c2"Bb+""^E7" B2 | "Eb" e2 d e | f e d e |
+"D7b9""^Am7" d4 |"^D7" c4 | "Eb" B2 =A B | c B"^D7&9" =A B |"C7""^D¨7" _A4 |"^C7" G4 |
+"F7" G2 F G | c G F G |"Bb7""^Fm7" G4 |"^B7" F4 | "Fm""^Fm7" F G A B |"^B¨7sus4" c2"Abm""^D¨7" e2 |
+"Eb""^E¨" e4 | z4 |]
+
+X:48
+T:The World Is Waiting
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Seitz/Lockhart
+K:C
+ ^D ||"C""^C" E3"G7#5" G |"C""^G7&5" A3"G7#5" G |"C""^C" E G A c |"E7""^Bm7€5" e2"^E7" d2 |
+"F""^F" c3"^F#º" A |"C""^C/G" G3"^B¨7" F |"D7""^Am7" E"^D7" D2 E |"G7""^A¨7" D3"G7#5""^G7" ^D |
+"C""^C" E3"G7#5" G |"C""^G7&5" A3"G7#5" G |"C""^C" E G A c |"E7""^Bm7€5" e2"^E7" d2 |
+"F""^F" c3"G7""^F#º" A |"C""^C/G" G3"A7""^A7" E |"Dm7b5""^Dm7€5" F3"G7""^D¨7" G |"C""^C" G4 |]
+
+X:49
+T:Somebody Stole My Gal
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/4
+C:Leo Wood
+K:Eb
+"Eb" z e"^A¨7" d c |"^Gm7" B2"Gbdim""^G¨m7" =A2 |"Bb7""^Fm7" _A4- |"^B¨7" A4 | "Bb7" z d c B |
+ A2 ^F2 |"Eb" G4- |"G7/D""^D¨7" G4"Gm7b5/Db" | "C7" z c B A |"^D¨7" G2"^C7" =E2 |"F7" G F =E F- |
+"^Bº" F4 | "F7""^Cm7" z e d e |"^F7" d2 c2 |"Bb7""^B¨7" z d c d |"Fm7""^Fm7" c2"Bb7""^E7" B2 |
+"Eb" z e"^A¨7" d c |"^Gm7" B2"Gbdim""^G¨m7" =A2 |"Bb7""^Fm7" _A4- |"^B¨7" A4 | "Bb7" z d c B |
+ A2"^D7" ^F2 |"Eb""^E¨""^Eº" G4 |"^Fm7" z2"Bb7""^B¨7" B2 | "Eb" e4- | e d e d |"Eb7""^B¨m7" _d4- |
+"^E¨7" d =d e _d | "Ab" c4- | c c e c |"Abm""^D¨7" _c4- | c2"^B¨7" _c2 |
+"Eb" B2"Gbdim""^A¨maj7" =c2 |"Fm""^Gm7" d2"Eb""^G¨7" e2 |"F7""^F7" z e2 c | c4 | "Fm7" z e d c |
+"Bb7" d2"Bb7#5""^E7" B2 |"Eb""^E¨" e4-"Ab" |"Eb" e2 z2 |]
+
+X:50
+T:There'll Be Some Changes Made
+O:Trad jazz
+R:jazz
+M:4/4
+L:1/8
+C:Overstreet/Higgins
+K:Bb
+ D ^CD ||"G7""^Dm7" AAAA-"^G7" AG^CD |"^Dm7" AAAA-"^G7" A4 | "C7""^Gm7" z d dd"^C7" dcBG |
+"^Gm7" d d2"^C7" d- d3 d |"D7""^Am7" dddd-"^D7" d c2 A | "G7" A^CDG-"^D¨7" G4 |
+"C7""^Gm7" dddd-"^C7" d=cBG |"F7""^Am7" c"^A¨7" c2"^Gm7" c- c"^D7"D^CD |
+"G7""^Dm7" AAAA"^G7" AG^CD |"G7""^Dm7" AAAA-"^G7" A4 |"C7""^Gm7" z2 dd"^C7" dcBG |
+"^Gm7" d d2"^C7" d- d3 d |"D7""^Am7" dddd-"^D7" dcB^F |"G7""^Dm7" A A2 G-"^G7" G4 |
+"C7" z d cB"F7" G2 F2 |"Bb" B"^A¨7" c2 d-"G7" d4 |"C7" z d cd"F7" f2 d2 |"Bb" B4 z |]
