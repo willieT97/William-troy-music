@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning to Walk — The Dojo</title>
+<meta name="description" content="Learn to walk a bassline, step by step, under an old jazz cat. From the root of the chord to a walking line. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+    --amber:#E0922A; --green:#1F9D55; --muted:#6F6757;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--paper); color:var(--ink); font-family:var(--body); line-height:1.55; -webkit-font-smoothing:antialiased; position:relative; min-height:100vh; }
+  body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:9; opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E"); }
+  .mark{ position:fixed; width:16px; height:16px; z-index:8; opacity:.6; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--ink); }
+  .mark::before{ left:7px; top:0; width:2px; height:16px; }
+  .mark::after{ top:7px; left:0; height:2px; width:16px; }
+  .mark.tl{ left:12px; top:12px; } .mark.tr{ right:12px; top:12px; }
+  .mark.bl{ left:12px; bottom:12px; } .mark.br{ right:12px; bottom:12px; }
+
+  .wrap{ max-width:740px; margin:0 auto; padding:26px 20px 90px; position:relative; z-index:1; }
+  header.top{ text-align:center; margin-bottom:4px; }
+  .title{ position:relative; display:inline-block; white-space:nowrap; font-family:var(--disp); font-weight:800; font-size:clamp(1.4rem,5vw,2.3rem); letter-spacing:-.01em; line-height:1; }
+  .title::after{ content:attr(data-text); position:absolute; left:2.5px; top:2.5px; color:var(--pink); mix-blend-mode:multiply; z-index:-1; }
+  .belt{ font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:9px; }
+  .belt .dot{ display:inline-block; width:9px; height:9px; border:1.5px solid var(--ink); border-radius:50%; vertical-align:-1px; margin-right:5px; background:#fff; }
+
+  .bar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:18px 0 16px; border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); padding:8px 0; }
+  .pos{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .tocbtn{ font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; padding:7px 14px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); cursor:pointer; box-shadow:3px 3px 0 var(--ink); }
+  .tocbtn:active{ transform:translate(3px,3px); box-shadow:none; }
+  .toc{ position:relative; z-index:30; border:2.5px solid var(--ink); background:#FBF7EE; padding:14px 16px; margin-bottom:20px; box-shadow:8px 8px 0 var(--ink); }
+  .toc.hidden{ display:none; }
+  .toc h4{ font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:14px 0 6px; }
+  .toc h4:first-child{ margin-top:0; }
+  .toc a{ display:block; font-size:.9rem; padding:5px 8px; color:var(--ink); text-decoration:none; cursor:pointer; border-left:3px solid transparent; }
+  .toc a:hover{ background:rgba(36,56,200,.06); }
+  .toc a.cur{ border-left-color:var(--pink); font-weight:600; background:rgba(255,78,134,.07); }
+  .toc a.soon{ color:var(--muted); cursor:default; } .toc a.soon:hover{ background:none; }
+  .toc .tag{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); border:1px solid var(--amber); padding:1px 5px; margin-left:6px; vertical-align:1px; }
+
+  .stage{ position:relative; border:3px solid var(--ink); background:#F2ECDD; box-shadow:9px 9px 0 var(--ink); overflow:hidden; }
+  .stage::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:4; opacity:.10; background:repeating-linear-gradient(0deg, var(--ink) 0 1px, transparent 1px 4px); }
+  .banner{ position:relative; z-index:5; background:var(--ink); color:var(--paper); padding:9px 14px; font-family:var(--disp); font-weight:800; font-size:.92rem; letter-spacing:.01em; display:flex; gap:10px; align-items:baseline; }
+  .banner .bk{ font-family:var(--mono); font-weight:700; font-size:.6rem; letter-spacing:.14em; color:var(--amber); }
+  .scene{ position:relative; z-index:3; display:flex; gap:0; align-items:stretch; min-height:230px; }
+  .scene .floor{ position:absolute; left:0; right:0; bottom:0; height:64px; background:rgba(224,146,42,.06); border-top:2px solid rgba(23,20,14,.25); z-index:0; }
+  .portrait{ position:relative; z-index:2; width:172px; flex:0 0 172px; display:flex; align-items:flex-end; justify-content:center; padding:14px 6px 0; transition:opacity .2s, filter .2s; }
+  .portrait svg{ width:100%; height:auto; display:block; filter:drop-shadow(4px 4px 0 rgba(23,20,14,.18)); }
+  .scene.student .portrait{ opacity:.55; filter:grayscale(.3); }
+  .speech{ position:relative; z-index:2; flex:1; margin:14px 14px 16px 4px; align-self:center; border:2.5px solid var(--ink); background:var(--paper); box-shadow:5px 5px 0 var(--ink); padding:13px 15px 12px; cursor:pointer; }
+  .speech::before{ content:""; position:absolute; left:-12px; top:30px; width:0; height:0; border-top:9px solid transparent; border-bottom:9px solid transparent; border-right:12px solid var(--ink); }
+  .who{ font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; margin-bottom:7px; color:var(--amber); }
+  .scene.student .who{ color:var(--pink); }
+  .line{ font-size:1.04rem; min-height:3.2em; }
+  .line .cursor{ display:inline-block; width:.55em; opacity:.7; }
+  .cont{ font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:10px; text-align:right; min-height:1em; }
+  .cont.go{ color:var(--pink); } .cont.blink{ animation:bl 1s steps(2) infinite; }
+  @keyframes bl{ 50%{ opacity:.25; } }
+
+  .exwrap{ margin-top:22px; position:relative; z-index:20; } .exwrap[hidden]{ display:none; }
+  .ex{ position:relative; z-index:21; border:2.5px solid var(--ink); background:#FBF7EE; box-shadow:8px 8px 0 var(--ink); padding:18px 18px 20px; }
+  .ex .exh{ font-family:var(--mono); font-size:.6rem; letter-spacing:.18em; text-transform:uppercase; color:var(--pink); margin-bottom:4px; }
+  .ex .exttl{ font-family:var(--disp); font-weight:700; font-size:1.18rem; margin:0 0 6px; }
+  .ex .exd{ font-size:.95rem; color:#3a352a; margin:0 0 16px; }
+  .drillp{ font-family:var(--mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--amber); margin:-6px 0 12px; }
+  .drillp:empty{ display:none; }
+  .bwbox{ background:#FFFDF5; border:2px solid var(--ink); overflow-x:auto; padding:6px 4px; }
+  .bwbox svg{ display:block; }
+
+  .btn{ font-family:var(--mono); font-size:.74rem; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; padding:11px 18px; border:2.5px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:3px 3px 0 var(--ink); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:none; }
+  .btn:disabled{ opacity:.5; cursor:default; box-shadow:none; transform:none; }
+  .btn.ink{ background:var(--ink); color:var(--paper); } .btn.blue{ background:var(--blue); color:var(--paper); }
+  .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+  .fb{ min-height:22px; font-size:.98rem; margin:12px 0 2px; }
+  .fb.ok{ color:var(--green); } .fb.no{ color:var(--pink); }
+  .hint{ font-family:var(--mono); font-size:.66rem; letter-spacing:.03em; color:var(--muted); margin-top:12px; line-height:1.7; }
+
+  .nav{ display:flex; justify-content:space-between; gap:12px; margin-top:28px; padding-top:18px; border-top:2px solid var(--ink); }
+  .nav .endnote{ font-family:var(--mono); font-size:.62rem; letter-spacing:.04em; color:var(--muted); text-align:right; max-width:300px; align-self:center; }
+
+  @media (max-width:560px){
+    .scene{ flex-direction:column; align-items:center; }
+    .portrait{ width:128px; flex-basis:auto; padding-top:16px; }
+    .speech{ margin:6px 14px 16px; align-self:stretch; } .speech::before{ display:none; }
+  }
+  @media (prefers-reduced-motion: reduce){ .btn:active,.tocbtn:active{ transform:none; } .cont.blink{ animation:none; } }
+</style>
+</head>
+<body>
+  <span class="mark tl"></span><span class="mark tr"></span><span class="mark bl"></span><span class="mark br"></span>
+  <div class="wrap">
+    <header class="top">
+      <span class="title" data-text="Learning to Walk">Learning to Walk</span>
+      <div class="belt" id="belt"></div>
+    </header>
+    <div class="bar">
+      <button class="tocbtn" id="tocBtn">☰ Lessons</button>
+      <span class="pos" id="pos"></span>
+    </div>
+    <nav class="toc hidden" id="toc"></nav>
+    <div class="stage">
+      <div class="banner"><span class="bk" id="bk"></span><span id="btitle"></span></div>
+      <div class="scene" id="scene">
+        <div class="floor"></div>
+        <div class="portrait" id="portrait"></div>
+        <div class="speech" id="speech">
+          <div class="who" id="who">THE CAT</div>
+          <div class="line" id="line"></div>
+          <div class="cont blink" id="cont">▼ tap to continue</div>
+        </div>
+      </div>
+    </div>
+    <div class="exwrap" id="exwrap" hidden></div>
+    <div class="nav">
+      <button class="btn" id="prev">← Previous</button>
+      <div id="nextslot"></div>
+    </div>
+    <div class="nav" style="border:0;padding-top:6px;margin-top:6px"><a href="dojo.html" style="font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;color:var(--blue);text-decoration:none">← back to the Dojo</a></div>
+  </div>
+
+<script>
+"use strict";
+const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = id => document.getElementById(id);
+
+/* ===================== THE CAT (portrait) ===================== */
+const MASTER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" preserveAspectRatio="xMidYMax meet">
+  <g stroke="#17140E" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <!-- upright bass behind, to the side -->
+    <rect x="150" y="66" width="7" height="86" rx="2" fill="#7A4A1E"/>
+    <path d="M153 66 q-9 -3 -5 -12 q7 -5 9 3" fill="none" stroke-width="3"/>
+    <path d="M150 206 C124 206 122 172 143 170 C124 168 126 128 153 130 C180 128 182 168 163 170 C184 172 176 206 150 206 Z" fill="#C77B33"/>
+    <line x1="153" y1="70" x2="153" y2="150" stroke="#F4EEE2" stroke-width="1.2"/>
+    <!-- suit / shoulders -->
+    <path d="M34 216 C34 178 56 160 92 160 C128 160 150 178 150 216 Z" fill="#2438C8"/>
+    <path d="M78 162 L92 188 L106 162 Z" fill="#F4EEE2"/>
+    <path d="M92 188 l0 22" stroke-width="2"/>
+    <!-- head -->
+    <circle cx="92" cy="118" r="35" fill="#C98A52"/>
+    <!-- goatee -->
+    <path d="M80 140 q12 18 24 0 q-3 16 -12 16 q-9 0 -12 -16 Z" fill="#3a2f26" stroke="none"/>
+    <path d="M80 140 q12 18 24 0" fill="none"/>
+    <!-- shades -->
+    <rect x="62" y="110" width="24" height="13" rx="4" fill="#17140E" stroke="none"/>
+    <rect x="98" y="110" width="24" height="13" rx="4" fill="#17140E" stroke="none"/>
+    <line x1="86" y1="115" x2="98" y2="115"/>
+    <!-- fedora -->
+    <path d="M50 100 q42 -20 84 0 q6 8 -6 10 q-36 -13 -72 0 q-12 -2 -6 -10 Z" fill="#17140E" stroke-width="2.5"/>
+    <path d="M64 100 q0 -34 28 -34 q28 0 28 34 Z" fill="#17140E" stroke-width="2.5"/>
+    <rect x="64" y="90" width="56" height="7" fill="#FF4E86" stroke="none"/>
+  </g>
+</svg>`;
+
+/* ===================== AUDIO ===================== */
+let actx = null, masterBus = null;
+function audio(){
+  if(!actx || actx.state==='closed'){
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    const comp = actx.createDynamicsCompressor(); comp.threshold.value=-16; comp.ratio.value=3;
+    const g = actx.createGain(); g.gain.value=0.9; comp.connect(g); g.connect(actx.destination); masterBus = comp;
+  }
+  if(actx.state==='suspended') actx.resume().catch(()=>{});
+  return actx;
+}
+const mtof = m => 440 * Math.pow(2, (m-69)/12);
+function voice(midi, t, dur, peak, type){
+  const ac = audio();
+  const o1 = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), gt = ac.createGain();
+  o1.type = type || 'sine'; o2.type = 'triangle';
+  o1.frequency.value = mtof(midi); o2.frequency.value = mtof(midi);
+  gt.gain.value = 0.25; o1.connect(g); o2.connect(gt); gt.connect(g);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(peak, t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  g.connect(masterBus || ac.destination);
+  o1.start(t); o2.start(t); o1.stop(t+dur+0.05); o2.stop(t+dur+0.05);
+}
+const bassNote = (midi,t,dur) => voice(midi, t, dur, 0.42, 'sine');
+const compNote = (midi,t,dur) => voice(midi, t, dur, 0.10, 'triangle');
+
+/* ===================== MUSIC HELPERS ===================== */
+const LSEMI = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 }, LTRS = ['C','D','E','F','G','A','B'];
+const diAt = (L,o) => o*7 + LTRS.indexOf(L);
+const letterOfDI = di => LTRS[((di%7)+7)%7];
+const octOfDI = di => Math.floor(di/7);
+const naturalMidi = di => (octOfDI(di)+1)*12 + LSEMI[letterOfDI(di)];
+function chordParse(sym){
+  const m = sym.match(/^([A-G])([#b]?)(.*)$/);
+  const rootPc = ((LSEMI[m[1]] + (m[2]==='#'?1:m[2]==='b'?-1:0))%12 + 12) % 12;
+  const q = (m[3]||'').toLowerCase();
+  let iv = [0,4,7];
+  if(/dim|o/.test(q)) iv = [0,3,6];
+  else if(/aug|\+/.test(q)) iv = [0,4,8];
+  else if(/^(m|min|-)/.test(q) && !/maj/.test(q)) iv = [0,3,7];
+  if(/7/.test(q)) iv = [...iv, /maj7/.test(q) ? 11 : 10];
+  return { sym, rootPc, rootName: m[1]+m[2], fifthPc:(rootPc+7)%12, thirdPc:(rootPc+iv[1])%12, tones: iv.map(i=>(rootPc+i)%12) };
+}
+
+/* ===================== BASS STAFF ===================== */
+const BSTEP = 7, BY0 = 108;                 // G2 (di18) bottom line
+const byOfDI = di => BY0 - (di - 18) * BSTEP;
+const BLINES = [18,20,22,24,26];            // G2 B2 D3 F3 A3
+function bassLayout(ex){
+  const npb = ex.notesPerBar, bars = ex.chart.length;
+  const beatW = npb <= 1 ? 78 : npb === 2 ? 58 : 40;
+  const barW = beatW * npb, leftPad = 46;
+  return { npb, bars, beatW, barW, leftPad, W: leftPad + bars*barW + 18,
+           slotX:(bar,beat)=> leftPad + bar*barW + (beat+0.5)*beatW };
+}
+function ledgersB(x, di){
+  let s = '';
+  if(di > 26) for(let d=28; d<=di; d+=2) s += `<line x1="${x-9}" y1="${byOfDI(d)}" x2="${x+9}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.2"/>`;
+  if(di < 18) for(let d=16; d>=di; d-=2) s += `<line x1="${x-9}" y1="${byOfDI(d)}" x2="${x+9}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.2"/>`;
+  return s;
+}
+function drawBass(ex, notes, opts){
+  opts = opts || {};
+  const L = bassLayout(ex), W = L.W, H = 150;
+  let s = `<svg id="bwStaff" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  const x0 = 8, x1 = W - 8;
+  BLINES.forEach(d => { const y = byOfDI(d); s += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#17140E" stroke-width="1.3"/>`; });
+  s += `<text x="12" y="${byOfDI(24)+7}" font-family="Georgia,serif" font-size="40" fill="#17140E">\u{1D122}</text>`;
+  // barlines + chord symbols
+  for(let b=0; b<=L.bars; b++){ const x = L.leftPad + b*L.barW; s += `<line x1="${x}" y1="${byOfDI(26)}" x2="${x}" y2="${byOfDI(18)}" stroke="#17140E" stroke-width="${b===0||b===L.bars?2.2:1.3}"/>`; }
+  ex.chart.forEach((sym,b) => { const x = L.leftPad + b*L.barW + L.barW/2; s += `<text x="${x}" y="26" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="18" fill="#2438C8">${sym}</text>`; });
+  // notes / placeholders
+  for(let b=0; b<L.bars; b++) for(let k=0; k<L.npb; k++){
+    const i = b*L.npb + k, x = L.slotX(b,k), di = notes[i];
+    if(di == null){
+      if(!opts.static) s += `<circle cx="${x}" cy="${byOfDI(21)}" r="6" fill="none" stroke="#8a8577" stroke-width="1.4" stroke-dasharray="2 3"/>`;
+      continue;
+    }
+    const y = byOfDI(di); s += ledgersB(x, di);
+    let col = '#17140E';
+    if(opts.given && opts.given[i]) col = '#2438C8';                    // given chord-skeleton note
+    else if(opts.marks){ const m = opts.marks[i]; col = m === true ? '#1F9D55' : m === 'free' ? '#2438C8' : m === false ? '#c0392b' : '#17140E'; }
+    else if(i === opts.sel) col = '#2438C8';
+    if(ex.whole) s += `<ellipse cx="${x}" cy="${y}" rx="9" ry="5.8" fill="#FFFDF5" stroke="${col}" stroke-width="2.7"/>`;   // open whole note
+    else s += `<ellipse cx="${x}" cy="${y}" rx="6.4" ry="5" transform="rotate(-16 ${x} ${y})" fill="${col}"/>`;
+  }
+  s += `</svg>`;
+  return s;
+}
+function playBass(ex, notes){
+  const ac = audio(), spb = 60/96, run = () => {
+    const t0 = ac.currentTime + 0.12, npb = ex.notesPerBar;
+    ex.chart.forEach((sym,b) => {
+      const ch = chordParse(sym);
+      ch.tones.forEach(pc => compNote(48 + pc, t0 + b*4*spb, 4*spb*0.96));    // comp the chord
+      if(npb <= 1){
+        const di = notes[b]; if(di == null) return;
+        if(ex.whole){ bassNote(naturalMidi(di), t0 + b*4*spb, 4*spb*0.97); }                        // one whole note, held all bar
+        else for(let beat=0; beat<4; beat++) bassNote(naturalMidi(di), t0 + (b*4+beat)*spb, spb*0.9); // pump the root, 4 to the bar
+      } else {
+        const beatLen = 4/npb;
+        for(let k=0; k<npb; k++){ const di = notes[b*npb+k]; if(di==null) continue; bassNote(naturalMidi(di), t0 + (b*4 + k*beatLen)*spb, beatLen*spb*0.92); }
+      }
+    });
+  };
+  if(ac.state==='suspended') ac.resume().then(run).catch(run); else run();
+}
+
+/* ===================== EXERCISES ===================== */
+let bw = null;   // active bassWrite state
+function renderExercise(ex){
+  const head = `<div class="exh">${ex.exh||'The bandstand'}</div><div class="exttl">${ex.exttl}</div><p class="exd">${ex.desc}</p>`;
+  if(ex.type === 'bassDemo') return `<div class="ex">${head}<div class="bwbox" id="demoBox"></div><div class="row"><button class="btn blue" id="demoPlay">&#9654; Hear it</button></div><div class="hint">${ex.hint||''}</div></div>`;
+  if(ex.type === 'bassWrite') return `<div class="ex">${head}<div class="drillp" id="bwDrill"></div><div class="bwbox" id="bwBox"></div><div class="row"><button class="btn blue" id="bwPlay">&#9654; Play</button><button class="btn" id="bwCheck">Check</button><button class="btn" id="bwClear">Clear</button></div><div class="fb" id="bwFb"></div><div class="row" id="bwNextRow" hidden><button class="btn ink" id="bwNext">Next chart →</button></div><div class="hint">${ex.hint||''}</div></div>`;
+  return `<div class="ex">${head}</div>`;
+}
+function wireExercise(ex){
+  if(ex.type === 'bassDemo'){
+    el('demoBox').innerHTML = drawBass(ex, ex.answer, { static:true });
+    el('demoPlay').addEventListener('click', () => playBass(ex, ex.answer));
+  }
+  if(ex.type === 'bassWrite'){
+    const charts = ex.charts || [ex.chart];
+    bw = { baseEx:ex, charts, chartIdx:0, solved: charts.map(()=>false), ex:null, notes:null, baseNotes:null, given:null, locked:null, checked:false, frozen:false };
+    loadChart(0);
+    el('bwBox').addEventListener('click', onBwClick);
+    el('bwPlay').addEventListener('click', () => playBass(bw.ex, bw.notes));
+    el('bwCheck').addEventListener('click', checkBass);
+    el('bwClear').addEventListener('click', clearBW);
+    el('bwNext').addEventListener('click', () => { if(bw.chartIdx < bw.charts.length-1) loadChart(bw.chartIdx+1); });
+  }
+}
+function loadChart(k){
+  bw.chartIdx = k;
+  const base = bw.baseEx;
+  bw.ex = Object.assign({}, base, { chart: bw.charts[k] });
+  const n = bw.ex.chart.length * bw.ex.notesPerBar;
+  const given = (!base.charts && base.given) ? base.given.slice() : null;
+  bw.given  = given ? given.map(x => x != null) : null;
+  bw.locked = given ? given.map(x => x != null) : null;
+  bw.baseNotes = given ? given.slice() : new Array(n).fill(null);
+  bw.notes = bw.baseNotes.slice();
+  bw.checked = false; bw.frozen = false;
+  drawBW();
+  el('bwFb').textContent = ''; el('bwFb').className = 'fb';
+  el('bwNextRow').hidden = true;
+  el('bwDrill').textContent = bw.charts.length > 1 ? `Chart ${k+1} of ${bw.charts.length}` : '';
+}
+function clearBW(){ bw.notes = bw.baseNotes.slice(); bw.checked = false; bw.frozen = false; el('bwFb').textContent=''; el('bwFb').className='fb'; el('bwNextRow').hidden = true; drawBW(); }
+function drawBW(){ el('bwBox').innerHTML = drawBass(bw.ex, bw.notes, Object.assign({ given: bw.given }, bw.checked ? { marks: bw.marks } : {})); }
+function onBwClick(e){
+  if(!bw || bw.frozen) return;
+  const svg = el('bwStaff'), rect = svg.getBoundingClientRect();
+  const L = bassLayout(bw.ex);
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  // nearest slot
+  let best = 1e9, slot = -1;
+  for(let b=0;b<L.bars;b++) for(let k=0;k<L.npb;k++){ const i=b*L.npb+k; const d=Math.abs(L.slotX(b,k)-x); if(d<best){ best=d; slot=i; } }
+  if(slot < 0 || best > L.beatW*0.6) return;
+  if(bw.locked && bw.locked[slot]) return;                 // can't move a given note
+  let di = 18 + Math.round((BY0 - y)/BSTEP);
+  di = Math.max(12, Math.min(30, di));
+  bw.notes[slot] = di;
+  if(bw.checked){ bw.checked = false; el('bwFb').textContent=''; el('bwFb').className='fb'; }  // editing clears the last marks
+  drawBW();
+}
+function checkBass(){
+  if(!bw || bw.frozen) return;
+  const ex = bw.ex, npb = ex.notesPerBar;
+  const marks = new Array(bw.notes.length).fill(null);
+  let allFilled = true, pass = true;
+  for(let i=0; i<bw.notes.length; i++){
+    if(bw.locked && bw.locked[i]) continue;                // given note — not graded
+    const di = bw.notes[i];
+    if(di == null){ allFilled = false; continue; }
+    const bar = Math.floor(i/npb), k = i%npb, ch = chordParse(ex.chart[bar]);
+    const midi = naturalMidi(di), pc = midi % 12;
+    let ok;
+    if(ex.rule === 'roots') ok = pc === ch.rootPc;
+    else if(ex.rule === 'rootFifth') ok = (k === 0 ? pc === ch.rootPc : pc === ch.fifthPc);
+    else if(ex.rule === 'arpeggio') ok = ch.tones.includes(pc);
+    else if(ex.rule === 'strongWeak'){
+      if(k % 2 === 0){ ok = ch.tones.includes(pc); }        // strong beat: chord tone
+      else { marks[i] = 'free'; continue; }                 // weak beat: your call
+    }
+    else if(ex.rule === 'passing'){
+      const a = bw.notes[i-1], b = bw.notes[i+1];
+      if(a != null && b != null){
+        const am = naturalMidi(a), bm = naturalMidi(b), lo = Math.min(am,bm), hi = Math.max(am,bm);
+        ok = (midi > lo && midi < hi && (hi - midi) <= 2 && (midi - lo) <= 2);   // stepwise between its neighbours
+      } else ok = ch.tones.includes(pc);
+    }
+    else ok = true;
+    marks[i] = ok; if(!ok) pass = false;
+  }
+  if(!allFilled) pass = false;
+  bw.marks = marks; bw.checked = true; drawBW();
+  const fb = el('bwFb');
+  if(pass){
+    bw.solved[bw.chartIdx] = true; bw.frozen = true;
+    if(bw.solved.every(Boolean)){
+      fb.textContent = ex.win || 'That’s it. Solid.'; fb.className = 'fb ok'; bassOk = true; renderNav();
+    } else {
+      fb.textContent = (ex.winEach || 'Nailed it.') + ' Here’s another chart — hit Next.'; fb.className = 'fb ok';
+      el('bwNextRow').hidden = false;
+    }
+  }
+  else if(!allFilled){ fb.textContent = 'Fill in every empty slot, then check again.'; fb.className = 'fb no'; }
+  else { fb.textContent = ex.fail || 'Not quite — the red notes need fixing. Click to move them, then check again.'; fb.className = 'fb no'; }
+}
+let bassOk = false;
+
+/* ===================== DIALOGUE ENGINE ===================== */
+let pages = [], pageIdx = 0, dialogueDone = false;
+let typer = null, curToks = [], curTotal = 0, curShown = 0, lineDone = false;
+function buildPages(teach){
+  const out = [];
+  teach.forEach(b => { if(b.t === 'qa'){ out.push({who:'student', html:b.q}); out.push({who:'master', html:b.a}); } else out.push({who:'master', html:b.html}); });
+  return out;
+}
+function tokenize(html){ const t=[]; let i=0; while(i<html.length){ if(html[i]==='<'){ const j=html.indexOf('>',i); t.push({tag:html.slice(i,j+1)}); i=j+1; } else { t.push({ch:html[i]}); i++; } } return t; }
+function renderType(){ let out='',c=0; for(const t of curToks){ if('tag' in t) out+=t.tag; else { if(c<curShown) out+=t.ch; c++; } } el('line').innerHTML = out + (lineDone ? '' : '<span class="cursor">▍</span>'); }
+function startType(html){ clearInterval(typer); curToks=tokenize(html); curTotal=curToks.filter(t=>'ch' in t).length; curShown=0; lineDone=false; el('cont').classList.remove('go'); el('cont').textContent=''; renderType(); if(reduced){ finishLine(); return; } typer=setInterval(()=>{ curShown+=1; renderType(); if(curShown>=curTotal) finishLine(); }, 18); }
+function finishLine(){ clearInterval(typer); curShown=curTotal; lineDone=true; renderType(); const last=(pageIdx>=pages.length-1); el('cont').classList.add('blink'); el('cont').classList.toggle('go', last); el('cont').textContent = last ? '▼ hit the bandstand' : '▼ tap to continue'; }
+function showPage(){ const pg=pages[pageIdx]; el('scene').classList.toggle('student', pg.who==='student'); el('who').textContent = pg.who==='student' ? 'YOU' : 'THE CAT'; startType(pg.html); }
+function advance(){ if(dialogueDone) return; if(!lineDone){ finishLine(); return; } if(pageIdx<pages.length-1){ pageIdx+=1; showPage(); } else endDialogue(); }
+function endDialogue(){ dialogueDone=true; el('cont').classList.remove('blink'); el('cont').textContent='— your turn —'; el('exwrap').hidden=false; el('exwrap').scrollIntoView({behavior: reduced?'auto':'smooth', block:'start'}); }
+
+/* ===================== COURSE ===================== */
+const COURSE = [
+  { title:'Module 1 — The Bottom', belt:'White Belt', lessons:[
+    { num:'1.1', title:'What the bass is for', teach:[
+        { html:"Hey, kid. Pull up a stool. So you wanna <em>walk</em>. First you gotta know what the bass is even <b>for</b>." },
+        { html:"The bass has two jobs, and it does 'em both at once. Job one: it's the <b>foundation</b>. The bottom note — the <b>root</b> — tells everybody what the chord is. No bass, nobody knows where home is." },
+        { html:"Job two: it's the <b>time</b>. The heartbeat. Me and the drummer, we're the engine room. We keep the pulse rock-steady so everybody else can fly." },
+        { t:'qa', q:"So I just play low notes?", a:"Ha! You play the <em>right</em> low notes in the <em>right</em> time. That's the whole game — takes a lifetime. Start at the bottom. Give it a listen." },
+      ], ex:{ type:'bassDemo', exttl:'The simplest bass in the world', desc:'Four to the bar, one note — the root of each chord. Foundation and time, both jobs at once. Hit play.',
+        chart:['C','Am','F','G'], notesPerBar:4,
+        answer:[ diAt('C',3),diAt('C',3),diAt('C',3),diAt('C',3), diAt('A',2),diAt('A',2),diAt('A',2),diAt('A',2), diAt('F',2),diAt('F',2),diAt('F',2),diAt('F',2), diAt('G',2),diAt('G',2),diAt('G',2),diAt('G',2) ],
+        hint:'That’s the root of each chord, pumping four to the bar. Nothing fancy — but it’s already doing both jobs: naming the chord and keeping the time.' } },
+    { num:'1.2', title:'Find the root', teach:[
+        { html:"Your turn on the bandstand. I'll give you a chord chart, and you find <b>home</b>." },
+        { html:"Under each chord, drop its <b>root</b> on the staff — that's the note the chord is named after. We'll keep it simple: one <b>whole note</b> a bar, just hold it down. Click the staff to place it." },
+        { html:"Don't sweat the octave — a root's a root, high or low, just land on the right letter. Get through one chart and I'll flip you another. Do a few till it's easy." },
+      ], ex:{ type:'bassWrite', rule:'roots', whole:true, exttl:'Root of each chord',
+        desc:'One whole note a bar: the root of each chord. Solve a chart, hit Next chart, and do a few. Play it back any time to hear your bass hold down the changes.',
+        charts:[ ['C','F','G','C'], ['G','C','D','G'], ['A','D','E','A'], ['Am','F','C','G'] ], notesPerBar:1,
+        win:'That’s every root, on every chart. You’ve got home base cold — walk on.',
+        winEach:'That’s it — home on every chord.',
+        fail:'Not every note is the root — the red ones aren’t home. Click to move them, then check again.',
+        hint:'The root is the letter the chord’s named after: C→C, F→F, G→G, D→D, A→A. Any octave. Bass clef — the F line runs between the two dots.' } },
+  ]},
+
+  { title:'Module 2 — Root & Fifth', belt:'Yellow Belt', lessons:[
+    { num:'2.1', title:'The fifth', teach:[
+        { html:"Alright — one note's a little lonesome. Time to add the <b>fifth</b>. Every chord's got one: count up five letters from the root. C's fifth is <b>G</b>. G's fifth is <b>D</b>. F's is <b>C</b>." },
+        { html:"The root and the fifth are the two strongest notes in any chord — rock solid, no major-or-minor drama. That's why they hold up a whole barn dance." },
+        { html:"Country and folk live right here: <b>root on beat one, fifth on beat three</b>. Boom… chuck. Boom… chuck. Give it a listen." },
+      ], ex:{ type:'bassDemo', exttl:'Root & fifth — the two-feel', desc:'Root on one, fifth on three, over G — C — D — G. That two-feel is the heartbeat of a thousand country songs.',
+        chart:['G','C','D','G'], notesPerBar:2,
+        answer:[ diAt('G',2),diAt('D',3), diAt('C',3),diAt('G',3), diAt('D',3),diAt('A',3), diAt('G',2),diAt('D',3) ],
+        hint:'Two notes a bar: the root, then its fifth up top. Strong and open — it never sounds “wrong.”' } },
+    { num:'2.2', title:'Play root and fifth', teach:[
+        { html:"Your turn. Same chart idea: <b>C, F, G, C</b>. Two notes in each bar." },
+        { html:"Beat one, drop the <b>root</b>. Beat three, drop the <b>fifth</b> — five letters up from the root. C→G, F→C, G→D, C→G." },
+        { html:"Octave's your business — put the fifth up high or down low, long as it's the right letter. Fill it in." },
+      ], ex:{ type:'bassWrite', rule:'rootFifth', exttl:'Root, then fifth', desc:'Two slots per bar. Root on the first, fifth on the second. Then play it back and hear that two-feel.',
+        chart:['C','F','G','C'], notesPerBar:2,
+        win:'There it is — root and fifth, steady as a rocking chair. That’s the two-feel.',
+        fail:'Check the red ones: first note is the root, second is the fifth (five letters up).',
+        hint:'Fifths: C→G, F→C, G→D. Any octave. First slot root, second slot fifth.' } },
+    { num:'2.3', title:'Walking up to the V', teach:[
+        { html:"Here's the first taste of <em>walking</em>. Instead of jumping from one chord to the next, you <b>step</b> there — one note at a time, up the scale." },
+        { html:"Classic move: you're sitting on the <b>I</b> chord (C), and the <b>V</b> chord (G) is coming. So you walk up — C, D, E, F — and land on <b>G</b> right as the chord changes. Feels like the music's pulling you along." },
+        { html:"That's the whole idea of a walking bass in miniature. Give it an ear — hear how those steps lead your feet straight to the V." },
+      ], ex:{ type:'bassDemo', exttl:'The walk-up', desc:'Over the last bar of C, step up the scale — C, D, E, F — and arrive on G exactly when the V chord lands.',
+        chart:['C','G'], notesPerBar:4,
+        answer:[ diAt('C',3),diAt('D',3),diAt('E',3),diAt('F',3), diAt('G',2),diAt('B',2),diAt('D',3),diAt('B',2) ],
+        hint:'Beats 1–4 of the C bar walk C–D–E–F, then the downbeat of the G bar lands on G. Those in-between notes are your first passing tones.' } },
+  ]},
+
+  { title:'Module 3 — Outlining the Chord', belt:'Orange Belt', lessons:[
+    { num:'3.1', title:'Arpeggios', teach:[
+        { html:"Now we open the chord up. An <b>arpeggio</b> is just the chord played one note at a time — <b>root, third, fifth</b>, maybe the octave or the seventh on top." },
+        { html:"That <b>third</b> is the storyteller. Major third — bright, sunny. Minor third — moody, blue. The root and fifth can't tell you that; the third can. This is where jazz and blues start living in the bass." },
+        { html:"And on a dominant chord — like <b>G7</b> — there's a flat <b>seventh</b> (that's the F). That note is pure blues. Listen: I'll arpeggiate up each chord." },
+      ], ex:{ type:'bassDemo', exttl:'Arpeggiate the chord', desc:'Root, third, fifth, octave — up each chord. Hear the major chords glow and the minor one darken, and catch that bluesy 7th on the G7.',
+        chart:['C','Am','F','G7'], notesPerBar:4,
+        answer:[ diAt('C',3),diAt('E',3),diAt('G',3),diAt('C',4), diAt('A',2),diAt('C',3),diAt('E',3),diAt('A',3), diAt('F',2),diAt('A',2),diAt('C',3),diAt('F',3), diAt('G',2),diAt('B',2),diAt('D',3),diAt('F',3) ],
+        hint:'C, Am, F are root–3rd–5th–octave. The G7 climbs root–3rd–5th–flat7 — that last F is the blue note.' } },
+    { num:'3.2', title:'Outline the changes', teach:[
+        { html:"Your turn to spell out the chords. Four notes a bar — make every one a <b>chord tone</b>: root, third, or fifth (the flat-seventh's fair game on the G7)." },
+        { html:"Start each bar on the <b>root</b> if you can — that keeps the foundation clear — then climb the rest of the chord however you like." },
+        { html:"No wrong-note passing stuff yet. Just chord tones, four to the bar. Fill it in and hear yourself outline the changes." },
+      ], ex:{ type:'bassWrite', rule:'arpeggio', exttl:'Chord tones only', desc:'Four notes in every bar, and each one has to belong to the chord. Spell C, F, G7, then home to C.',
+        chart:['C','F','G7','C'], notesPerBar:4,
+        win:'Every note belongs to its chord — that’s a bassline that outlines the harmony. Now you’re cooking.',
+        fail:'The red notes aren’t in the chord. C = C·E·G, F = F·A·C, G7 = G·B·D·F. Move them onto chord tones.',
+        hint:'C: C E G · F: F A C · G7: G B D F · C: C E G. Any octave, four per bar.' } },
+  ]},
+
+  { title:'Module 4 — Strong & Weak', belt:'Green Belt', lessons:[
+    { num:'4.1', title:'Strong and weak beats', teach:[
+        { html:"Here's a secret that makes bass lines make <em>sense</em>. In four-four, the beats aren't equal. <b>One and three are strong</b>; <b>two and four are weak</b>." },
+        { html:"Rule of thumb the pros live by: put a <b>chord tone on every strong beat</b> — especially the root on beat one. That's what locks the harmony in. The <b>weak beats</b> are where you get to roam." },
+        { html:"So the ear hears solid chord tones on the strong beats, and the in-between notes just… color. Listen — the strong beats are the chord, the weak beats wander." },
+      ], ex:{ type:'bassDemo', exttl:'Landing on the strong beats', desc:'Beats one and three are chord tones — the frame. Beats two and four are neighbor notes that lean back home.',
+        chart:['C','Am','F','G'], notesPerBar:4,
+        answer:[ diAt('C',3),diAt('D',3),diAt('E',3),diAt('D',3), diAt('A',2),diAt('B',2),diAt('C',3),diAt('B',2), diAt('F',2),diAt('G',2),diAt('A',2),diAt('G',2), diAt('G',2),diAt('A',2),diAt('B',2),diAt('A',2) ],
+        hint:'Beats 1 & 3 land on chord tones; beats 2 & 4 are neighbor notes a step away. The frame is strong; the filler is loose.' } },
+    { num:'4.2', title:'Frame it out', teach:[
+        { html:"Your turn. Four notes a bar, chart's <b>C, F, G, C</b>. Here's the deal:" },
+        { html:"On the <b>strong beats — one and three — you must land a chord tone</b>. I'll hold you to it. On the <b>weak beats — two and four — anything goes</b>: a chord tone, a step up, a step down, whatever your ear wants." },
+        { html:"Build a frame you can trust on the strong beats, then have a little fun in between. Fill it in." },
+      ], ex:{ type:'bassWrite', rule:'strongWeak', exttl:'Chord tones on 1 & 3', desc:'Strong beats (1 and 3) have to be chord tones. Weak beats (2 and 4) are yours to play with. Then hear it walk.',
+        chart:['C','F','G','C'], notesPerBar:4,
+        win:'Strong beats locked onto chord tones, weak beats doing their own thing — that’s how a walking line breathes.',
+        fail:'Beats 1 & 3 (the strong ones, in red) need chord tones. Beats 2 & 4 can be anything — leave those be.',
+        hint:'Strong beats 1 & 3 = chord tones (C:C·E·G, F:F·A·C, G:G·B·D). Beats 2 & 4 are free.' } },
+  ]},
+
+  { title:'Module 5 — Passing Tones', belt:'Blue Belt', lessons:[
+    { num:'5.1', title:'Passing tones', teach:[
+        { html:"Last piece, and it's the one that makes it <em>walk</em>. A <b>passing tone</b> is a note that isn't in the chord — you just pass through it on a weak beat to <b>step</b> from one chord tone to the next." },
+        { html:"Say you're on the root and you want to reach the third two steps up. Don't jump — walk. Root, then the note between, then the third. That in-between note is the passing tone. Smooth as anything." },
+        { html:"String those together and you've got a real walking bass line — chord tones on the strong beats, passing tones strolling between them. Have a listen to the whole thing move." },
+      ], ex:{ type:'bassDemo', exttl:'A line that walks', desc:'Chord tones on the strong beats, passing tones filling the steps between. This is the sound you’ve been walking toward.',
+        chart:['C','F','G','C'], notesPerBar:4,
+        answer:[ diAt('C',3),diAt('D',3),diAt('E',3),diAt('G',3), diAt('F',2),diAt('G',2),diAt('A',2),diAt('C',3), diAt('G',2),diAt('A',2),diAt('B',2),diAt('D',3), diAt('C',3),diAt('B',2),diAt('A',2),diAt('G',2) ],
+        hint:'Each bar: root on 1, a chord tone on 3, and the notes between are passing tones stepping the line along.' } },
+    { num:'5.2', title:'Fill in the passing tones', teach:[
+        { html:"Here's a line that's almost finished. The <b>blue notes</b> are chord tones — already placed on the strong beats and the fifth. But beat two of every bar is <b>empty</b>." },
+        { html:"Your job: drop in the <b>passing tone</b> — the single note that <em>steps</em> from the note before it to the note after it. If it goes C up to E, the passing tone is the D in between." },
+        { html:"One right answer per gap: the note that fills the step. Find all four and you've walked your first real bass line." },
+      ], ex:{ type:'bassWrite', rule:'passing', exttl:'Complete the walk', desc:'The chord tones (blue) are given. Fill the empty second beat of each bar with the passing tone that steps between them.',
+        chart:['C','F','G','C'], notesPerBar:4,
+        given:[ diAt('C',3),null,diAt('E',3),diAt('G',3), diAt('F',2),null,diAt('A',2),diAt('C',3), diAt('G',2),null,diAt('B',2),diAt('D',3), diAt('C',3),null,diAt('E',3),diAt('G',3) ],
+        win:'That’s a walking bass line — chord tones on the beat, passing tones stepping between. You’re walking, kid.',
+        fail:'A passing tone sits right between its neighbours, one step each side. C→E wants D; F→A wants G; G→B wants A. Fix the red ones.',
+        hint:'Fill only the empty second beat. C_E → D, F_A → G, G_B → A, C_E → D. One step at a time.' } },
+    { num:'5.3', title:'The whole walk', teach:[
+        { html:"You've got all the pieces now, kid. Roots and fifths. Arpeggios. Strong beats and weak beats. Passing tones. Put 'em together and this is what you get." },
+        { html:"This is a <b>two-five-one</b> — the most important little journey in jazz. Dm7 to G7 home to C. Listen how the line walks the whole way: a chord tone on every strong beat, a passing tone smoothing every step." },
+        { html:"That's the walk. Now go do it over every tune you know — slow, steady, one note at a time. I'll be on the bandstand." },
+      ], ex:{ type:'bassDemo', exttl:'Walking a ii–V–I', desc:'Everything you’ve learned, in four bars: a walking bass line strolling through Dm7 – G7 – Cmaj7. This is the destination.',
+        chart:['Dm7','G7','Cmaj7','Cmaj7'], notesPerBar:4,
+        answer:[ diAt('D',3),diAt('E',3),diAt('F',3),diAt('A',3), diAt('G',2),diAt('A',2),diAt('B',2),diAt('D',3), diAt('C',3),diAt('D',3),diAt('E',3),diAt('G',3), diAt('C',3),diAt('E',3),diAt('G',3),diAt('E',3) ],
+        hint:'Chord tones land on the strong beats; passing tones step between. That’s a walking bass line — the whole course in four bars.' } },
+  ]},
+];
+const LESSONS = [];
+COURSE.forEach(mod => { if(mod.lessons) mod.lessons.forEach(les => LESSONS.push(Object.assign({ module:mod.title, belt:mod.belt }, les))); });
+let idx = 0;
+
+/* ===================== LESSON / NAV / TOC ===================== */
+function renderLesson(){
+  const L = LESSONS[idx];
+  el('bk').textContent = 'LESSON ' + L.num;
+  el('btitle').textContent = L.title;
+  el('belt').innerHTML = `<span class="dot"></span>${L.belt}`;
+  el('pos').textContent = `Lesson ${idx+1} of ${LESSONS.length}`;
+  el('portrait').innerHTML = MASTER_SVG;
+  bassOk = false;
+  pages = buildPages(L.teach); pageIdx = 0; dialogueDone = false;
+  el('scene').classList.remove('student');
+  el('exwrap').hidden = true;
+  el('exwrap').innerHTML = renderExercise(L.ex);
+  wireExercise(L.ex);
+  showPage();
+  renderNav(); buildToc();
+  window.scrollTo({ top:0, behavior: reduced?'auto':'smooth' });
+}
+function renderNav(){
+  const L = LESSONS[idx];
+  el('prev').disabled = (idx === 0);
+  const slot = el('nextslot');
+  if(idx < LESSONS.length - 1){
+    const gated = L.ex && L.ex.type === 'bassWrite' && !bassOk;
+    if(gated) slot.innerHTML = `<span class="endnote">Nail the exercise, then walk on →</span>`;
+    else { slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`; el('next').addEventListener('click', () => go(idx+1)); }
+  } else {
+    slot.innerHTML = `<span class="endnote">That's the walk, kid. Now go do it over every tune you know.</span>`;
+  }
+}
+function go(i){ idx = Math.max(0, Math.min(LESSONS.length-1, i)); renderLesson(); }
+function buildToc(){
+  let h = '';
+  COURSE.forEach(mod => {
+    h += `<h4>${mod.title}</h4>`;
+    if(mod.lessons) mod.lessons.forEach(les => { const li = LESSONS.findIndex(x=>x.num===les.num); h += `<a href="#" class="${li===idx?'cur':''}" data-go="${li}">${les.num} · ${les.title}</a>`; });
+    else if(mod.soon) h += `<a class="soon">${mod.blurb} <span class="tag">soon</span></a>`;
+  });
+  const toc = el('toc'); toc.innerHTML = h;
+  toc.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); go(+a.dataset.go); toc.classList.add('hidden'); }));
+}
+
+/* ===================== INIT ===================== */
+el('speech').addEventListener('click', advance);
+el('tocBtn').addEventListener('click', () => el('toc').classList.toggle('hidden'));
+el('prev').addEventListener('click', () => go(idx-1));
+renderLesson();
+</script>
+</body>
+</html>
