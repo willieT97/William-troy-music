@@ -1191,7 +1191,7 @@ function kbDot(cx, cy, mk){
          `<text x="${cx}" y="${cy+3.4}" text-anchor="middle" font-family="'Space Mono',monospace" font-size="${fs}" font-weight="700" fill="${mk.txt}">${mk.letter}</text>`;
 }
 function keyboardSVG(markFor, label){
-  const LOW = 48, HIGH = 72;
+  const LOW = 48, HIGH = 84;
   const NAT = [0,2,4,5,7,9,11];
   const X0k = 20, W = SVG_W - 40;
   let nWhite = 0;
@@ -1262,9 +1262,9 @@ function renderFretboard(i){
   const sounding = t.midi + I.shift;
 
   if(I.keyboard){
-    if(sounding < 48 || sounding > 72){
+    if(sounding < 48 || sounding > 84){
       $("fbBox").innerHTML = keyboardSVG(()=>null, "keyboard");
-      fbCaption(t, sounding, ` · off this two-octave view`);
+      fbCaption(t, sounding, ` · off this three-octave view`);
       return;
     }
     $("fbBox").innerHTML = keyboardSVG(
