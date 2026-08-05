@@ -1,0 +1,838 @@
+% Beginner folk songs & carols — familiar melodies from The Public Domain
+% Song Anthology (David Berger & Chuck Israels), released CC0 / public
+% domain. Nursery rhymes, simple folk songs, carols and spirituals for
+% first melody playing. All tunes are US public domain.
+
+X:1
+T:Twinkle, Twinkle, Little Star
+O:Beginner
+R:nursery
+M:2/4
+L:1/4
+C:French Folk Song/Taylor
+K:C
+"C" C C |"^Em7" G G |"F""^F" A A |"C""^Em7" G2 | "G7""^Dm7" F F |"C""^C" E E |"G""^A¨7" D"^G7" D |
+"C""^C" C2 | "C""^Em7" G G |"G7""^Dm7" F F |"C""^C" E E |"G""^Bm7" D2 | "C""^E7" G G |
+"G7""^A7&5" F F |"C""^D7" E E |"G""^G7" D2 | "C""^F#m7€5" C C |"^Fm" G G |"F""^Em7" A A |
+"C""^A7" G2 | "G7""^Dm7" F F |"C""^C#º" E E |"G""^Dm7" D"^G7" D |"C""^C" C2 |]
+
+X:2
+T:Mary Had A Little Lamb
+O:Beginner
+R:nursery
+M:4/4
+L:1/4
+C:Mason/Hale
+K:G
+"G""^Chorus" B A"^D¨7€5" G A |"^C" B B"^Cm" B2 |"D7""^Bm7" A A"^B¨º" A2 |"G""^Am7" B d"^D7" d2 |
+"G""^C#m7€5" B A"^C" G A |"^F9" B B"^EmŒ„Š7" B"^Em7" B |"D7""^E¨7" A A"^D7" B A |
+"G""^G" G2"^D7sus4" z"^Verse" A | "G" B3/2 A/"^D¨7€5" G A |"^C" B B"^Cm" B2 |
+"D7""^Bm7" A A"^B¨º" A2 |"G""^Am7" B d"^D7" d D | "G""^C#m7€5" B3/2 A/"^C" G A |
+"^F9" B B"^EmŒ„Š7" B"^Em7" B |"D7""^E¨7" A A"^D7" B A |"G""^A¨" G3"^G" z |]
+
+X:3
+T:London Bridge Is Falling Down
+O:Beginner
+R:nursery
+M:2/4
+L:1/8
+C:English Folk Song/Children's Game
+K:Bb
+"Bb" F>G"^B7€5" FE |"^B¨" DE"^Bº" F2 |"F7""^Cm7" CD"^F7""^E¨m" E2 |
+"Bb""^Dm7" D"^D¨7"E"^Cm7""^B7" F2 | "Bb" F>G"^Am7€5" FE |"^A¨7" DE"^G7" F2 |
+"F7""^G¨7€5" C2"^B7€5" F2 |"Bb""^B¨" D B,3 |]
+
+X:4
+T:Row, Row, Row Your Boat
+O:Beginner
+R:nursery
+M:6/8
+L:1/8
+C:Eliphalet Oram Lyte
+K:Bb
+"Bb" B,3"^Gm7" B,3 |"^Cm7" B,2 C"^E¨m" D3 |"^B¨" D2 C"^Gm7" D2 E |"^Cm7""^B7" F6 |
+"Bb""^Em7€5" BBB"^A7&5" FFF |"Gm""^A¨7" DDD"^Gm7" B,B,B, |"Cm7" F2 E"F7" D2 C |"Bb" B,3 z3 |]
+
+X:5
+T:Pop Goes The Weasel
+O:Beginner
+R:nursery
+M:6/8
+L:1/8
+C:English Nursery Rhyme
+K:Eb
+"Eb""^Verse" E2 E"Bb""^Dm7€5" F2 F |"Eb""^D¨7" GBG"^Cm7" E2 B, |"^A¨m7" E2 E"Bb""^D¨7" F2 F |
+"Eb""^E¨" G3"^Cm7" E2 B, | "Eb""^Am7€5" E2 E"Bb""^D7" F2 F |"Eb""^Em7€5" GBG"^A7€5" E2 z |
+"Ab""^Fm7" c z z"Bb7""^B¨7sus4" F2 A |"Eb""^E7" G3"^E¨" E2"^Chorus" B | "F7""^Cm7" e2 e"^F7" c2 c |
+"Bb""^B¨" d2 d"^Gm7" B2 B |"F7""^Cm7" e2 e"^F7" c2 c |"Bb""^B¨" d3"^Em7€5" B3 |
+"Ab""^A¨m" A2"Eb7" G"Ab""^Dm7€5" A2"Eb" B |"Ab""^Gm7" c2"Bb" d"Ab""^G¨º" e3 |
+"^Fm7" c z z"Bb7""^B¨7sus4" F2 A |"Eb""^E7" G3"^E¨" E2 z |]
+
+X:6
+T:This Old Man
+O:Beginner
+R:nursery
+M:2/2
+L:1/4
+C:English Nursery Rhyme
+K:C
+"C" G E G2 |"Dm7""^Am7" G E G2 |"G7""^Dm7" A G F E |"^G7" D"^Am7" E"^Bm7€5" F"^B¨7" E/F/ |
+"C""^Am7" G"^Am7/G" C C/"^F#m7€5"C/ C |"^Fm" C/D/E/F/"^Em7""^A7" G2 |"G7""^Dm7" G D"^A¨7" D F |
+"C""^G7sus4" E"G7""^G7" D"C""^C" C2 |]
+
+X:7
+T:Old Macdonald Had A Farm
+O:Beginner
+R:nursery
+M:2/2
+L:1/4
+C:American Nursery Rhyme
+K:G
+"G" G G"^G7/B" G D |"C""^C7" E E"G""^Bm7""^B¨7" D2 |"^A7" B B"D7""^D7" A A |
+"G""^Bm7""^B¨º" G3"^Am7""^A¨7" D | "G" G G"^G7/B" G D |"C""^C7" E E"G""^Bm7""^B¨7" D2 |
+"G""^A7" B B"D7" A A |"G" G3 D/D/ | "G" G G"C""^C7" G"G""^G7" D/D/ |"C""^C7" G G"G" G z |
+"G""^Bm7&5" G/G/ G"C""^B¨º" G/G/ G | "G""^Am7" G/G/G/G/"C""^A¨7" G G |"G" G G"^G7/B" G D |
+"C""^C7" E E"G""^Bm7""^B¨7" D2 | "G/D""^A7" B B"D7""^D7" A A |"G" G4 |]
+
+X:8
+T:Frère Jacques
+O:Beginner
+R:nursery
+M:4/4
+L:1/4
+C:Traditional 4-Part French Round
+K:F
+"F""^Am7" F"C7" G"F""^Dm7" A F |"F""^Gm7" F"C7" G"F""^C7sus4" A"^G¨maj7" F |
+"F""^F" A"C7""^Gm7" B"F""^Am7""^Gm7" c2 |"F""^F" A"C7""^Gm7" B"F""^Am7""^D7" c2 |
+"F""^Gm7" c/d/"C7"c/B/"F""^Bm7€5" A F |"F""^B¨6" c/d/"C7"c/B/"F""^E¨7€5" A"^Dm7" F |
+"F""^Gm7" F"C7""^G¨maj7€5" C"F""^Am7&5""^A¨º" F2 | "F""^Gm7" F"C7""^G¨maj7€5" C"F""^F" F2 |]
+
+X:9
+T:Here We Go 'Round The Mulberry Bush
+O:Beginner
+R:nursery
+M:3/8
+L:1/8
+C:Traditional English nursery rhyme/game/Thos. P. Westendorf
+K:F
+"F" FFF |"^E¨9" F2 A |"^Am7" ccA |"^Dm7" F2"^G#º" F | "C7""^Am7" GG"^A¨º"E |
+"^Gm7" C2"^Gm7/C""^G¨7€5" C |"F""^F" A"^B¨"A"^Am7"G |"^Gm7""^Gm7/C" F3 | "F" FF"^Gm7"F |
+ F2"^Am7" A | cc"^Dm7"A | F2 F | "C7""^B¨" (GA)"^B¨m"G |"^Gm7" C2"^C7" E |"F""^B¨7" F3 |"^F" F3 |
+"F" FFF |"^Gm7" F2 A |"^Am7" c2 A |"^B¨" F3 | "C7""^A7" GGG |"^Dm7" G2 A |"^D¨7" G2 E |
+"^C7sus4" C3 | "F""^Bm7€5" FFF |"^B¨" F2"^B¨m" A |"^Am7" c2 A |"^Dm7" F2 A | "C7""^D¨7€5" (GA)G |
+"^G¨7€5" C(DE) |"F""^E¨" F3 |"^F" F3 |]
+
+X:10
+T:Polly Wolly Doodle
+O:Beginner
+R:nursery
+M:4/4
+L:1/8
+C:Dan Emmett
+K:F
+"^Verse" FG ||"F" A2 A2"^Gm7" F2 FG |"^Am7" A2 A2"^B¨maj7" F2 F2 |"^Am7" AAAA"^D7&9" BBAA |
+"C7""^Gm7" G4"^C7" z2 EF |"C7""^Bm7&5" G2 G2"^B¨º" E2 E2 |"^Am7" G2 G2"^A¨º" E2 G2 |
+"^Gm7" cccc"^D¨7" BB"^C7"GG | "F" F4 z2"^Chorus" FG ||"F""^F/C" A6"^Gm7/C" FG |
+"^Am7/C" A6"^Gm7/C" FG |"^F" A2"^E¨7" A2"^D7&9" B2 A2 | "C7""^Gm7""^D¨7" G6"^C7" EF |
+"C7""^Bm7&5" GGGG"^B¨m7€5" EEEE |"^Am7" GGGG"^A¨º" EE G2 |"^Gm7" cc"^F#º"cc"^Gm7" BB"^E7"GG |
+"F" F6 |]
+
+X:11
+T:Go Tell Aunt Rhody
+O:Beginner
+R:nursery
+M:2/4
+L:1/8
+C:American Folk Song
+K:D
+"D" F2"^C7" FE |"^Bm7" D2"^B¨7" D2 |"A7""^Em7" E2"^A7" EG |"D""^G#m7€5" (FE)"^Gm6" D2 |
+"D""^F#m7" A2"^C7" AG |"^Bm7" F2"^F7" DD |"A7""^B¨7" EG"^A7"FE |"D""^D" D4 |]
+
+X:12
+T:A Tisket, A Tasket
+O:Beginner
+R:nursery
+M:4/4
+L:1/4
+C:Nursery Rhyme
+K:D
+ A |:"D""^Dmaj7" A2"^Em7" F B |"^F#m7" A2"^Em7" F G |"^Dmaj7" A A"^Em7" F B |"^F#m7" A2"^B7" F F |
+"A7""^Em7" G G"^A7" E E |"^Em7" G G"^A7" E E |"^Em7" E G"^A7" F E |1"D""^Dmaj7" F2"^Em7/A" D A :|2
+"D" F2 D |]
+
+X:13
+T:Rock-a-bye Baby
+O:Beginner
+R:nursery
+M:3/4
+L:1/4
+C:Canning or Blake/English Nursery Rhyme
+K:Bb
+"Bb" D3/2 F/ d |"^B¨º" c2"^B¨" B | D3/2 F/ d |"F7""^F7sus4" c2 z | "F7""^Cm7" F3/2 A/ e |
+"^F7€9" d2 c |"Eb""^B¨º" c B G |"Bb""^B¨" F2 z | "Bb" D3/2 F/ d |"^B¨º" c2"^B¨" B |
+"^A¨7" D3/2 F/ B |"Am7b5""^G7" A2"Edim""^A#º" G | "Bb/F""^Bm7€5" F"^E7" B"Eb""^Am7€5" e |
+"Bb/F""^A¨7" d"^D¨7" B2 |"F7""^G¨7" c"Eb""^Cm7" G"F7""^B7" A |"Bb""^B¨" B3 |]
+
+X:14
+T:Billy Boy
+O:Beginner
+R:nursery
+M:2/4
+L:1/8
+C:English Folk Song
+K:Bb
+ (DE) ||"Bb" F2"^Gm7" FF |"^Cm7" B2 DE |"^Dm7" F2"^D¨7" FG |"^Cm7" F2 (DE) | "Bb" F2"^A¨7" FF |
+"^Gm7" B2"^Bº" ED |"C7" D C3 |"F7" z2 CD | "F7""^Cm7" EEEE |"^F7" E2 FE |"Bb""^B¨" (DC)"^A¨7"DE |
+"^Gm7" F2"^D¨7" BG | "Bb""^Cm7" F2"^Bº" DF |"F7""^Cm7" FE"^F7"CA, |"Bb" C B,3- | B,2 |]
+
+X:15
+T:Alouette
+O:Beginner
+R:nursery
+M:4/4
+L:1/8
+C:Canadian Folk Song
+K:F
+|:"F""^Refrain  - Repeat ad lib" F3 G"^Dm7" A2 A2 |"C7""^Gm7" GF"^C7"GA"F""^F" F2"^C7sus4" C2 |
+"^F" F3 G"^Dm7" A2 A2 |"C7""^Gm7" GF"^C7"GA"F""^F" F4 | "F""^Verse" FGAB"C743" cc c2 |
+ cdcB"F" AG F2 | "C743" cc c2 CC C2 | cc c2 CC C2 |"^Am7" (c2"^D7&5" B2"^G7" A2"^C7" G2) ::
+"F" F3 G"^Dm7" A2 A2 |"C7""^Gm7" GF"^C7"GA"F""^F" F2"^C7sus4" C2 |"^F" F3 G"^Dm7" A2 A2 |
+"C7""^D¨7" GF"^C7"GA"F""^F" F4 |]
+
+X:16
+T:Oh, My Darling Clementine
+O:Beginner
+R:folk
+M:3/4
+L:1/8
+C:American Folk Song/Percy Montrose
+K:F
+"^Verse" F>F ||"F" F2 C2 A>A |"^E¨7" A2 F2 F>A |"^Dm7" c3 c BA |"C7""^D¨7" G4 G>A |
+"C7""^Gm7" B2"^Gm7/F" B2"^Em7€5" A>G |"F""^E¨7" A2 F2"^Dm7" FA |"C7""^D¨7" G3"^G¨7€5" C EG |
+"F""^F" F4"^Chorus" F>F | "F""^Gm7/C" F2"^Dm7/C" C2"^B¨maj7/C" A>A |"^Gm7/C" A2 F2"^B¨maj7/C" F>A |
+"^Dm7/C" c3 c"^C#º/D" B"^E¨º"A |"C7""^Em7""^Gm/F" G4"^F#º" G>A |
+"C7""^Gm7" B2 B2"A7/C#""^C#º" A>G |"Dm""^Dm7" A2"^A¨7" F2"G7""^B¨m" FA |
+"C7""^Am7" G3"^Dm7" C"^D¨7&9" EG |"F""^G¨maj7""^F" F4 |]
+
+X:17
+T:On Top Of Old Smoky
+O:Beginner
+R:folk
+M:3/4
+L:1/4
+C:Appalachian Folk Song
+K:C
+ C C E G |:"F""^Fmaj7" c3 |"^Em7" A3- |"^Dm7" A2 A |"^G7sus4" F G A | "C""^Cmaj7" G3- |"^Bm7" G3- |
+"^Am7" G2 G/-G/ |"^C/G" C E"^C#º" G | "G7""^Dm7" G3 |"^F#º" D3- |"^G7sus4" D2 E | F E D |
+"C""^A¨maj7" C3- |"^D¨maj7" C3- |1"^Cmaj7" C2 C |"C7" C E G :|2"C""^Cmaj7" C2- |]
+
+X:18
+T:Home On The Range
+O:Beginner
+R:folk
+M:3/4
+L:1/4
+C:Kelley/Higley
+K:G
+"^Verse" D ||"G" D G A |"G7" B2 G/F/ |"C" E c c |"Cm""^F7" c2 B/c/ | "G""^Bm7" d2"^B¨7" G/G/ |
+"A7" G F G |"D""^E¨7" A3- |"D7" A2 D | "G" D G A |"G7" B2 G/F/ |"C" E c c |"Cm""^F7" c2 c/c/ |
+"G""^G/D" B3/2"^D#º" A/"^Em7" G |"D7""^Am7" F"^D7" G A |"G" G3- |"D743" G3 |
+"G""^Chorus""^G#º" d3 |"D7""^Am7" c"^D7" B3/2 A/ |"G" B3- | B2 D/D/ | "G""^G/B" G2 G/G/ |
+"A7""^B¨º" G F G |"D""^Am7""^E¨7" A3- |"D7""^D7" A2"^A¨7" D | "G" D G A |"G7" B2 G/F/ |"C" E c c |
+"Cm""^F7" c2 c/c/ | "G""^G/D" B3/2"^D#º" A/"^Em7" G |"D7""^Am7" F"^D7" G A |"G" G3- | G2 |]
+
+X:19
+T:Red River Valley
+O:Beginner
+R:folk
+M:4/4
+L:1/4
+C:Canadian/American Folk Song
+K:D
+ A, D ||"D" F2 F F |"^A7sus4" F2 E F |"^D" E D3 |"^A7sus4" z2 A, D | "D" F2"^C7" D F |
+"^F#m7" A2"^B7€9" G F |"A7""^Dm7""^B¨7" E4 |"^Em7/A" z2"^E¨7" A G | "D""^Dmaj7" F2"^C7" F E |
+"D7""^Bm7""^B¨7" D2"^Am7" E"^A¨7" F |"G""^G" A"^Am7" G3- |
+"^Bm7""^Am7" G2"G#dim""^A¨m7" B,"^Gm7" _B, | "A7""^F#m7" A,2"^Bm7" C D |"^B¨7" E2"^A7sus4" F E |
+"D" D4 | z4 |]
+
+X:20
+T:Shenandoah
+O:Beginner
+R:folk
+M:4/4
+L:1/8
+C:American Folk Song
+K:F
+ C2 ||"F" FF"^Gm7" F2-"^Am7" FG"F7""^B¨"AB |[M:3/4]"Bb""^F/C" d"F""^C#º" c3"^Dm" fe |
+"Bb""^Gm7" d3"^Am7" c"^B¨" dc |"F""^F/C" A"^B¨" c3"^Am7" c2 |
+[M:4/4]"Dm""^Gm7" dd d2-"^C7" dA"Am"cA |[M:3/4]"Gm""^F" G"^Dm" F3"Dm""Gm""^Gm7€5" G2 |
+"F""^F/C" A3 F A>d |"C""^F9" c3 F"F""^B¨" F>"^B¨m"G | [M:2/4]"Dm""^G9" A3"C" G |
+"F""^B¨m/F" G"^F" F3 |]
+
+X:21
+T:Down In The Valley
+O:Beginner
+R:folk
+M:3/4
+L:1/4
+C:American Folk Song
+K:G
+ D G A ||"G""^Gmaj7" B3 |"^D7sus4" G3 |"^G6" B A G | "D7""^Am7" A3- |"^D7" A3 | D F A ||
+"D7""^Am7" c3 | "^D7" A3 | c B A |"G""^Gmaj7" B3- |"^G6" B3 | "^D7sus4" D G A ||"G""^Gmaj7" B3 |
+"^D7sus4" G3 |"^G6" B A G | "D7""^Am7" A3- |"^D7" A3 | D F A ||"D7""^Am7" d3 | "^D7" d3 | c B A |
+"G" G3- | G3 |]
+
+X:22
+T:My Bonnie Lies Over The Ocean
+O:Beginner
+R:folk
+M:3/4
+L:1/4
+C:Scottish Folk Song
+K:G
+"^Verse" D ||"G" B A G |"C" A G E |"G" D B,2- |"^C" B,2 D | "G""^Bm7" B A G |"A7""^E¨7" G F G |
+"D7""^Am7" A3- |"^D7" A2 D | "G""^B7" B A G |"C""^C" A G E |"G""^Bm7" D B,2- |"^Em7" B,2"^G#º" D |
+"C""^Am7" E A G |"D7" F E F |"G" G3- | G2 z | "G""^Chorus" D3 |"G7""^Bm7&5" G3 |"C""^B¨7" E3 |
+"A7""^Em7" A3 | "D7""^E¨7" F F F |"^Am7" F E"^D7" F |"G""^Bm7" G2"^B¨º" A |"^Am7""^E¨7""^D7" B3 |
+"G" D3 |"G7""^Bm7&5" G3 |"C""^B¨7" E3 |"A7""^Em7" A2 G | "D7""^E¨7" F F F |"^Am7" F E"^A¨7" F |
+"G""^G" G3- | G2 |]
+
+X:23
+T:The Camptown Races
+O:Beginner
+R:folk
+M:4/4
+L:1/4
+C:Stephen Foster
+K:C
+ E/ ||"C""^Cmaj7" G G"^Bm7" E G |"^Em7" A G"^Am7" E2 |"G7""^Dm7" E"^G7sus4" D3 |
+"^Dm7" E"^G7sus4" D2"^Fm" z/ E/ | "C""^Em7" G G"^Am7" E G |"^Dm7" A G"^C#º" E2 |
+"G7""^Dm7" D3/2 D/"^Dm7/G" E D |"C""^A¨maj7" C3"^Dm7""^G7sus4" z | "C""^Cmaj7" C3/2 C/"^B¨7" E G |
+"^Am7" c2"^Gm7" z2 |"F""^Fmaj7" A3/2 A/"^Am7" c A |"C""^Dm7" G2"^G7sus4" z z/ E/ |
+"C""^Cmaj7" G G"^B¨7" E/E/G/G/ |"^Em7" A/ G E/-"^C#º" E2 |"G7""^Dm7" D E/F/"^G7sus4" E/ D D/ |
+"C""^D¨maj7" C3"^C" z |]
+
+X:24
+T:Old Folks At Home
+O:Beginner
+R:folk
+M:4/4
+L:1/8
+C:Stephen Foster
+K:D
+"D""^Dmaj7""^Verse""^D6" F4"^Am7" ED"^D7"FE |"^G" D2 d2"G""^G#º" B d3 |
+"D""^D/A" A4"^Bm7" F2"^F7" D2 |"A7""^B¨7""^Em7""^A7" E8 | "D""^Dmaj7""^D6" F4"^Am7" ED"^D7"FE |
+"^G" D2 d2"G""^G#º" B d3 |"D""^D/A" A2"^Bm7" F>D"Em""^B¨7" E2"A7""^A7" E2 |"D""^D" D8 |
+"D""^Dmaj7""^D6" F4"^Am7" ED"^D7"FE |"^G" D2 d2"G""^G#º" B d3 |"D""^D/A" A4"^Bm7" F2"^F7" D2 |
+"A7""^B¨7""^Em7""^A7" E8 | "D""^Dmaj7""^D6" F4"^Am7" ED"^D7"FE |"^G" D2 d2"G""^G#º" B d3 |
+"D""^D/A" A2"^Bm7" F>D"Em""^B¨7" E2"A7""^A7" E>E |"D""^D" D8 |
+"A7""^Em6""^Chorus" c3 d"^B¨7" e2"^E¨7" A2 |"D""^D" A3 B"D7""^E¨7" A2"^A¨7" d2 |
+"G""^Bm7" d2"^F7" B2"^B¨7" G2"^A7&5" B2 |"D""^F#m7€5""^B7""^Em7""^A7" A8"A7" |
+"D""_One of Foster’s biggest hits, the song was originally published under E.F. Christy’s name and performed by Christy’s Minstrels. Based on parlor songs of the time, W.E.B. DuBois classified it among the sorrow songs he wrote about and W.C. Hand cited it as a song that “touched the heart of Lincoln” and helped make emancipation a reality. However, the original lyrics are controversial today, and the State of Florida worked with the American Music Center at the University of Pittsburgh to create new lyrics to the state song.""^Dmaj7""^D6" F4"^Am7" ED"^D7"FE |
+"G""^G" D2 d2"^G#º" B d3 |"D/A""^D" A2"^Bm7" F>D"Em""^B¨7" E2"A7" E>E |"D""^E¨""^D" D8 |]
+
+X:25
+T:Beautiful Dreamer
+O:Beginner
+R:folk
+M:9/8
+L:1/8
+C:Stephen Foster
+K:D
+"D" dcd"^F#m7" A3"B7" F3 |"Em" E^DE B6"E7" | "A7" AcB"^Em7" BAG"^A7" GFE |"D" F6- F3 |
+"D" dcd"^F#m7" A3"B7" F3 |"Em" E^DE B6"E7" |"A7" AcB"^Em7" BAG"^A7" GFE | "D" D6-"G""D" D3 ||
+"A7""^Em7" AGE"^A7" C3"^C#7" B3 |"D""^D" BA"^C7"F"^Bm7" (D3"Bm""^F7" d3) |
+"G""^Bm7" dcd"^F7" B3"E7""^Bm7" e2 d | "A""^E7" cdB"A7""^E¨7" A6 |"D""^D" dcd"^F#m7" A3"B7" F3 |
+"Em" E^DE"E7" B6 | "A7" AcB"^Em7" BAG"^A7" GFE |"D""^C9" F6- F3 |
+"G" Bcd"D/A" dAF"A7""^Em7" G"^A7"FE |"D" D6 z3 |]
+
+X:26
+T:The Yellow Rose Of Texas
+O:Beginner
+R:folk
+M:2/2
+L:1/4
+C:J.K.
+K:C
+"^Verse" G/F/ ||"C" E G G G | A G2 F | E G c3/2 d/ | e3 e | "C" e G"C#dim" G e |"G7" e d2"Am7" c |
+"D7" B c d3/2 e/ |"G7" d3 G | "C" E G G G | A G2 F | E G c3/2 d/ | e3"^C#º" G |
+"G7""^Dm7" G f"^G7" f f |"C""^C/G" f"^Fm" e2"F" d |"C""^C/G" c G"G7""^G7" e3/2 d/ |
+"C""^C" c3"^Chorus" G/F/ | "C" E G G G | A G2 F | E G c3/2 d/ | e3 G | "C" G e"C#dim" e e |
+"G7" e d2"Am7" c |"D7" B c d3/2 e/ |"G7""^Dm7" d3"^A¨7""^G7" G/F/ | "C" E G G G | A G G F |
+ E G c3/2 d/ | e3"C#dim" G/G/ |
+"G7""^The origins of the “Yellow Rose of Texas” are unknown, but the first known published version appeared in 1858. Different lyrics have accompanied the tune over the years, but according to some, Emily D. West is the yellow rose named in the song. A mixed race woman from Connecticut, West had been indentured to James Morgan. After being brought to Morgan’s Point, she was captured by General Santa Anna during the war for Texas’ independence. The original lyrics can be viewed in the archives at the University ofTexas, Austin.""^Dm7" G f"^G7" f f |
+"C""^C" f e"F""^Fm" d3/2 c/ |"C""^C/G" c G"G7""^G7" e3/2 d/ |"C""^C" c3 |]
+
+X:27
+T:She'll Be Comin' Round The Mountain
+O:Beginner
+R:folk
+M:2/4
+L:1/8
+C:Spiritual
+K:G
+ DE ||"G""^G/B" GG"^B¨º"GG |"^Am7" ED"^D7"B,D |"^Gmaj7" G2"^Am7" z2 |"^Bm7" z2"^CŒ„Š7" GA |
+"G""^C#m7€5" BB"^Cm"BB |"^Bm7" dB"^B¨m"AG |"D7""^Am7" A2"^E¨7" z2 |"^D7" z2"^D#º" dc |
+"G""^Em7" BB"^E¨º"BB |"G7""^Dm7" AG"^D¨7"GG |"C""^CŒ„Š7" EE"^B¨7"EE |"C#dim""^Am7" AG"^A#º"FE |
+"G/D""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section.""^Bm7" DD"^B¨7"DD |
+"Am7""^Am7" BA"D7""^D7"EF |"G""^G" G2 z2 | z2 |]
+
+X:28
+T:I've Been Working On The Railroad
+O:Beginner
+R:folk
+M:4/4
+L:1/8
+C:American Folk Song
+K:F
+"F" F3 C"^Gm7" F>CF>G |"^Fmaj7" A4"^B7€5" F4 |"Bb""^B¨" B3 B"^B¨m" F2 G2 |
+"F""^F""^B¨""^Am7""^Gm7" A8 | "F" F3 C"^Gm7" F>CF>G |"^E¨7" A4"^Dm7" F2 A>A |"G7" A2 G2 G2 A2 |
+"C7""^D¨7""^C7" G8 | "C7""^D¨7" G3 G"^C7" ^F>GA>G |"F""^B¨" =F4"^Am7""^Dm7" C4 |
+"Bb""^B¨7" B2"^A¨m6" B>B"^Gm7€5" F>FG>G |"A7""^Em7€5""^A7" A8 | "Bb" D3 E"^Bº" F>EF>D |
+"F""^F/C""^B¨7" C4"^Am7€5""^A¨º" F4 |"G7""^Gm7" A2"Gm7""^D¨9" B2"C7""^C9" A2"^E7" G2 |
+"F""^F""^B¨m7""^F6" F8 | "F" C>CC>C"^B7" F4 |"Bb" D>DD>D"G7""^Bº" G4 |
+"C7" E>E"^A¨º"E>E"Bb7""^Gm7" D2"C7" E2 |"F""^Am7&5" F2"C7""^A¨º" G2"F""^Gm7""^C7" A4 |
+"F" C>CC>C"^B7" F4 |"Bb" D>DD>D"G7""^Bº" G4 |"C7" E>E"^A¨º"E>E"Bb7""^Gm7" D2"C7" E2 |
+"F""^E¨6""^E6""^F6" F8 | "F" A>AA>A"^B¨7" F>F F2 |"^Am7" C4"^A¨7" F4 |
+"^F/C" A>AA>A"^Bm7€5" F>F F2 |"C7""^B¨" (G2"^Am7" E2"^Gm7" D2"^G¨7€5" C2) |
+"F" A>AA>A"^A7&5" F>F F2 |"Bb" B4"Bdim" d4 |"F/C" c>c"^F#º"c>c"C7""^Gm7" B2"^C7" G2 |
+"F""^F" F2"^A¨maj7" C2"^Gm7" D2"^G¨maj7" F2 | "F" A4"^B¨7" F4 |"^Am7" (3CCC C2"^A¨7" F4 |
+"^G7" A2 A2 (3FFF F2 |"C7""^Gm7" (G2"^D¨7" E2"^Gm7" D2"^G¨7€5" C2) | "F" A4"^A7&5" F4 |
+"Bb" (3BBB B2"Bdim" d4 |"F/C" c>c"^F#º"c>c"C7""^Gm7" B2"^C7" G2 |"F""^G¨maj7""^F" F8 |]
+
+X:29
+T:Auld Lang Syne
+O:Beginner
+R:folk
+M:4/4
+L:1/8
+C:Scotch Air/Burns
+K:F
+ C2 |:"F""^F" F3"^F/E" F"Dm""^Dm" F2"^F#º" A2 |"Bb6""^Gm" G3"^Gm/F" F"C7""^Em7€5" G2"^A7" A2 |
+"F""^Dm" F3"^Dm/C" F"F7""^F" A2"^F7" c2 |"Bb""^B¨" d6"^Bº" d2 |
+"F""^F" c3"^A7/C#" A"Dm""^Dm7" A2 F2 |"Bb6""^Gm" G3"^Gm/F" F"C7""^Em7€5" G2"^A7" A2 |
+"Dm""^Dm" F3"Gm7" D"C7""^Gm7" D2"^C7" C2 |"F""^E¨""^E" F6"Bb""^F" d2 |
+"F""^Am7" (c3 A)"F7""^Dm7" (A2"^F#º" F2) |"Bb6""^Gm" G3"^Bº" F"C7""^C7" G2"^B¨7" d2 |
+"F""^Am7" (c3"^Gm7" A)"F7""^Fmaj7" (A2"^F7" c2) |"Bb""^B¨7" d6"^Bº" d2 |
+"F""^F" c3 A"Dm""^Dm" A2"^A¨7" F2 |"Bb6""^Gm7" G3"^D¨7" F"C7""^C7" G2"A7""^B¨m" (AG) |
+"Dm""^F/A" (F3"Gm7""^A¨7" D)"Bb/C""^Gm7" (D2"C7""^C7" C2) |1 "F""^G¨maj7" F6"^F" C2 :|2
+"F""^G¨maj7""^F" F6 |]
+
+X:30
+T:Scarborough Fair
+O:Beginner
+R:folk
+M:3/4
+L:1/4
+C:English Ballad
+K:C
+"Dm" D2 D |"^B¨" A2 A |"C""^Am7" E3/2 F/ E |"Dm""^Dm" D3 | "F""^Fmaj7" z A"^Em7&5" c |
+"Dm""^Am7" d2 c |"F""^Em7" A"G" B"^Am7" G |"Dm""^Dm7" A3- | A2 d | "Dm""^B¨maj7" d2 d |
+"F""^Am7" c2 A |"F""^B¨maj7" A"Em""^Am7" G"Dm""^Gm7" F |"C""^Fmaj7""^Em7""^Dm7" E3 |
+"Dm""^B¨maj7" D2 A |"C""^Am7" G2"Dm""^Dm7" F |"C""^Cmaj7" E"Dm""^B¨maj7" D"C""^Am7" C |
+"Dm""^Dm" D3- | D3 |]
+
+X:31
+T:Greensleeves
+O:Beginner
+R:folk
+M:3/4
+L:1/8
+C:English Folk Song
+K:C
+ D2 ||"Dm7" F4 G2 |"^G7" A4 (BA) |"C" G4"^B¨7" E2 |"^Am7" C4 (DE) | "Bb""^Bm7€5" F4 D2 |
+"^E7" D4 (^CD) |"A7" E4 ^C2 | A,4 D2 | "Dm7" F4 G2 |"^G7" A4 (BA) |"C" G4"^B¨7" E2 |
+"^Am7" (C2 D2) z E | "Bb""^B¨7" (F2 E2) D2 |"A7" (^C3 B,) C2 |"Dm" D4"^Gm" D2 |"^Dm" D4 z2 |
+"F" c6 |"^F#m7€5" c4"^B7" (BA) |"C""^Em7" G4"^B¨7" E2 |"Am7" (C4 DE) | "Dm7""^Bm7€5" (F4 D2) |
+"^E7" D4 (^CD) |"A7" E4 ^C2 |"^Em7""^E¨7" A,6 | "F" c6 |"^F#m7€5" c4"^B7" BA |
+"C""^Em7" G4"^B¨7" E2 |"Am7" C4 (DE) | "Bb" F4 ED |"A7" (^C2 B,2) C2 |"Dm""^E¨" D6 |"^Dm" D6 |]
+
+X:32
+T:(The Bonnie Banks O')
+O:Beginner
+R:folk
+M:4/4
+L:1/8
+C:Scottish Folk Song
+K:F
+"^Verse" (CE) ||"F" F2"^E¨7" FG"^Dm7" A2"^A¨m" GF |
+"Bb/F""^Gm7" G2"^D¨7" GF"^C7" D2"C7""^G¨7€5" CE |"F""^F" F2"^E7€9" F2"^E¨7" F2"^D7" Ac |
+"Bb""^Gm7" d4"F""^C7" c2"^B¨m6" c2 |"Dm""^Am7" d2 dc"Am""^Dm7" A2 Ac |
+"Gm""^Gm7" BA"A7#5"GF"Bb" D2"C7" C"^C7/B¨"E | "F""^Am7&5" FF"^E¨7"Ac"Bb""^Am7" d2"F/C""^F#º" cA |
+"C7""^Gm7""^C7" G4"F""^F" F2"^C7" C2 ||"F""^F" F2"^E¨7" FG"^Dm7" A2 GF |
+"Bb""^Gm7" F2 FD"C7" C2 CE |"F" F2"^E7€9" FF"^E¨7" F2"^D7" Ac |"Bb""^Gm7" d4"F""^C7" c2"^B¨7" c2 |
+"Dm""^Am7" d2 dc"Am""^Dm7" A2 Ac |"Gm""^Gm7" BA"A7#5"GF"Bb" D2"C7" CE |
+"F""^Bm7€5" FF"^B¨m"Ac"Bb""^Am7" d2"F/C""^D7" cA |"C7""^Gm7""^C7" G4"F""^F" F2 |]
+
+X:33
+T:Londonderry Air
+O:Beginner
+R:folk
+M:4/4
+L:1/8
+C:Irish Ballad/Weatherly
+K:C
+ B, CD |:"C" E3 D"C7" EAGE |"F" DC A,2- A,C"Fm"EF | "Em7" G3 A"Am7" GE"D7"CE |
+"Dm7""^Am7" D4-"G7""^A¨7" DB,CD |"C" E3 D"C7" EAGE | "F" (DC) A,2-"Fm" A,B,CD |
+"Am7" E3"^A¨7" F"Dm7" ED"G7"CD |"C""^Am7" C4"^Dm7" z G"G7" AB | "C" c3 B"F" BAGA |
+"C/E" GE C2-"C" CGA"^E7"B | "Am" c3"Am/G" B"F" BA"Em7"GE |
+"D7""^Am7""^A¨7" D4-"G7""^Dm7" DG"^D¨7"GG |"C7" e3 d"F" dc"F#dim"Ac |
+"C/G" (GE)"Am" C2-"Fm/Ab" CB,CD |"C/G" EA"Am7"GE"Dm7" DC"G7"A,B, |1
+"C""^A¨7" C4"^Dm7" z B,"^G7" CD :|2"C" C8 |]
+
+X:34
+T:Silent Night
+O:Beginner
+R:carol
+M:3/4
+L:1/8
+C:Gruber/Mohr & Young
+K:C
+"C" (G3 A) G2 |"^D¨7€5" E6 |"^C" (G3 A)"^B7&5" G2 |"^B¨7€5" E6 | "G7""^Am7" d4 d2 |"^A¨7" B6 |
+"C""^G7sus4" c4 c2 |"^E7&9" G6 | "F" A4 A2 |"^F#º" (c3 B) A2 |"C""^C/G" G3 A G2 |
+"^Cmaj7""^Bm7""^Am7" E6 | "F" A4 A2 |"^F#º" c3 B A2 |"C""^C/G" G3 A G2 |"^A7€9" E6 |
+"G7""^Dm7" d4"^Bm7€5" d2 |"G#dim""^E7€9" f3 d B2 |"Am7""^E¨7" (c6 |"D7""^D7" e6) |
+"C/G" (c2 G2) E2 |"G7""^Dm7" G3 F"^A¨7" D2 |"C""^D¨" C6 |"^C" z6 |]
+
+X:35
+T:Jingle Bells
+O:Beginner
+R:carol
+M:2/4
+L:1/8
+C:Jas. Pierpont
+K:G
+"G""^Gmaj7""^Verse" DB"^Am7"AG |"^Bm7" D3"^Am7" D/D/ |"^G" DB"G7""^B7"AG |"C""^C" E3"^Bº" z |
+"Am7""^Am7" Ec"^Bm7"BA |"D7""^C#m7""^Cm7€5""^Bm7""^B¨º" F4 |"^Am7" dd"^D7"cA |
+"G""^G" B3"D7""^A¨7€5" z | "G""^Gmaj7" DB"^Am7"AG |"^Bm7""^Am7" D4 |"^G" DB"B7""^B7"AG |
+"C""^Cmaj7""^Dm7" E3"E7""^Em7""^B¨7€5" E | "Am7" Ec"^F#m7€5"BA |"D7""^Bm7€5" dd"^E7"d"^G#º"d |
+"Am7""^Am7" e"^Bm7"d"D7""^Cmaj7"c"^D7"A |"G""^Em7""^F#m7€5" G3"^Gmaj7" z |
+"G""^Gmaj7""^Chorus" BB"^Cmaj7/D" B2 |"^Gmaj7" BB"^Cmaj7/D" B2 |"^Gmaj7" Bd"C""^Cmaj7/D" G>"Cm"A |
+"G""^Gmaj7""^G#º" B4 | "C""^Am7" cc"^D7€9" c>c |"G""^C/G" c"^F#m7€5"B"E7""^F7" B"^E7"B/B/ |
+"A7""^A7" BA"^Em7"AB |"D7""^E¨7" (A2"^A¨7" d2) | "G""^Gmaj7" BB"^Cmaj7/D" B2 |
+"^Gmaj7" BB"^Cmaj7/D" B2 |"^Gmaj7" Bd"C""^Cmaj7/D" G>"Cm"A |"G""^Gmaj7""^G#º" B4 |
+"C""^Am7" cc"^D7€9" c>c |"G""^C/G" c"^F#m7€5"B"E7""^F7" B"^E7"B/B/ |
+"Am7""^Am7" dd"D7""^E¨7"c"^F#7"A |"G""^G" G3 z |]
+
+X:36
+T:Deck The Halls
+O:Beginner
+R:carol
+M:4/4
+L:1/8
+C:Welsh Carol
+K:F
+"F" c3 B A2 G2 | F2 G2 A2 F2 |"C7" GABG"F/C" A3"C7" G |"F/C" F2"C7" E2"F" F4 | "F" c3 B A2 G2 |
+ F2 G2 A2 F2 |"C7" GABG"F/C" A3"C7" G |"F/C" F2"C7" E2"F" F4 | "C7" G3 A B2 G2 |
+"F" A3"^E7€5" B"^E¨7" c2 A2 |"F""^Am7" A=B c2"Dm""^Dm7" de f2 |"C/G" e2"G7" d2"C" c4 |
+"F" c3 B A2 G2 |"^Bm7€5" F2 G2"^B¨m" A2 F2 |"Bb""^Am7" dddd"F/A""^Dm7" c3"Gm/Bb""^Gm7" B |
+"F/C" A2"C7" G2"F" F4 |]
+
+X:37
+T:Joy To The World
+O:Beginner
+R:carol
+M:2/4
+L:1/8
+C:English Hymn/Watts
+K:D
+"D" d2"A/D""^Em7" c>"G/D"B |"D""^F#m7" A3"Em/G""^G" G |"D/A""^D/A" F2"A7""^A#º" E2 |
+"D""^Bm7" D3"^B¨7""^D7""^Am7" A | "G""^G7" B3 B |"A""^A7" c3 c |"D""^D" d4- | d2 z d |
+"D""^G" (d"A"c)"G"(B"D"A) |"^D" (A>"A7"G"D" F)d |"D""^G" (d"A"c)"G"(B"D"A) |"^D" (A>"A7"G"D" F)F |
+"D""^C7" F/F/F F(F/G/) |"^B7" A3 (G/F/) |"A""^B¨7" E/E/E E(E/F/) |"A7""^Em7" G3"^A7" (F/E/) |
+"D""^C7" D"^F7" d2"G/D" B |"D""^Em" (A>G)"^B7" F"Em/G""^B¨7"G |"D/A""^Em7/A" F2"A7""^A7" E2 |
+"D""^D" D2 z2 |]
+
+X:38
+T:O Tannenbaum
+O:Beginner
+R:carol
+M:3/4
+L:1/8
+C:Ernst Anschütz
+K:F
+ C ||"F" F>F"^Gm7" F3"C""^Am7" G |"F""^B¨" A>A"^B¨m" A3 A |
+"Gm7""^Em7€5" G"D"A"Gm""^A7&5" B2"C""^Bm7€5" E2 |"C7""^E7&9" G2"F""^F" F2 z"^G¨7" c |
+"F" c"^E¨7"A"Bb""^A¨7" d3"F" c |"C""^Gm7" c"C7"B"^D¨7" B3 B |"^Gm7" B"^D¨7"G"^G¨7" c3"^Fm7" B |
+"C7/F""^E7" B"F""^E¨7"A"^F" A3"C7""^G¨7" C | "F""^F" F>"^A¨7"F"^Gm7" F3"C""^Am7" G |
+"F""^B¨" A>"^B¨m"A"^Am7" A3"Dm""^D7&9" A |"Gm7""^D¨7" G"D""^E¨7"A"Gm""^D7&9" B2"C""^G7€9" E2 |
+"C7""^Fº/C" G2"F""^F" F2 z |]
+
+X:39
+T:Hark! The Herald Angels Sing
+O:Beginner
+R:carol
+M:4/4
+L:1/4
+C:Mendelsohn/Wesley
+K:F
+"F""^Am7" C F"^A¨º" F3/2"C" E/ |"F""^Gm7" F A"^C7" (A"C" G) |
+"F""^Am7" c"A" c"Bb""^Dm7" c3/2"Gm" B/ |"F/C""^Gm7" A"C""^D¨7" G"F""^C7" A2 |
+"F" C F"^A7" F3/2"C" E/ |"Dm""^Dm7" F"F/C""^Dm7/C" A"Bm7b5""^Bm7€5" (A"^E7" G) |
+"Am""^Am7" c"G" G"C""^B¨7" G3/2 E/ |"D7""^Am7" E"G7""^A¨7" D"C""^Gm7""^G¨7" C2 |
+"F" c c"^Dm7" c F |"C7""^Gm7" B"F" A"^C7" (A"C" G) |"F""^Am7" c c"^Dm7" c F |
+"C7""^Gm7" B"F" A"^C7" (A"C" G) | "Bb" d d"^Am7€5" d"D7""^D7" c |"Gm" B"D7" A"Gm" B2 |
+"C""^D¨7" G"C/Bb""^C7" (A/B/)"F""^Am7" c3/2"^A¨º" F/ |"F""^Gm7" F"C""^C7" G"F""^F""^F7" A2 |
+"Bb" d3/2 d/"^Am7€5" d"D7""^D7" c |"Gm" B"D7" A"Gm" B2 |
+"C""^D¨7" G"C/Bb""^C7" (A/B/)"F""^Am7" c3/2"^A¨º" F/ |"F/C""^Gm7" F"C7""^C7" G"F""^F" F2 |]
+
+X:40
+T:God Rest Ye Merry Gentlemen
+O:Beginner
+R:carol
+M:4/4
+L:1/4
+C:English Christmas Carol
+K:Emin
+ E ||"Em" E B"B7""^Fmaj7" B A |"Em""^Em7" G"D" F"C""^Bm7" E"G" D |
+"C""^Cmaj7" E"B" F"Em""^F7" G"Am/C" A |"B""^F#m7€5" B3"Em""^F#m7€5/B" E |
+"Em" E B"B7""^Fmaj7" B A |"Em""^Em7" (G"D" F)"C""^Bm7" E"G" D |"C""^C" E"B" F"Em""^F7" G"Am/C" A |
+"B""^Bm7" B3"Em""^E7€9" B | "Am""^Am7" c"D/F#" A"G""^E7sus4" B"C/E""^B¨m6" c |
+"G7/B""^Am7" d"C" e"G""^D#º7" B"B7" A |"Em""^Em7" G"Edim" E"Bm/D""^Bm7" F"G/B" G |
+"D7""^E¨7" A2"^Am7/D" (G A) | "Em""^G7" B2"C" c"G" B |"G""^F#m7€5" (B"D/A" A)"G/B""^B7" G"B" F |
+"Em""^Fmaj7" E2"^Em7" G/F/"A7" E |"D""^C7" A2"G/B""^Am7/D" (G"D7/A" A) |
+"G""^F7" (B"C/E" c)"G/B""^E7&9" d"C" e |"B""^F#m7€5" (B"D/A" A)"B7#5""^B7€9" G"B7" F |
+"Em""^Em" E3 |]
+
+X:41
+T:O Little Town Of Bethlehem
+O:Beginner
+R:carol
+M:4/4
+L:1/4
+C:Redner/Brooks
+K:G
+ B ||"G" B B"Gdim""^F#" ^A"G""^G" B |"Am""^G#º" d"^Am7" c"^C7" E"^C#º" =A |
+"G/D""^G/D" G (F/G/)"D7""^D7€9" A D |"G""^Gmaj7/D" B3 B | "G""^G" B"G/F""^F7" B"E7""^E7" e d |
+"Am""^G#º" d"^Am7" c"^C7" E"^C#º" A |"G/D" G (F/G/)"D7" B A |"G" G3"^B7€9" B |
+"G""^Em" B"^G#º" B"Am7""^B7/A" A"A#dim""^C#m7€5" G |"B""^C7€5" F2"B7""^B7" F F |
+"Em""^C" E"B7/D#" F"G/D" G"Am/C""^F#7" A |"B7""^F#m7€5" B3"^F7" B | "G" B B"Gdim" ^A"G""^G#º" B |
+"Am7""^Am7" d c"^C7" E"C#dim""^C#º" e |"G/D""^G/D" d"A7""^C#º/D" (F/G/)"D7""^D7€9" B3/2 A/ |
+"G" G3 |]
+
+X:42
+T:The First Noel
+O:Beginner
+R:carol
+M:3/4
+L:1/4
+C:Cornish Christmas Carol
+K:D
+"^Verse" (F/E/) ||"D" (D3/2 E/)"^Bm" (F/G/) |"^F#m7" A2 (B/c/) |"^Bm7" d"^F#m7" c"G#dim" B |
+"D/A" A2 B/c/ | "Bm" d"F#m7" c"G#dim" B |"D/A" A"G" B"A7" c |"D/A" d"^Em7" A"A7" G |
+"D" F2 (F/E/) | "D" (D3/2 E/)"^Bm" (F/G/) |"^F#m7" A2 (B/c/) |"^Bm7" d"^F#m7" c"G#dim" B |
+"D/A" A2 B/c/ | "Bm" d"F#m7" c"G#dim" B |"D/A" (A"G" B)"A7" c |"D/A" (d"^Em7" A)"A7" G |
+"D" F2"^Chorus" (F/E/) | "D" (D3/2 E/)"Bm" (F/G/) |"F#m" A2 (d/c/) |"G" B2"G#dim" B |"D/A" A3 |
+"Bm7" d"F#m7" c"G#dim" B |"D/A" (A"G" B)"A7" c |"D/A" (d"^Em7" A)"A7" G |"D" F2 |]
+
+X:43
+T:Angels We Have Heard On High
+O:Beginner
+R:carol
+M:4/4
+L:1/8
+C:French Carol
+K:F
+"F" A2"^Bm7€5" A2"^B¨m" A2"^Am7" c2 |"C""^Dm7" c3"^Dm7/G" B"^E¨7" A4 |
+"F""^F/C" A2"C""^B¨" G2"F""^Am7" A2"^Dm7" c2 |"F/C""^Gm7€5" A3"C""^C7€9" G"F""^F" F4 |
+"F" A2"^Bm7€5" A2"^B¨m" A2"^Am7" c2 |"C""^Dm7" c3"^Dm7/G" B"^E¨7" A4 |
+"F""^F/C" A2"C""^B¨" G2"F""^Am7" A2"^Dm7" c2 |"F/C""^Gm7€5" A3"C""^C7€9" G"F""^F" F4 |
+"F""^F""^A7/E" (c4"Dm""^Dm7" dcB"^F#º"A |"Gm7""^Gm7""^D¨7" B4"C7""^C7sus4" cB"^Em7€5"AG |
+"F""^F""^A7" A4"Bb""^B¨" BA"^Bº"GF | "C""^C7sus4" G3) C"^C7sus4/B¨" C4"C/Bb" |
+"F/A""^Am7€5" F2"C""^E7" G2"F""^E¨7" A2"Bb""^D7&5" B2 |"F""^G7" A4"C""^C7" G4 |
+"F""^F""^A7/E" (c4"Dm""^Dm7" dcB"^F#º"A |"Gm7""^Gm7""^D¨7" B4"C7""^C7sus4" cB"^Em7€5"AG |
+"F""^F""^A7" A4"Bb""^B¨" BA"^Bº"GF | "C""^C7sus4" G3) C"^C7sus4/B¨" C4"C/Bb" |
+"F/A""^Am7€5" F2"C""^E7" G2"F""^E¨7" A2"Bb""^D7&5" B2 |"F""^G7" (A4"C7""^C7" G4) |
+"F""^D¨maj7""^F" F8 |]
+
+X:44
+T:We Wish You A Merry Christmas
+O:Beginner
+R:carol
+M:3/4
+L:1/4
+C:English Christmas Carol
+K:G
+ D |:"G" G G/A/G/F/ |"C""^B¨7€5" E E"E7/B" E |"A7""^Em7" A A/B/A/G/ |
+"D""^A7sus4" F"^A¨7€5" D"D7/C" D | "B7""^F#m7€5" B B/c/"^B7"B/A/ |"Em""^Em7" G"^B¨7€5" E"E7" D/D/ |
+"Am""^Am7" E"^E¨7€5" A"D7""^A¨7" F |1"G""^G" G2 D :|2"G""^G" G2 D || "G""^G/B" G G G |
+"Bm""^F#/A#" F2 F |"Am7""^Am7" G"D/A""^A#º" F"A7" E |"D""^Bm7""^Am7" D2"D7/C""^Gmaj7" D |
+"B7""^F#m7€5" B B/c/"^B7"B/A/ |"Em7""^Em7" d D"E7""^G#º" D/D/ |"Am""^Am7" E"^E¨7€5" A"D7""^A¨7" F |
+"G""^G" G2 |]
+
+X:45
+T:Away In A Manger
+O:Beginner
+R:carol
+M:3/4
+L:1/4
+C:Kirkpatrick/Murray
+K:F
+ c ||"F" c3/2 B/ A |"^F7" A G F |"Bb" F E"^Bº" D |"F""^F/C" C2"^F#º" C | "C743""^Gm7" C3/2 D/ C |
+"C7""^C7" C G"^B¨7" E |"F""^Am7" D"^Dm7" C"^A¨7" F |"^Gm7" A2"C7""^C7€9" c | "F" c3/2 B/ A |
+"F7""^F7/E¨" A G F |"Bb/D""^B¨/D" F"^B¨7" E"^Bº" D |"F/C""^F/C" C2"^F#º" C | "C7""^Gm7" B3/2 A/ G |
+"F""^F" A"Gm""^Em7€5" G"F/A""^Dm7" F |"C7""^Gm7" G"^Gm7/C" D"^G¨7" E |"F""^F6" F2 z |]
+
+X:46
+T:Swing Low, Sweet Chariot
+O:Beginner
+R:spiritual
+M:4/4
+L:1/8
+C:Spiritual
+K:Ab
+"Ab""^Chorus" c2"^Fm7" A4 c2 |"Db""^B¨m7" A3 A"Ab""^E¨7" (F E3) |"^A¨/C" AAAA"^Fm7" ce e2 |
+"Bbm7""^B¨m7""^E¨7" e8"Eb7" | "Ab""^A¨" (fe)"^A¨7" c4 e2 |"Db""^D¨6" A3 A"Ab""^B7€5" (F E3) |
+"Bbm7""^Fm7" AA"^E7"AA"Eb7" c"^B¨m7"c"^E¨7" B2 |"Ab""^A¨"!fine! A6"^Verse" c2 ||
+"Ab""^A¨" e"^B7" A2 F"Bb9""^B¨7" A2"^D7" A2 |"Db7""^D¨7" AA"Eb7""^B7" A2"^B¨m7" (F"^A7€5" E3) |
+"Fm""^Fm7" AA"^E7"AA"Ab/Eb" c"^A¨/E¨"e"^G¨7" e2 |"Cm""^Cm7""^B7" e6"Eb7""^B¨m7""^A7" e2 |
+"Ab""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section.""^A¨" (fe)"^G¨7" c2"Fm""^Fm7" c2"^B7" A2 |
+"Bbm7""^B¨m7" AA"^E7"AA"Eb7""^B¨m7" (F"^A7" E3) |
+"Ab/Eb" A"^A¨/E¨"A"^Fm7"AA"Bb7""^B¨7" cc"Eb7b9""^E¨7€9" B2 |"Ab""^A¨"!D.C.! A8 |]
+
+X:47
+T:Go Down, Moses
+O:Beginner
+R:spiritual
+M:4/4
+L:1/4
+C:Spiritual
+K:Bb
+"^Verse" D ||"Gm" B B"D7" A A |"Gm""^Gm" B"^Gm/F" B"^Em7€5" G2 |"D7""^Am7€5" D D"^D7" ^F/ F3/2 |
+"Gm""^Gm" G3 D | "Gm""^Gm" B B"D7""^D7" A"^D#º" A |"Gm""^Em7€5" B B"^A7" G2 |
+"D7""^Am7€5/E¨" D D"^A¨7" ^F/ F3/2 |"Gm""^Gm" G3 z | "Gm""^Chorus" G G3"Gm/F" |"C/E" c c3"Cm/Eb" |
+"Gm/D" d2"D+/C""^C7" d3/2"^C7/B¨" c/ |
+"Gm/Bb""^Am7€5" d"D7/A""^D7€9" (d/>c/)"Gm""^Gm" (B/<G/-"Gm/F""^Gm/F" G) |
+"Em7b5""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section." B/4 G15/4"Eb7" |
+"Gm/D" (G/F/)"^B¨7" D3 |"D7""^Am7€5" D D"^D7" ^F/ F3/2 |"Gm" G3 |]
+
+X:48
+T:Nobody Knows The Trouble I've Seen
+O:Beginner
+R:spiritual
+M:4/4
+L:1/4
+C:Spiritual
+K:Eb
+|:"Eb""^Chorus" G/ B, C/"Ab" E3/2"Abm" F/ |"Eb/Bb" G/G/"Cm""^Am7€5" G"B+""^A¨""^A¨m" G2"Eb/Bb" |
+"Eb" G/ B, C/"F7""^Cm7" E E |"Fm7" C B,3"Bb7" | "Eb" G/ B, C/"Ab" E3/2"Abm" F/ |
+"Eb" G/G/"G7""^D¨7" G"Cm""^C7" G2 |"Eb/Bb""^Fm7" B3/2 G/"Bb7""^Fm7/B¨" F"^B¨7" G |1
+"Ab""^Emaj7" E2"Eb""^E¨" E!fine! z :|2 "Ab""^Emaj7" E2"Eb""^E¨" E"^Verse" G ||"Eb" B B"^G7" B G |
+"Gm""^A¨" B B"Cm""^A¨m" G2 |"Eb/Bb""^Gm7" B2"^Cm7" G2 | "Bb7""^B7€5" F2"^B¨7" z G |
+"Eb" B B"^D¨7" B G |"Gm""^Gm7" B B"Cm""^Cm7" (G/F/"^G¨7" E) |"F7" G2"Bb7" F2 |
+"Eb""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section." E3!D.C.! z ||
+
+X:49
+T:Joshua Fit The Battle Of Jericho
+O:Beginner
+R:spiritual
+M:4/4
+L:1/8
+C:Spiritual
+K:Dmin
+"Dm""^Chorus" D^CDE"^Dm/C" FE(FG) |"^Bm7€5" A F2 A-"^B¨m" A4 |"Gm""^Em7€5/A" G E2 G-"A7""^A7" G4 |
+"Dm""^Dm/A" A F2 (A-"A7""^A7&5" AGFE) | "Dm" D^CDE"^Dm/C" FE(FG) |
+"^Bm7€5" A F2 A-"Bb""^B¨maj7" A2"^B¨m6" FG |
+"Dm""^Dm/A" A2"Gm6""^Em7€5" GG"G#dim""^B¨7" F2"A7""^A7" E2 |"Dm""^Dm" D6 z2 |
+"Dm""^Verse" dAAA"^Dm/C" A2 A2 |"F/C""^Bm7€5" AA"^B¨" A4"^B¨m" z2 |
+"Bb""^Em7€5" AAAA"A7""^A7" A A2 A- |"Dm""^Dm" A6 z2 |
+"Dm""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section." d2 A2"^Dm/C" A A3 |
+"Dm/C""^Bm7€5" A2"^B¨" A4"Bb""^B¨m" AA |
+"Dm""^Dm/A" AA"Gm6""^Em7€5" G2"G#dim""^B¨7" F"^A7" E2"A7" D- |"Dm""^Dm" D6 z2 |]
+
+X:50
+T:Deep River
+O:Beginner
+R:spiritual
+M:4/4
+L:1/8
+C:Spiritual
+K:F
+"F""^Fmaj7" (A4-"^F6" AG F2) |"Bb""^B¨" G2"^Bº" D4 F2 |"A+""^F/C" F2 F2"G7""^D7" f3 d |
+"Am/C""^Gm7" c2"Dm/C""^Gm7/C" (A4"Am/C""Gm/C" G2) | "F""^Fmaj7" (A4-"^F6" AG F2) |
+"Bb""^B¨" G2 D2"Bb7""^Bº" F3 F |"Dm""^F/C" F>F"^Dm7" A2"Gm7""^Gm7" G>F"C7""^B¨/C" D>"^C7"D |
+"F""^F" F2 F6 | "F""^Fmaj7" (A4-"^F6" AG F2) |"Bb""^B¨" G2"^Bº" D4 F2 |
+"A+""^F/C" F2 F2"G7""^D7" f3 d | "Am/C""^Gm7" c2"Dm/C""^Gm7/C" (A4"Am/C""Gm/C" G2) |
+"Fmaj7""^Fmaj7" (A4-"F6""^F6" AG F2) |"Bb""^B¨" G2 D2"D7""^D7/A" D3 D |
+"G7""^G7" D>D F2"Bb6""^B¨" F>D"C7""^C7sus4" C>D |"F""^G¨" F2"^F" F4 z2 ||
+"Dm""^Dm" d d2 e"^G7" (fe)"^G#º" d2 | "Am" (c2 A4) c>c |
+"Dm""^Dm" (d2"^Dm7" f2)"G7""^G7" (e2"^G#º" d2) |"Am""^Am" (c2 A4)"C7/G" c2 |
+"F""^Fmaj7" (a4-"^B7€5" ag)"F7" f2 | "Bb""^B¨" (g2"^Bº" d4)"Bb7" f2 |
+"F/C""^F/C" (f2"^C7sus4" c4)"C743""C7" B2 |"A7/C#""^A/C#" A6"Dm""Am/C""^Dm""^G¨7" A2 ||
+"F""^Fmaj7" (A4-"^F6" AG"^A7&5" F2) |
+"Bb""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section.""^B¨" G2 D2"D7""^D7/A" D3 D |
+"G7" D>D F2"Bb6" F>D"C7" C>D |"F" F2 F6-"Bbm6" |"F" F4 z4 |]
+
+X:51
+T:Go Tell It On The Mountain
+O:Beginner
+R:spiritual
+M:4/4
+L:1/4
+C:Spiritual
+K:G
+"G""^Chorus" B2 B/>A/G/>E/ |"^Em7" D2"^B¨7" G2 |"D7""^Am7" A/"^Cm" A A/"^Bm7" A"^B¨º" G |
+"G""^Am7" B d"D7""^D7" (e d) | "G" B2"^F7" B/>A/G/>E/ |"^Em7" D2"Em""^B¨7" G"Am" c |
+"G/D""^Am7" B/ B3/2"D743""^D7sus4" (A/G/) A |"G""^G" G4 | "G""^Verse" B d d/ e3/2 |
+"G7""^Dm7" d"^G7" B3 |"Am""^C" A/ A3/2"Cm""^Cm" G A |"G""^F#m7€5" B3"^B7&5" G |
+"Em""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section.""^Em7" B d"Am""^Am7" d e |
+"D""^Dm7" d"^G7" B2 G |"Am""^C" A/ A A/ G"C7""^C7" E |"D""^Am7" D2"D+""^A¨7€5" d2 |]
+
+X:52
+T:Michael, Row The Boat Ashore
+O:Beginner
+R:spiritual
+M:4/4
+L:1/4
+C:Spiritual
+K:Eb
+ E G ||"Eb" B3/2 G/ B"^A¨7" c |"^E¨" B2"^E¨7" G B |"Ab""^A¨""^A¨7" c4 |
+"Eb""^E¨" B2"^Am7€5" G"^D7&5" B |
+"Eb""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section.""^Gm7" B3/2"^D¨7" G/"Fm/Ab""^Fm/A¨" A"Am7b5""^Am7€5" G |
+"Bb""^B¨""^Bº" F2"Bdim""Cm""^Cm7" E"Bdim""^Bº" F |"Eb/Bb""^E¨/B¨""^Am7€5" (G2"Bb7""^A¨7""^G7" F2) |
+"Eb""^G¨7""^E7""^F7""^E¨" E2 |]
+
+X:53
+T:Amazing Grace
+O:Beginner
+R:spiritual
+M:3/4
+L:1/4
+C:British Hymn/John Newton
+K:G
+ D ||"G" G2 (B/G/) |"^G7" B2"D7" A |"Em""^C" G2"C""^C#º" E |"G""^G/D" D2"^Bm7" D |
+"G""^Em7" G2 (B/G/) |"^A7" B2"D7" A |"G""^Am7" d3- |"^D7" d2 B | "G" d2 B |"^G7" G2 D |
+"C""^C" E2"^C#º" (G/E/) |"G""^G/D" D2"^Bm7" D | "Em" G2"G/D""^A9" (B/G/) |"D7""^D7" B2 A |"G" G3- |
+ G2 |]
+
+X:54
+T:Were You There?
+O:Beginner
+R:spiritual
+M:4/4
+L:1/4
+C:Spiritual
+K:Eb
+ B, E ||"Eb" G2"^Cm7" G G |"Fm""^Fm7" F E"Bb7""^B¨7" G3/2 F/ |"Eb""^E¨""^A¨7" E4-"Ab" |
+"Eb""^E¨" E2"^Fm7" E"^E7" G | "Eb" B2"^E7" B B |"Ab""^Am7€5" c"Eb""^D7" B"^D¨7" B3/2 G/ |
+"Bb""^Cm7""^B7" F4-"Ab" |"Bb""^B¨7" F4 | "Eb""^E¨7" (B2"Ab""^A¨7" e3/2 c/ |"Eb""^E¨""^G7" B4) |
+"Ab""^A¨7" c"Eb""^E¨7" B2"^Dm7€5" G |"G7""^D¨7" G3/2 F/"Cm""^Cm" E"Eb7""^A7" E | "Ab" F E3 |
+"Eb" E"^A7" E3 |"Ab""^A¨7" C"Bb""^Gm7" B,3- |"^C7" B,2"Cm""^Cm7" E"Fm""^Fm7" A |
+"Eb/Bb""_The spirituals in this anthology use lyrics from the earliest published versions available, which often reflect the work of early music researchers who collected them from the oral traditions. For more information on spirituals and performance practice, see the works by Abromeit and Jones in the Further Reading section." G2"Bdim" G"Cm""^Cm7" G |
+"Fm""^Fm7" F E"Bb7""^B¨7" G3/2 F/ |"Eb""^E¨""^A¨7" E4-"Ab" |"Eb""^E¨" E2 |]
+
+X:55
+T:Shall We
+O:Beginner
+R:spiritual
+M:4/4
+L:1/8
+C:Rbt. Lowry
+K:D
+"D""^Verse" F2 F2"^D/C#" F>EF>G |"^F#m7" A4"^B7" F4 |
+"A7""^Em7" G2"^Em7/D" G2"^C#m7€5" G>A"^Cm6"G>"^Cº"F |"^Bm7""^B¨7" (E4"^Em7""^E¨7" A4) |
+"D""^G#m7€5" F2 F2"^G" F>E"^Gm"F>G |"^F#m7""^C7" A4"^B7sus4" F2"^B7" FG |
+"A7""^Bm7" E2 (EF)"^B¨º" G2 (FE) |"D""^Am7""^A¨7" D8 | "G""^Refrain" B2 B2"^G#º" d>cd>B |
+"D""^D/A" A4"^B7" F2 z F |"A7""^Em7" G>FG>F"^Em7/A" G>F"^A#º" (GE) |
+"D""^Bm7""^B¨º" F4"^Am7""^D7" A4 | "G""^G" B>BB>B"^G#º" (d>c)d>B |"D""^D/A" A4"^C7" F2 F2 |
+"A7""^Bm7" E2"^B¨7" E>F"^Em7" G2"^A7" (FE) |"D" D8 |]

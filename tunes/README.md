@@ -19,6 +19,14 @@ Three starter collections:
   settings are included — settings citing a Creative Commons licence, the
   *Fiddler's Fakebook* or any other book source, or a named modern composer
   (e.g. Bill Monroe compositions) were left out.
+- **Trad jazz & blues** — 50 early-jazz, ragtime and blues melodies from
+  [The Public Domain Song Anthology](https://imslp.org/wiki/The_Public_Domain_Song_Anthology_(Berger,_David))
+  (Berger & Israels, **CC0**), tagged `O:Trad jazz`, in `trad-jazz.abc`.
+  Converted from the anthology's MusicXML lead sheets (see `fetch-jazz.py`).
+- **Beginner folk songs & carols** — 55 familiar melodies from the same CC0
+  anthology, tagged `O:Beginner`, in `beginner.abc`: nursery rhymes, simple
+  folk songs, Christmas carols and spirituals for first melody playing
+  (see `fetch-beginner.py`).
 - **Trad jazz & blues** — 50 early jazz, ragtime and blues melodies from
   **The Public Domain Song Anthology** (David Berger & Chuck Israels), which is
   released **CC0 / public domain**, tagged `O:Trad jazz`, in `trad-jazz.abc`.
