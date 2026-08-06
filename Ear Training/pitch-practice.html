@@ -220,7 +220,7 @@ let seqLen = 3, scaleKey = 'major', tonicSel = '0', keyRoot = 0;
 let customOffsets = new Set([0,2,4,5,7,9,11]);
 let tonicMidi = 60, seq = [], answer = [], checked = false;
 let running = false, pendingCheck = null, advanceT = null;
-let recent = [], prevTonic = null;   // anti-repetition memory
+let recent = [], prevTonic = null, lastKeyRoot = null;   // anti-repetition + last round's tonic
 let streak = 0, best = +(localStorage.getItem('wtm_pitchpractice_best')||0), correct = 0, total = 0;
 
 const poolOffsets = () => scaleKey === 'custom' ? [...customOffsets].sort((a,b)=>a-b) : SCALES[scaleKey];
@@ -240,11 +240,10 @@ function playTonic(){
     tri.forEach((o,i) => sound(tonicMidi + o, t0 + i*0.16, 0.32, 0.8)); });          // establish the tonic (quality-matched)
 }
 function playSequence(){ playChain(seq, 0.62, 0.5); }
-function playRound(){
+function playRound(withRef){
   const tri = tonicTriad();
   afterResume(() => { const ac = audio(); let t = ac.currentTime + 0.1;
-    tri.forEach((o,i) => sound(tonicMidi + o, t + i*0.15, 0.3, 0.75));               // tonic reference
-    t += tri.length*0.15 + 0.5;
+    if(withRef){ tri.forEach((o,i) => sound(tonicMidi + o, t + i*0.15, 0.3, 0.75)); t += tri.length*0.15 + 0.5; }  // tonic reference (Start / key change)
     seq.forEach((off,i) => sound(tonicMidi + off, t + i*0.62, 0.5, 0.95)); });
 }
 
@@ -252,7 +251,7 @@ function playRound(){
 function toggleRun(){ running ? stopRun() : startRun(); }
 function startRun(){
   if(poolOffsets().length < 2){ el('fb').textContent = 'Pick at least two notes first.'; el('fb').className = 'fb no'; return; }
-  running = true; recent = []; prevTonic = null;
+  running = true; recent = []; prevTonic = null; lastKeyRoot = null;
   el('startBtn').innerHTML = '&#9209; Stop'; el('startBtn').classList.remove('blue'); el('startBtn').classList.add('ink');
   nextRound();
 }
@@ -273,10 +272,12 @@ function freshSeq(){                                  // …and not one of the l
   recent.push(s.join(',')); if(recent.length > 4) recent.shift();
   return s;
 }
-function nextRound(){
+function nextRound(force){
   if(!running) return;
   if(tonicSel === 'rand'){ do { keyRoot = randInt(0,11); } while(keyRoot === prevTonic); prevTonic = keyRoot; }
   else keyRoot = +tonicSel;
+  const ref = !!force || keyRoot !== lastKeyRoot;   // tonic anchor: on Start, and whenever the tonic changes
+  lastKeyRoot = keyRoot;
   tonicMidi = 60 + keyRoot - (keyRoot > 5 ? 12 : 0);
   seq = freshSeq();
   answer = []; checked = false; clearTimeout(pendingCheck); clearTimeout(advanceT);
@@ -284,7 +285,7 @@ function nextRound(){
   el('againBtn').disabled = false; el('tonicBtn').disabled = false; el('undoBtn').disabled = true;
   el('fb').textContent = `Key of ${KEY_NAMES[keyRoot]} — find each note you hear on the keyboard.`;
   el('fb').className = 'fb';
-  playRound();
+  playRound(ref);
 }
 function onKey(pc){
   if(!running || checked || answer.length >= seq.length) return;
@@ -313,8 +314,8 @@ function check(){
   if(perfect){ fb.textContent = `Perfect — all ${seq.length}. ${streak>=3?'🔥 ':''}Next one coming…`; fb.className = 'fb ok'; }
   else { fb.textContent = `${right} of ${seq.length} — here's how it went, listen again…`; fb.className = 'fb no'; }
   if(running){
-    if(perfect){ advanceT = setTimeout(nextRound, 1150); }
-    else { playSequence(); advanceT = setTimeout(nextRound, seq.length*620 + 1200); }   // replay the miss, then move on
+    if(perfect){ advanceT = setTimeout(() => nextRound(false), 1150); }
+    else { playSequence(); advanceT = setTimeout(() => nextRound(false), seq.length*620 + 1200); }   // replay the miss, then move on
   }
 }
 
