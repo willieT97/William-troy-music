@@ -270,16 +270,23 @@ const letterOfDI = di => LTRS[((di%7)+7)%7];
 const octOfDI = di => Math.floor(di/7);
 const naturalMidi = di => (octOfDI(di)+1)*12 + LSEMI[letterOfDI(di)];
 function chordParse(sym){
-  const m = sym.match(/^([A-G])([#b]?)(.*)$/);
-  const rootPc = ((LSEMI[m[1]] + (m[2]==='#'?1:m[2]==='b'?-1:0))%12 + 12) % 12;
+  const m = sym.match(/^([A-G])([#b♯♭]?)(.*)$/);
+  const acc = (m[2]==='#'||m[2]==='♯') ? 1 : (m[2]==='b'||m[2]==='♭') ? -1 : 0;
+  const rootPc = ((LSEMI[m[1]] + acc)%12 + 12) % 12;
   const q = (m[3]||'').toLowerCase();
   let iv = [0,4,7];
   if(/dim|o/.test(q)) iv = [0,3,6];
   else if(/aug|\+/.test(q)) iv = [0,4,8];
   else if(/^(m|min|-)/.test(q) && !/maj/.test(q)) iv = [0,3,7];
   if(/7/.test(q)) iv = [...iv, /maj7/.test(q) ? 11 : 10];
+  if(/b5|ø/.test(q)) iv = iv.map(x => x === 7 ? 6 : x);          // half-diminished / ♭5
   return { sym, rootPc, rootName: m[1]+m[2], fifthPc:(rootPc+7)%12, thirdPc:(rootPc+iv[1])%12, tones: iv.map(i=>(rootPc+i)%12) };
 }
+/* a chart bar may hold one chord (string) or two (["C","A7"] = first half / second half of the bar) */
+const barSyms = entry => Array.isArray(entry) ? entry : [entry];
+const chordAtBeat = (entry, beat) => { const cs = barSyms(entry); return cs.length === 2 ? (beat < 2 ? cs[0] : cs[1]) : cs[0]; };
+const isChordOnset = (entry, beat) => beat === 0 || (Array.isArray(entry) && entry.length === 2 && beat === 2);
+const anySplit = chart => chart.some(e => Array.isArray(e) && e.length === 2);
 
 /* ===================== BASS STAFF ===================== */
 const BSTEP = 7, BY0 = 108;                 // G2 (di18) bottom line
@@ -292,10 +299,10 @@ function bassLayout(ex){
   return { npb, bars, beatW, barW, leftPad, W: leftPad + bars*barW + 18,
            slotX:(bar,beat)=> leftPad + bar*barW + (beat+0.5)*beatW };
 }
-function ledgersB(x, di){
-  let s = '', LX = 12;   // wider than the notehead (whole note rx=9) so the ledger pokes out on both sides
-  if(di > 26) for(let d=28; d<=di; d+=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)}" x2="${x+LX}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.4"/>`;
-  if(di < 18) for(let d=16; d>=di; d-=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)}" x2="${x+LX}" y2="${byOfDI(d)}" stroke="#17140E" stroke-width="1.4"/>`;
+function ledgersB(x, di, yOff){
+  let s = '', LX = 12, o = yOff || 0;   // wider than the notehead (whole note rx=9) so the ledger pokes out on both sides
+  if(di > 26) for(let d=28; d<=di; d+=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)+o}" x2="${x+LX}" y2="${byOfDI(d)+o}" stroke="#17140E" stroke-width="1.4"/>`;
+  if(di < 18) for(let d=16; d>=di; d-=2) s += `<line x1="${x-LX}" y1="${byOfDI(d)+o}" x2="${x+LX}" y2="${byOfDI(d)+o}" stroke="#17140E" stroke-width="1.4"/>`;
   return s;
 }
 /* a properly-stemmed notehead: whole = open no stem, half = open + stem, quarter = filled + stem.
@@ -350,11 +357,14 @@ function playBass(ex, notes){
     const t0 = ac.currentTime + 0.12, npb = ex.notesPerBar;
     if(ex.seq){
       if(ex.comp === 'strum'){                                             // bluegrass: guitar strums quarter notes
-        ex.chart.forEach((sym,b) => { const v = chordVoicing(chordParse(sym));
-          for(let beat=0; beat<4; beat++) strumChord(v, t0 + (b*4+beat)*spb, spb*0.9, beat%2===1); });
-      } else if(ex.comp === 'stab'){                                        // blues/jazz: piano chord on each beat
-        ex.chart.forEach((sym,b) => { const v = chordVoicing(chordParse(sym));
-          for(let beat=0; beat<4; beat++) v.forEach(m => compNote(m, t0 + (b*4+beat)*spb, spb*0.8, 0.34)); });
+        ex.chart.forEach((entry,b) => { for(let beat=0; beat<4; beat++){ const v = chordVoicing(chordParse(chordAtBeat(entry,beat)));
+          strumChord(v, t0 + (b*4+beat)*spb, spb*0.9, beat%2===1); } });
+      } else if(ex.comp === 'stab'){                                        // blues: piano chord on each beat
+        ex.chart.forEach((entry,b) => { for(let beat=0; beat<4; beat++){ const v = chordVoicing(chordParse(chordAtBeat(entry,beat)));
+          v.forEach(m => compNote(m, t0 + (b*4+beat)*spb, spb*0.8, 0.34)); } });
+      } else if(ex.comp === 'jazz'){                                        // jazz: piano comps on 2 & 4, bass walks
+        ex.chart.forEach((entry,b) => { [1,3].forEach(beat => { const v = chordVoicing(chordParse(chordAtBeat(entry,beat)));
+          v.forEach(m => compNote(m, t0 + (b*4+beat)*spb, spb*0.85, 0.3)); }); });
       } else {
         ex.chart.forEach((sym,b) => { const ch = chordParse(sym); ch.tones.forEach(pc => compNote(48 + pc, t0 + b*4*spb, 4*spb*0.96)); });
       }
@@ -383,6 +393,33 @@ const DUR_ICON = {
   2:`<svg class="dico" viewBox="0 0 16 22" aria-hidden="true"><line x1="12.3" y1="14" x2="12.3" y2="2" stroke="currentColor" stroke-width="1.7"/><ellipse cx="8" cy="14" rx="5" ry="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`,
   1:`<svg class="dico" viewBox="0 0 16 22" aria-hidden="true"><line x1="12.3" y1="14" x2="12.3" y2="2" stroke="currentColor" stroke-width="1.7"/><ellipse cx="8" cy="14" rx="5" ry="3.5" fill="currentColor"/></svg>`
 };
+/* circle-of-fifths diagram + a "hear it round the circle" playback (for the theory lesson) */
+function circleSVG(){
+  const keys = ['C','G','D','A','E','B','F♯','D♭','A♭','E♭','B♭','F'];
+  const accs = ['—','1♯','2♯','3♯','4♯','5♯','6','5♭','4♭','3♭','2♭','1♭'];
+  const cx = 180, cy = 180, R = 132;
+  let s = `<svg width="360" height="352" viewBox="0 0 360 352" xmlns="http://www.w3.org/2000/svg">`;
+  s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#17140E" stroke-width="1.5" opacity=".22"/>`;
+  s += `<text x="${cx}" y="${cy-6}" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="14" fill="#17140E">CIRCLE OF</text>`;
+  s += `<text x="${cx}" y="${cy+12}" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="14" fill="#17140E">FIFTHS</text>`;
+  s += `<text x="${cx}" y="${cy+34}" text-anchor="middle" font-family="'Space Mono',monospace" font-size="9.5" fill="#6F6757">← flats · sharps →</text>`;
+  keys.forEach((k,i) => {
+    const ang = (-90 + i*30) * Math.PI/180, x = cx + R*Math.cos(ang), y = cy + R*Math.sin(ang);
+    const col = i===0 ? '#17140E' : (i<=6 ? '#2438C8' : '#E0922A');
+    s += `<circle cx="${x}" cy="${y}" r="25" fill="#FBF7EE" stroke="${col}" stroke-width="2.5"/>`;
+    s += `<text x="${x}" y="${y-1}" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="16" fill="${col}">${k}</text>`;
+    s += `<text x="${x}" y="${y+12}" text-anchor="middle" font-family="'Space Mono',monospace" font-size="8" fill="#6F6757">${accs[i]}</text>`;
+  });
+  return s + `</svg>`;
+}
+function playCircle(){
+  const ac = audio(), step = 0.32, run = () => {
+    const t0 = ac.currentTime + 0.1, pcs = [0,7,2,9,4,11,6,1,8,3,10,5];   // C G D A E B F♯ D♭ A♭ E♭ B♭ F
+    pcs.forEach((pc,i) => bassNote(48+pc, t0 + i*step, step*0.95));
+    bassNote(48, t0 + 12*step, step*1.5);                                  // home to C
+  };
+  if(ac.state==='suspended') ac.resume().then(run).catch(run); else run();
+}
 let bw = null;   // active bassWrite state
 function renderExercise(ex){
   const head = `<div class="exh">${ex.exh||'The bandstand'}</div><div class="exttl">${ex.exttl}</div><p class="exd">${ex.desc}</p>`;
@@ -396,6 +433,7 @@ function renderExercise(ex){
     }
     return `<div class="ex">${head}<div class="bwbox" id="demoBox"></div><div class="row"><button class="btn blue" id="demoPlay">&#9654; Hear it</button></div><div class="hint">${ex.hint||''}</div></div>`;
   }
+  if(ex.type === 'circle') return `<div class="ex">${head}<div class="bwbox" style="text-align:center">${circleSVG()}</div><div class="row"><button class="btn blue" id="circlePlay">&#9654; Hear it — round the circle</button></div><div class="hint">${ex.hint||''}</div></div>`;
   if(ex.type === 'bassWrite') return `<div class="ex">${head}<div class="drillp" id="bwDrill"></div><div class="bwbox" id="bwBox"></div><div class="row"><button class="btn blue" id="bwPlay">&#9654; Play</button><button class="btn" id="bwCheck">Check</button><button class="btn" id="bwClear">Clear</button></div><div class="fb" id="bwFb"></div><div class="row" id="bwNextRow" hidden><button class="btn ink" id="bwNext">Next chart →</button></div><div class="hint">${ex.hint||''}</div></div>`;
   if(ex.type === 'bassFree') return `<div class="ex">${head}
     <div class="durrow"><span class="durlbl">Note length:</span>
@@ -438,7 +476,7 @@ function wireExercise(ex){
   if(ex.type === 'bassFree'){
     bf = { ex, bars: ex.chart.map(()=>[]), dur:1, acc:0, checked:false, frozen:false, marks:null };
     if(ex.comp === 'strum') getGtr();                        // warm the guitar for the jam
-    if(ex.comp === 'stab') getEP();                          // warm the piano for the blues comp
+    if(ex.comp === 'stab' || ex.comp === 'jazz') getEP();    // warm the piano comp
     drawFreeBox();
     el('bwBox').addEventListener('click', onFreeClick);
     const durBtns = [...document.querySelectorAll('[data-dur]')];
@@ -545,30 +583,46 @@ let bf = null;   // active bassFree state
 function freeSeq(){ const out = []; bf.bars.forEach((notes,bar) => notes.forEach(n => out.push({ bar, beat:n.beat, dur:n.dur, di:n.di, acc:n.acc||0 }))); return out; }
 const nmid = n => naturalMidi(n.di) + (n.acc||0);   // sounding midi of a free/seq note
 function drawFreeBox(){ el('bwBox').innerHTML = drawFree(bf.ex); }
+const FREE_ROWH = 146;                                    // vertical spacing between lead-sheet rows
+const freeRows = ex => Math.ceil(ex.chart.length / (ex.perRow || 4));
 function drawFree(ex){
-  const L = bassLayout(ex), W = L.W, H = 150;
+  const L = bassLayout(ex), perRow = ex.perRow || 4, rows = freeRows(ex), ROWH = FREE_ROWH;
+  const W = L.leftPad + perRow*L.barW + 18, H = rows*ROWH;
   let s = `<svg id="bwStaff" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-  const x0 = 8, x1 = W - 8;
-  // faint beat guides (quarter grid) inside each bar
-  for(let b=0; b<L.bars; b++) for(let k=1; k<4; k++){ const gx = L.leftPad + b*L.barW + k*L.beatW; s += `<line x1="${gx}" y1="${byOfDI(26)}" x2="${gx}" y2="${byOfDI(18)}" stroke="#cfc7b2" stroke-width="1" stroke-dasharray="2 4"/>`; }
-  BLINES.forEach(d => { const y = byOfDI(d); s += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#17140E" stroke-width="1.3"/>`; });
-  s += `<text x="12" y="${byOfDI(24)+7}" font-family="Georgia,serif" font-size="40" fill="#17140E">\u{1D122}</text>`;
-  for(let b=0; b<=L.bars; b++){ const x = L.leftPad + b*L.barW; s += `<line x1="${x}" y1="${byOfDI(26)}" x2="${x}" y2="${byOfDI(18)}" stroke="#17140E" stroke-width="${b===0||b===L.bars?2.2:1.3}"/>`; }
-  ex.chart.forEach((sym,b) => { const x = L.leftPad + b*L.barW + L.barW/2; s += `<text x="${x}" y="26" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="18" fill="#2438C8">${sym}</text>`; });
-  bf.bars.forEach((notes,bar) => notes.forEach(n => {
-    const x = n.dur >= 4 ? (L.leftPad + bar*L.barW + L.barW/2) : L.slotX(bar, n.beat), y = byOfDI(n.di);
-    let col = '#17140E';
-    if(bf.checked && bf.marks){ const m = bf.marks[bar+'_'+n.beat]; col = m===true ? '#1F9D55' : m==='free' ? '#2438C8' : m===false ? '#c0392b' : '#17140E'; }
-    s += ledgersB(x, n.di) + noteGlyph(x, y, n.di, n.dur, col, n.acc||0);
-  }));
+  const sym = (sy,x,y,sz) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="${sz}" fill="#2438C8">${sy}</text>`;
+  for(let r=0; r<rows; r++){
+    const o = r*ROWH, nb = Math.min(perRow, L.bars - r*perRow), rx1 = L.leftPad + nb*L.barW + 8;
+    // beat guides
+    for(let c=0; c<nb; c++){ const b = r*perRow + c, split = Array.isArray(ex.chart[b]) && ex.chart[b].length === 2;
+      for(let k=1; k<4; k++){ const gx = L.leftPad + c*L.barW + k*L.beatW, mid = (k === 2 && split);
+        s += `<line x1="${gx}" y1="${byOfDI(26)+o}" x2="${gx}" y2="${byOfDI(18)+o}" stroke="${mid?'#8a8577':'#cfc7b2'}" stroke-width="${mid?1.3:1}" stroke-dasharray="${mid?'3 3':'2 4'}"/>`; } }
+    BLINES.forEach(d => { const y = byOfDI(d)+o; s += `<line x1="8" y1="${y}" x2="${rx1}" y2="${y}" stroke="#17140E" stroke-width="1.3"/>`; });
+    s += `<text x="12" y="${byOfDI(24)+7+o}" font-family="Georgia,serif" font-size="40" fill="#17140E">\u{1D122}</text>`;
+    for(let c=0; c<=nb; c++){ const x = L.leftPad + c*L.barW, heavy = (c===0 || r*perRow+c===L.bars);
+      s += `<line x1="${x}" y1="${byOfDI(26)+o}" x2="${x}" y2="${byOfDI(18)+o}" stroke="#17140E" stroke-width="${heavy?2.2:1.3}"/>`; }
+    for(let c=0; c<nb; c++){ const b = r*perRow + c, cs = barSyms(ex.chart[b]), x0b = L.leftPad + c*L.barW, syY = 26 + o;
+      if(cs.length === 2){ s += sym(cs[0], x0b + L.barW*0.25, syY, 15) + sym(cs[1], x0b + L.barW*0.75, syY, 15); }
+      else s += sym(cs[0], x0b + L.barW/2, syY, 18); }
+    for(let c=0; c<nb; c++){ const b = r*perRow + c; bf.bars[b].forEach(n => {
+      const x = n.dur >= 4 ? (L.leftPad + c*L.barW + L.barW/2) : (L.leftPad + c*L.barW + (n.beat+0.5)*L.beatW), y = byOfDI(n.di)+o;
+      let col = '#17140E';
+      if(bf.checked && bf.marks){ const m = bf.marks[b+'_'+n.beat]; col = m===true ? '#1F9D55' : m==='free' ? '#2438C8' : m===false ? '#c0392b' : '#17140E'; }
+      s += ledgersB(x, n.di, o) + noteGlyph(x, y, n.di, n.dur, col, n.acc||0);
+    }); }
+  }
   return s + `</svg>`;
 }
 function onFreeClick(e){
   if(!bf || bf.frozen) return;
-  const svg = el('bwStaff'), rect = svg.getBoundingClientRect(), L = bassLayout(bf.ex);
-  const x = e.clientX - rect.left, y = e.clientY - rect.top;
-  let bar = Math.floor((x - L.leftPad) / L.barW); bar = Math.max(0, Math.min(L.bars-1, bar));
-  let beat = Math.round((x - L.leftPad - bar*L.barW) / L.beatW - 0.5); beat = Math.max(0, Math.min(3, beat));
+  const ex = bf.ex, L = bassLayout(ex), perRow = ex.perRow || 4, rows = freeRows(ex);
+  const svg = el('bwStaff'), rect = svg.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  let row = Math.floor(py / FREE_ROWH); row = Math.max(0, Math.min(rows-1, row));
+  const y = py - row*FREE_ROWH, nb = Math.min(perRow, L.bars - row*perRow);
+  let col = Math.floor((px - L.leftPad) / L.barW);
+  if(col < 0 || col >= nb) return;                                          // clicked the clef gutter or past the last bar
+  const bar = row*perRow + col;
+  let beat = Math.round((px - L.leftPad - col*L.barW) / L.beatW - 0.5); beat = Math.max(0, Math.min(3, beat));
   const dur = bf.dur; beat = Math.min(beat, 4 - dur);                       // keep the note inside the bar
   let di = 18 + Math.round((BY0 - y)/BSTEP); di = Math.max(14, Math.min(28, di));
   const acc = bf.acc || 0;
@@ -594,11 +648,16 @@ function checkFree(){
     sorted.forEach(n => { if(n.beat !== cover) ok = false; cover = n.beat + n.dur; });
     if(cover !== 4) ok = false; if(!ok) filled = false;
   });
-  let badDownbeat = false, badOther = false;
+  let badDownbeat = false, badOther = false, badStrong = false;
   const BLUES_SET = [0,3,4,5,6,7,9,10];   // root, ♭3, 3, 4, ♭5, 5, 6, ♭7 — the blues/dominant colour tones
   flat.forEach((n,gi) => {
-    const ch = chordParse(ex.chart[n.bar]), pc = nmid(n) % 12; let mark;
-    if(n.beat === 0){ mark = pc === ch.rootPc; if(!mark) badDownbeat = true; }          // downbeat = root
+    const entry = ex.chart[n.bar], ch = chordParse(chordAtBeat(entry, n.beat)), pc = nmid(n) % 12; let mark;
+    if(ex.strongWeak){                                                                  // strong beats = chord tones, weak beats free
+      if(isChordOnset(entry, n.beat)){ mark = ex.looseRoot ? ch.tones.includes(pc) : (pc === ch.rootPc); if(!mark) badDownbeat = true; } // chord onset: root (or any chord tone if looseRoot)
+      else if(n.beat === 2){ mark = ch.tones.includes(pc); if(!mark) badStrong = true; } // other strong beat: any chord tone
+      else mark = 'free';                                                               // weak beats: your call
+    }
+    else if(n.beat === 0){ mark = pc === ch.rootPc; if(!mark) badDownbeat = true; }      // downbeat = root
     else if(ch.tones.includes(pc)){ mark = true; }                                      // chord tone anywhere
     else if(ex.blues && BLUES_SET.includes(((pc - ch.rootPc) + 12) % 12)){ mark = 'free'; }  // a blue note
     else {                                                                              // off-chord: ok only as a passing step
@@ -610,12 +669,13 @@ function checkFree(){
     }
     marks[n.bar+'_'+n.beat] = mark;
   });
-  const pass = filled && flat.length > 0 && !badDownbeat && !badOther;
+  const pass = filled && flat.length > 0 && !badDownbeat && !badOther && !badStrong;
   bf.marks = marks; bf.checked = true; drawFreeBox();
   const fb = el('bwFb');
   if(pass){ fb.textContent = ex.win || 'That’s a bassline. Solid.'; fb.className = 'fb ok'; bf.frozen = true; bassOk = true; renderNav(); }
   else if(!filled){ fb.textContent = 'Fill every bar all the way through — the note lengths in each bar have to add up to four beats.'; fb.className = 'fb no'; }
-  else if(badDownbeat){ fb.textContent = 'Start every bar on its root — that’s your foundation. Fix the red downbeats.'; fb.className = 'fb no'; }
+  else if(badDownbeat){ fb.textContent = ex.looseRoot ? 'As each chord starts, land one of its chord tones — root, third, or fifth. Fix the red downbeats.' : (anySplit(ex.chart) ? 'Each chord lands on its root as it starts — beat 1, and beat 3 where the bar has two chords. Fix the red downbeats.' : 'Start every bar on its root — that’s your foundation. Fix the red downbeats.'); fb.className = 'fb no'; }
+  else if(badStrong){ fb.textContent = 'Beat 3 is a strong beat too — land a chord tone there. The weak beats (2 & 4) can be anything. Fix the red ones.'; fb.className = 'fb no'; }
   else if(ex.blues){ fb.textContent = 'That note’s outside the blues — stick to chord tones, blue notes (♭3, ♭5, ♭7, the 6th), or a passing step. Fix the red ones.'; fb.className = 'fb no'; }
   else { fb.textContent = 'A note that’s not in the chord only works as a passing step between two others. Fix the red ones.'; fb.className = 'fb no'; }
 }
@@ -718,8 +778,38 @@ const COURSE = [
         hint:'Pick a length (whole/half/quarter), then click. Root on each downbeat. Two-feel = root + fifth (G→D, C→G, D→A). Walk up to the D with quarters if you’re feeling it. Click a note again to remove it.' } },
   ]},
 
-  { title:'Module 3 — Outlining the Chord', belt:'Orange Belt', lessons:[
-    { num:'3.1', title:'Arpeggios', teach:[
+  { title:'Module 3 — Strong & Weak', belt:'Orange Belt', lessons:[
+    { num:'3.1', title:'Strong and weak beats', teach:[
+        { html:"Here's a secret that makes bass lines make <em>sense</em>. In four-four, the beats aren't equal. <b>One and three are strong</b>; <b>two and four are weak</b>." },
+        { html:"Rule of thumb the pros live by: put a <b>chord tone on every strong beat</b> — especially the root on beat one. That's what locks the harmony in. The <b>weak beats</b> are where you get to roam." },
+        { html:"So the ear hears solid chord tones on the strong beats, and the in-between notes just… color. Listen — the strong beats are the chord, the weak beats wander." },
+      ], ex:{ type:'bassDemo', exttl:'Landing on the strong beats', desc:'Beats one and three are chord tones — the frame. Beats two and four are neighbor notes that lean back home.',
+        chart:['C','Am','F','G'], notesPerBar:4,
+        answer:[ diAt('C',3),diAt('D',3),diAt('E',3),diAt('D',3), diAt('A',2),diAt('B',2),diAt('C',3),diAt('B',2), diAt('F',2),diAt('G',2),diAt('A',2),diAt('G',2), diAt('G',2),diAt('A',2),diAt('B',2),diAt('A',2) ],
+        hint:'Beats 1 & 3 land on chord tones; beats 2 & 4 are neighbor notes a step away. The frame is strong; the filler is loose.' } },
+    { num:'3.2', title:'Frame it out', teach:[
+        { html:"Your turn. Four notes a bar, chart's <b>C, F, G, C</b>. Here's the deal:" },
+        { html:"On the <b>strong beats — one and three — you must land a chord tone</b>. I'll hold you to it. On the <b>weak beats — two and four — anything goes</b>: a chord tone, a step up, a step down, whatever your ear wants." },
+        { html:"Build a frame you can trust on the strong beats, then have a little fun in between. Fill it in." },
+      ], ex:{ type:'bassWrite', rule:'strongWeak', exttl:'Chord tones on 1 & 3', desc:'Strong beats (1 and 3) have to be chord tones. Weak beats (2 and 4) are yours to play with. Then hear it walk.',
+        chart:['C','F','G','C'], notesPerBar:4,
+        win:'Strong beats locked onto chord tones, weak beats doing their own thing — that’s how a walking line breathes.',
+        fail:'Beats 1 & 3 (the strong ones, in red) need chord tones. Beats 2 & 4 can be anything — leave those be.',
+        hint:'Strong beats 1 & 3 = chord tones (C:C·E·G, F:F·A·C, G:G·B·D). Beats 2 & 4 are free.' } },
+    { num:'3.3', title:'Your first blues', teach:[
+        { html:"Now put it on a real song. The <b>twelve-bar blues</b> — the most-played form in the world. Three chords, plain and simple: <b>C, F, and G</b>." },
+        { html:"Walk it with what you just learned: <b>root on beat one, a chord tone on beat three</b> — that's your frame. Beats two and four are free to roam. Nothing fancy yet, just a solid line that holds the changes." },
+        { html:"Piano's got the chords; you hold down the bottom. Root on every downbeat, fill each bar, and let it roll. Count it off." },
+        { t:'qa', q:"Just three chords for twelve bars?", a:"That's the magic of the blues — three chords, a thousand songs. Get this walking and you can sit in anywhere. Start simple: roots and chord tones. Go." },
+      ], ex:{ type:'bassFree', exttl:'Walk a twelve-bar blues', bpm:92, comp:'stab', strongWeak:true,
+        desc:'A plain twelve-bar blues in C — just the triads C, F, G. Walk it strong and simple: root on beat one, a chord tone on beat three, weak beats your call. Fill each bar. Hit Play and the piano joins you.',
+        chart:['C','F','C','C','F','F','C','C','G','F','C','G'], notesPerBar:4, beatW:30,
+        win:'Twelve bars of blues, walked strong and steady — roots on the downbeats, chord tones on three, holding the whole form together. That’s a bass player’s blues.',
+        hint:'Strong beats: C = C·E·G, F = F·A·C, G = G·B·D (root on beat 1, chord tone on beat 3). Beats 2 & 4 are free — a chord tone or a neighbour step.' } },
+  ]},
+
+  { title:'Module 4 — Outlining the Chord', belt:'Green Belt', lessons:[
+    { num:'4.1', title:'Arpeggios', teach:[
         { html:"Now we open the chord up. Instead of just root and fifth, you play the chord <em>one note at a time</em> — an <b>arpeggio</b>. Root, <b>third</b>, fifth, maybe the octave on top." },
         { html:"That fills your line with the actual colour of the chord. This is where jazz and blues start living down in the bass — outlining every chord as it goes by." },
         { html:"And there's more than one way up. Straight up the ladder, up and back down, or broken into a bouncing pattern. Give all three a listen — same chords, three different arpeggios." },
@@ -739,7 +829,7 @@ const COURSE = [
                   {bar:2,beat:0,dur:1,di:diAt('G',2)},{bar:2,beat:1,dur:1,di:diAt('D',3)},{bar:2,beat:2,dur:1,di:diAt('B',2)},{bar:2,beat:3,dur:1,di:diAt('D',3)},
                   {bar:3,beat:0,dur:1,di:diAt('C',3)},{bar:3,beat:1,dur:1,di:diAt('G',3)},{bar:3,beat:2,dur:1,di:diAt('E',3)},{bar:3,beat:3,dur:1,di:diAt('G',3)} ] },
         ] } },
-    { num:'3.2', title:'The third tells the story', teach:[
+    { num:'4.2', title:'The third tells the story', teach:[
         { html:"Of all four notes, the <b>third</b> is the storyteller. It's the one that decides whether a chord sounds <em>happy</em> or <em>sad</em> — major or minor." },
         { html:"Same root, same fifth — but slide that third down a half-step and everything changes. <b>Major third</b>: bright, sunny. <b>Minor third</b>: dark, moody. Your root and fifth can't tell you which; only the third can." },
         { html:"Listen to the very same arpeggio, twice — once major, once minor. Only one note moves. That's the power of the third." },
@@ -751,7 +841,7 @@ const COURSE = [
           { label:'Minor third — dark', tag:'sad', chart:['Cm'], notesPerBar:4,
             seq:[ {bar:0,beat:0,dur:1,di:diAt('C',3)}, {bar:0,beat:1,dur:1,di:diAt('E',3),acc:-1}, {bar:0,beat:2,dur:1,di:diAt('G',3)}, {bar:0,beat:3,dur:1,di:diAt('C',4)} ] },
         ] } },
-    { num:'3.3', title:'The bluesy seventh', teach:[
+    { num:'4.3', title:'The bluesy seventh', teach:[
         { html:"One more note turns an arpeggio bluesy: the <b>flat seventh</b>. Stack it on top of a chord and you get a <b>dominant seventh</b> — like <b>C7</b>. That's the sound of the blues, right there." },
         { html:"The flat seven sits a whole step below the root. On C7 that's <b>B♭</b> — the <em>blue note</em>. It's restless; it wants to move. That tension is the whole engine of blues and jazz." },
         { html:"Listen — I'll arpeggiate C7 up to that B♭ and back down. Hear how the flat seven aches to resolve." },
@@ -760,7 +850,7 @@ const COURSE = [
         seq:[ {bar:0,beat:0,dur:1,di:diAt('C',3)}, {bar:0,beat:1,dur:1,di:diAt('E',3)}, {bar:0,beat:2,dur:1,di:diAt('G',3)}, {bar:0,beat:3,dur:1,di:diAt('B',3),acc:-1},
               {bar:1,beat:0,dur:1,di:diAt('B',3),acc:-1}, {bar:1,beat:1,dur:1,di:diAt('G',3)}, {bar:1,beat:2,dur:1,di:diAt('E',3)}, {bar:1,beat:3,dur:1,di:diAt('C',3)} ],
         hint:'Root C, third E, fifth G, then the flat seventh B♭ — a whole step under the octave. That B♭ is the blue note that makes it a dominant chord.' } },
-    { num:'3.4', title:'Blues bass lines', teach:[
+    { num:'4.4', title:'Blues bass lines', teach:[
         { html:"Now let's turn those arpeggios into real <b>blues bass lines</b> — the little patterns cats have played over dominant chords for a hundred years." },
         { html:"The first one every bass player learns: <b>1 – ♭3 – 3 – 5</b>. Root, then a slippery <em>chromatic</em> climb through the flat-third up to the major third, and land on the fifth. Over C7 that's <b>C – E♭ – E – G</b>. That ♭3-to-3 slide is pure blues grease." },
         { html:"The other classic is the <b>boogie</b>: <b>1 – 3 – 5 – 6 – ♭7</b> and back down. Root, third, fifth, up to the sixth, tip the flat-seven, and roll home. It rocks a whole band by itself. Give 'em both a listen." },
@@ -773,36 +863,16 @@ const COURSE = [
             seq:[ {bar:0,beat:0,dur:1,di:diAt('C',3)},{bar:0,beat:1,dur:1,di:diAt('E',3)},{bar:0,beat:2,dur:1,di:diAt('G',3)},{bar:0,beat:3,dur:1,di:diAt('A',3)},
                   {bar:1,beat:0,dur:1,di:diAt('B',3),acc:-1},{bar:1,beat:1,dur:1,di:diAt('A',3)},{bar:1,beat:2,dur:1,di:diAt('G',3)},{bar:1,beat:3,dur:1,di:diAt('E',3)} ] },
         ] } },
-    { num:'3.5', title:'The blues jam', teach:[
-        { html:"Time to put it to work. Somebody's calling a <b>blues</b> — twelve bars, the form every jazz and blues cat on earth knows cold. All <b>dominant sevenths</b>: C7, F7, G7." },
+    { num:'4.5', title:'The jazz blues jam', teach:[
+        { html:"Time to put it all together on a <b>jazz blues</b> — twelve bars, the form every jazz and blues cat on earth knows cold. All <b>dominant sevenths</b>: C7, F7, G7." },
         { html:"Get your bassline together by <b>outlining each chord</b> — arpeggiate root, third, fifth as it goes by. And grab that <b>flat seventh</b> when you can: hit the <b>♭ button</b>, then the note. B♭ over the C7, E♭ over the F7 — that's the blue note, the whole flavour." },
         { html:"Root on every downbeat, fill each bar, and let it roll. This one's medium tempo — piano's comping behind you. Count it off." },
-        { t:'qa', q:"Twelve bars is a lot — where do I even start?", a:"Roots first, like always — one solid root a bar and you've already got a bassline. Then go back and fill in thirds, fifths, that flat seven. Build it up. Nobody walks the blues perfect the first time." },
-      ], ex:{ type:'bassFree', exttl:'Walk the twelve-bar blues', bpm:104, comp:'stab', accidentals:true, blues:true,
-        desc:'A twelve-bar blues in C — all dominant chords. Outline each one (root–third–fifth, plus the ♭7 for blue). Pick a note length, pick an accidental if you need it, then click. Root on every downbeat; fill each bar. Hit Play and the piano joins you.',
+        { t:'qa', q:"How's this different from the blues we already walked?", a:"Same twelve bars, but now they're <em>dominant sevenths</em>, and you're outlining each one — thirds, fifths, that flat seven. Same road, richer scenery. That's the jazz blues." },
+      ], ex:{ type:'bassFree', exttl:'Walk the jazz blues', bpm:104, comp:'stab', accidentals:true, blues:true,
+        desc:'A twelve-bar jazz blues in C — all dominant chords. Outline each one (root–third–fifth, plus the ♭7 for blue). Pick a note length, pick an accidental if you need it, then click. Root on every downbeat; fill each bar. Hit Play and the piano joins you.',
         chart:['C7','F7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7'], notesPerBar:4, beatW:30,
-        win:'Twelve bars of blues, front to back, and your line outlined every chord — flat sevens and all. That’s the sound, kid. You’re playing the blues.',
+        win:'Twelve bars of jazz blues, front to back, and your line outlined every chord — flat sevens and all. That’s the sound, kid. You’re playing the blues.',
         hint:'C7 = C·E·G·B♭ · F7 = F·A·C·E♭ · G7 = G·B·D·F. Roots are all natural; for the ♭7 blue note use the ♭ button (B♭ over C7, E♭ over F7). Root on every downbeat, fill each bar to four beats.' } },
-  ]},
-
-  { title:'Module 4 — Strong & Weak', belt:'Green Belt', lessons:[
-    { num:'4.1', title:'Strong and weak beats', teach:[
-        { html:"Here's a secret that makes bass lines make <em>sense</em>. In four-four, the beats aren't equal. <b>One and three are strong</b>; <b>two and four are weak</b>." },
-        { html:"Rule of thumb the pros live by: put a <b>chord tone on every strong beat</b> — especially the root on beat one. That's what locks the harmony in. The <b>weak beats</b> are where you get to roam." },
-        { html:"So the ear hears solid chord tones on the strong beats, and the in-between notes just… color. Listen — the strong beats are the chord, the weak beats wander." },
-      ], ex:{ type:'bassDemo', exttl:'Landing on the strong beats', desc:'Beats one and three are chord tones — the frame. Beats two and four are neighbor notes that lean back home.',
-        chart:['C','Am','F','G'], notesPerBar:4,
-        answer:[ diAt('C',3),diAt('D',3),diAt('E',3),diAt('D',3), diAt('A',2),diAt('B',2),diAt('C',3),diAt('B',2), diAt('F',2),diAt('G',2),diAt('A',2),diAt('G',2), diAt('G',2),diAt('A',2),diAt('B',2),diAt('A',2) ],
-        hint:'Beats 1 & 3 land on chord tones; beats 2 & 4 are neighbor notes a step away. The frame is strong; the filler is loose.' } },
-    { num:'4.2', title:'Frame it out', teach:[
-        { html:"Your turn. Four notes a bar, chart's <b>C, F, G, C</b>. Here's the deal:" },
-        { html:"On the <b>strong beats — one and three — you must land a chord tone</b>. I'll hold you to it. On the <b>weak beats — two and four — anything goes</b>: a chord tone, a step up, a step down, whatever your ear wants." },
-        { html:"Build a frame you can trust on the strong beats, then have a little fun in between. Fill it in." },
-      ], ex:{ type:'bassWrite', rule:'strongWeak', exttl:'Chord tones on 1 & 3', desc:'Strong beats (1 and 3) have to be chord tones. Weak beats (2 and 4) are yours to play with. Then hear it walk.',
-        chart:['C','F','G','C'], notesPerBar:4,
-        win:'Strong beats locked onto chord tones, weak beats doing their own thing — that’s how a walking line breathes.',
-        fail:'Beats 1 & 3 (the strong ones, in red) need chord tones. Beats 2 & 4 can be anything — leave those be.',
-        hint:'Strong beats 1 & 3 = chord tones (C:C·E·G, F:F·A·C, G:G·B·D). Beats 2 & 4 are free.' } },
   ]},
 
   { title:'Module 5 — Passing Tones', belt:'Blue Belt', lessons:[
@@ -824,14 +894,98 @@ const COURSE = [
         win:'That’s a walking bass line — chord tones on the beat, passing tones stepping between. You’re walking, kid.',
         fail:'A passing tone sits right between its neighbours, one step each side. C→E wants D; F→A wants G; G→B wants A. Fix the red ones.',
         hint:'Fill only the empty second beat. C_E → D, F_A → G, G_B → A, C_E → D. One step at a time.' } },
-    { num:'5.3', title:'The whole walk', teach:[
-        { html:"You've got all the pieces now, kid. Roots and fifths. Arpeggios. Strong beats and weak beats. Passing tones. Put 'em together and this is what you get." },
-        { html:"This is a <b>two-five-one</b> — the most important little journey in jazz. Dm7 to G7 home to C. Listen how the line walks the whole way: a chord tone on every strong beat, a passing tone smoothing every step." },
-        { html:"That's the walk. Now go do it over every tune you know — slow, steady, one note at a time. I'll be on the bandstand." },
-      ], ex:{ type:'bassDemo', exttl:'Walking a ii–V–I', desc:'Everything you’ve learned, in four bars: a walking bass line strolling through Dm7 – G7 – Cmaj7. This is the destination.',
-        chart:['Dm7','G7','Cmaj7','Cmaj7'], notesPerBar:4,
-        answer:[ diAt('D',3),diAt('E',3),diAt('F',3),diAt('A',3), diAt('G',2),diAt('A',2),diAt('B',2),diAt('D',3), diAt('C',3),diAt('D',3),diAt('E',3),diAt('G',3), diAt('C',3),diAt('E',3),diAt('G',3),diAt('E',3) ],
-        hint:'Chord tones land on the strong beats; passing tones step between. That’s a walking bass line — the whole course in four bars.' } },
+    { num:'5.3', title:'Lead into the next chord', teach:[
+        { html:"Here's the best trick you can do on a weak beat: <b>approach</b> the next chord. On beat four — right before the change — play a note that's just a <b>step away</b> from where the next bar starts. It pulls the ear straight into the new chord." },
+        { html:"Two flavours. A <b>scale-step approach</b> lands from a note in the key — smooth and easy. A <b>chromatic approach</b> sneaks in from a <em>half-step below</em> the next root — that little outside note leans hard, and it's the sound of a real jazz walk." },
+        { html:"Same four bars — a <b>Cmaj7 – Am7 – Dm7 – G7</b> turnaround — both ways. Listen to how each beat four leans you into the next root." },
+      ], ex:{ type:'bassDemo', exttl:'Approach the next root', desc:'Chord tones on the strong beats, and beat four steps into the next chord. First from a scale note, then from a half-step below — that chromatic lean is pure jazz.',
+        hint:'Beat four is a step from the next bar’s root. Scale-step (in the key) is smooth; a half-step below (often a sharp) leans harder. Both aim your ear at the coming chord.',
+        variants:[
+          { label:'Scale-step approach', tag:'smooth', chart:['Cmaj7','Am7','Dm7','G7'], notesPerBar:4,
+            seq:[ {bar:0,beat:0,dur:1,di:diAt('C',3)},{bar:0,beat:1,dur:1,di:diAt('E',3)},{bar:0,beat:2,dur:1,di:diAt('G',3)},{bar:0,beat:3,dur:1,di:diAt('B',3)},
+                  {bar:1,beat:0,dur:1,di:diAt('A',3)},{bar:1,beat:1,dur:1,di:diAt('G',3)},{bar:1,beat:2,dur:1,di:diAt('E',3)},{bar:1,beat:3,dur:1,di:diAt('C',3)},
+                  {bar:2,beat:0,dur:1,di:diAt('D',3)},{bar:2,beat:1,dur:1,di:diAt('E',3)},{bar:2,beat:2,dur:1,di:diAt('F',3)},{bar:2,beat:3,dur:1,di:diAt('A',3)},
+                  {bar:3,beat:0,dur:1,di:diAt('G',3)},{bar:3,beat:1,dur:1,di:diAt('F',3)},{bar:3,beat:2,dur:1,di:diAt('E',3)},{bar:3,beat:3,dur:1,di:diAt('D',3)} ] },
+          { label:'Chromatic approach', tag:'leans hard', chart:['Cmaj7','Am7','Dm7','G7'], notesPerBar:4,
+            seq:[ {bar:0,beat:0,dur:1,di:diAt('C',3)},{bar:0,beat:1,dur:1,di:diAt('E',3)},{bar:0,beat:2,dur:1,di:diAt('G',3)},{bar:0,beat:3,dur:1,di:diAt('G',3),acc:1},
+                  {bar:1,beat:0,dur:1,di:diAt('A',3)},{bar:1,beat:1,dur:1,di:diAt('G',3)},{bar:1,beat:2,dur:1,di:diAt('E',3)},{bar:1,beat:3,dur:1,di:diAt('C',3),acc:1},
+                  {bar:2,beat:0,dur:1,di:diAt('D',3)},{bar:2,beat:1,dur:1,di:diAt('E',3)},{bar:2,beat:2,dur:1,di:diAt('F',3)},{bar:2,beat:3,dur:1,di:diAt('F',3),acc:1},
+                  {bar:3,beat:0,dur:1,di:diAt('G',3)},{bar:3,beat:1,dur:1,di:diAt('F',3)},{bar:3,beat:2,dur:1,di:diAt('E',3)},{bar:3,beat:3,dur:1,di:diAt('D',3)} ] },
+        ] } },
+    { num:'5.4', title:'The chromatic walk', teach:[
+        { html:"You've got all the pieces now: roots, fifths, arpeggios, strong and weak beats, passing tones. Put 'em together over a <b>two-five-one</b> — Dm7 to G7 home to C — and you've got a real walking bass line." },
+        { html:"And here's the last bit of spice. On a weak beat, you don't have to stay in the key — you can step through a <b>chromatic</b> note, one that's <em>outside</em> the scale, as long as it lands you on a chord tone. That's what makes a jazz walk purr." },
+        { html:"Listen close to the end of the first bar: <b>F</b> up to <b>F♯</b> — that sharp is a chromatic step — sliding right into the <b>G</b> of the next chord. Chord tones on the strong beats, smooth steps (in the key or out) filling every gap." },
+      ], ex:{ type:'bassDemo', exttl:'A walking ii–V–I', desc:'The destination: a walking line through Dm7 – G7 – C, with a chromatic F♯ leaning into the G. Chord tones on the strong beats, steps between.',
+        chart:['Dm7','G7','C'], notesPerBar:4,
+        seq:[ {bar:0,beat:0,dur:1,di:diAt('D',3)},{bar:0,beat:1,dur:1,di:diAt('E',3)},{bar:0,beat:2,dur:1,di:diAt('F',3)},{bar:0,beat:3,dur:1,di:diAt('F',3),acc:1},
+              {bar:1,beat:0,dur:1,di:diAt('G',3)},{bar:1,beat:1,dur:1,di:diAt('F',3)},{bar:1,beat:2,dur:1,di:diAt('E',3)},{bar:1,beat:3,dur:1,di:diAt('D',3)},
+              {bar:2,beat:0,dur:4,di:diAt('C',3)} ],
+        hint:'Dm7 climbs D–E–F to F♯ — a chromatic half-step that leans UP into the G above (not a drop to a low G). Then G7 walks down G–F–E–D, and D steps into C.' } },
+    { num:'5.5', title:'The practice room', teach:[
+        { html:"Come on back to the <b>practice room</b> — just you and me, no crowd, no pressure. This is where the real work happens, and where you'll spend the rest of your life." },
+        { html:"I'm putting a lead sheet in front of you: <b>“Autumn Leaves.”</b> A jazz standard every player knows — and a gift for a walker, because it's all <b>ii-V-i's</b> that never leave one key. Read the chords straight down the page, like a real chart." },
+        { html:"Walk it your way — <b>root on the strong beats</b>, chord tones and passing notes between, an approach into each new chord if you like. Take your time. There's no gong in here." },
+        { t:'qa', q:"It's a lot of chords…", a:"Eight bars, one chord each, all in the family of C. Roots first — D, G, C, F, B, E, A — they're all natural, easy to find. Then colour it in. Slow and steady. That's the practice room." },
+      ], ex:{ type:'bassFree', exttl:'Walk “Autumn Leaves”', bpm:116, comp:'jazz', accidentals:true, strongWeak:true, perRow:4,
+        desc:'“Autumn Leaves” (in A minor / C) as a lead sheet — read it top to bottom. Eight bars of ii-V-i, one chord a bar, all in one key. Walk it: root on the strong beats, chord tones and steps between. No rush. Hit Play and the trio sits in with you.',
+        chart:['Dm7','G7','Cmaj7','Fmaj7','Bm7b5','E7','Am7','Am7'], notesPerBar:4, beatW:34,
+        win:'That’s a jazz standard, walked — roots holding the changes, a line moving through all those ii-V’s. The practice room’s where players are made, and you just put in the work.',
+        hint:'Roots (all natural): Dm7→D · G7→G · Cmaj7→C · Fmaj7→F · Bm7♭5→B · E7→E · Am7→A. Root on beat 1, a chord tone on beat 3, weak beats free.' } },
+  ]},
+
+  { title:'Module 6 — Walking Around the Circle', belt:'Black Belt', lessons:[
+    { num:'6.1', title:'The circle of fifths', teach:[
+        { html:"Before we walk every key, let's read the map. All twelve keys live on one wheel — the <b>circle of fifths</b> — and it tells you everything about sharps and flats." },
+        { html:"Start at the top: <b>C</b> — the plain key, no sharps, no flats. Step <b>clockwise</b>, up a fifth, to <b>G</b>: one sharp. Another fifth to <b>D</b>: two sharps. Keep going — A, E, B — one more sharp each step. Those are the <b>sharp keys</b>." },
+        { html:"Now from C go the <em>other</em> way, <b>counter-clockwise</b> — down a fifth to <b>F</b>: one flat. Then <b>B♭</b>: two flats. B♭, E♭, A♭, D♭ — a flat more each step. The <b>flat keys</b>." },
+        { html:"That's the whole secret: neighbours on the wheel are a fifth apart and differ by just one sharp or flat. Hit <b>Hear it</b> to travel round the circle — every step's a fifth — then we'll start walking through the keys." },
+      ], ex:{ type:'circle', exttl:'The map of the keys', desc:'Every key on one wheel. C sits at the top with nothing; go clockwise and you add a sharp each step, counter-clockwise and you add a flat — and every neighbour is a fifth away.',
+        hint:'Clockwise = up a fifth, +1 sharp (G, D, A, E, B…). Counter-clockwise = down a fifth, +1 flat (F, B♭, E♭, A♭…). Neighbours are always one accidental apart.' } },
+    { num:'6.2', title:'The same walk, any key', teach:[
+        { html:"Here's a secret that unlocks the whole instrument: a walking line is the <em>same shape</em> in every key — only the letters change. Learn a lick in C, and you already half-know it in all twelve." },
+        { html:"Listen: the exact same walking ii-V-I — root, step up, the third, a chromatic lean, into the next chord — first in <b>C</b>, then lifted up to <b>F</b>. Same moves, different letters." },
+      ], ex:{ type:'bassDemo', exttl:'One shape, two keys', desc:'The identical walking ii-V-I in two keys. Hear how the shape — steps, the third, the chromatic approach — stays exactly the same; only the notes move.',
+        hint:'Same walk both times. In C the chromatic lean into G is an F♯; in F the chromatic lean into C is a B♮. Learn the shape once, play it anywhere.',
+        variants:[
+          { label:'In C · Dm7 – G7 – C', tag:'home key', chart:['Dm7','G7','C'], notesPerBar:4,
+            seq:[ {bar:0,beat:0,dur:1,di:diAt('D',3)},{bar:0,beat:1,dur:1,di:diAt('E',3)},{bar:0,beat:2,dur:1,di:diAt('F',3)},{bar:0,beat:3,dur:1,di:diAt('F',3),acc:1},
+                  {bar:1,beat:0,dur:1,di:diAt('G',3)},{bar:1,beat:1,dur:1,di:diAt('F',3)},{bar:1,beat:2,dur:1,di:diAt('E',3)},{bar:1,beat:3,dur:1,di:diAt('D',3)},
+                  {bar:2,beat:0,dur:4,di:diAt('C',3)} ] },
+          { label:'In F · Gm7 – C7 – F', tag:'moved up', chart:['Gm7','C7','F'], notesPerBar:4,
+            seq:[ {bar:0,beat:0,dur:1,di:diAt('G',2)},{bar:0,beat:1,dur:1,di:diAt('A',2)},{bar:0,beat:2,dur:1,di:diAt('B',2),acc:-1},{bar:0,beat:3,dur:1,di:diAt('B',2)},
+                  {bar:1,beat:0,dur:1,di:diAt('C',3)},{bar:1,beat:1,dur:1,di:diAt('B',2),acc:-1},{bar:1,beat:2,dur:1,di:diAt('A',2)},{bar:1,beat:3,dur:1,di:diAt('G',2)},
+                  {bar:2,beat:0,dur:4,di:diAt('F',2)} ] },
+        ] } },
+    { num:'6.3', title:'Around the circle', teach:[
+        { html:"So let's put it to the test — a lap around the <b>circle of fifths</b>. Bird woodshedded every tune in all twelve keys; we'll take a handful, marching down the flat side." },
+        { html:"A dominant chord in each key: <b>C7, F7, B♭7, E♭7, A♭7, D♭7</b>. Land the root of each as it comes round — you'll need that <b>♭ button</b> now — and walk a bar in every one. Keys most players run from. Round you go." },
+      ], ex:{ type:'bassFree', exttl:'Round the circle', bpm:120, comp:'jazz', accidentals:true, strongWeak:true, perRow:3,
+        desc:'Six keys, marching around the circle of fifths — a dominant chord in each. Land the root as each comes (you’ll need the ♭ palette), then walk the bar. Same shapes you know, new letters.',
+        chart:['C7','F7','B♭7','E♭7','A♭7','D♭7'], notesPerBar:4, beatW:34,
+        win:'Six keys walked clean, flats and all — you’re playing in corners of the instrument most folks avoid. That’s the woodshed talking. Now you can walk anything, anywhere.',
+        hint:'C7 = C·E·G·B♭ · F7 = F·A·C·E♭ · B♭7 = B♭·D·F·A♭ · E♭7 = E♭·G·B♭·D♭ · A♭7 = A♭·C·E♭·G♭ · D♭7 = D♭·F·A♭·B. Root on beat 1, another chord tone on beat 3, roam on 2 & 4 — use the ♭ button for all the flats.' } },
+    { num:'6.4', title:'You don’t always need the root', teach:[
+        { html:"One last freedom, and it's a big one. You've been planting the <b>root</b> on beat one every time — and that's the safe, strong choice. But you don't <em>always</em> need it there." },
+        { html:"Any <b>chord tone</b> can hold down a downbeat — the third, the fifth, even the seventh. Sometimes starting a bar on the third or fifth lets your line flow smoother instead of leaping back to the root every bar." },
+        { html:"Listen — a walk where every bar starts on the <b>third</b>, never the root. Still totally solid; the harmony still speaks. That's the freedom the great walkers use." },
+      ], ex:{ type:'bassDemo', exttl:'Downbeats on the third', desc:'A walk through Dm7 – G7 – Cmaj7 where every bar begins on the third, not the root. It still holds the changes — proof you don’t need the root on one.',
+        chart:['Dm7','G7','Cmaj7'], notesPerBar:4,
+        seq:[ {bar:0,beat:0,dur:1,di:diAt('F',3)},{bar:0,beat:1,dur:1,di:diAt('E',3)},{bar:0,beat:2,dur:1,di:diAt('D',3)},{bar:0,beat:3,dur:1,di:diAt('F',3)},
+              {bar:1,beat:0,dur:1,di:diAt('B',2)},{bar:1,beat:1,dur:1,di:diAt('A',2)},{bar:1,beat:2,dur:1,di:diAt('G',2)},{bar:1,beat:3,dur:1,di:diAt('B',2)},
+              {bar:2,beat:0,dur:1,di:diAt('E',3)},{bar:2,beat:1,dur:1,di:diAt('D',3)},{bar:2,beat:2,dur:1,di:diAt('C',3)},{bar:2,beat:3,dur:2,di:diAt('E',3)} ],
+        hint:'Every downbeat here is the third — F over Dm7, B over G7, E over Cmaj7 — never the root. The line still outlines the harmony. That’s the freedom to start a bar anywhere in the chord.' } },
+    { num:'6.5', title:'The cutting session', teach:[
+        { html:"It's late. You've followed me from a barn dance to a blues joint to the practice room — and now you're standing at the door of a <b>cutting session</b>. That's where players duel: one after another, everybody trying to burn hotter than the last. No mercy." },
+        { html:"Ever hear about young <b>Charlie Parker</b>? First cutting session, barely a teenager, he got lost in the changes — and the drummer sailed a <b>cymbal</b> across the floor, <em>gonged</em> him right off the stand. Whole room laughed." },
+        { html:"You know what Bird did? Went home and <b>woodshedded</b> a whole year — every tune, every key — and came back and changed music forever. So don't fear the gong. It's just the start of the story." },
+        { html:"They're calling <b>“I Got Rhythm.”</b> Rhythm changes — the fastest, most-played changes in jazz, <b>two chords a bar</b>. Land a <b>chord tone of each chord as it hits</b> (beat one, and beat three when it flips) — root's your anchor, but you know now you can lean on the third or fifth too. Walk between however you can. Sink or swim. Count it off." },
+        { t:'qa', q:"Two chords a bar, that fast — what if I get gonged?", a:"Then you get gonged, and you woodshed, and you come back. But you won't drown if you hold each chord as it comes — a chord tone on beat one, a chord tone on beat three. Nail those two and the rest is just walking. Go get 'em." },
+      ], ex:{ type:'bassFree', exttl:'Walk the rhythm changes', bpm:168, comp:'jazz', accidentals:true, strongWeak:true, looseRoot:true, perRow:4,
+        desc:'“I Got Rhythm” — the changes, two chords a bar, eight bars, and the band’s not slowing down. Land a chord tone of each chord as it starts (beat 1, and beat 3 when it flips), then walk between with chord tones, approaches, whatever you’ve got. Survive it and you can walk anything.',
+        chart:[['C','A7'],['Dm7','G7'],['C','A7'],['Dm7','G7'],['C','C7'],['F','Fm'],['C','A7'],['Dm7','G7']], notesPerBar:4, beatW:34,
+        win:'You walked the rhythm changes — a chord tone on every change as it flew by, and a line between. Nobody threw a cymbal. Kid… you’re a bass player now. Go do it over every tune you know.',
+        hint:'Two chords a bar: land a chord tone of the first on beat 1, a chord tone of the second on beat 3. Roots are all natural (C, A, D, G, F). Beats 2 & 4 are free — chord tones or a chromatic step into the next chord (♯/♭ palette’s there).' } },
   ]},
 ];
 const LESSONS = [];
@@ -865,7 +1019,7 @@ function renderNav(){
     if(gated) slot.innerHTML = `<span class="endnote">Nail the exercise, then walk on →</span>`;
     else { slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`; el('next').addEventListener('click', () => go(idx+1)); }
   } else {
-    slot.innerHTML = `<span class="endnote">That's the walk, kid. Now go do it over every tune you know.</span>`;
+    slot.innerHTML = `<span class="endnote">The end of the road — the cutting session. Walk it and you can walk anything.</span>`;
   }
 }
 function go(i){ idx = Math.max(0, Math.min(LESSONS.length-1, i)); renderLesson(); }
