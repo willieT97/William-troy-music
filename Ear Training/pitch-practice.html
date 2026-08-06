@@ -40,6 +40,11 @@
   .seg button:active{ transform:translate(2px,2px); box-shadow:none; }
   .seg button.cur{ background:var(--ink); color:var(--paper); box-shadow:2px 2px 0 var(--pink); }
   .lenbtn{ min-width:38px; text-align:center; }
+  .sel{ font-family:var(--mono); font-size:.82rem; padding:9px 12px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); cursor:pointer; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{ font-family:var(--mono); font-size:.72rem; cursor:pointer; min-width:34px; text-align:center; padding:6px 8px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
+  .chip.on{ background:var(--ink); color:var(--paper); box-shadow:2px 2px 0 var(--pink); }
+  .chip:active{ transform:translate(2px,2px); box-shadow:none; }
   .hintline{ font-family:var(--mono); font-size:.63rem; color:var(--muted); margin-top:8px; line-height:1.6; }
 
   .btn{ font-family:var(--mono); font-size:.76rem; letter-spacing:.05em; text-transform:uppercase; cursor:pointer;
@@ -59,11 +64,14 @@
   .slot .corr{ position:absolute; bottom:2px; font-family:var(--mono); font-weight:400; font-size:.56rem; color:var(--green); }
   .slot .idx{ position:absolute; top:2px; left:4px; font-family:var(--mono); font-weight:400; font-size:.5rem; color:var(--muted); }
 
-  .pad{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0 4px; }
-  .pad button{ font-family:var(--disp); font-weight:800; font-size:1.05rem; cursor:pointer; min-width:48px; padding:11px 10px;
-    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:3px 3px 0 var(--ink); }
-  .pad button:active{ transform:translate(3px,3px); box-shadow:none; }
-  .pad button:disabled{ opacity:.4; cursor:default; box-shadow:none; }
+  .piano{ position:relative; width:min(360px,98%); height:158px; margin:8px auto 4px; }
+  .wkey{ position:absolute; top:0; height:158px; border:2px solid var(--ink); background:var(--paper); cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:9px; font-family:var(--disp); font-weight:800; font-size:.95rem; }
+  .bkey{ position:absolute; top:0; height:98px; border:2px solid var(--ink); background:var(--ink); color:var(--paper); z-index:2; cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:7px; font-family:var(--mono); font-weight:700; font-size:.58rem; }
+  .wkey.hit{ background:var(--blue); color:#fff; } .bkey.hit{ background:var(--blue); }
+  .wkey:active,.bkey:active{ filter:brightness(.94); }
+  .wkey.off,.bkey.off{ opacity:.24; cursor:default; }
 
   .fb{ min-height:24px; text-align:center; font-size:1rem; margin:14px 0 4px; }
   .fb.ok{ color:var(--green); font-weight:600; } .fb.no{ color:#c0392b; }
@@ -93,35 +101,53 @@
     </div>
     <div class="field">
       <div class="flabel">Which notes</div>
-      <div class="seg" id="poolSeg">
-        <button data-pool="penta">Pentatonic <span style="opacity:.6">5</span></button>
-        <button data-pool="major" class="cur">Major scale <span style="opacity:.6">7</span></button>
-        <button data-pool="chromatic">Chromatic <span style="opacity:.6">12</span></button>
+      <select id="scaleSel" class="sel">
+        <option value="major" selected>Major</option>
+        <option value="minor">Minor</option>
+        <option value="harmonic">Harmonic minor</option>
+        <option value="majpenta">Major pentatonic</option>
+        <option value="minpenta">Minor pentatonic</option>
+        <option value="majblues">Major blues</option>
+        <option value="minblues">Minor blues</option>
+        <option value="custom">Custom…</option>
+        <option value="chromatic">Chromatic</option>
+      </select>
+      <div class="customrow" id="customRow" hidden>
+        <div class="flabel" style="margin-top:12px">Custom notes — tap to include</div>
+        <div class="chips" id="chips"></div>
       </div>
     </div>
     <div class="field">
-      <div class="flabel">Key</div>
-      <div class="seg" id="keySeg">
-        <button data-key="C" class="cur">Stay in C · name the letters</button>
-        <button data-key="rand">Change key · name the degrees</button>
-      </div>
+      <div class="flabel">Tonic</div>
+      <select id="tonicSel" class="sel">
+        <option value="0" selected>C</option>
+        <option value="1">D♭</option>
+        <option value="2">D</option>
+        <option value="3">E♭</option>
+        <option value="4">E</option>
+        <option value="5">F</option>
+        <option value="6">F♯</option>
+        <option value="7">G</option>
+        <option value="8">A♭</option>
+        <option value="9">A</option>
+        <option value="10">B♭</option>
+        <option value="11">B</option>
+        <option value="rand">Random — a new tonic each round</option>
+      </select>
       <div class="hintline" id="keyHint"></div>
     </div>
   </div>
 
   <div class="row transport">
-    <button class="btn blue" id="newBtn">&#9654; New sequence</button>
+    <button class="btn blue" id="startBtn">&#9654; Start</button>
     <button class="btn" id="againBtn" disabled>&#8635; Hear again</button>
     <button class="btn" id="tonicBtn" disabled>&#9834; Tonic</button>
+    <button class="btn" id="undoBtn" disabled>&#9003; Undo</button>
   </div>
 
   <div class="slots" id="slots"></div>
-  <div class="pad" id="pad"></div>
-  <div class="row" style="justify-content:center; margin-top:12px;">
-    <button class="btn" id="undoBtn" disabled>&#9003; Undo</button>
-    <button class="btn ink" id="checkBtn" disabled>Check</button>
-  </div>
-  <div class="fb" id="fb">Set it up, then hit <b>New sequence</b> and name what you hear.</div>
+  <div class="piano" id="piano"></div>
+  <div class="fb" id="fb">Set it up, then hit <b>Start</b> — name each note you hear, and the next one plays on its own.</div>
 
   <div class="score">
     <div class="tile"><div class="n" id="stStreak">0</div><div class="l">Streak</div></div>
@@ -174,93 +200,156 @@ function sound(midi, t, dur, level){
 function afterResume(fn){ const ac = audio(); if(ac.state==='suspended') ac.resume().then(fn).catch(fn); else fn(); }
 
 /* ===================== MUSIC ===================== */
-const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
-const DEGREES = ['1','♭2','2','♭3','3','4','♭5','5','♭6','6','♭7','7'];
-const POOLS = { penta:[0,2,4,7,9], major:[0,2,4,5,7,9,11], chromatic:[0,1,2,3,4,5,6,7,8,9,10,11] };
+const SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const FLAT_KEYS = [5,10,3,8,1,6];                                        // F B♭ E♭ A♭ D♭ G♭ — spell with flats
+const KEY_NAMES = ['C','D♭','D','E♭','E','F','F♯','G','A♭','A','B♭','B']; // conventional major-key name by root pc
+const SCALES = {                                     // semitone offsets from the tonic
+  major:    [0,2,4,5,7,9,11],
+  minor:    [0,2,3,5,7,8,10],
+  harmonic: [0,2,3,5,7,8,11],
+  majpenta: [0,2,4,7,9],
+  minpenta: [0,3,5,7,10],
+  majblues: [0,2,3,4,7,9],
+  minblues: [0,3,5,6,7,10],
+  chromatic:[0,1,2,3,4,5,6,7,8,9,10,11]
+};
+const MINOR_SCALES = ['minor','harmonic','minpenta','minblues'];   // flat-side spelling + minor tonic triad
 
-let seqLen = 3, poolKey = 'major', keyMode = 'C';
+let seqLen = 3, scaleKey = 'major', tonicSel = '0', keyRoot = 0;
+let customOffsets = new Set([0,2,4,5,7,9,11]);
 let tonicMidi = 60, seq = [], answer = [], checked = false;
+let running = false, pendingCheck = null, advanceT = null;
+let recent = [], prevTonic = null;   // anti-repetition memory
 let streak = 0, best = +(localStorage.getItem('wtm_pitchpractice_best')||0), correct = 0, total = 0;
 
-const labelFor = off => keyMode === 'C' ? NOTE_NAMES[off % 12] : DEGREES[off];
+const poolOffsets = () => scaleKey === 'custom' ? [...customOffsets].sort((a,b)=>a-b) : SCALES[scaleKey];
+const useFlats = () => FLAT_KEYS.includes(MINOR_SCALES.includes(scaleKey) ? (keyRoot+3)%12 : keyRoot);  // spell to the (relative) key
+const nameForPc = pc => (useFlats() ? FLAT : SHARP)[((pc%12)+12)%12];
+const scalePcs = () => poolOffsets().map(o => (keyRoot + o) % 12);      // the pitch classes in play
+const pcOfOffset = off => (keyRoot + off) % 12;
+function tonicTriad(){ if(scaleKey==='chromatic'||scaleKey==='custom') return [0,7,12]; return [0, MINOR_SCALES.includes(scaleKey)?3:4, 7, 12]; }
 
 function playChain(notes, gap, dur){                 // notes: [{off, at}] relative offsets scheduled by index
   afterResume(() => { const t0 = audio().currentTime + 0.12;
     notes.forEach((n,i) => sound(tonicMidi + n, t0 + i*gap, dur, 0.95)); });
 }
 function playTonic(){
+  const tri = tonicTriad();
   afterResume(() => { const t0 = audio().currentTime + 0.06;
-    [0,4,7,12].forEach((o,i) => sound(tonicMidi + o, t0 + i*0.16, 0.32, 0.8)); });   // establish the key: I chord up
+    tri.forEach((o,i) => sound(tonicMidi + o, t0 + i*0.16, 0.32, 0.8)); });          // establish the tonic (quality-matched)
 }
 function playSequence(){ playChain(seq, 0.62, 0.5); }
 function playRound(){
+  const tri = tonicTriad();
   afterResume(() => { const ac = audio(); let t = ac.currentTime + 0.1;
-    [0,4,7,12].forEach((o,i) => sound(tonicMidi + o, t + i*0.15, 0.3, 0.75));       // tonic reference
-    t += 4*0.15 + 0.5;
+    tri.forEach((o,i) => sound(tonicMidi + o, t + i*0.15, 0.3, 0.75));               // tonic reference
+    t += tri.length*0.15 + 0.5;
     seq.forEach((off,i) => sound(tonicMidi + off, t + i*0.62, 0.5, 0.95)); });
 }
 
-/* ===================== ROUND FLOW ===================== */
-function newSequence(){
-  if(keyMode === 'C'){ tonicMidi = 60; }
-  else { const tp = randInt(0,11); tonicMidi = 60 + tp; if(tonicMidi > 66) tonicMidi -= 12; }
-  const pool = POOLS[poolKey];
-  seq = Array.from({length:seqLen}, () => pool[randInt(0, pool.length-1)]);
-  answer = []; checked = false;
-  buildPad(); renderSlots();
-  el('againBtn').disabled = false; el('tonicBtn').disabled = false;
-  el('fb').textContent = keyMode === 'C' ? 'Name each note by its letter, in order.' : 'A new key — name each note by its scale degree, in order.';
+/* ===================== ROUND FLOW (auto-advancing) ===================== */
+function toggleRun(){ running ? stopRun() : startRun(); }
+function startRun(){
+  if(poolOffsets().length < 2){ el('fb').textContent = 'Pick at least two notes first.'; el('fb').className = 'fb no'; return; }
+  running = true; recent = []; prevTonic = null;
+  el('startBtn').innerHTML = '&#9209; Stop'; el('startBtn').classList.remove('blue'); el('startBtn').classList.add('ink');
+  nextRound();
+}
+function stopRun(){
+  running = false; clearTimeout(pendingCheck); clearTimeout(advanceT); pendingCheck = advanceT = null;
+  el('startBtn').innerHTML = '&#9654; Start'; el('startBtn').classList.add('blue'); el('startBtn').classList.remove('ink');
+  el('againBtn').disabled = true; el('tonicBtn').disabled = true; el('undoBtn').disabled = true;
+  el('fb').textContent = 'Stopped. Hit Start to keep drilling.'; el('fb').className = 'fb';
+}
+function makeSeq(){                                   // random, but never the same note twice in a row
+  const pool = poolOffsets(), s = [];
+  for(let i=0; i<seqLen; i++){ let n; do { n = pool[randInt(0, pool.length-1)]; } while(i>0 && n===s[i-1] && pool.length>1); s.push(n); }
+  return s;
+}
+function freshSeq(){                                  // …and not one of the last few sequences
+  let s, tries = 0;
+  do { s = makeSeq(); tries++; } while(tries < 24 && recent.includes(s.join(',')));
+  recent.push(s.join(',')); if(recent.length > 4) recent.shift();
+  return s;
+}
+function nextRound(){
+  if(!running) return;
+  if(tonicSel === 'rand'){ do { keyRoot = randInt(0,11); } while(keyRoot === prevTonic); prevTonic = keyRoot; }
+  else keyRoot = +tonicSel;
+  tonicMidi = 60 + keyRoot - (keyRoot > 5 ? 12 : 0);
+  seq = freshSeq();
+  answer = []; checked = false; clearTimeout(pendingCheck); clearTimeout(advanceT);
+  buildPiano(); renderSlots();
+  el('againBtn').disabled = false; el('tonicBtn').disabled = false; el('undoBtn').disabled = true;
+  el('fb').textContent = `Key of ${KEY_NAMES[keyRoot]} — find each note you hear on the keyboard.`;
   el('fb').className = 'fb';
   playRound();
 }
-function onPad(off){
-  if(checked || answer.length >= seqLen) return;
-  answer.push(off);
+function onKey(pc){
+  if(!running || checked || answer.length >= seq.length) return;
+  answer.push(pc);
+  const off = (pc - keyRoot + 12) % 12;
   afterResume(() => sound(tonicMidi + off, audio().currentTime + 0.01, 0.5, 0.85));   // hear your guess
-  renderSlots();
-  el('undoBtn').disabled = false;
-  el('checkBtn').disabled = answer.length !== seqLen;
+  renderSlots(); el('undoBtn').disabled = false;
+  if(answer.length === seq.length) pendingCheck = setTimeout(check, 320);              // auto-check (Undo cancels)
 }
 function undo(){
   if(checked || !answer.length) return;
-  answer.pop(); renderSlots();
-  el('undoBtn').disabled = !answer.length; el('checkBtn').disabled = true;
+  clearTimeout(pendingCheck); pendingCheck = null;
+  answer.pop(); renderSlots(); el('undoBtn').disabled = !answer.length;
 }
 function check(){
-  if(checked || answer.length !== seqLen) return;
-  checked = true;
-  let right = 0; seq.forEach((off,i) => { if(answer[i] === off) right++; });
-  total += seqLen; correct += right;
-  if(right === seqLen){ streak++; if(streak > best){ best = streak; localStorage.setItem('wtm_pitchpractice_best', best); } }
+  pendingCheck = null;
+  if(checked || answer.length !== seq.length) return;
+  checked = true; el('undoBtn').disabled = true;
+  let right = 0; seq.forEach((off,i) => { if(answer[i] === pcOfOffset(off)) right++; });
+  total += seq.length; correct += right;
+  const perfect = right === seq.length;
+  if(perfect){ streak++; if(streak > best){ best = streak; localStorage.setItem('wtm_pitchpractice_best', best); } }
   else streak = 0;
   renderSlots(); renderStats();
-  el('checkBtn').disabled = true; el('undoBtn').disabled = true;
   const fb = el('fb');
-  if(right === seqLen){ fb.textContent = `Perfect — all ${seqLen}. ${streak>=3?'🔥 ':''}Hit New sequence for another.`; fb.className = 'fb ok'; }
-  else { fb.textContent = `${right} of ${seqLen}. The green notes below are the answers — hear it again, then go on.`; fb.className = 'fb no'; }
+  if(perfect){ fb.textContent = `Perfect — all ${seq.length}. ${streak>=3?'🔥 ':''}Next one coming…`; fb.className = 'fb ok'; }
+  else { fb.textContent = `${right} of ${seq.length} — here's how it went, listen again…`; fb.className = 'fb no'; }
+  if(running){
+    if(perfect){ advanceT = setTimeout(nextRound, 1150); }
+    else { playSequence(); advanceT = setTimeout(nextRound, seq.length*620 + 1200); }   // replay the miss, then move on
+  }
 }
 
 /* ===================== RENDER ===================== */
 function renderSlots(){
   const box = el('slots'); box.innerHTML = '';
-  for(let i=0; i<seqLen; i++){
+  for(let i=0; i<seq.length; i++){
     const d = document.createElement('div'); d.className = 'slot';
-    const entered = answer[i] != null;
+    const entered = answer[i] != null, correctPc = pcOfOffset(seq[i]);
     if(!checked && i === answer.length) d.classList.add('cur');
-    if(checked && entered){ d.classList.add(answer[i] === seq[i] ? 'ok' : 'no'); }
-    let inner = `<span class="idx">${i+1}</span>` + (entered ? labelFor(answer[i]) : '');
-    if(checked && answer[i] !== seq[i]) inner += `<span class="corr">${labelFor(seq[i])}</span>`;
+    if(checked && entered){ d.classList.add(answer[i] === correctPc ? 'ok' : 'no'); }
+    let inner = `<span class="idx">${i+1}</span>` + (entered ? nameForPc(answer[i]) : '');
+    if(checked && answer[i] !== correctPc) inner += `<span class="corr">${nameForPc(correctPc)}</span>`;
     d.innerHTML = inner;
     box.appendChild(d);
   }
 }
-function buildPad(){
-  const pad = el('pad'); pad.innerHTML = '';
-  POOLS[poolKey].forEach(off => {
-    const b = document.createElement('button');
-    b.textContent = labelFor(off); b.dataset.off = off;
-    b.addEventListener('click', () => onPad(off));
-    pad.appendChild(b);
+const WHITE = [0,2,4,5,7,9,11];                       // white-key pitch classes C D E F G A B
+const BLACK = [[1,0],[3,1],[6,3],[8,4],[10,5]];      // [pitch class, index of white key it sits after]
+function buildPiano(){
+  const p = el('piano'); p.innerHTML = '';
+  const sp = scalePcs(), wPct = 100/7, bW = wPct*0.62;
+  WHITE.forEach((pc,i) => {
+    const k = document.createElement('div');
+    k.className = 'wkey' + (sp.includes(pc) ? '' : ' off');
+    k.style.left = (i*wPct) + '%'; k.style.width = wPct + '%';           // blank key — find it by ear/position
+    if(sp.includes(pc)) k.addEventListener('click', () => onKey(pc));
+    p.appendChild(k);
+  });
+  BLACK.forEach(([pc,aw]) => {
+    const k = document.createElement('div');
+    k.className = 'bkey' + (sp.includes(pc) ? '' : ' off');
+    k.style.left = ((aw+1)*wPct - bW/2) + '%'; k.style.width = bW + '%';
+    if(sp.includes(pc)) k.addEventListener('click', () => onKey(pc));
+    p.appendChild(k);
   });
 }
 function renderStats(){
@@ -269,9 +358,9 @@ function renderStats(){
   el('stAcc').textContent = total ? Math.round(correct/total*100) + '%' : '—';
 }
 function setKeyHint(){
-  el('keyHint').textContent = keyMode === 'C'
-    ? 'The key is always C. A C is played first as your anchor; name what you hear by letter (C, D, E…).'
-    : 'A new key every round — its tonic is played first. Name what you hear by scale degree (1 = the tonic, 2, 3 … ♭3, etc.).';
+  el('keyHint').textContent = tonicSel === 'rand'
+    ? 'A different tonic each round — it’s played first as your anchor. Then find each note you hear on the keyboard.'
+    : `Tonic is ${KEY_NAMES[keyRoot]} — played first as your anchor. Then find each note you hear on the keyboard.`;
 }
 
 /* ===================== SETTINGS WIRING ===================== */
@@ -283,26 +372,42 @@ function setKeyHint(){
     seg.appendChild(b);
   }
 })();
-el('poolSeg').querySelectorAll('[data-pool]').forEach(b => b.addEventListener('click', () => {
-  poolKey = b.dataset.pool; el('poolSeg').querySelectorAll('[data-pool]').forEach(x => x.classList.toggle('cur', x===b));
-}));   // applies on the next New sequence
-el('keySeg').querySelectorAll('[data-key]').forEach(b => b.addEventListener('click', () => {
-  keyMode = b.dataset.key; el('keySeg').querySelectorAll('[data-key]').forEach(x => x.classList.toggle('cur', x===b));
-  setKeyHint();
-}));   // applies on the next New sequence
+function buildCustomRow(){
+  const c = el('chips'); c.innerHTML = '';
+  for(let off=0; off<12; off++){
+    const b = document.createElement('button');
+    b.className = 'chip' + (customOffsets.has(off) ? ' on' : '');
+    b.textContent = nameForPc((keyRoot+off) % 12);
+    b.addEventListener('click', () => {
+      customOffsets.has(off) ? customOffsets.delete(off) : customOffsets.add(off);
+      b.classList.toggle('on'); if(!running) buildPiano();
+    });
+    c.appendChild(b);
+  }
+}
+el('scaleSel').addEventListener('change', () => {
+  scaleKey = el('scaleSel').value;
+  el('customRow').hidden = scaleKey !== 'custom';
+  if(scaleKey === 'custom') buildCustomRow();
+  setKeyHint(); if(!running) buildPiano();           // applies next round if one's running
+});
+el('tonicSel').addEventListener('change', () => {
+  tonicSel = el('tonicSel').value;
+  keyRoot = (tonicSel === 'rand') ? 0 : +tonicSel;   // preview tonic for the idle keyboard
+  setKeyHint(); if(!running){ buildPiano(); if(scaleKey === 'custom') buildCustomRow(); }
+});
 
-el('newBtn').addEventListener('click', newSequence);
+el('startBtn').addEventListener('click', toggleRun);
 el('againBtn').addEventListener('click', () => { if(seq.length) playSequence(); });
 el('tonicBtn').addEventListener('click', () => { if(seq.length) playTonic(); });
 el('undoBtn').addEventListener('click', undo);
-el('checkBtn').addEventListener('click', check);
 document.addEventListener('pointerdown', () => { audio(); getPiano(); }, { once:true });
 window.addEventListener('keydown', e => {
-  if(e.key === 'Enter'){ newSequence(); }
-  else if(e.key === ' '){ e.preventDefault(); if(seq.length) playSequence(); }
-  else if(e.key === 'Backspace'){ undo(); }
+  if(e.key === 'Enter'){ e.preventDefault(); toggleRun(); }
+  else if(e.key === ' '){ e.preventDefault(); if(seq.length && running) playSequence(); }
+  else if(e.key === 'Backspace'){ e.preventDefault(); undo(); }
 });
-setKeyHint(); renderStats();
+setKeyHint(); renderStats(); buildPiano();
 </script>
 </body>
 </html>
