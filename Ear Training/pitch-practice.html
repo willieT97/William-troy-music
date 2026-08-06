@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pitch Practice — pure ear training</title>
+<meta name="description" content="Pure note ear training. Hear a short sequence off a reference tonic and name what you heard. Pick the length, the notes, and the key. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js" defer></script>
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --green:#1F9D55; --amber:#E0922A;
+    --muted:#6F6757;
+    --disp:"Syne",system-ui,sans-serif; --body:"Hanken Grotesk",system-ui,sans-serif; --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:var(--body); color:var(--ink); background:var(--paper); min-height:100vh; line-height:1.5; -webkit-font-smoothing:antialiased; position:relative; }
+  body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"); }
+  .wrap{ position:relative; z-index:1; max-width:640px; margin:0 auto; padding:26px 18px 80px; }
+
+  header{ text-align:center; margin-bottom:20px; }
+  .title{ position:relative; display:inline-block; font-family:var(--disp); font-weight:800; font-size:clamp(1.7rem,6vw,2.6rem);
+    letter-spacing:-.02em; line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply; }
+  .title::after{ content:attr(data-text); position:absolute; left:3px; top:3px; color:var(--pink); mix-blend-mode:multiply; z-index:-1; }
+  .subtitle{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-top:12px; }
+
+  .panel{ position:relative; background:#FBF7EE; border:2.5px solid var(--ink); box-shadow:8px 8px 0 var(--ink); padding:16px 16px 18px; margin-bottom:20px; }
+  .panel h2{ font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--pink); margin:0 0 12px; }
+
+  .field{ margin-bottom:14px; } .field:last-child{ margin-bottom:0; }
+  .flabel{ font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+  .seg{ display:flex; flex-wrap:wrap; gap:7px; }
+  .seg button{ font-family:var(--mono); font-size:.74rem; cursor:pointer; padding:8px 12px; border:2px solid var(--ink);
+    background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
+  .seg button:active{ transform:translate(2px,2px); box-shadow:none; }
+  .seg button.cur{ background:var(--ink); color:var(--paper); box-shadow:2px 2px 0 var(--pink); }
+  .lenbtn{ min-width:38px; text-align:center; }
+  .hintline{ font-family:var(--mono); font-size:.63rem; color:var(--muted); margin-top:8px; line-height:1.6; }
+
+  .btn{ font-family:var(--mono); font-size:.76rem; letter-spacing:.05em; text-transform:uppercase; cursor:pointer;
+    padding:12px 18px; border:2.5px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:3px 3px 0 var(--ink); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:none; }
+  .btn:disabled{ opacity:.45; cursor:default; box-shadow:none; transform:none; }
+  .btn.blue{ background:var(--blue); color:#fff; } .btn.ink{ background:var(--ink); color:var(--paper); }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .transport{ justify-content:center; margin-bottom:18px; }
+
+  .slots{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:4px 0 16px; min-height:64px; }
+  .slot{ width:52px; height:60px; border:2.5px solid var(--ink); background:var(--paper); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-family:var(--disp); font-weight:800; font-size:1.15rem; position:relative; }
+  .slot.cur{ box-shadow:0 0 0 3px var(--blue); }
+  .slot.ok{ background:#e6f4ec; border-color:var(--green); color:var(--green); }
+  .slot.no{ background:#fce9ef; border-color:#c0392b; color:#c0392b; }
+  .slot .corr{ position:absolute; bottom:2px; font-family:var(--mono); font-weight:400; font-size:.56rem; color:var(--green); }
+  .slot .idx{ position:absolute; top:2px; left:4px; font-family:var(--mono); font-weight:400; font-size:.5rem; color:var(--muted); }
+
+  .pad{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0 4px; }
+  .pad button{ font-family:var(--disp); font-weight:800; font-size:1.05rem; cursor:pointer; min-width:48px; padding:11px 10px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:3px 3px 0 var(--ink); }
+  .pad button:active{ transform:translate(3px,3px); box-shadow:none; }
+  .pad button:disabled{ opacity:.4; cursor:default; box-shadow:none; }
+
+  .fb{ min-height:24px; text-align:center; font-size:1rem; margin:14px 0 4px; }
+  .fb.ok{ color:var(--green); font-weight:600; } .fb.no{ color:#c0392b; }
+
+  .score{ display:flex; gap:10px; justify-content:center; margin-top:18px; }
+  .tile{ flex:1; max-width:150px; border:2px solid var(--ink); background:#FBF7EE; box-shadow:3px 3px 0 var(--ink); padding:9px 6px; text-align:center; }
+  .tile .n{ font-family:var(--disp); font-weight:800; font-size:1.5rem; line-height:1; }
+  .tile .l{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:5px; }
+
+  .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:.7rem; color:var(--muted); }
+  .foot a{ color:var(--blue); text-decoration:none; } .foot a:hover{ text-decoration:underline; }
+  @media (prefers-reduced-motion: reduce){ .btn:active,.seg button:active,.pad button:active{ transform:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="title" data-text="Pitch Practice">Pitch Practice</span>
+    <div class="subtitle">no game · just your ear</div>
+  </header>
+
+  <div class="panel">
+    <h2>Set it up</h2>
+    <div class="field">
+      <div class="flabel">How many notes in the sequence</div>
+      <div class="seg" id="lenSeg"></div>
+    </div>
+    <div class="field">
+      <div class="flabel">Which notes</div>
+      <div class="seg" id="poolSeg">
+        <button data-pool="penta">Pentatonic <span style="opacity:.6">5</span></button>
+        <button data-pool="major" class="cur">Major scale <span style="opacity:.6">7</span></button>
+        <button data-pool="chromatic">Chromatic <span style="opacity:.6">12</span></button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="flabel">Key</div>
+      <div class="seg" id="keySeg">
+        <button data-key="C" class="cur">Stay in C · name the letters</button>
+        <button data-key="rand">Change key · name the degrees</button>
+      </div>
+      <div class="hintline" id="keyHint"></div>
+    </div>
+  </div>
+
+  <div class="row transport">
+    <button class="btn blue" id="newBtn">&#9654; New sequence</button>
+    <button class="btn" id="againBtn" disabled>&#8635; Hear again</button>
+    <button class="btn" id="tonicBtn" disabled>&#9834; Tonic</button>
+  </div>
+
+  <div class="slots" id="slots"></div>
+  <div class="pad" id="pad"></div>
+  <div class="row" style="justify-content:center; margin-top:12px;">
+    <button class="btn" id="undoBtn" disabled>&#9003; Undo</button>
+    <button class="btn ink" id="checkBtn" disabled>Check</button>
+  </div>
+  <div class="fb" id="fb">Set it up, then hit <b>New sequence</b> and name what you hear.</div>
+
+  <div class="score">
+    <div class="tile"><div class="n" id="stStreak">0</div><div class="l">Streak</div></div>
+    <div class="tile"><div class="n" id="stBest">0</div><div class="l">Best streak</div></div>
+    <div class="tile"><div class="n" id="stAcc">—</div><div class="l">Accuracy</div></div>
+  </div>
+
+  <div class="foot"><a href="../training.html">&larr; back to Training</a></div>
+</div>
+
+<script>
+"use strict";
+const el = id => document.getElementById(id);
+const randInt = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+
+/* ===================== AUDIO (sampled piano + synth fallback) ===================== */
+let actx = null, masterBus = null;
+function audio(){
+  if(!actx){
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    const comp = actx.createDynamicsCompressor(); comp.threshold.value=-16; comp.ratio.value=3;
+    const g = actx.createGain(); g.gain.value=0.9; comp.connect(g); g.connect(actx.destination); masterBus = comp;
+  }
+  if(actx.state==='suspended') actx.resume().catch(()=>{});
+  return actx;
+}
+const mtof = m => 440 * Math.pow(2, (m-69)/12);
+let piano = null, pianoLoading = null;
+function getPiano(){
+  if(piano) return Promise.resolve(piano);
+  if(pianoLoading) return pianoLoading;
+  if(!window.Soundfont) return Promise.resolve(null);
+  pianoLoading = window.Soundfont.instrument(audio(), 'acoustic_grand_piano', { soundfont:'MusyngKite', destination:masterBus })
+    .then(p => { piano = p; return p; }).catch(() => null);
+  return pianoLoading;
+}
+function synthVoice(midi, t, dur, peak){
+  const ac = audio(), f0 = mtof(midi), parts = [[1,1],[2,0.5],[3,0.25],[4,0.12]];
+  const out = ac.createGain(); out.connect(masterBus || ac.destination);
+  out.gain.setValueAtTime(0.0001, t); out.gain.linearRampToValueAtTime(peak, t+0.008);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.3);
+  parts.forEach(([n,a]) => { const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.value = f0*n; g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.15,(dur+0.3)/(1+(n-1)*0.6)));
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.5); });
+}
+function sound(midi, t, dur, level){
+  if(piano){ try{ piano.play(midi, t, { duration:dur, gain:level, destination:masterBus }); return; }catch(e){} }
+  synthVoice(midi, t, dur, (level||0.9) * 0.34);
+}
+function afterResume(fn){ const ac = audio(); if(ac.state==='suspended') ac.resume().then(fn).catch(fn); else fn(); }
+
+/* ===================== MUSIC ===================== */
+const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const DEGREES = ['1','♭2','2','♭3','3','4','♭5','5','♭6','6','♭7','7'];
+const POOLS = { penta:[0,2,4,7,9], major:[0,2,4,5,7,9,11], chromatic:[0,1,2,3,4,5,6,7,8,9,10,11] };
+
+let seqLen = 3, poolKey = 'major', keyMode = 'C';
+let tonicMidi = 60, seq = [], answer = [], checked = false;
+let streak = 0, best = +(localStorage.getItem('wtm_pitchpractice_best')||0), correct = 0, total = 0;
+
+const labelFor = off => keyMode === 'C' ? NOTE_NAMES[off % 12] : DEGREES[off];
+
+function playChain(notes, gap, dur){                 // notes: [{off, at}] relative offsets scheduled by index
+  afterResume(() => { const t0 = audio().currentTime + 0.12;
+    notes.forEach((n,i) => sound(tonicMidi + n, t0 + i*gap, dur, 0.95)); });
+}
+function playTonic(){
+  afterResume(() => { const t0 = audio().currentTime + 0.06;
+    [0,4,7,12].forEach((o,i) => sound(tonicMidi + o, t0 + i*0.16, 0.32, 0.8)); });   // establish the key: I chord up
+}
+function playSequence(){ playChain(seq, 0.62, 0.5); }
+function playRound(){
+  afterResume(() => { const ac = audio(); let t = ac.currentTime + 0.1;
+    [0,4,7,12].forEach((o,i) => sound(tonicMidi + o, t + i*0.15, 0.3, 0.75));       // tonic reference
+    t += 4*0.15 + 0.5;
+    seq.forEach((off,i) => sound(tonicMidi + off, t + i*0.62, 0.5, 0.95)); });
+}
+
+/* ===================== ROUND FLOW ===================== */
+function newSequence(){
+  if(keyMode === 'C'){ tonicMidi = 60; }
+  else { const tp = randInt(0,11); tonicMidi = 60 + tp; if(tonicMidi > 66) tonicMidi -= 12; }
+  const pool = POOLS[poolKey];
+  seq = Array.from({length:seqLen}, () => pool[randInt(0, pool.length-1)]);
+  answer = []; checked = false;
+  buildPad(); renderSlots();
+  el('againBtn').disabled = false; el('tonicBtn').disabled = false;
+  el('fb').textContent = keyMode === 'C' ? 'Name each note by its letter, in order.' : 'A new key — name each note by its scale degree, in order.';
+  el('fb').className = 'fb';
+  playRound();
+}
+function onPad(off){
+  if(checked || answer.length >= seqLen) return;
+  answer.push(off);
+  afterResume(() => sound(tonicMidi + off, audio().currentTime + 0.01, 0.5, 0.85));   // hear your guess
+  renderSlots();
+  el('undoBtn').disabled = false;
+  el('checkBtn').disabled = answer.length !== seqLen;
+}
+function undo(){
+  if(checked || !answer.length) return;
+  answer.pop(); renderSlots();
+  el('undoBtn').disabled = !answer.length; el('checkBtn').disabled = true;
+}
+function check(){
+  if(checked || answer.length !== seqLen) return;
+  checked = true;
+  let right = 0; seq.forEach((off,i) => { if(answer[i] === off) right++; });
+  total += seqLen; correct += right;
+  if(right === seqLen){ streak++; if(streak > best){ best = streak; localStorage.setItem('wtm_pitchpractice_best', best); } }
+  else streak = 0;
+  renderSlots(); renderStats();
+  el('checkBtn').disabled = true; el('undoBtn').disabled = true;
+  const fb = el('fb');
+  if(right === seqLen){ fb.textContent = `Perfect — all ${seqLen}. ${streak>=3?'🔥 ':''}Hit New sequence for another.`; fb.className = 'fb ok'; }
+  else { fb.textContent = `${right} of ${seqLen}. The green notes below are the answers — hear it again, then go on.`; fb.className = 'fb no'; }
+}
+
+/* ===================== RENDER ===================== */
+function renderSlots(){
+  const box = el('slots'); box.innerHTML = '';
+  for(let i=0; i<seqLen; i++){
+    const d = document.createElement('div'); d.className = 'slot';
+    const entered = answer[i] != null;
+    if(!checked && i === answer.length) d.classList.add('cur');
+    if(checked && entered){ d.classList.add(answer[i] === seq[i] ? 'ok' : 'no'); }
+    let inner = `<span class="idx">${i+1}</span>` + (entered ? labelFor(answer[i]) : '');
+    if(checked && answer[i] !== seq[i]) inner += `<span class="corr">${labelFor(seq[i])}</span>`;
+    d.innerHTML = inner;
+    box.appendChild(d);
+  }
+}
+function buildPad(){
+  const pad = el('pad'); pad.innerHTML = '';
+  POOLS[poolKey].forEach(off => {
+    const b = document.createElement('button');
+    b.textContent = labelFor(off); b.dataset.off = off;
+    b.addEventListener('click', () => onPad(off));
+    pad.appendChild(b);
+  });
+}
+function renderStats(){
+  el('stStreak').textContent = (streak>=3?'🔥':'') + streak;
+  el('stBest').textContent = best;
+  el('stAcc').textContent = total ? Math.round(correct/total*100) + '%' : '—';
+}
+function setKeyHint(){
+  el('keyHint').textContent = keyMode === 'C'
+    ? 'The key is always C. A C is played first as your anchor; name what you hear by letter (C, D, E…).'
+    : 'A new key every round — its tonic is played first. Name what you hear by scale degree (1 = the tonic, 2, 3 … ♭3, etc.).';
+}
+
+/* ===================== SETTINGS WIRING ===================== */
+(function buildLenSeg(){
+  const seg = el('lenSeg');
+  for(let n=1; n<=8; n++){
+    const b = document.createElement('button'); b.className = 'lenbtn' + (n===seqLen?' cur':''); b.textContent = n; b.dataset.len = n;
+    b.addEventListener('click', () => { seqLen = n; [...seg.children].forEach(x => x.classList.toggle('cur', x===b)); });
+    seg.appendChild(b);
+  }
+})();
+el('poolSeg').querySelectorAll('[data-pool]').forEach(b => b.addEventListener('click', () => {
+  poolKey = b.dataset.pool; el('poolSeg').querySelectorAll('[data-pool]').forEach(x => x.classList.toggle('cur', x===b));
+}));   // applies on the next New sequence
+el('keySeg').querySelectorAll('[data-key]').forEach(b => b.addEventListener('click', () => {
+  keyMode = b.dataset.key; el('keySeg').querySelectorAll('[data-key]').forEach(x => x.classList.toggle('cur', x===b));
+  setKeyHint();
+}));   // applies on the next New sequence
+
+el('newBtn').addEventListener('click', newSequence);
+el('againBtn').addEventListener('click', () => { if(seq.length) playSequence(); });
+el('tonicBtn').addEventListener('click', () => { if(seq.length) playTonic(); });
+el('undoBtn').addEventListener('click', undo);
+el('checkBtn').addEventListener('click', check);
+document.addEventListener('pointerdown', () => { audio(); getPiano(); }, { once:true });
+window.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ newSequence(); }
+  else if(e.key === ' '){ e.preventDefault(); if(seq.length) playSequence(); }
+  else if(e.key === 'Backspace'){ undo(); }
+});
+setKeyHint(); renderStats();
+</script>
+</body>
+</html>
