@@ -79,6 +79,11 @@
   .vlabel{ font-family:var(--disp); font-weight:700; font-size:1rem; margin:16px 0 7px; }
   .vlabel:first-of-type{ margin-top:2px; }
   .vtag{ font-family:var(--mono); font-weight:400; font-size:.56rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); border:1px solid var(--muted); padding:1px 6px; margin-left:6px; vertical-align:2px; }
+  .clockrow{ display:flex; align-items:center; gap:12px; margin:2px 0 14px; }
+  .clocklbl{ font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .clock{ font-family:var(--mono); font-weight:700; font-size:1.7rem; letter-spacing:.02em; color:var(--ink); background:var(--paper); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); padding:2px 12px; font-variant-numeric:tabular-nums; }
+  .clock.low{ color:#c0392b; border-color:#c0392b; box-shadow:3px 3px 0 #c0392b; animation:cl 1s steps(2) infinite; }
+  @keyframes cl{ 50%{ opacity:.55; } }
   .durrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 12px; }
   .durlbl{ font-family:var(--mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-right:2px; }
   .durbtn{ display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:.72rem; letter-spacing:.02em; cursor:pointer; padding:6px 11px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
@@ -262,6 +267,17 @@ function hearNote(midi){
   const go = () => bassNote(midi, ac.currentTime + 0.01, 0.55);
   if(ac.state === 'suspended') ac.resume().then(go).catch(go); else go();
 }
+/* a cymbal crash — the "gong" that ends the cutting session when the clock runs out */
+function cymbalCrash(){
+  const ac = audio(), t = ac.currentTime + 0.01, dur = 1.7;
+  const n = Math.floor(ac.sampleRate * dur), buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
+  for(let i=0; i<n; i++) d[i] = (Math.random()*2 - 1) * Math.pow(1 - i/n, 1.4);   // decaying white noise
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 5000;
+  const g = ac.createGain(); g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  src.connect(hp); hp.connect(g); g.connect(masterBus || ac.destination);
+  src.start(t); src.stop(t + dur);
+}
 
 /* ===================== MUSIC HELPERS ===================== */
 const LSEMI = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 }, LTRS = ['C','D','E','F','G','A','B'];
@@ -435,7 +451,8 @@ function renderExercise(ex){
   }
   if(ex.type === 'circle') return `<div class="ex">${head}<div class="bwbox" style="text-align:center">${circleSVG()}</div><div class="row"><button class="btn blue" id="circlePlay">&#9654; Hear it — round the circle</button></div><div class="hint">${ex.hint||''}</div></div>`;
   if(ex.type === 'bassWrite') return `<div class="ex">${head}<div class="drillp" id="bwDrill"></div><div class="bwbox" id="bwBox"></div><div class="row"><button class="btn blue" id="bwPlay">&#9654; Play</button><button class="btn" id="bwCheck">Check</button><button class="btn" id="bwClear">Clear</button></div><div class="fb" id="bwFb"></div><div class="row" id="bwNextRow" hidden><button class="btn ink" id="bwNext">Next chart →</button></div><div class="hint">${ex.hint||''}</div></div>`;
-  if(ex.type === 'bassFree') return `<div class="ex">${head}
+  if(ex.type === 'bassFree') return `<div class="ex">${head}${ex.timeLimit ? `
+    <div class="clockrow"><span class="clocklbl">On the clock</span><span class="clock" id="clock">${fmtTime(ex.timeLimit)}</span><button class="btn" id="clockRetry" hidden>↻ Woodshed &amp; try again</button></div>` : ''}
     <div class="durrow"><span class="durlbl">Note length:</span>
       <button class="durbtn" data-dur="4" id="dur4">${DUR_ICON[4]}<span>whole <em>4</em></span></button>
       <button class="durbtn" data-dur="2" id="dur2">${DUR_ICON[2]}<span>half <em>2</em></span></button>
@@ -474,9 +491,11 @@ function wireExercise(ex){
     el('bwNext').addEventListener('click', () => { if(bw.chartIdx < bw.charts.length-1) loadChart(bw.chartIdx+1); });
   }
   if(ex.type === 'bassFree'){
-    bf = { ex, bars: ex.chart.map(()=>[]), dur:1, acc:0, checked:false, frozen:false, marks:null };
+    bf = { ex, bars: ex.chart.map(()=>[]), dur:1, acc:0, checked:false, frozen:false, marks:null,
+           timer:null, timeLeft: ex.timeLimit || 0, gonged:false };
     if(ex.comp === 'strum') getGtr();                        // warm the guitar for the jam
     if(ex.comp === 'stab' || ex.comp === 'jazz') getEP();    // warm the piano comp
+    if(ex.timeLimit) el('clockRetry').addEventListener('click', clockRetry);
     drawFreeBox();
     el('bwBox').addEventListener('click', onFreeClick);
     const durBtns = [...document.querySelectorAll('[data-dur]')];
@@ -634,10 +653,34 @@ function onFreeClick(e){
     bf.bars[bar].push({ beat, dur, di, acc }); bf.bars[bar].sort((a,c)=>a.beat-c.beat);
     hearNote(naturalMidi(di) + acc);
   }
+  startClockIfNeeded();                                                     // first note drops → the clock's running
   if(bf.checked){ bf.checked = false; el('bwFb').textContent=''; el('bwFb').className='fb'; }
   drawFreeBox();
 }
 function clearFree(){ bf.bars = bf.ex.chart.map(()=>[]); bf.checked=false; bf.frozen=false; el('bwFb').textContent=''; el('bwFb').className='fb'; drawFreeBox(); }
+/* ---- the cutting-session clock (only when ex.timeLimit is set) ---- */
+const fmtTime = s => `${Math.floor(Math.max(0,s)/60)}:${String(Math.max(0,s)%60).padStart(2,'0')}`;
+function startClockIfNeeded(){
+  if(!bf || !bf.ex.timeLimit || bf.timer || bf.gonged || bf.timeLeft <= 0) return;
+  bf.timer = setInterval(clockTick, 1000);
+}
+function clockTick(){
+  bf.timeLeft--;
+  const c = el('clock'); if(c){ c.textContent = fmtTime(bf.timeLeft); c.classList.toggle('low', bf.timeLeft <= 30); }
+  if(bf.timeLeft <= 0){ clockStop(); clockGong(); }
+}
+function clockStop(){ if(bf && bf.timer){ clearInterval(bf.timer); bf.timer = null; } }
+function clockGong(){
+  bf.gonged = true; bf.frozen = true; cymbalCrash();
+  const fb = el('bwFb'); if(fb){ fb.textContent = 'TIME! 🥁 — the cat sails a cymbal across the floor. Gonged. Woodshed and count it off again.'; fb.className = 'fb no'; }
+  const r = el('clockRetry'); if(r) r.hidden = false;
+}
+function clockRetry(){
+  clockStop(); bf.timeLeft = bf.ex.timeLimit; bf.gonged = false; bf.frozen = false;
+  const c = el('clock'); if(c){ c.textContent = fmtTime(bf.timeLeft); c.classList.remove('low'); }
+  const r = el('clockRetry'); if(r) r.hidden = true;
+  const fb = el('bwFb'); if(fb){ fb.textContent = 'Fresh clock. Count it off.'; fb.className = 'fb'; }
+}
 function checkFree(){
   if(!bf || bf.frozen) return;
   const ex = bf.ex, flat = freeSeq(), marks = {};
@@ -672,7 +715,7 @@ function checkFree(){
   const pass = filled && flat.length > 0 && !badDownbeat && !badOther && !badStrong;
   bf.marks = marks; bf.checked = true; drawFreeBox();
   const fb = el('bwFb');
-  if(pass){ fb.textContent = ex.win || 'That’s a bassline. Solid.'; fb.className = 'fb ok'; bf.frozen = true; bassOk = true; renderNav(); }
+  if(pass){ clockStop(); fb.textContent = (ex.timeLimit && bf.timeLeft>0 ? `Made it with ${fmtTime(bf.timeLeft)} to spare! ` : '') + (ex.win || 'That’s a bassline. Solid.'); fb.className = 'fb ok'; bf.frozen = true; bassOk = true; renderNav(); }
   else if(!filled){ fb.textContent = 'Fill every bar all the way through — the note lengths in each bar have to add up to four beats.'; fb.className = 'fb no'; }
   else if(badDownbeat){ fb.textContent = ex.looseRoot ? 'As each chord starts, land one of its chord tones — root, third, or fifth. Fix the red downbeats.' : (anySplit(ex.chart) ? 'Each chord lands on its root as it starts — beat 1, and beat 3 where the bar has two chords. Fix the red downbeats.' : 'Start every bar on its root — that’s your foundation. Fix the red downbeats.'); fb.className = 'fb no'; }
   else if(badStrong){ fb.textContent = 'Beat 3 is a strong beat too — land a chord tone there. The weak beats (2 & 4) can be anything. Fix the red ones.'; fb.className = 'fb no'; }
@@ -979,13 +1022,19 @@ const COURSE = [
         { html:"It's late. You've followed me from a barn dance to a blues joint to the practice room — and now you're standing at the door of a <b>cutting session</b>. That's where players duel: one after another, everybody trying to burn hotter than the last. No mercy." },
         { html:"Ever hear about young <b>Charlie Parker</b>? First cutting session, barely a teenager, he got lost in the changes — and the drummer sailed a <b>cymbal</b> across the floor, <em>gonged</em> him right off the stand. Whole room laughed." },
         { html:"You know what Bird did? Went home and <b>woodshedded</b> a whole year — every tune, every key — and came back and changed music forever. So don't fear the gong. It's just the start of the story." },
-        { html:"They're calling <b>“I Got Rhythm.”</b> Rhythm changes — the fastest, most-played changes in jazz, <b>two chords a bar</b>. Land a <b>chord tone of each chord as it hits</b> (beat one, and beat three when it flips) — root's your anchor, but you know now you can lean on the third or fifth too. Walk between however you can. Sink or swim. Count it off." },
-        { t:'qa', q:"Two chords a bar, that fast — what if I get gonged?", a:"Then you get gonged, and you woodshed, and you come back. But you won't drown if you hold each chord as it comes — a chord tone on beat one, a chord tone on beat three. Nail those two and the rest is just walking. Go get 'em." },
-      ], ex:{ type:'bassFree', exttl:'Walk the rhythm changes', bpm:168, comp:'jazz', accidentals:true, strongWeak:true, looseRoot:true, perRow:4,
-        desc:'“I Got Rhythm” — the changes, two chords a bar, eight bars, and the band’s not slowing down. Land a chord tone of each chord as it starts (beat 1, and beat 3 when it flips), then walk between with chord tones, approaches, whatever you’ve got. Survive it and you can walk anything.',
-        chart:[['C','A7'],['Dm7','G7'],['C','A7'],['Dm7','G7'],['C','C7'],['F','Fm'],['C','A7'],['Dm7','G7']], notesPerBar:4, beatW:34,
-        win:'You walked the rhythm changes — a chord tone on every change as it flew by, and a line between. Nobody threw a cymbal. Kid… you’re a bass player now. Go do it over every tune you know.',
-        hint:'Two chords a bar: land a chord tone of the first on beat 1, a chord tone of the second on beat 3. Roots are all natural (C, A, D, G, F). Beats 2 & 4 are free — chord tones or a chromatic step into the next chord (♯/♭ palette’s there).' } },
+        { html:"They're calling <b>“I Got Rhythm.”</b> The <em>whole</em> tune — <b>thirty-two bars, A-A-B-A</b>. The A's are the fast rhythm changes, <b>two chords a bar</b>. The <b>bridge</b> in the middle eases off and cruises through four dominant chords — <b>E7, A7, D7, G7</b>, two bars each — then it's home for the last A." },
+        { html:"And here's the pressure that makes it a cutting session: <b>three minutes</b> — about the length of a tune — to get your <em>whole</em> bassline together before I wave you off. The clock starts the second you drop your first note. Land a chord tone of each chord as it hits, walk between however you can, and <b>don't stop.</b> Count it off." },
+        { t:'qa', q:"The whole tune, on the clock — what if I get gonged?", a:"Then you get gonged, you woodshed, and you count it off again. Same as Bird. Hold each chord as it comes — a chord tone on beat one, a chord tone on beat three — and keep moving. Roots first if the clock's breathing on you. Go get 'em." },
+      ], ex:{ type:'bassFree', exttl:'Walk the rhythm changes — 3:00 on the clock', bpm:168, comp:'jazz', accidentals:true, strongWeak:true, looseRoot:true, perRow:4, timeLimit:180,
+        desc:'“I Got Rhythm,” the full thirty-two-bar tune — A-A-B-A. Two chords a bar through the A’s, a dominant-cycle bridge in the middle, home for the last A. Land a chord tone of each chord as it starts (beat 1, and beat 3 when it flips), and walk between. Three minutes on the clock — it starts when you drop your first note.',
+        chart:[
+          ['C','A7'],['Dm7','G7'],['C','A7'],['Dm7','G7'],['C','C7'],['F','Fm'],['C','A7'],['Dm7','G7'],
+          ['C','A7'],['Dm7','G7'],['C','A7'],['Dm7','G7'],['C','C7'],['F','Fm'],['C','A7'],['Dm7','G7'],
+          'E7','E7','A7','A7','D7','D7','G7','G7',
+          ['C','A7'],['Dm7','G7'],['C','A7'],['Dm7','G7'],['C','C7'],['F','Fm'],['Dm7','G7'],'C'
+        ], notesPerBar:4, beatW:34,
+        win:'You walked the whole rhythm changes — A-A-B-A, bridge and all — and beat the clock. Nobody threw a cymbal. Kid… you’re a bass player now. Go do it over every tune you know.',
+        hint:'A sections: two chords a bar — a chord tone of the first on beat 1, of the second on beat 3. Bridge: E7 · A7 · D7 · G7, two bars each, one chord tone on 1 and one on 3. Roots are all natural; the ♯/♭ palette handles the colour. Fill every bar; keep moving.' } },
   ]},
 ];
 const LESSONS = [];
@@ -994,6 +1043,7 @@ let idx = 0;
 
 /* ===================== LESSON / NAV / TOC ===================== */
 function renderLesson(){
+  clockStop();                                    // stop any running cutting-session clock before leaving
   const L = LESSONS[idx];
   el('bk').textContent = 'LESSON ' + L.num;
   el('btitle').textContent = L.title;
