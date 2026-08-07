@@ -802,6 +802,10 @@
     save(); renderAll(); }
   (function mountVault(){ if(window.MAAuth && window.MAAuth.mountVault){ window.MAAuth.mountVault(document.getElementById('slVault'),
       { kind:'songlab', noun:'song', getState:function(){ return clone(state); }, applyState:slApply }); } else setTimeout(mountVault, 80); })();
+  (function openFromUrl(){ var m=/[?&]open=([\w-]+)/.exec(location.search); if(!m) return; var id=m[1], done=false;   // deep-link from the account page
+    (function w(){ if(window.MAAuth && window.MAAuth.onChange){ window.MAAuth.onChange(function(u){ if(done||!u) return; done=true;
+      window.MAAuth.creations.get(id).then(function(r){ if(r&&r.data) slApply(r.data); }).catch(function(){}); }); } else setTimeout(w,80); })();
+  })();
   loadLib(); load(); renderKeys(); renderAll(); renderMySongs();
   openSharedFromUrl();
   window.addEventListener('resize', relayout);

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your account — Music Arcade</title>
+<meta name="description" content="Your Music Arcade account — profile, your saved songs, charts and solos, and the songs you've published. Built by William Troy." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#F4EEE2; --ink:#17140E; --card:#FFFDF7; --blue:#2438C8; --pink:#FF4E86; --green:#1F9D55; --muted:#8a7f6a;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:var(--body); color:var(--ink); background:var(--paper); min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:820px; margin:0 auto; padding:20px 18px 80px; }
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
+  .tabs a{ font-weight:800; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; color:var(--ink);
+    padding:9px 15px; border:2.5px solid var(--ink); border-radius:12px; background:var(--card); box-shadow:3px 3px 0 var(--ink); }
+  .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+  header.top{ text-align:center; margin-bottom:18px; }
+  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(1.9rem,6vw,2.8rem); margin:.2rem 0; letter-spacing:-.02em; }
+  h1 .em{ color:var(--pink); }
+  .lede{ max-width:60ch; margin:0 auto; color:#5a5343; font-weight:600; }
+  .card{ background:var(--card); border:2.5px solid var(--ink); border-radius:18px; box-shadow:6px 6px 0 var(--ink); padding:16px 16px 18px; margin-bottom:18px; }
+  .card h2{ font-family:var(--disp); font-weight:700; font-size:1.1rem; margin:0 0 12px; display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .card h2 .sub{ font-family:var(--body); font-weight:700; font-size:.78rem; color:var(--muted); }
+  .grouplbl{ font-weight:800; font-size:.62rem; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin:14px 0 7px; }
+  .grouplbl:first-child{ margin-top:0; }
+  .item{ display:flex; align-items:center; gap:9px; border:2px solid #e4dcc9; border-radius:11px; padding:8px 11px; margin-bottom:7px; }
+  .item .inm{ flex:1; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .item .meta{ font-family:var(--mono); font-size:.68rem; color:var(--muted); }
+  .mini{ cursor:pointer; text-decoration:none; border:2px solid var(--ink); border-radius:8px; background:#fff; color:var(--ink); font-weight:800; font-size:.8rem; padding:5px 11px; box-shadow:2px 2px 0 var(--ink); }
+  .mini:active{ transform:translate(2px,2px); box-shadow:none; } .mini.del{ color:var(--pink); padding:5px 9px; }
+  .empty{ color:var(--muted); font-weight:700; font-size:.86rem; padding:1px 0 6px; }
+  .fld{ display:flex; flex-direction:column; gap:5px; margin-bottom:12px; max-width:340px; }
+  .fld label{ font-weight:800; font-size:.62rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); }
+  .fld input{ font:inherit; font-weight:700; padding:9px 11px; border:2.5px solid var(--ink); border-radius:10px; background:#fff; box-shadow:2px 2px 0 var(--ink); }
+  .btn{ cursor:pointer; border:2.5px solid var(--ink); border-radius:11px; background:#fff; color:var(--ink); font-weight:800; font-size:.92rem; padding:9px 16px; box-shadow:2px 2px 0 var(--ink); }
+  .btn:active{ transform:translate(2px,2px); box-shadow:none; } .btn.go{ background:var(--green); color:#fff; } .btn.out{ color:var(--pink); }
+  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .msg{ font-size:.82rem; font-weight:700; margin:4px 0 0; min-height:1em; } .msg.ok{ color:var(--green); } .msg.err{ color:#C0453B; }
+  .emailrow{ font-weight:700; color:#5a5343; margin-bottom:12px; } .emailrow b{ color:var(--ink); }
+  .gate{ text-align:center; padding:26px 10px; } .gate p{ color:#5a5343; font-weight:600; margin:0 0 14px; }
+  .foot{ margin-top:26px; text-align:center; color:var(--muted); font-weight:700; font-size:.82rem; } .foot a{ color:var(--blue); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header class="top">
+    <h1>Your <span class="em">account</span></h1>
+    <p class="lede">Everything in one place — your profile, the songs, charts and solos you've saved, and what you've shared to the Charts.</p>
+  </header>
+
+  <!-- signed out -->
+  <div class="card gate" id="gate" hidden>
+    <p>Sign in to see your saved work and published songs.</p>
+    <button class="btn go" id="gateSignin">Sign in / Create account</button>
+  </div>
+
+  <!-- signed in -->
+  <div id="hub" hidden>
+    <div class="card">
+      <h2>Profile</h2>
+      <div class="emailrow" id="emailRow"></div>
+      <div class="fld"><label for="uname">Username</label><input type="text" id="uname" maxlength="24" placeholder="set a username"></div>
+      <div class="row"><button class="btn go" id="saveName">Save username</button><button class="btn out" id="signOut">Sign out</button></div>
+      <div class="msg" id="pmsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Your saved work <span class="sub">— across the studio</span></h2>
+      <div id="creations"></div>
+    </div>
+
+    <div class="card">
+      <h2>Published to the Charts <span class="sub">— under your name</span></h2>
+      <div id="published"></div>
+    </div>
+  </div>
+
+  <div class="foot"><p><a href="create.html">&larr; Back to Create</a></p></div>
+</div>
+
+<script>
+(function(){
+  var KINDS=[ {kind:'songlab', label:'Song Lab', tool:'songlab.html'},
+              {kind:'jamtrack', label:'Jam Track', tool:'jam-track.html'},
+              {kind:'songmaker', label:'Song Maker', tool:'composer.html'} ];
+  function el(t,c,x){ var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; }
+  function isLab(d){ return !!(d && d.sections); }
+
+  function renderGate(){ document.getElementById('gate').hidden=false; document.getElementById('hub').hidden=true; }
+  function renderHub(user, profile){
+    document.getElementById('gate').hidden=true; document.getElementById('hub').hidden=false;
+    var er=document.getElementById('emailRow'); er.innerHTML=''; er.appendChild(document.createTextNode('Signed in as ')); var b=el('b',null,user.email); er.appendChild(b);
+    document.getElementById('uname').value = (profile && profile.username) || '';
+    renderCreations(); renderPublished(user, profile);
+  }
+
+  function renderCreations(){
+    var host=document.getElementById('creations'); host.innerHTML='';
+    KINDS.forEach(function(k){
+      host.appendChild(el('div','grouplbl', k.label));
+      var box=el('div'); host.appendChild(box); box.appendChild(el('div','empty','Loading…'));
+      window.MAAuth.creations.list(k.kind).then(function(items){
+        box.innerHTML='';
+        if(!items.length){ box.appendChild(el('div','empty','Nothing saved yet.')); return; }
+        items.forEach(function(it){
+          var row=el('div','item'); row.appendChild(el('span','inm', it.title||'Untitled'));
+          var open=el('a','mini','Open'); open.href=k.tool+'?open='+encodeURIComponent(it.id); row.appendChild(open);
+          var del=el('button','mini del','✕'); del.title='Delete';
+          del.addEventListener('click', function(){ del.disabled=true; window.MAAuth.creations.remove(it.id).then(function(){ row.remove(); if(!box.querySelector('.item')) box.appendChild(el('div','empty','Nothing saved yet.')); }).catch(function(){ del.disabled=false; }); });
+          row.appendChild(del); box.appendChild(row);
+        });
+      }).catch(function(){ box.innerHTML=''; box.appendChild(el('div','empty','Couldn’t load these.')); });
+    });
+  }
+
+  function renderPublished(user, profile){
+    var host=document.getElementById('published'); host.innerHTML='';
+    var uname = profile && profile.username;
+    if(!uname){ host.appendChild(el('div','empty','Set a username above, then anything you publish shows here.')); return; }
+    host.appendChild(el('div','empty','Loading…'));
+    window.MAAuth.client().then(function(sb){
+      return sb.from('songs_public').select('id,title,data,votes,created_at,author').eq('author', uname).order('created_at',{ascending:false});
+    }).then(function(res){
+      host.innerHTML='';
+      if(res.error){ host.appendChild(el('div','empty','Publishing credits aren’t switched on yet (run supabase-gallery.sql).')); return; }
+      var rows=res.data||[];
+      if(!rows.length){ host.appendChild(el('div','empty','You haven’t published anything yet — hit Publish in Song Lab or Song Maker.')); return; }
+      rows.forEach(function(sg){
+        var row=el('div','item'); row.appendChild(el('span','inm', sg.title||'Untitled'));
+        row.appendChild(el('span','meta','▲ '+(sg.votes||0)));
+        var view=el('a','mini','View'); view.href=(isLab(sg.data)?'songlab.html':'composer.html')+'?song='+encodeURIComponent(sg.id); view.target='_blank'; row.appendChild(view);
+        var del=el('button','mini del','✕'); del.title='Remove from the Charts';
+        del.addEventListener('click', function(){ if(!confirm('Remove “'+(sg.title||'this song')+'” from the Charts?')) return; del.disabled=true;
+          window.MAAuth.client().then(function(sb){ return sb.rpc('delete_my_song',{ p_id:sg.id }); }).then(function(r){ if(r.error) throw r.error; row.remove(); if(!host.querySelector('.item')) host.appendChild(el('div','empty','You haven’t published anything yet.')); }).catch(function(){ del.disabled=false; }); });
+        row.appendChild(del); host.appendChild(row);
+      });
+    }).catch(function(){ host.innerHTML=''; host.appendChild(el('div','empty','Couldn’t load your published songs.')); });
+  }
+
+  // profile actions
+  document.getElementById('gateSignin').addEventListener('click', function(){ if(window.MAAuth) window.MAAuth.open('signin'); });
+  document.getElementById('signOut').addEventListener('click', function(){ if(window.MAAuth) window.MAAuth.signOut(); });
+  document.getElementById('saveName').addEventListener('click', function(){
+    var name=(document.getElementById('uname').value||'').trim(), msg=document.getElementById('pmsg');
+    if(name && !/^[A-Za-z0-9_.\- ]{2,24}$/.test(name)){ msg.className='msg err'; msg.textContent='Username: 2–24 letters, numbers, spaces or _ . -'; return; }
+    var btn=document.getElementById('saveName'); btn.disabled=true; msg.className='msg'; msg.textContent='Saving…';
+    var cur=(window.MAAuth.profile()||{}).username||'';
+    (name && name.toLowerCase()!==cur.toLowerCase() ? window.MAAuth.usernameFree(name) : Promise.resolve(true)).then(function(free){
+      if(name && !free){ btn.disabled=false; msg.className='msg err'; msg.textContent='That username is taken.'; return; }
+      window.MAAuth.setUsername(name).then(function(){ btn.disabled=false; msg.className='msg ok'; msg.textContent='Saved!'; renderPublished(window.MAAuth.user(), window.MAAuth.profile()); })
+        .catch(function(e){ btn.disabled=false; msg.className='msg err'; msg.textContent=(e&&e.message)||'Couldn’t save.'; });
+    });
+  });
+
+  // react to auth (fires on load + on sign in/out)
+  function wire(){ window.MAAuth.onChange(function(user, profile){ if(user) renderHub(user, profile); else renderGate(); }); }
+  (function boot(){ if(window.MAAuth && window.MAAuth.onChange) wire(); else setTimeout(boot, 80); })();
+})();
+</script>
+</body>
+</html>

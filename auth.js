@@ -66,6 +66,9 @@
     list: function (kind) { return ensureSb().then(needUser).then(function () {
       return sb.from('creations').select('id,title,data,updated_at').eq('user_id', user.id).eq('kind', kind).order('updated_at', { ascending: false })
         .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
+    get: function (id) { return ensureSb().then(needUser).then(function () {
+      return sb.from('creations').select('id,title,data').eq('id', id).eq('user_id', user.id).maybeSingle()
+        .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
     save: function (kind, item) { return ensureSb().then(needUser).then(function () {
       var t = (item.title || 'Untitled').slice(0, 80);
       if (item.id) return sb.from('creations').update({ title: t, data: item.data }).eq('id', item.id).eq('user_id', user.id).select('id,title,data,updated_at').single().then(chk);
@@ -74,6 +77,9 @@
     remove: function (id) { return ensureSb().then(needUser).then(function () {
       return sb.from('creations').delete().eq('id', id).eq('user_id', user.id).then(function (r) { if (r.error) throw r.error; return true; }); }); }
   };
+  window.MAAuth.usernameFree = function (name) { return usernameFree(name); };
+  window.MAAuth.setUsername = function (name) { return ensureSb().then(needUser).then(function () {
+    return saveUsername(name || null).then(function (r) { if (r && r.error) throw r.error; profile = { username: name || null }; renderControl(); emit(); return profile; }); }); };
 
   // ---- reusable Save/open panel: cloud when signed in, this-device localStorage when signed out ----
   // MAAuth.mountVault(container, { kind, noun, getState, applyState })
@@ -298,6 +304,7 @@
     cardBody.appendChild(un.wrap);
     var msg = el('div', 'maa-msg'); cardBody.appendChild(msg);
     var save = el('button', 'maa-go', 'Save username'); save.type = 'button'; cardBody.appendChild(save);
+    var page = el('a', 'maa-alt', 'Your saved work & songs →'); page.href = '/account.html'; page.style.display = 'block'; page.style.textDecoration = 'none'; page.style.textAlign = 'center'; page.style.boxSizing = 'border-box'; cardBody.appendChild(page);
     var out = el('button', 'maa-alt', 'Sign out'); out.type = 'button'; cardBody.appendChild(out);
     save.addEventListener('click', function () {
       var name = (un.input.value || '').trim();

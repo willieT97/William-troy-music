@@ -972,6 +972,10 @@
   updateStatus();
   (function mountVault(){ if(window.MAAuth && window.MAAuth.mountVault){ window.MAAuth.mountVault(document.getElementById('jtVault'),
       { kind:'jamtrack', noun:'chart', getState:jtGetState, applyState:jtApply }); } else setTimeout(mountVault, 80); })();
+  (function openFromUrl(){ var m=/[?&]open=([\w-]+)/.exec(location.search); if(!m) return; var id=m[1], done=false;   // deep-link from the account page
+    (function w(){ if(window.MAAuth && window.MAAuth.onChange){ window.MAAuth.onChange(function(u){ if(done||!u) return; done=true;
+      window.MAAuth.creations.get(id).then(function(r){ if(r&&r.data) jtApply(r.data); }).catch(function(){}); }); } else setTimeout(w,80); })();
+  })();
   window.addEventListener('keydown', function(e){ if(e.code==='Space' && e.target.tagName!=='INPUT' && e.target.tagName!=='SELECT'){ e.preventDefault(); playing?stopPlay(true):startPlay(); } });
 })();
 </script>

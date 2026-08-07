@@ -818,6 +818,10 @@
     undoStack.length=0; redoStack.length=0; updateUndoBtns(); save(); syncControls(); renderPalette(); renderRhythms(); renderDrums(); redrawAll(); }
   (function mountVault(){ if(window.MAAuth && window.MAAuth.mountVault){ window.MAAuth.mountVault(document.getElementById('cmpVault'),
       { kind:'songmaker', noun:'song', getState:cmpGetState, applyState:cmpApply }); } else setTimeout(mountVault, 80); })();
+  (function openFromUrl(){ var m=/[?&]open=([\w-]+)/.exec(location.search); if(!m) return; var id=m[1], done=false;   // deep-link from the account page
+    (function w(){ if(window.MAAuth && window.MAAuth.onChange){ window.MAAuth.onChange(function(u){ if(done||!u) return; done=true;
+      window.MAAuth.creations.get(id).then(function(r){ if(r&&r.data) cmpApply(r.data); }).catch(function(){}); }); } else setTimeout(w,80); })();
+  })();
 
   // ---------- init ----------
   loadLib(); load(); syncControls(); renderKeys(); renderPalette(); renderRhythms(); renderDrums(); renderMySongs(); renderMadeCount(); relayout(); updateUndoBtns();
