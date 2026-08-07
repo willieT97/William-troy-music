@@ -49,6 +49,8 @@
   .toc a:hover{ background:rgba(36,56,200,.06); }
   .toc a.cur{ border-left-color:var(--pink); font-weight:600; background:rgba(255,78,134,.07); }
   .toc a.soon{ color:var(--muted); cursor:default; } .toc a.soon:hover{ background:none; }
+  .toc a.locked{ color:var(--muted); cursor:default; opacity:.55; } .toc a.locked:hover{ background:none; }
+  .toc a.done{ border-left-color:#1c8a4a; }
   .toc .tag{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); border:1px solid var(--amber); padding:1px 5px; margin-left:6px; vertical-align:1px; }
 
   .stage{ position:relative; border:3px solid var(--ink); background:#F2ECDD; box-shadow:9px 9px 0 var(--ink); overflow:hidden; }
@@ -1042,6 +1044,15 @@ const LESSONS = [];
 COURSE.forEach(mod => { if(mod.lessons) mod.lessons.forEach(les => LESSONS.push(Object.assign({ module:mod.title, belt:mod.belt }, les))); });
 let idx = 0;
 
+/* ===================== PROGRESS: save + sequential unlock ===================== */
+const PKEY = 'ltw.progress.v1';
+let progress = (function(){ try{ const p = JSON.parse(localStorage.getItem(PKEY)); if(p && p.done) return p; }catch(e){} return { done:{}, last:0 }; })();
+function saveProgress(){ try{ localStorage.setItem(PKEY, JSON.stringify(progress)); }catch(e){} }
+function isDone(i){ return i>=0 && i<LESSONS.length && !!progress.done[LESSONS[i].num]; }
+function isGatedType(ex){ return !!ex && (ex.type === 'bassWrite' || ex.type === 'bassFree'); }
+function maxOpen(){ let m = 0; while(m < LESSONS.length-1 && isDone(m)) m++; return m; }   // furthest openable lesson index
+function markDone(i){ if(i<0 || i>=LESSONS.length) return; const k = LESSONS[i].num; if(!progress.done[k]){ progress.done[k] = true; saveProgress(); buildToc(); } }
+
 /* ===================== LESSON / NAV / TOC ===================== */
 function renderLesson(){
   clockStop();                                    // stop any running cutting-session clock before leaving
@@ -1064,21 +1075,31 @@ function renderLesson(){
 function renderNav(){
   const L = LESSONS[idx];
   el('prev').disabled = (idx === 0);
+  if(isGatedType(L.ex) && bassOk) markDone(idx);      // solving the exercise completes the lesson (unlocks the next, live)
   const slot = el('nextslot');
   if(idx < LESSONS.length - 1){
-    const gated = L.ex && (L.ex.type === 'bassWrite' || L.ex.type === 'bassFree') && !bassOk;
+    const gated = isGatedType(L.ex) && !bassOk && !isDone(idx);   // already-passed lessons are never re-locked
     if(gated) slot.innerHTML = `<span class="endnote">Nail the exercise, then walk on →</span>`;
-    else { slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`; el('next').addEventListener('click', () => go(idx+1)); }
+    else { slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`; el('next').addEventListener('click', () => { markDone(idx); go(idx+1); }); }
   } else {
     slot.innerHTML = `<span class="endnote">The end of the road — the cutting session. Walk it and you can walk anything.</span>`;
   }
 }
-function go(i){ idx = Math.max(0, Math.min(LESSONS.length-1, i)); renderLesson(); }
+function go(i){ i = Math.max(0, Math.min(LESSONS.length-1, i)); if(i > maxOpen()) return; idx = i; progress.last = idx; saveProgress(); renderLesson(); }
 function buildToc(){
+  const mo = maxOpen();
   let h = '';
   COURSE.forEach(mod => {
     h += `<h4>${mod.title}</h4>`;
-    if(mod.lessons) mod.lessons.forEach(les => { const li = LESSONS.findIndex(x=>x.num===les.num); h += `<a href="#" class="${li===idx?'cur':''}" data-go="${li}">${les.num} · ${les.title}</a>`; });
+    if(mod.lessons) mod.lessons.forEach(les => {
+      const li = LESSONS.findIndex(x=>x.num===les.num);
+      const locked = li > mo, done = isDone(li);
+      const cls = [li===idx?'cur':'', locked?'locked':'', done?'done':''].filter(Boolean).join(' ');
+      const mark = done ? '✓ ' : (locked ? '🔒 ' : '');
+      h += locked
+        ? `<a class="${cls}" title="Finish the lesson before to unlock this one">${mark}${les.num} · ${les.title}</a>`
+        : `<a href="#" class="${cls}" data-go="${li}">${mark}${les.num} · ${les.title}</a>`;
+    });
     else if(mod.soon) h += `<a class="soon">${mod.blurb} <span class="tag">soon</span></a>`;
   });
   const toc = el('toc'); toc.innerHTML = h;
@@ -1090,6 +1111,7 @@ document.addEventListener('pointerdown', () => { audio(); getEP(); }, { once:tru
 el('speech').addEventListener('click', advance);
 el('tocBtn').addEventListener('click', () => el('toc').classList.toggle('hidden'));
 el('prev').addEventListener('click', () => go(idx-1));
+idx = Math.min(progress.last || 0, maxOpen());   // resume where you left off (never past what's unlocked)
 renderLesson();
 </script>
 </body>

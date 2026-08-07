@@ -346,6 +346,7 @@
     drawRhumb();
     setPhase('done');
     reveal();
+    try{ localStorage.setItem('oldman.progress.v1','done'); }catch(e){}   // remember this port's been charted
   }
 
   function reset(){
@@ -360,6 +361,14 @@
   soundBtn.addEventListener('click',()=>{soundOn=!soundOn;soundBtn.classList.toggle('on',soundOn);});
 
   drawStave();buildBoard();buildDeep();setPhase('intro1');
+
+  // single-port course: "progress" = whether you've charted it. Show a badge if you have.
+  try{ if(localStorage.getItem('oldman.progress.v1')==='done'){
+    const c=document.querySelector('.controls');
+    if(c){ const b=document.createElement('span'); b.textContent='✓ Port charted';
+      b.style.cssText='font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;color:#1c8a4a;align-self:center;margin-left:6px';
+      c.appendChild(b); }
+  } }catch(e){}
 })();
 </script>
 </body>
