@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -224,6 +225,8 @@
 
   <div class="card">
     <h2>My songs</h2>
+    <div id="cmpVault"></div>
+    <div class="rowlbl" style="margin-top:16px">On this device &amp; sharing</div>
     <div class="mysongs" id="mysongs"></div>
   </div>
 
@@ -804,6 +807,15 @@
         state.chords=(d.chords||[]).slice(); state.notes=(d.notes||[]).slice();
         save(); syncControls(); renderPalette(); renderRhythms(); renderDrums(); redrawAll(); showToast('Opened shared song “'+(res.data.title||'')+'” 🎵',3000); })
       .catch(function(){ showToast('Couldn’t open that shared song.'); }); }
+
+  // ---------- save & sync (accounts) ----------
+  function cmpGetState(){ return { root:state.root, mode:state.mode, tempo:state.tempo, snap:state.snap, rhythm:state.rhythm, drums:state.drums, chords:(state.chords||[]).slice(), notes:(state.notes||[]).slice() }; }
+  function cmpApply(d){ if(!d) return;
+    state.root=d.root||0; state.mode=d.mode||'maj'; state.tempo=d.tempo||100; state.snap=d.snap||2; state.rhythm=d.rhythm||'held'; state.drums=d.drums||'none';
+    state.chords=(d.chords||[]).slice(); state.notes=(d.notes||[]).slice();
+    undoStack.length=0; redoStack.length=0; updateUndoBtns(); save(); syncControls(); renderPalette(); renderRhythms(); renderDrums(); redrawAll(); }
+  (function mountVault(){ if(window.MAAuth && window.MAAuth.mountVault){ window.MAAuth.mountVault(document.getElementById('cmpVault'),
+      { kind:'songmaker', noun:'song', getState:cmpGetState, applyState:cmpApply }); } else setTimeout(mountVault, 80); })();
 
   // ---------- init ----------
   loadLib(); load(); syncControls(); renderKeys(); renderPalette(); renderRhythms(); renderDrums(); renderMySongs(); renderMadeCount(); relayout(); updateUndoBtns();

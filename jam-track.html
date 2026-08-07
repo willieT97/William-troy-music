@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jam Track — Music Arcade</title>
@@ -239,6 +240,11 @@
           <div class="playhead" id="playhead"></div>
         </div>
         <div class="sheethint" id="sheetHint"><b>Drop</b> a chord onto any beat — it plays until the next chord or the end of the bar · <b>tap a chord</b> on the chart to remove it.</div>
+      </div>
+
+      <div class="card">
+        <h2>Your charts <span class="sub">— save &amp; open</span></h2>
+        <div id="jtVault"></div>
       </div>
     </div>
   </div>
@@ -943,11 +949,29 @@
   var toastT;
   function showToast(msg,ms){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('show'); }, ms||1800); }
 
+  // ---------- save & sync (accounts) ----------
+  function jtGetState(){ return JSON.parse(JSON.stringify(state)); }
+  function jtSyncControls(){
+    document.getElementById('root').value=state.root; document.getElementById('mode').value=state.mode;
+    document.getElementById('style').value=state.style; document.getElementById('bars').value=state.bars;
+    document.getElementById('ts').value=state.ts; document.getElementById('tempo').value=state.bpm; document.getElementById('bpm').textContent=state.bpm;
+    document.getElementById('loop').checked=state.loop; document.getElementById('countin').checked=state.countin;
+    document.getElementById('hearBand').checked=!state.muteBand; document.getElementById('hearMel').checked=!state.muteMel;
+    noteDur=(UNIT()===0.5?1:0.5); buildMelTools();
+  }
+  function jtApply(d){ if(!d) return; if(playing) stopPlay(true);
+    state=d; if(!state.custom) state.custom=[]; if(!state.melody) state.melody=[]; if(!state.ts) state.ts=(state.beats===3?'3/4':'4/4'); if(!METERS[state.ts]) state.ts='4/4';
+    state.chart=(state.chart||[]).map(function(b){ if(b&&b.slots) return b; var sl=[null,null,null,null]; if(b){ if(b.a) sl[0]=b.a; if(b.b) sl[2]=b.b; } return {slots:sl}; });
+    fitChart(); normalizeMelody(); save(); jtSyncControls(); rebuildRootNames(); renderPalette(); renderChart();
+  }
+
   // ---------- boot ----------
   if(!load()) defaultChart();
   initControls();
   rebuildRootNames(); renderPalette(); renderStandards(); renderChart();
   updateStatus();
+  (function mountVault(){ if(window.MAAuth && window.MAAuth.mountVault){ window.MAAuth.mountVault(document.getElementById('jtVault'),
+      { kind:'jamtrack', noun:'chart', getState:jtGetState, applyState:jtApply }); } else setTimeout(mountVault, 80); })();
   window.addEventListener('keydown', function(e){ if(e.code==='Space' && e.target.tagName!=='INPUT' && e.target.tagName!=='SELECT'){ e.preventDefault(); playing?stopPlay(true):startPlay(); } });
 })();
 </script>

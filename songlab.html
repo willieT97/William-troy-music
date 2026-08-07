@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Song Lab — Music Arcade</title>
@@ -270,7 +271,9 @@
   </div>
 
   <div class="card">
-    <h2>Save &amp; open</h2>
+    <h2>Save &amp; open <span class="sub">— your account</span></h2>
+    <div id="slVault"></div>
+    <div class="rowlbl" style="margin-top:18px">On this device &amp; publishing</div>
     <div class="row" style="margin-bottom:12px">
       <button class="btn" id="saveBtn">💾 Save song</button>
       <button class="btn ghost" id="newBtn">✚ New song</button>
@@ -790,6 +793,13 @@
 
   // ---------- init ----------
   function renderAll(){ editTrack='mel'; syncTrackTabs(); syncControls(); syncSounds(); renderArrange(); renderEditorTitle(); renderChords(); renderBeatPresets(); renderBeat(); renderKeys(); relayout(); }
+  // save & sync to your account (falls back to this-device storage when signed out)
+  function slApply(d){ if(!d||!d.sections) return; state=clone(d); if(!state.custom) state.custom=[]; if(!state.inst) state.inst=Object.assign({},DEFAULT_INST);
+    if(state.cur==null||state.cur>=state.sections.length) state.cur=0;
+    state.sections.forEach(function(sec){ if(!sec.beat) sec.beat=emptyBeat(); INSTR.forEach(function(x){ if(!sec.beat[x.id]) sec.beat[x.id]=[]; }); if(!sec.rhythm) sec.rhythm='held'; if(!sec.bass) sec.bass=[]; });
+    save(); renderAll(); }
+  (function mountVault(){ if(window.MAAuth && window.MAAuth.mountVault){ window.MAAuth.mountVault(document.getElementById('slVault'),
+      { kind:'songlab', noun:'song', getState:function(){ return clone(state); }, applyState:slApply }); } else setTimeout(mountVault, 80); })();
   loadLib(); load(); renderKeys(); renderAll(); renderMySongs();
   openSharedFromUrl();
   window.addEventListener('resize', relayout);
