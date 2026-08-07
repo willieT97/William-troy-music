@@ -788,10 +788,12 @@
   // ---------- cloud publishing (share a link) — separate from unlocks ----------
   function shareLink(id){ return location.origin+location.pathname+'?song='+id; }
   function copyLinkText(t){ try{ if(navigator.clipboard) navigator.clipboard.writeText(t); }catch(e){} }
+  // publish through the signed-in client (credits the song to your username); anon client when signed out
+  function pubClient(){ return (window.MAAuth && window.MAAuth.user && window.MAAuth.user()) ? window.MAAuth.client() : loadSupa(); }
   function publishSong(i){ var sg=lib.songs[i]; if(!sg) return;
     if(!supaReady()){ showToast('Add your Supabase keys in the code to publish.'); return; }
     showToast('Publishing…',1500);
-    loadSupa().then(function(sb){ return sb.rpc('publish_song',{ p_title:sg.name, p_data:sg.data }); })
+    pubClient().then(function(sb){ return sb.rpc('publish_song',{ p_title:sg.name, p_data:sg.data }); })
       .then(function(res){ if(res.error) throw res.error; var row=Array.isArray(res.data)?res.data[0]:res.data;
         sg.published={ id:row.id, token:row.edit_token }; saveLib(); renderMySongs();
         copyLinkText(shareLink(row.id)); showToast('Published! Link copied 🔗',3200); })

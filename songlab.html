@@ -409,9 +409,11 @@
     return _sbP; }
   function shareLink(id){ return location.origin+location.pathname+'?song='+id; }
   function copyLinkText(t){ try{ if(navigator.clipboard) navigator.clipboard.writeText(t); }catch(e){} }
+  // publish through the signed-in client (so the song is credited to your username); anon client when signed out
+  function pubClient(){ return (window.MAAuth && window.MAAuth.user && window.MAAuth.user()) ? window.MAAuth.client() : loadSupa(); }
   function publishSong(i){ var sg=lib.songs[i]; if(!sg) return; if(!supaReady()){ showToast('Publishing isn’t set up.'); return; }
     showToast('Publishing…',1500); var pd=Object.assign({}, sg.data, {kind:'lab'});
-    loadSupa().then(function(sb){ return sb.rpc('publish_song',{ p_title:sg.name, p_data:pd }); })
+    pubClient().then(function(sb){ return sb.rpc('publish_song',{ p_title:sg.name, p_data:pd }); })
       .then(function(res){ if(res.error) throw res.error; var row=Array.isArray(res.data)?res.data[0]:res.data;
         sg.published={ id:row.id, token:row.edit_token }; saveLib(); renderMySongs(); copyLinkText(shareLink(row.id)); showToast('On the Charts! Link copied 🔗',3200); })
       .catch(function(e){ showToast('Couldn’t publish — '+(e.message||'try again')); }); }

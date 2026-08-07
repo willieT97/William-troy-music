@@ -122,8 +122,17 @@
       return t.length < n || score > (t[t.length - 1].score || 0);
     },
 
-    /** arcade-style name entry → Promise<string> ('' if cancelled) */
+    /** true when signed in with a username → scores post under that name automatically */
+    accountName() {
+      try { const A = global.MAAuth; if (A && A.user && A.user()) { const p = A.profile && A.profile(); if (p && p.username) return p.username; } } catch (_) {}
+      return null;
+    },
+
+    /** arcade-style name entry → Promise<string> ('' if cancelled).
+        Signed-in players skip the prompt and post under their username. */
     enterName(defaultName = '') {
+      const acct = this.accountName();
+      if (acct) return Promise.resolve(acct);
       return new Promise(resolve => {
         const wrap = document.createElement('div');
         wrap.setAttribute('style',

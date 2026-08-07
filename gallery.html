@@ -298,7 +298,10 @@
       var nm=document.createElement('div'); nm.className='nm'; nm.textContent=sg.title||'Untitled';
       var pv=document.createElement('div'); pv.className='pvwrap';
       var cv=document.createElement('canvas'); var ph=document.createElement('div'); ph.className='ph';
-      pv.appendChild(cv); pv.appendChild(ph); mid.appendChild(nm); mid.appendChild(pv);
+      pv.appendChild(cv); pv.appendChild(ph); mid.appendChild(nm);
+      if(sg.author){ var by=document.createElement('div'); by.className='by'; by.textContent='by '+sg.author;
+        by.style.cssText='font-size:.72rem;font-weight:700;color:var(--muted,#6F6757);margin:-1px 0 2px;'; mid.appendChild(by); }
+      mid.appendChild(pv);
       if(lab){ var a=document.createElement('a'); a.className='openlab'; a.href='songlab.html?song='+sg.id; a.textContent='🎼 Song Lab — open the full song ↗'; mid.appendChild(a);
         pv.classList.add('clickable'); pv.addEventListener('click', function(){ location.href='songlab.html?song='+sg.id; }); }
       row.appendChild(rank); row.appendChild(mid); row.appendChild(side); gallery.appendChild(row);
@@ -311,11 +314,13 @@
   window.addEventListener('resize', function(){ previews.forEach(function(p){ drawPreviewAny(p.cv, p.data); }); });
 
   var sortMode='top';
+  function fetchSongs(sb, cols){ var q=sb.from('songs_public').select(cols).limit(60);
+    return (sortMode==='top' ? q.order('votes',{ascending:false}).order('created_at',{ascending:false}) : q.order('created_at',{ascending:false})); }
   function load(){ if(!supaReady()){ gallery.innerHTML='<div class="state">The charts aren’t switched on yet.</div>'; return; }
     gallery.innerHTML='<div class="state">Loading the charts…</div>';
-    loadSupa().then(function(sb){ var q=sb.from('songs_public').select('id,title,data,votes,created_at').limit(60);
-      q = sortMode==='top' ? q.order('votes',{ascending:false}).order('created_at',{ascending:false}) : q.order('created_at',{ascending:false});
-      return q; })
+    loadSupa().then(function(sb){
+      return fetchSongs(sb,'id,title,data,votes,created_at,author')            // author column (after supabase-gallery.sql)
+        .then(function(res){ return res.error ? fetchSongs(sb,'id,title,data,votes,created_at') : res; }); }) // fallback if not migrated yet
       .then(function(res){ if(res.error) throw res.error; render(res.data||[]); })
       .catch(function(){ gallery.innerHTML='<div class="state">Couldn’t load the charts right now.</div>'; });
   }
