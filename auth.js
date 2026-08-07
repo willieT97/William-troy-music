@@ -155,6 +155,9 @@
   // ---- auth actions ----
   function doSignUp(email, pw, username) { return ensureSb().then(function () { return sb.auth.signUp({ email: email, password: pw, options: { data: { username: username } } }); }); }
   function doSignIn(email, pw) { return ensureSb().then(function () { return sb.auth.signInWithPassword({ email: email, password: pw }); }); }
+  function doGoogle() { return ensureSb().then(function () { return sb.auth.signInWithOAuth({ provider: 'google' }); }); } // returns to Supabase Site URL (no redirect allowlist needed)
+  function doReset(email) { return ensureSb().then(function () { return sb.auth.resetPasswordForEmail(email); }); } // reset email → Site URL
+  function doUpdatePassword(pw) { return ensureSb().then(function () { return sb.auth.updateUser({ password: pw }); }); }
   function usernameFree(name) { return ensureSb().then(function () { return sb.rpc('username_available', { p_name: name }).then(function (r) { return r.error ? true : !!r.data; }); }); }
   function saveUsername(name) { return ensureSb().then(function () { return sb.from('profiles').update({ username: name }).eq('id', user.id); }); }
 
@@ -185,6 +188,11 @@
       '.maa-go{width:100%;cursor:pointer;border:2.5px solid #17140E;border-radius:12px;background:#1F9D55;color:#fff;font-family:"Syne",system-ui,sans-serif;' +
         'font-weight:800;font-size:1.05rem;padding:12px;box-shadow:3px 3px 0 #17140E;}' +
       '.maa-go:active{transform:translate(3px,3px);box-shadow:none;} .maa-go[disabled]{opacity:.6;cursor:default;}' +
+      '.maa-google{width:100%;cursor:pointer;border:2.5px solid #17140E;border-radius:12px;background:#fff;color:#17140E;font-weight:800;font-size:.95rem;padding:11px;box-shadow:2px 2px 0 #17140E;display:flex;align-items:center;justify-content:center;gap:9px;}' +
+      '.maa-google:active{transform:translate(2px,2px);box-shadow:none;} .maa-google svg{flex:none;}' +
+      '.maa-or{display:flex;align-items:center;gap:10px;color:#8a7f6a;font-weight:700;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;margin:13px 0;}' +
+      '.maa-or::before,.maa-or::after{content:"";flex:1;height:2px;background:#e4dcc9;}' +
+      '.maa-forgot{display:block;text-align:center;margin-top:12px;color:#2438C8;font-weight:700;font-size:.82rem;text-decoration:none;cursor:pointer;}' +
       '.maa-alt{width:100%;margin-top:9px;cursor:pointer;border:2.5px solid #17140E;border-radius:12px;background:#fff;color:#17140E;font-weight:800;font-size:.92rem;padding:10px;box-shadow:2px 2px 0 #17140E;}' +
       '.maa-msg{font-size:.85rem;font-weight:700;margin:2px 0 10px;min-height:1em;}' +
       '.maa-msg.err{color:#C0453B;} .maa-msg.ok{color:#1F9D55;}' +
@@ -249,6 +257,7 @@
   function renderModal() {
     cardBody.innerHTML = '';
     if (view === 'account') return renderAccount();
+    if (view === 'reset') return renderReset();
     // sign in / sign up
     cardBody.appendChild(header(view === 'signup' ? 'Create your account' : 'Welcome back'));
     cardBody.appendChild(el('p', 'maa-sub', 'One account across the whole Music Arcade — save your songs, charts and solos and pick them up on any device.'));
@@ -259,6 +268,13 @@
     t2.addEventListener('click', function () { view = 'signup'; renderModal(); });
     tabs.appendChild(t1); tabs.appendChild(t2); cardBody.appendChild(tabs);
 
+    // Continue with Google
+    var gbtn = el('button', 'maa-google'); gbtn.type = 'button';
+    gbtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Continue with Google</span>';
+    gbtn.addEventListener('click', function () { gbtn.disabled = true; doGoogle().catch(function () { gbtn.disabled = false; }); });
+    cardBody.appendChild(gbtn);
+    cardBody.appendChild(el('div', 'maa-or', 'or'));
+
     var form = document.createElement('form'); form.autocomplete = 'on';
     var uname;
     if (view === 'signup') { uname = field('Username', 'text', 'username', 'e.g. jazzcat'); form.appendChild(uname.wrap); }
@@ -267,6 +283,16 @@
     var msg = el('div', 'maa-msg'); form.appendChild(msg);
     var go = el('button', 'maa-go', view === 'signup' ? 'Create account' : 'Sign in'); go.type = 'submit'; form.appendChild(go);
     cardBody.appendChild(form);
+
+    if (view === 'signin') {
+      var fp = el('a', 'maa-forgot', 'Forgot your password?'); fp.href = '#';
+      fp.addEventListener('click', function (e) { e.preventDefault(); var em = email.input.value.trim();
+        if (!/.+@.+\..+/.test(em)) return setMsg(msg, 'Type your email above first, then tap this.', 'err');
+        setMsg(msg, 'Sending a reset link…');
+        doReset(em).then(function (r) { if (r && r.error) return setMsg(msg, prettyErr(r.error), 'err'); setMsg(msg, 'Check your email for a link to reset your password.', 'ok'); })
+          .catch(function (er) { setMsg(msg, prettyErr(er), 'err'); }); });
+      cardBody.appendChild(fp);
+    }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -294,6 +320,20 @@
       }
     });
     setTimeout(function () { (view === 'signup' ? uname.input : email.input).focus(); }, 30);
+  }
+
+  function renderReset() {
+    cardBody.appendChild(header('Set a new password'));
+    cardBody.appendChild(el('p', 'maa-sub', 'Choose a new password for your account.'));
+    var f = document.createElement('form'); var pw = field('New password', 'password', 'newpw', 'at least 6 characters'); f.appendChild(pw.wrap);
+    var msg = el('div', 'maa-msg'); f.appendChild(msg);
+    var go = el('button', 'maa-go', 'Save password'); go.type = 'submit'; f.appendChild(go); cardBody.appendChild(f);
+    f.addEventListener('submit', function (e) { e.preventDefault(); var p = pw.input.value;
+      if (!p || p.length < 6) return setMsg(msg, 'Password must be at least 6 characters.', 'err');
+      go.disabled = true; setMsg(msg, 'Saving…');
+      doUpdatePassword(p).then(function (r) { go.disabled = false; if (r && r.error) return setMsg(msg, prettyErr(r.error), 'err'); setMsg(msg, 'Password updated — you’re signed in!', 'ok'); setTimeout(closeModal, 1300); })
+        .catch(function (er) { go.disabled = false; setMsg(msg, prettyErr(er), 'err'); }); });
+    setTimeout(function () { pw.input.focus(); }, 30);
   }
 
   function renderAccount() {
@@ -337,8 +377,9 @@
       .then(function () { booted = true; renderControl(); emit(); })
       .catch(function () { booted = true; renderControl(); emit(); });
     ensureSb().then(function () {
-      sb.auth.onAuthStateChange(function (_evt, session) {
+      sb.auth.onAuthStateChange(function (evt, session) {
         user = session ? session.user : null;
+        if (evt === 'PASSWORD_RECOVERY') openModal('reset'); // arrived from a reset email link
         fetchProfile().then(function () { renderControl(); emit(); });
       });
     }).catch(function () {});
