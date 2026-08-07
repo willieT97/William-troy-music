@@ -226,8 +226,10 @@
   <div class="card">
     <h2>My songs</h2>
     <div id="cmpVault"></div>
-    <div class="rowlbl" style="margin-top:16px">On this device &amp; sharing</div>
-    <div class="mysongs" id="mysongs"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+      <button class="btn" id="pubBtn" style="background:var(--green);color:#fff">📢 Publish to the Charts</button>
+    </div>
+    <div style="margin-top:8px;line-height:1.5;color:var(--muted);font-weight:700;font-size:.85rem">Finishing a song lands it here and counts toward your chord unlocks. Published songs go to <a href="/gallery.html">the Charts</a> and are managed on <a href="/account.html">your account page</a>.</div>
   </div>
 
   <div class="foot">
@@ -742,66 +744,52 @@
   function songHasContent(){ return state.chords.length>0 || state.notes.length>0; }
   function renderMadeCount(){ var e=document.getElementById('madeCount'), next=null; PACKS.forEach(function(p){ if(next==null && p.need>lib.made) next=p; });
     e.textContent='Songs made: '+lib.made+(next ? ' · '+(next.need-lib.made)+' more to unlock '+next.name : ' · all packs unlocked!'); }
-  function renderMySongs(){ var host=document.getElementById('mysongs'); host.innerHTML='';
-    if(!lib.songs.length){ host.innerHTML='<div class="empty">Finish a song and it lands here — with a shiny pack unlock along the way.</div>'; return; }
-    lib.songs.forEach(function(sg,i){ var row=document.createElement('div'); row.className='savedsong';
-      row.innerHTML='<span class="snm">'+esc(sg.name)+(sg.published?' <span class="pubbadge">shared</span>':'')+'</span>';
-      var open=document.createElement('button'); open.className='btn mini2'; open.textContent='Open'; open.addEventListener('click', function(){ openSaved(i); });
-      row.appendChild(open);
-      if(supaReady()){
-        if(sg.published){
-          var copy=document.createElement('button'); copy.className='btn mini2'; copy.textContent='🔗 Link';
-          copy.addEventListener('click', function(){ copyLinkText(shareLink(sg.published.id)); showToast('Link copied 🔗'); });
-          var un=document.createElement('button'); un.className='btn mini2 del'; un.textContent='Unpublish';
-          un.addEventListener('click', function(){ if(confirm('Remove “'+sg.name+'” from the web?')) unpublishSong(i); });
-          row.appendChild(copy); row.appendChild(un);
-        } else {
-          var pub=document.createElement('button'); pub.className='btn mini2 pub'; pub.textContent='Publish';
-          pub.addEventListener('click', function(){ publishSong(i); });
-          row.appendChild(pub);
-        }
-      }
-      var del=document.createElement('button'); del.className='btn mini2 del'; del.textContent='×'; del.title='Delete';
-      del.addEventListener('click', function(){ if(confirm('Delete “'+sg.name+'”?')){ lib.songs.splice(i,1); saveLib(); renderMySongs(); } });
-      row.appendChild(del); host.appendChild(row);
-    });
-  }
-  function openSaved(i){ var sg=lib.songs[i]; if(!sg) return;
-    if(songHasContent() && !confirm('Open “'+sg.name+'”? Your current song will be replaced — finish it first to keep it.')) return;
-    var d=sg.data; state.root=d.root; state.mode=d.mode; state.tempo=d.tempo; state.snap=d.snap||2; state.rhythm=d.rhythm||'held'; state.drums=d.drums||'none';
-    state.chords=(d.chords||[]).slice(); state.notes=(d.notes||[]).slice();
-    undoStack.length=0; redoStack.length=0; updateUndoBtns(); save(); syncControls(); renderPalette(); renderRhythms(); renderDrums(); redrawAll(); showToast('Opened “'+sg.name+'” 🎵');
-  }
   function finishSong(){
     if(!songHasContent()){ showToast('Add some chords or notes first! 🎵'); return; }
-    var def='Song '+(lib.songs.length+1), name=prompt('Name your song 🎵', def); if(name===null) return; name=(name.trim()||def);
-    lib.songs.unshift({ name:name, ts:Date.now(), data:{root:state.root,mode:state.mode,tempo:state.tempo,snap:state.snap,rhythm:state.rhythm,drums:state.drums,chords:state.chords.slice(),notes:state.notes.slice()} });
-    var before=lib.made; lib.made++; saveLib();
+    var def='Song '+(lib.made+1), name=prompt('Name your song 🎵', def); if(name===null) return; name=(name.trim()||def);
+    var data={root:state.root,mode:state.mode,tempo:state.tempo,snap:state.snap,rhythm:state.rhythm,drums:state.drums,chords:state.chords.slice(),notes:state.notes.slice()};
+    var before=lib.made; lib.made++; saveLib();          // unlock progress (the game) — kept as a simple counter
+    saveFinishedToVault(name, data);                     // the song itself lands in your account / vault
     state.chords=[]; state.notes=[]; save(); undoStack.length=0; redoStack.length=0; updateUndoBtns(); redrawAll();
-    renderMySongs(); renderMadeCount(); renderPalette();
+    renderMadeCount(); renderPalette();
     var newly=null; PACKS.forEach(function(p){ if(newly==null && p.need>before && p.need<=lib.made) newly=p; });
-    if(newly) showToast('🎉 '+lib.made+' song'+(lib.made===1?'':'s')+' made — you unlocked the '+newly.name+' chords!', 3600);
-    else showToast('🎉 Saved “'+name+'” to your songs!');
+    if(newly) showToast('🎉 '+lib.made+' song'+(lib.made===1?'':'s')+' made — you unlocked the '+newly.name+' chords! Saved to My songs.', 3800);
+    else showToast('🎉 Saved “'+name+'” to My songs!');
   }
   document.getElementById('finishBtn').addEventListener('click', finishSong);
+  // finished songs go into the vault — your account when signed in, this device otherwise
+  function saveFinishedToVault(name, data){
+    if(window.MAAuth && window.MAAuth.user && window.MAAuth.user() && window.MAAuth.creations){
+      window.MAAuth.creations.save('songmaker', { title:name, data:data }).then(function(){ mountCmpVault(); }).catch(function(){ localFinish(name,data); });
+    } else localFinish(name,data);
+  }
+  function localFinish(name, data){ try{ var a=JSON.parse(localStorage.getItem('mavault.songmaker')||'[]');
+      a.unshift({ id:'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), title:name, data:data, updated_at:new Date().toISOString() });
+      localStorage.setItem('mavault.songmaker', JSON.stringify(a)); }catch(e){} mountCmpVault(); }
 
-  // ---------- cloud publishing (share a link) — separate from unlocks ----------
+  // ---------- cloud publishing (share a link) — managed afterwards on your account page ----------
   function shareLink(id){ return location.origin+location.pathname+'?song='+id; }
   function copyLinkText(t){ try{ if(navigator.clipboard) navigator.clipboard.writeText(t); }catch(e){} }
-  // publish through the signed-in client (credits the song to your username); anon client when signed out
+  // publish through the signed-in client (credits the song to your username)
   function pubClient(){ return (window.MAAuth && window.MAAuth.user && window.MAAuth.user()) ? window.MAAuth.client() : loadSupa(); }
-  function publishSong(i){ var sg=lib.songs[i]; if(!sg) return;
-    if(!supaReady()){ showToast('Add your Supabase keys in the code to publish.'); return; }
-    showToast('Publishing…',1500);
-    pubClient().then(function(sb){ return sb.rpc('publish_song',{ p_title:sg.name, p_data:sg.data }); })
+  function publishCurrent(){ if(!songHasContent()){ showToast('Add some chords or notes first! 🎵'); return; }
+    if(!supaReady()){ showToast('Publishing isn’t set up yet.'); return; }
+    if(!(window.MAAuth && window.MAAuth.user && window.MAAuth.user())){ if(window.MAAuth&&window.MAAuth.open) window.MAAuth.open('signin'); showToast('Sign in to publish to the Charts'); return; }
+    var name=(prompt('Name this song for the Charts:','My song')||'').trim(); if(!name) return;
+    showToast('Publishing…',1600);
+    pubClient().then(function(sb){ return sb.rpc('publish_song',{ p_title:name, p_data:cmpGetState() }); })
       .then(function(res){ if(res.error) throw res.error; var row=Array.isArray(res.data)?res.data[0]:res.data;
-        sg.published={ id:row.id, token:row.edit_token }; saveLib(); renderMySongs();
-        copyLinkText(shareLink(row.id)); showToast('Published! Link copied 🔗',3200); })
-      .catch(function(e){ showToast('Couldn’t publish — '+(e.message||'try again')); }); }
-  function unpublishSong(i){ var sg=lib.songs[i]; if(!sg||!sg.published) return;
-    loadSupa().then(function(sb){ return sb.rpc('delete_song',{ p_id:sg.published.id, p_token:sg.published.token }); })
-      .then(function(res){ if(res.error) throw res.error; sg.published=null; saveLib(); renderMySongs(); showToast('Removed from the web.'); })
-      .catch(function(e){ showToast('Couldn’t unpublish — '+(e.message||'error')); }); }
+        copyLinkText(shareLink(row.id)); showToast('On the Charts! Link copied 🔗 — manage it on your account page',3800); })
+      .catch(function(e){ showToast('Couldn’t publish — '+((e&&e.message)||'try again')); }); }
+  document.getElementById('pubBtn').addEventListener('click', publishCurrent);
+  // one-time: fold songs from the old on-device library into your vault (unlock count is kept)
+  function migrateOldLib(){ try{ if(localStorage.getItem('mavault.songmaker.mig')) return;
+    var vault=JSON.parse(localStorage.getItem('mavault.songmaker')||'[]');
+    if(lib.songs && lib.songs.length){ lib.songs.forEach(function(sg){ if(!sg||!sg.data) return;
+      vault.push({ id:'mig'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), title:sg.name||'Untitled', data:sg.data, updated_at:new Date(sg.ts||Date.now()).toISOString() }); });
+      localStorage.setItem('mavault.songmaker', JSON.stringify(vault)); lib.songs=[]; saveLib(); }
+    localStorage.setItem('mavault.songmaker.mig','1');
+  }catch(e){} }
   function openSharedFromUrl(){ var m=/[?&]song=([\w-]+)/.exec(location.search||''); if(!m||!supaReady()) return;
     loadSupa().then(function(sb){ return sb.from('songs_public').select('title,data').eq('id',m[1]).single(); })
       .then(function(res){ if(res.error||!res.data) throw (res.error||new Error('not found')); var d=res.data.data||{};
@@ -816,15 +804,17 @@
     state.root=d.root||0; state.mode=d.mode||'maj'; state.tempo=d.tempo||100; state.snap=d.snap||2; state.rhythm=d.rhythm||'held'; state.drums=d.drums||'none';
     state.chords=(d.chords||[]).slice(); state.notes=(d.notes||[]).slice();
     undoStack.length=0; redoStack.length=0; updateUndoBtns(); save(); syncControls(); renderPalette(); renderRhythms(); renderDrums(); redrawAll(); }
-  (function mountVault(){ if(window.MAAuth && window.MAAuth.mountVault){ window.MAAuth.mountVault(document.getElementById('cmpVault'),
-      { kind:'songmaker', noun:'song', getState:cmpGetState, applyState:cmpApply }); } else setTimeout(mountVault, 80); })();
+  var cmpVaultOff=null;
+  function mountCmpVault(){ if(window.MAAuth && window.MAAuth.mountVault){ if(cmpVaultOff){ try{ cmpVaultOff(); }catch(e){} }
+      cmpVaultOff=window.MAAuth.mountVault(document.getElementById('cmpVault'), { kind:'songmaker', noun:'song', getState:cmpGetState, applyState:cmpApply }); }
+    else setTimeout(mountCmpVault, 80); }
   (function openFromUrl(){ var m=/[?&]open=([\w-]+)/.exec(location.search); if(!m) return; var id=m[1], done=false;   // deep-link from the account page
     (function w(){ if(window.MAAuth && window.MAAuth.onChange){ window.MAAuth.onChange(function(u){ if(done||!u) return; done=true;
       window.MAAuth.creations.get(id).then(function(r){ if(r&&r.data) cmpApply(r.data); }).catch(function(){}); }); } else setTimeout(w,80); })();
   })();
 
   // ---------- init ----------
-  loadLib(); load(); syncControls(); renderKeys(); renderPalette(); renderRhythms(); renderDrums(); renderMySongs(); renderMadeCount(); relayout(); updateUndoBtns();
+  loadLib(); migrateOldLib(); mountCmpVault(); load(); syncControls(); renderKeys(); renderPalette(); renderRhythms(); renderDrums(); renderMadeCount(); relayout(); updateUndoBtns();
   openSharedFromUrl();
   window.addEventListener('resize', function(){ relayout(); });
 })();
