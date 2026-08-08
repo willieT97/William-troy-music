@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="/analytics.js" defer></script>
 <script src="/auth.js" defer></script>
+<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
 <style>
   :root{
     --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
@@ -149,14 +150,64 @@
   var hl=(location.search.match(/[?&]highlight=([^&]+)/)||[])[1];
   if(hl){ hl=decodeURIComponent(hl); var card=document.querySelector('.card[data-product="'+hl+'"]'); if(card){ card.classList.add('hl'); card.scrollIntoView({behavior:'smooth', block:'center'}); } }
 
-  // ---- checkout (Phase 1 stub — Lemon Squeezy overlay lands here in Phase 3) ----
+  // ======================================================================
+  //  LEMON SQUEEZY CHECKOUT
+  //  Paste each product's "Buy link" URL below to go live. In Lemon Squeezy:
+  //  Products → (product) → Share → copy the URL, e.g.
+  //     https://YOURSTORE.lemonsqueezy.com/buy/xxxxxxxx-xxxx-...
+  //  Leave a value '' and that button shows a friendly "not switched on yet".
+  // ======================================================================
+  var LS_BUY = {
+    'pro-monthly':             '',
+    'pro-annual':              '',
+    'course:learning-to-walk': '',
+    'course:gradus':           ''
+  };
+  function variantKey(product){ return product === 'pro' ? (cycle === 'annual' ? 'pro-annual' : 'pro-monthly') : product; }
+  function checkoutUrl(base, user){
+    var u = new URL(base);
+    u.searchParams.set('embed', '1');
+    if(user){ if(user.email) u.searchParams.set('checkout[email]', user.email); u.searchParams.set('checkout[custom][user_id]', user.id); }
+    return u.toString();
+  }
   function buy(product){
-    var signedIn = !!(window.MAAuth && MAAuth.user && MAAuth.user());
-    if(!signedIn){ toast('Sign in first so your purchase attaches to your account.'); if(window.MAAuth) MAAuth.open('signin'); return; }
-    if(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAccess(product)){ toast('You already have this. 🎉'); return; }
-    toast('Checkout is being set up — Lemon Squeezy will open here soon.');
+    var A = window.MAAuth || {};
+    var user = A.user ? A.user() : null;
+    if(!user){ toast('Sign in first so your purchase attaches to your account.'); if(A.open) A.open('signin'); return; }
+    if(A.hasAccess && A.hasAccess(product)){ toast('You already have this. 🎉'); return; }
+    var base = LS_BUY[variantKey(product)];
+    if(!base){ toast('Checkout isn’t switched on yet — check back very soon!'); return; }
+    window.__lastBuy = product;
+    var url = checkoutUrl(base, user);
+    if(window.LemonSqueezy && window.LemonSqueezy.Url) window.LemonSqueezy.Url.Open(url);
+    else window.open(url, '_blank');   // fallback if lemon.js hasn't loaded
   }
   document.addEventListener('click', function(e){ var b=e.target.closest('.buy'); if(!b || b.classList.contains('owned') || b.classList.contains('soon')) return; buy(b.dataset.product); });
+
+  // after a successful checkout, poll for the entitlement the webhook is writing
+  function afterPurchase(){
+    toast('Payment received — unlocking your account…');
+    var tries = 0;
+    (function poll(){
+      tries++;
+      if(!(window.MAAuth && MAAuth.refreshEntitlements)){ if(tries<8) setTimeout(poll,1500); return; }
+      MAAuth.refreshEntitlements().then(function(){
+        var got = MAAuth.isPro() || (window.__lastBuy && MAAuth.owns(window.__lastBuy));
+        if(got){ toast('You’re in! Everything’s unlocked. 🎉'); refresh(); }
+        else if(tries<8) setTimeout(poll,1500);
+        else toast('All set — if it’s not showing yet, refresh the page in a moment.');
+      }).catch(function(){ if(tries<8) setTimeout(poll,1500); });
+    })();
+  }
+  (function initLS(tries){
+    tries = tries || 0;
+    if(window.createLemonSqueezy){
+      window.createLemonSqueezy();
+      try{ window.LemonSqueezy.Setup({ eventHandler: function(ev){ if(ev && ev.event === 'Checkout.Success') afterPurchase(); } }); }catch(e){}
+      return;
+    }
+    if(tries < 25) setTimeout(function(){ initLS(tries+1); }, 200);   // give lemon.js up to ~5s to load
+  })();
 
   // ---- reflect what you already own ----
   function refresh(){

@@ -74,7 +74,9 @@
     isPro: function () { return entitlements.some(function (e) { return e.product === 'pro' && activeEnt(e); }); },
     owns: function (product) { return entitlements.some(function (e) { return e.product === product && activeEnt(e); }); },
     hasAccess: function (product) { return window.MAAuth.isPro() || window.MAAuth.owns(product); },
-    onEntitlements: function (cb) { entListeners.push(cb); if (booted) { try { cb(entitlements); } catch (e) {} } return function () { var i = entListeners.indexOf(cb); if (i >= 0) entListeners.splice(i, 1); }; }
+    onEntitlements: function (cb) { entListeners.push(cb); if (booted) { try { cb(entitlements); } catch (e) {} } return function () { var i = entListeners.indexOf(cb); if (i >= 0) entListeners.splice(i, 1); }; },
+    // re-fetch entitlements now (e.g. right after a checkout, while the webhook lands)
+    refreshEntitlements: function () { return ensureSb().then(loadEntitlements).then(function (e) { emitEnt(); return e; }); }
   };
 
   // ---- per-user creations (save & sync); requires a signed-in user ----
