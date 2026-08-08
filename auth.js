@@ -77,6 +77,24 @@
     remove: function (id) { return ensureSb().then(needUser).then(function () {
       return sb.from('creations').delete().eq('id', id).eq('user_id', user.id).then(function (r) { if (r.error) throw r.error; return true; }); }); }
   };
+  // ---- keyed progress (one creations row per course, kind 'progress', title = course id) ----
+  window.MAAuth.progress = (function () {
+    var ids = {};   // course id -> creations row id (remembered for the session so pushes update, not duplicate)
+    return {
+      pull: function (course) {
+        return window.MAAuth.creations.list('progress').then(function (rows) {
+          var row = null; for (var i = 0; i < rows.length; i++) { if (rows[i].title === course) { row = rows[i]; break; } }
+          if (row) ids[course] = row.id;
+          return row ? row.data : null;
+        });
+      },
+      push: function (course, data) {
+        return window.MAAuth.creations.save('progress', { id: ids[course], title: course, data: data })
+          .then(function (row) { if (row && row.id) ids[course] = row.id; return row; });
+      }
+    };
+  })();
+
   window.MAAuth.usernameFree = function (name) { return usernameFree(name); };
   window.MAAuth.setUsername = function (name) { return ensureSb().then(needUser).then(function () {
     return saveUsername(name || null).then(function (r) { if (r && r.error) throw r.error; profile = { username: name || null }; renderControl(); emit(); return profile; }); }); };

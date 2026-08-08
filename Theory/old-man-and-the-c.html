@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Old Man and the C — Port I</title>
@@ -346,7 +347,7 @@
     drawRhumb();
     setPhase('done');
     reveal();
-    try{ localStorage.setItem('oldman.progress.v1','done'); }catch(e){}   // remember this port's been charted
+    markCharted();   // remember this port's been charted (locally + to the account)
   }
 
   function reset(){
@@ -362,13 +363,22 @@
 
   drawStave();buildBoard();buildDeep();setPhase('intro1');
 
-  // single-port course: "progress" = whether you've charted it. Show a badge if you have.
-  try{ if(localStorage.getItem('oldman.progress.v1')==='done'){
-    const c=document.querySelector('.controls');
-    if(c){ const b=document.createElement('span'); b.textContent='✓ Port charted';
-      b.style.cssText='font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;color:#1c8a4a;align-self:center;margin-left:6px';
-      c.appendChild(b); }
-  } }catch(e){}
+  // single-port course: "progress" = whether you've charted it. Kept in localStorage + synced to the account.
+  function signedIn(){ return !!(window.MAAuth && window.MAAuth.user && window.MAAuth.user()); }
+  function isCharted(){ try{ return localStorage.getItem('oldman.progress.v1')==='done'; }catch(e){ return false; } }
+  function showBadge(){ if(document.getElementById('chartedBadge')) return; const c=document.querySelector('.controls'); if(!c) return;
+    const b=document.createElement('span'); b.id='chartedBadge'; b.textContent='✓ Port charted';
+    b.style.cssText='font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;color:#1c8a4a;align-self:center;margin-left:6px';
+    c.appendChild(b); }
+  function markCharted(){ try{ localStorage.setItem('oldman.progress.v1','done'); }catch(e){} showBadge(); if(signedIn()) window.MAAuth.progress.push('oldman',{done:true}).catch(function(){}); }
+  function cloudSync(){ if(!signedIn()) return;
+    window.MAAuth.progress.pull('oldman').then(function(remote){
+      if(remote && remote.done){ try{ localStorage.setItem('oldman.progress.v1','done'); }catch(e){} showBadge(); }
+      else if(isCharted()) window.MAAuth.progress.push('oldman',{done:true}).catch(function(){});
+    }).catch(function(){});
+  }
+  if(isCharted()) showBadge();
+  (function waitAuth(){ if(window.MAAuth && window.MAAuth.onChange) window.MAAuth.onChange(function(u){ if(u) cloudSync(); }); else setTimeout(waitAuth, 120); })();
 })();
 </script>
 </body>

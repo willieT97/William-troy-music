@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Counterpoint Dojo — Steps to Parnassus</title>
@@ -711,14 +712,35 @@ COURSE.forEach(mod => { if(mod.lessons) mod.lessons.forEach(les => LESSONS.push(
 
 let idx = 0;
 
-/* ===================== PROGRESS: save + sequential unlock ===================== */
-const PKEY = 'gradus.progress.v1';
+/* ===================== PROGRESS: save + sequential unlock (localStorage + account sync) ===================== */
+const PKEY = 'gradus.progress.v1', COURSE_ID = 'gradus';
 let progress = (function(){ try{ const p = JSON.parse(localStorage.getItem(PKEY)); if(p && p.done) return p; }catch(e){} return { done:{}, last:0 }; })();
-function saveProgress(){ try{ localStorage.setItem(PKEY, JSON.stringify(progress)); }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(PKEY, JSON.stringify(progress)); }catch(e){} }
+function saveProgress(){ saveLocal(); cloudPush(); }
 function isDone(i){ return i>=0 && i<LESSONS.length && !!progress.done[LESSONS[i].num]; }
 function gateGoal(ex){ return (ex && ex.type === 'judge' && ex.goal) ? ex.goal : 0; }   // only the ear-streak 'judge' gates
 function maxOpen(){ let m = 0; while(m < LESSONS.length-1 && isDone(m)) m++; return m; }   // furthest openable lesson index
 function markDone(i){ if(i<0 || i>=LESSONS.length) return; const k = LESSONS[i].num; if(!progress.done[k]){ progress.done[k] = true; saveProgress(); buildToc(); } }
+
+/* account sync — the account is the cross-device copy; localStorage stays the instant/offline one */
+let cloudReady = false;
+function signedIn(){ return !!(window.MAAuth && MAAuth.user && MAAuth.user()); }
+function cloudPush(){ if(signedIn() && cloudReady) MAAuth.progress.push(COURSE_ID, progress).catch(function(){}); }
+function cloudPull(){
+  if(!signedIn()){ cloudReady = false; return; }
+  MAAuth.progress.pull(COURSE_ID).then(function(remote){
+    if(remote && remote.done){
+      const wasEmpty = !Object.keys(progress.done).length;
+      progress = { done: Object.assign({}, remote.done, progress.done), last: Math.max(progress.last||0, remote.last||0) };
+      saveLocal();
+      if(wasEmpty) go(Math.min(remote.last||0, maxOpen()));   // fresh device: resume where the account left off
+      else { idx = Math.min(idx, maxOpen()); buildToc(); renderNav(); }
+    }
+    cloudReady = true;
+    MAAuth.progress.push(COURSE_ID, progress).catch(function(){});   // seed / merge the union up to the account
+  }).catch(function(){ cloudReady = true; });
+}
+(function waitAuth(){ if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(function(u){ if(u) cloudPull(); else cloudReady = false; }); else setTimeout(waitAuth, 120); })();
 
 /* ===================== DIALOGUE ENGINE ===================== */
 let pages = [], pageIdx = 0, dialogueDone = false;
