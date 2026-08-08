@@ -52,6 +52,7 @@
     font-family:var(--disp); font-weight:800; font-size:1.1rem; padding:13px 22px; box-shadow:4px 4px 0 var(--ink); width:100%; }
   .buy:active{ transform:translate(4px,4px); box-shadow:none; }
   .buy.owned{ background:#fff; color:var(--muted); cursor:default; box-shadow:none; border-color:rgba(23,20,14,.3); }
+  .buy.soon{ background:#fff; color:var(--muted); cursor:default; box-shadow:none; border-color:rgba(23,20,14,.3); }
 
   h3.sec{ font-family:var(--disp); font-weight:800; font-size:1.4rem; text-align:center; margin:10px 0 6px; }
   .secsub{ text-align:center; color:var(--muted); font-size:.9rem; margin:0 0 22px; }
@@ -116,9 +117,9 @@
     </div>
     <div class="card" data-product="course:oldman">
       <h4>Old Man and the C</h4>
-      <p>Chart the notes of the fretboard, one port at a time. (More ports on the way.)</p>
-      <div class="cprice">$14.99</div>
-      <button class="buy" data-product="course:oldman">Buy course</button>
+      <p>Chart the fretboard, one port at a time. Port I is free while the deeper ports are being written.</p>
+      <div class="cprice" style="color:var(--muted)">Free for now</div>
+      <button class="buy soon" data-soon="1" disabled>More ports coming</button>
     </div>
   </div>
 
@@ -155,7 +156,7 @@
     if(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAccess(product)){ toast('You already have this. 🎉'); return; }
     toast('Checkout is being set up — Lemon Squeezy will open here soon.');
   }
-  document.addEventListener('click', function(e){ var b=e.target.closest('.buy'); if(!b || b.classList.contains('owned')) return; buy(b.dataset.product); });
+  document.addEventListener('click', function(e){ var b=e.target.closest('.buy'); if(!b || b.classList.contains('owned') || b.classList.contains('soon')) return; buy(b.dataset.product); });
 
   // ---- reflect what you already own ----
   function refresh(){
@@ -172,6 +173,7 @@
     else { proBuy.textContent='Go Pro'; proBuy.classList.remove('owned'); }
 
     [].forEach.call(document.querySelectorAll('#courses .buy'), function(b){
+      if(b.hasAttribute('data-soon')) return;   // not for sale yet (e.g. Old Man — single free port)
       var owned = A.hasAccess ? A.hasAccess(b.dataset.product) : false;
       if(owned){ b.textContent = pro ? 'Included with Pro ✓' : 'Owned ✓'; b.classList.add('owned'); }
       else { b.textContent='Buy course'; b.classList.remove('owned'); }

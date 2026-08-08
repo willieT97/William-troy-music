@@ -67,6 +67,8 @@
   .toc .synced{ font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:#1c8a4a; margin:0 0 12px; padding-bottom:11px; border-bottom:1.5px dashed rgba(23,20,14,.2); }
   .toc .synced.off{ color:var(--muted); }
   .toc .synced.off a{ color:var(--blue); text-decoration:underline; cursor:pointer; }
+  .toc a.pro{ cursor:pointer; }
+  .toc a.pro::after{ content:'PRO'; font-family:var(--mono); font-size:.52rem; font-weight:700; letter-spacing:.1em; color:#8a5a00; background:#FFE9A8; border:1px solid #8a5a00; border-radius:3px; padding:1px 5px; margin-left:7px; vertical-align:1px; }
   .toc .tag{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase;
     color:var(--amber); border:1px solid var(--amber); padding:1px 5px; margin-left:6px; vertical-align:1px; }
 
@@ -725,6 +727,17 @@ function gateGoal(ex){ return (ex && ex.type === 'judge' && ex.goal) ? ex.goal :
 function maxOpen(){ let m = 0; while(m < LESSONS.length-1 && isDone(m)) m++; return m; }   // furthest openable lesson index
 function markDone(i){ if(i<0 || i>=LESSONS.length) return; const k = LESSONS[i].num; if(!progress.done[k]){ progress.done[k] = true; saveProgress(); buildToc(); } }
 
+/* --- paywall gate: Module 0 (The Foundations) is free, the rest needs Pro (or this course bought) --- */
+const PRODUCT = 'course:' + COURSE_ID;
+const FREE_LESSONS = (COURSE[0] && COURSE[0].lessons) ? COURSE[0].lessons.length : 0;
+function entitled(){ return !!(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAccess(PRODUCT)); }
+function paywalled(i){ return i >= FREE_LESSONS && !entitled(); }
+function openCoursePaywall(){
+  if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'This lesson is Pro',
+    body:'The Foundations (Module 0) is free. Go Pro to unlock the modes, the species — and every Dojo course.', product:PRODUCT });
+  else location.href = '/upgrade.html?highlight=' + encodeURIComponent(PRODUCT);
+}
+
 /* account sync — the account is the cross-device copy; localStorage stays the instant/offline one */
 let cloudReady = false;
 function signedIn(){ return !!(window.MAAuth && MAAuth.user && MAAuth.user()); }
@@ -744,6 +757,7 @@ function cloudPull(){
   }).catch(function(){ cloudReady = true; });
 }
 (function waitAuth(){ if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(function(u){ if(u) cloudPull(); else cloudReady = false; buildToc(); }); else setTimeout(waitAuth, 120); })();
+(function waitEnt(){ if(window.MAAuth && MAAuth.onEntitlements) MAAuth.onEntitlements(function(){ idx = Math.min(idx, maxOpen()); buildToc(); renderNav(); }); else setTimeout(waitEnt, 120); })();
 
 /* ===================== DIALOGUE ENGINE ===================== */
 let pages = [], pageIdx = 0, dialogueDone = false;
@@ -1878,18 +1892,23 @@ function renderNav(){
   if(goal && jBest >= goal) markDone(idx);            // reaching the streak completes the lesson (unlocks the next, live)
   const slot = el('nextslot');
   if(idx < LESSONS.length - 1){
-    const gated = goal && jBest < goal && !isDone(idx);   // already-passed lessons are never re-locked
-    if(gated){
-      slot.innerHTML = `<span class="lab2">Reach a streak of ${goal} above to continue →</span>`;
+    if(paywalled(idx+1)){
+      slot.innerHTML = `<button class="btn ink" id="goPro">🔒 Unlock the rest — Go Pro</button>`;
+      el('goPro').addEventListener('click', openCoursePaywall);
     } else {
-      slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`;
-      el('next').addEventListener('click', () => { markDone(idx); go(idx + 1); });
+      const gated = goal && jBest < goal && !isDone(idx);   // already-passed lessons are never re-locked
+      if(gated){
+        slot.innerHTML = `<span class="lab2">Reach a streak of ${goal} above to continue →</span>`;
+      } else {
+        slot.innerHTML = `<button class="btn ink" id="next">Next →</button>`;
+        el('next').addEventListener('click', () => { markDone(idx); go(idx + 1); });
+      }
     }
   } else {
     slot.innerHTML = `<span class="endnote">The newest lesson — more of the higher species is being written. Return soon.</span>`;
   }
 }
-function go(i){ i = Math.max(0, Math.min(LESSONS.length - 1, i)); if(i > maxOpen()) return; idx = i; progress.last = idx; saveProgress(); renderLesson(); }
+function go(i){ i = Math.max(0, Math.min(LESSONS.length - 1, i)); if(i > maxOpen()) return; if(paywalled(i)){ openCoursePaywall(); return; } idx = i; progress.last = idx; saveProgress(); renderLesson(); }
 
 /* ===================== CONTENTS ===================== */
 function buildToc(){
@@ -1902,12 +1921,12 @@ function buildToc(){
     if(mod.lessons){
       mod.lessons.forEach(les => {
         const li = LESSONS.findIndex(x => x.num === les.num);
-        const locked = li > mo, done = isDone(li);
-        const cls = [li===idx?'cur':'', locked?'locked':'', done?'done':''].filter(Boolean).join(' ');
-        const mark = done ? '✓ ' : (locked ? '🔒 ' : '');
-        h += locked
-          ? `<a class="${cls}" title="Finish the lesson before to unlock this one">${mark}${les.num} · ${les.title}</a>`
-          : `<a href="#" class="${cls}" data-go="${li}">${mark}${les.num} · ${les.title}</a>`;
+        const done = isDone(li), pay = paywalled(li), locked = !pay && li > mo;   // Pro takes precedence over the sequential lock
+        const cls = [li===idx?'cur':'', pay?'pro':'', locked?'locked':'', done?'done':''].filter(Boolean).join(' ');
+        const mark = done ? '✓ ' : (pay ? '' : (locked ? '🔒 ' : ''));
+        if(pay) h += `<a href="#" class="${cls}" data-pay="1" title="Pro lesson — tap to unlock">${mark}${les.num} · ${les.title}</a>`;
+        else if(locked) h += `<a class="${cls}" title="Finish the lesson before to unlock this one">${mark}${les.num} · ${les.title}</a>`;
+        else h += `<a href="#" class="${cls}" data-go="${li}">${mark}${les.num} · ${les.title}</a>`;
       });
     } else if(mod.soon){
       h += `<a class="soon">${mod.blurb} <span class="tag">soon</span></a>`;
@@ -1916,6 +1935,8 @@ function buildToc(){
   const toc = el('toc'); toc.innerHTML = h;
   toc.querySelectorAll('[data-go]').forEach(a =>
     a.addEventListener('click', e => { e.preventDefault(); go(+a.dataset.go); el('toc').classList.add('hidden'); }));
+  toc.querySelectorAll('[data-pay]').forEach(a =>
+    a.addEventListener('click', e => { e.preventDefault(); el('toc').classList.add('hidden'); openCoursePaywall(); }));
   const si = el('syncSignin'); if(si) si.addEventListener('click', e => { e.preventDefault(); if(window.MAAuth && MAAuth.open) MAAuth.open('signin'); });
 }
 
