@@ -64,6 +64,9 @@
   .toc a.locked{ color:var(--muted); cursor:default; opacity:.55; }
   .toc a.locked:hover{ background:none; }
   .toc a.done{ border-left-color:#1c8a4a; }
+  .toc .synced{ font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:#1c8a4a; margin:0 0 12px; padding-bottom:11px; border-bottom:1.5px dashed rgba(23,20,14,.2); }
+  .toc .synced.off{ color:var(--muted); }
+  .toc .synced.off a{ color:var(--blue); text-decoration:underline; cursor:pointer; }
   .toc .tag{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase;
     color:var(--amber); border:1px solid var(--amber); padding:1px 5px; margin-left:6px; vertical-align:1px; }
 
@@ -740,7 +743,7 @@ function cloudPull(){
     MAAuth.progress.push(COURSE_ID, progress).catch(function(){});   // seed / merge the union up to the account
   }).catch(function(){ cloudReady = true; });
 }
-(function waitAuth(){ if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(function(u){ if(u) cloudPull(); else cloudReady = false; }); else setTimeout(waitAuth, 120); })();
+(function waitAuth(){ if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(function(u){ if(u) cloudPull(); else cloudReady = false; buildToc(); }); else setTimeout(waitAuth, 120); })();
 
 /* ===================== DIALOGUE ENGINE ===================== */
 let pages = [], pageIdx = 0, dialogueDone = false;
@@ -1891,7 +1894,9 @@ function go(i){ i = Math.max(0, Math.min(LESSONS.length - 1, i)); if(i > maxOpen
 /* ===================== CONTENTS ===================== */
 function buildToc(){
   const mo = maxOpen();
-  let h = '';
+  let h = signedIn()
+    ? `<div class="synced">✓ Progress synced to your account</div>`
+    : `<div class="synced off">Saved on this device — <a id="syncSignin">sign in</a> to sync across devices</div>`;
   COURSE.forEach(mod => {
     h += `<h4>${mod.title}</h4>`;
     if(mod.lessons){
@@ -1911,6 +1916,7 @@ function buildToc(){
   const toc = el('toc'); toc.innerHTML = h;
   toc.querySelectorAll('[data-go]').forEach(a =>
     a.addEventListener('click', e => { e.preventDefault(); go(+a.dataset.go); el('toc').classList.add('hidden'); }));
+  const si = el('syncSignin'); if(si) si.addEventListener('click', e => { e.preventDefault(); if(window.MAAuth && MAAuth.open) MAAuth.open('signin'); });
 }
 
 /* ===================== INIT ===================== */
