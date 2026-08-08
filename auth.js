@@ -22,6 +22,7 @@
 
   var SB = { url: 'https://txzxmwwqqrapcirtrurt.supabase.co', anonKey: 'sb_publishable_7DFs8Be2RgFe38U3k_HmtA_k1md1zlX' };
   var sb = null, sbReady = null, user = null, profile = null, booted = false, listeners = [];
+  var entitlements = [], entListeners = [];
 
   // ---- supabase client (session persisted in localStorage → shared across pages) ----
   function ensureSb() {
@@ -36,6 +37,16 @@
     return sbReady;
   }
   function emit() { listeners.forEach(function (cb) { try { cb(user, profile); } catch (e) {} }); }
+
+  // ---- entitlements (Pro subscription + one-time purchases); written only by the payment webhook ----
+  function activeEnt(e) { return e && e.status === 'active' && (!e.period_end || new Date(e.period_end) > new Date()); }
+  function loadEntitlements() {
+    if (!user) { entitlements = []; return Promise.resolve([]); }
+    return sb.from('entitlements').select('product,kind,status,period_end').eq('user_id', user.id)
+      .then(function (r) { entitlements = (r && !r.error && r.data) ? r.data : []; return entitlements; })
+      .catch(function () { entitlements = []; return entitlements; });
+  }
+  function emitEnt() { entListeners.forEach(function (cb) { try { cb(entitlements); } catch (e) {} }); }
   function fetchProfile() {
     if (!user) { profile = null; return Promise.resolve(null); }
     return sb.from('profiles').select('username').eq('id', user.id).maybeSingle()
@@ -57,7 +68,13 @@
     open: function (view) { openModal(view || (user ? 'account' : 'signin')); },
     close: closeModal,
     signOut: function () { return ensureSb().then(function () { return sb.auth.signOut(); }); },
-    client: function () { return ensureSb().then(function () { return sb; }); }
+    client: function () { return ensureSb().then(function () { return sb; }); },
+    // entitlements — read-only in the browser; the webhook is the source of truth
+    entitlements: function () { return entitlements.slice(); },
+    isPro: function () { return entitlements.some(function (e) { return e.product === 'pro' && activeEnt(e); }); },
+    owns: function (product) { return entitlements.some(function (e) { return e.product === product && activeEnt(e); }); },
+    hasAccess: function (product) { return window.MAAuth.isPro() || window.MAAuth.owns(product); },
+    onEntitlements: function (cb) { entListeners.push(cb); if (booted) { try { cb(entitlements); } catch (e) {} } return function () { var i = entListeners.indexOf(cb); if (i >= 0) entListeners.splice(i, 1); }; }
   };
 
   // ---- per-user creations (save & sync); requires a signed-in user ----
@@ -216,6 +233,8 @@
       '.maa-msg.err{color:#C0453B;} .maa-msg.ok{color:#1F9D55;}' +
       '.maa-sub{font-size:.8rem;color:#8a7f6a;font-weight:600;margin:0 0 12px;}' +
       '.maa-hint{font-size:.72rem;color:#8a7f6a;font-weight:600;margin-top:2px;}' +
+      '.maa-pw-badge{display:inline-block;font-weight:800;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#8a5a00;background:#FFE9A8;border:2px solid #17140E;border-radius:999px;padding:3px 10px;margin:0 0 12px;}' +
+      '.maa-golink{display:block;text-align:center;text-decoration:none;box-sizing:border-box;}' +
       '@media (prefers-reduced-motion:reduce){.maa-btn,.maa-go,.maa-tab{transition:none;}}';
     var st = document.createElement('style'); st.id = 'maa-styles'; st.textContent = css; document.head.appendChild(st);
   }
@@ -251,6 +270,33 @@
   }
   function openModal(v) { if (!modal) buildModal(); view = v; renderModal(); modal.classList.add('on'); }
   function closeModal() { if (modal) modal.classList.remove('on'); }
+
+  // ---- reusable paywall overlay: MAAuth.paywall({ title, body, product }) ----
+  var pwEl = null;
+  function closePaywall() { if (pwEl) pwEl.classList.remove('on'); }
+  window.MAAuth.paywall = function (opts) {
+    opts = opts || {};
+    injectStyles();
+    if (!pwEl) { pwEl = document.createElement('div'); pwEl.className = 'maa-modal'; document.body.appendChild(pwEl);
+      pwEl.addEventListener('click', function (e) { if (e.target === pwEl) closePaywall(); }); }
+    var title = opts.title || 'A Pro lesson';
+    var body = opts.body || 'This is part of Music Arcade Pro.';
+    var href = '/upgrade.html' + (opts.product ? ('?highlight=' + encodeURIComponent(opts.product)) : '');
+    pwEl.innerHTML =
+      '<div class="maa-card">' +
+        '<div class="maa-h"><h3></h3><button class="maa-x" type="button" aria-label="Close">×</button></div>' +
+        '<div class="maa-pw-badge">✦ Music Arcade Pro</div>' +
+        '<p class="maa-sub"></p>' +
+        '<a class="maa-go maa-golink" href="' + href + '">See plans →</a>' +
+        (user ? '' : '<button class="maa-alt" type="button" data-pw="signin">I already have an account — sign in</button>') +
+      '</div>';
+    pwEl.querySelector('.maa-h h3').textContent = title;   // textContent → safe against any markup in the strings
+    pwEl.querySelector('.maa-sub').textContent = body;
+    pwEl.querySelector('.maa-x').addEventListener('click', closePaywall);
+    var si = pwEl.querySelector('[data-pw="signin"]');
+    if (si) si.addEventListener('click', function () { closePaywall(); openModal('signin'); });
+    pwEl.classList.add('on');
+  };
 
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
   var _toastEl, _toastT;
@@ -392,13 +438,14 @@
     ensureSb()
       .then(function () { return sb.auth.getSession(); })
       .then(function (r) { user = (r && r.data && r.data.session) ? r.data.session.user : null; return fetchProfile(); })
-      .then(function () { booted = true; renderControl(); emit(); })
-      .catch(function () { booted = true; renderControl(); emit(); });
+      .then(function () { return loadEntitlements(); })
+      .then(function () { booted = true; renderControl(); emit(); emitEnt(); })
+      .catch(function () { booted = true; renderControl(); emit(); emitEnt(); });
     ensureSb().then(function () {
       sb.auth.onAuthStateChange(function (evt, session) {
         user = session ? session.user : null;
         if (evt === 'PASSWORD_RECOVERY') openModal('reset'); // arrived from a reset email link
-        fetchProfile().then(function () { renderControl(); emit(); });
+        fetchProfile().then(loadEntitlements).then(function () { renderControl(); emit(); emitEnt(); });
       });
     }).catch(function () {});
   }
