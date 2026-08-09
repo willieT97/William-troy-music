@@ -158,10 +158,10 @@
   //  Leave a value '' and that button shows a friendly "not switched on yet".
   // ======================================================================
   var LS_BUY = {
-    'pro-monthly':             '',
-    'pro-annual':              '',
-    'course:learning-to-walk': '',
-    'course:gradus':           ''
+    'pro-monthly':             'https://musicarcade.lemonsqueezy.com/checkout/buy/8e0ab9b6-8185-44ff-aa80-4d4782a2f389',
+    'pro-annual':              'https://musicarcade.lemonsqueezy.com/checkout/buy/a0977c7d-0394-40c6-ad6e-6774f1a5690c',
+    'course:learning-to-walk': 'https://musicarcade.lemonsqueezy.com/checkout/buy/2bf97d20-6d30-45d9-bb4c-a743aebd751f',
+    'course:gradus':           'https://musicarcade.lemonsqueezy.com/checkout/buy/1819bd5d-8a7d-4098-b2ad-c778117d9ab9'
   };
   function variantKey(product){ return product === 'pro' ? (cycle === 'annual' ? 'pro-annual' : 'pro-monthly') : product; }
   function checkoutUrl(base, user){
