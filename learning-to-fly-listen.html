@@ -36,13 +36,15 @@
   .chip.bad{ border-color:#C0453B; color:#C0453B; } .chip .t{ font-size:.62rem; color:var(--muted); }
   .chip.late .t{ color:var(--amber); }
   .hint{ font-size:.8rem; color:var(--muted); margin-top:12px; } .hint b{ color:var(--ink); }
+  .warn{ background:#FFE9A8; border:2.5px solid var(--ink); border-radius:12px; padding:10px 14px; font-size:.86rem; font-weight:600; margin:0 0 18px; box-shadow:3px 3px 0 var(--ink); }
   .foot{ text-align:center; margin-top:20px; font-size:.8rem; } .foot a{ color:var(--blue); text-decoration:none; }
 </style>
 
 <div class="wrap">
   <div class="kick">Learning to Fly · prototype</div>
   <h1>The Listening Lab 🎧</h1>
-  <p class="lede">Play the pentatonic scale in <b>any order</b> along with the click — the lab listens and scores you on <b>notes in the scale</b> and <b>rhythm</b>. (Single-note instruments; headphones help so the click doesn't bleed into the mic.)</p>
+  <p class="lede">Play the pentatonic scale in <b>any order</b> along with the click — the lab listens and scores you on <b>notes in the scale</b> and <b>rhythm</b>. Single-note instruments.</p>
+  <div class="warn">🎧 <b>Use wired headphones or earbuds.</b> Bluetooth adds a delay (often ~⅕ second) that throws the rhythm scoring off — and headphones keep the click out of the mic.</div>
 
   <div class="card">
     <div class="row">
@@ -193,14 +195,19 @@
     state.onsets=[]; state.armed=true; state.rmsSlow=0; state.armSilent=false; state.curMidi=-1; state.capturing=false;
 
     var t0=ctx.currentTime+0.2;
-    var perfT0=performance.now()+200;                 // same offset, perf-clock domain (for scoring)
+    var perfT0=performance.now()+200;                 // perf-clock domain (for scoring)
+    // Compensate for how late you HEAR the click (output / Bluetooth latency): shift the scoring
+    // grid + capture window by the reported output latency so notes you played "in time" line up.
+    // Mic path only — the demo feeds the analyser directly, so it has no output-air delay.
+    var comp = demo ? 0 : (ctx.outputLatency || ctx.baseLatency || 0) * 1000;
+    var perfGrid0 = perfT0 + comp;
     var i;
     // schedule all clicks
     for(i=0;i<COUNTIN+playBeats;i++){ click(t0+i*beat, i%4===0); }
     // scoring grid = the beats (quarter notes) across the play window, in perf-clock ms.
     // The drill is "land on the click", so grade against beats; tolerance scales with tempo
     // (~28% of a beat) so difficulty stays consistent fast or slow.
-    var grid=[], playStart=perfT0+COUNTIN*beat*1000;
+    var grid=[], playStart=perfGrid0+COUNTIN*beat*1000;
     for(i=0;i<playBeats;i++){ grid.push(playStart+i*beat*1000); }
     var tolMs=beat*1000*0.28;
 
@@ -210,10 +217,10 @@
     // count-in display
     var ci=0; setStatus('Count-in…', 'count');
     var ciTimer=setInterval(function(){ ci++; if(ci<=COUNTIN){ el('status').textContent=(COUNTIN-ci+1)+''; } }, beat*1000);
-    // begin capture at the downbeat after the count-in
-    setTimeout(function(){ clearInterval(ciTimer); state.capturing=true; setStatus(demo?'Demo playing…':'Play! — pentatonic, any order', 'live'); }, (COUNTIN*beat)*1000 + (perfT0-performance.now()));
+    // capture opens ~120ms before the (heard) downbeat and closes after the last beat
+    setTimeout(function(){ clearInterval(ciTimer); state.capturing=true; setStatus(demo?'Demo playing…':'Play! — pentatonic, any order', 'live'); }, (COUNTIN*beat)*1000 + (perfGrid0-performance.now()) - 120);
     // finish
-    setTimeout(function(){ state.capturing=false; finish(rootPc, type, grid, tolMs); }, ((COUNTIN+playBeats)*beat)*1000 + (perfT0-performance.now()) + 250);
+    setTimeout(function(){ state.capturing=false; finish(rootPc, type, grid, tolMs); }, ((COUNTIN+playBeats)*beat)*1000 + (perfGrid0-performance.now()) + 350);
   }
 
   function scheduleDemo(startT, beat, playBeats, rootPc, type){
