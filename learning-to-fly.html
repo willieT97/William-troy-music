@@ -1,0 +1,251 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning to Fly — The Dojo</title>
+<meta name="description" content="Learn to improvise from the ground up — start with melodies you know and the major pentatonic scale. A Music Arcade course by William Troy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<style>
+  :root{ --paper:#F4EEE2; --ink:#17140E; --card:#FFFDF7; --blue:#2438C8; --pink:#FF4E86; --green:#1F9D55; --amber:#E0922A; --muted:#6F6757;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace; }
+  *{ box-sizing:border-box; } html,body{ margin:0; }
+  body{ font-family:var(--body); color:var(--ink); background:var(--paper); -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:680px; margin:0 auto; padding:22px 18px 70px; }
+  header.top{ text-align:center; }
+  .course{ font-family:var(--disp); font-weight:800; font-size:clamp(1.9rem,6vw,2.6rem); letter-spacing:-.02em; }
+  .belt{ font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:7px; }
+  .belt .dot{ display:inline-block; width:9px; height:9px; border:1.5px solid var(--ink); border-radius:50%; vertical-align:-1px; margin-right:5px; background:#fff; }
+  .lessline{ display:flex; justify-content:space-between; align-items:center; margin:16px 0 10px; padding-top:14px; border-top:2px solid var(--ink); }
+  #pos{ font-family:var(--mono); font-size:.64rem; letter-spacing:.06em; color:var(--muted); }
+  .tocbtn{ font-family:var(--mono); font-size:.62rem; letter-spacing:.06em; text-transform:uppercase; padding:7px 13px; border:2px solid var(--ink); background:var(--card); cursor:pointer; box-shadow:3px 3px 0 var(--ink); }
+  .tocbtn:active{ transform:translate(3px,3px); box-shadow:none; }
+  .toc{ border:2.5px solid var(--ink); background:var(--card); padding:12px 14px; margin-bottom:18px; box-shadow:8px 8px 0 var(--ink); }
+  .toc.hidden{ display:none; }
+  .toc h4{ font-family:var(--mono); font-size:.58rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:12px 0 6px; } .toc h4:first-child{ margin-top:0; }
+  .toc a{ display:block; font-size:.9rem; padding:5px 7px; color:var(--ink); text-decoration:none; cursor:pointer; border-left:3px solid transparent; }
+  .toc a:hover{ background:rgba(36,56,200,.06); }
+  .toc a.cur{ border-left-color:var(--pink); font-weight:700; background:rgba(255,78,134,.07); }
+  .toc a.done{ border-left-color:var(--green); } .toc a.locked{ color:var(--muted); opacity:.55; cursor:default; } .toc a.locked:hover{ background:none; }
+  .toc a.pro{ cursor:pointer; } .toc a.pro::after{ content:'PRO'; font-family:var(--mono); font-size:.5rem; font-weight:700; letter-spacing:.1em; color:#8a5a00; background:#FFE9A8; border:1px solid #8a5a00; border-radius:3px; padding:1px 5px; margin-left:7px; }
+  .toc a.soon{ color:var(--muted); cursor:default; } .toc .tag{ font-family:var(--mono); font-size:.52rem; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); border:1px solid var(--amber); padding:1px 5px; margin-left:6px; }
+  .synced{ font-family:var(--mono); font-size:.56rem; letter-spacing:.1em; text-transform:uppercase; color:var(--green); margin:0 0 12px; padding-bottom:10px; border-bottom:1.5px dashed rgba(23,20,14,.2); }
+  .synced.off{ color:var(--muted); } .synced.off a{ color:var(--blue); text-decoration:underline; cursor:pointer; }
+  .stage{ border:3px solid var(--ink); background:var(--card); box-shadow:9px 9px 0 var(--ink); padding:18px; }
+  .portrait{ width:96px; margin:0 auto 6px; } .portrait svg{ width:100%; height:auto; display:block; }
+  .lesson-h{ text-align:center; } .bk{ font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; color:var(--pink); }
+  .lesson-h h2{ font-family:var(--disp); font-weight:800; font-size:1.4rem; margin:.15rem 0 12px; }
+  .scene{ border:2.5px solid var(--ink); border-radius:6px; background:var(--paper); padding:14px; min-height:96px; cursor:pointer; }
+  .scene.student{ background:#eef1ff; }
+  .who{ font-family:var(--mono); font-size:.56rem; letter-spacing:.14em; color:var(--muted); margin-bottom:6px; }
+  .line{ font-size:1rem; line-height:1.5; min-height:2.6em; } .line .cursor{ color:var(--pink); }
+  .cont{ font-family:var(--mono); font-size:.62rem; color:var(--blue); margin-top:8px; opacity:0; } .cont.show{ opacity:1; }
+  .exwrap{ margin-top:16px; }
+  .ex{ border:2.5px solid var(--ink); background:#FBF7EE; box-shadow:8px 8px 0 var(--ink); padding:16px; }
+  .ex .exh{ font-family:var(--mono); font-size:.58rem; letter-spacing:.16em; text-transform:uppercase; color:var(--pink); }
+  .ex .exttl{ font-family:var(--disp); font-weight:800; font-size:1.15rem; margin:2px 0 4px; }
+  .ex .exd{ font-size:.92rem; color:#3a352a; margin:0 0 14px; }
+  .staffwrap{ overflow-x:auto; background:#fff; border:2px solid #e4dcc9; border-radius:8px; padding:8px; margin-bottom:14px; }
+  .staff{ display:block; }
+  .mnote.on ellipse{ fill:var(--pink)!important; stroke:var(--pink); } .mnote.on text{ fill:var(--pink); font-weight:700; }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{ cursor:pointer; border:2.5px solid var(--ink); border-radius:10px; background:var(--card); color:var(--ink); font-family:var(--disp); font-weight:800; font-size:.98rem; padding:10px 18px; box-shadow:3px 3px 0 var(--ink); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:none; } .btn[disabled]{ opacity:.5; }
+  .btn.blue{ background:var(--blue); color:#fff; } .btn.ink{ background:var(--ink); color:var(--paper); }
+  .nav{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:22px; padding-top:16px; border-top:2px solid var(--ink); }
+  .nav a{ font-family:var(--mono); font-size:.62rem; letter-spacing:.06em; color:var(--blue); text-decoration:none; }
+  .endnote{ font-family:var(--mono); font-size:.62rem; color:var(--muted); text-align:right; max-width:280px; }
+  .toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); font-weight:700; font-size:.9rem; padding:11px 18px; border-radius:10px; opacity:0; transition:.2s; z-index:9999; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="course">Learning to Fly</div>
+    <div class="belt" id="belt"></div>
+    <div class="lessline"><span id="pos"></span><button class="tocbtn" id="tocBtn">☰ Lessons</button></div>
+  </header>
+  <nav class="toc hidden" id="toc"></nav>
+  <div class="stage">
+    <div class="portrait" id="portrait"></div>
+    <div class="lesson-h"><div class="bk" id="bk"></div><h2 id="btitle"></h2></div>
+    <div class="scene" id="scene">
+      <div class="who" id="who"></div>
+      <div class="speech" id="speech"><div class="line" id="line"></div><div class="cont" id="cont"></div></div>
+    </div>
+    <div class="exwrap" id="exwrap" hidden></div>
+    <div class="nav"><button class="btn" id="prev">← Previous</button><div id="nextslot"></div></div>
+  </div>
+  <div class="nav" style="border:0;padding-top:10px"><a href="dojo.html">← back to the Dojo</a><span></span></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var el = function(id){ return document.getElementById(id); };
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function toast(m){ var t=el('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){ t.classList.remove('show'); },2200); }
+
+  /* ===== the master (a little songbird mentor) ===== */
+  var MASTER_SVG = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="50" cy="88" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
+    + '<path d="M20 78 Q50 84 80 78" stroke="#8a6a3a" stroke-width="4" fill="none" stroke-linecap="round"/>'
+    + '<ellipse cx="50" cy="52" rx="26" ry="28" fill="#E0922A" stroke="#17140E" stroke-width="3"/>'
+    + '<path d="M50 30 Q70 30 72 52 Q72 72 50 76 Z" fill="#f2b45a" stroke="#17140E" stroke-width="2.5"/>'
+    + '<circle cx="42" cy="46" r="12" fill="#FFFDF7" stroke="#17140E" stroke-width="2.5"/>'
+    + '<circle cx="44" cy="47" r="4.5" fill="#17140E"/><circle cx="45.6" cy="45.6" r="1.4" fill="#fff"/>'
+    + '<path d="M28 50 L14 46 L28 42 Z" fill="#FF4E86" stroke="#17140E" stroke-width="2.5" stroke-linejoin="round"/>'
+    + '<path d="M50 40 Q64 46 62 62 Q54 60 50 54 Z" fill="#c97f1f" stroke="#17140E" stroke-width="2"/>'
+    + '<path d="M40 24 Q46 12 52 22" stroke="#17140E" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+    + '<path d="M62 74 L70 84 M52 76 L56 88" stroke="#c97f1f" stroke-width="3" stroke-linecap="round"/>'
+    + '</svg>';
+
+  /* ===== melodies (key of C — midi + duration in beats) ===== */
+  var MARY = [64,62,60,62, 64,64,[64,2], 62,62,[62,2], 64,67,[67,2], 64,62,60,62, 64,64,64,64, 62,62,64,62, [60,4]]
+    .map(function(x){ return Array.isArray(x)?{m:x[0],d:x[1]}:{m:x,d:1}; });
+  var CPENT = [60,62,64,67,69,72,69,67,64,62,[60,2]]
+    .map(function(x){ return Array.isArray(x)?{m:x[0],d:x[1]}:{m:x,d:1}; });
+
+  /* ===== audio ===== */
+  var actx=null, master=null, timers=[];
+  function audio(){ if(!actx){ var AC=window.AudioContext||window.webkitAudioContext; actx=new AC(); master=actx.createGain(); master.gain.value=0.85; master.connect(actx.destination); } if(actx.state==='suspended') actx.resume(); return actx; }
+  function stopPlay(){ timers.forEach(clearTimeout); timers=[]; var on=document.querySelectorAll('.mnote.on'); for(var i=0;i<on.length;i++) on[i].classList.remove('on'); }
+  function tone(t,m,dur){ var f=440*Math.pow(2,(m-69)/12); var o=actx.createOscillator(), g=actx.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.26,t+0.02); g.gain.setValueAtTime(0.26,t+dur*0.6); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.start(t); o.stop(t+dur+0.03); }
+  function hi(i){ var on=document.querySelectorAll('.mnote.on'); for(var k=0;k<on.length;k++) on[k].classList.remove('on'); var e=el('mn'+i); if(e) e.classList.add('on'); }
+  function playMelody(mel, bpm){ audio(); stopPlay(); var spb=60/bpm, t=actx.currentTime+0.12, beat=0;
+    mel.forEach(function(n,i){ var when=t+beat*spb; tone(when, n.m, Math.max(0.14, n.d*spb*0.9));
+      timers.push(setTimeout(function(){ hi(i); }, Math.max(0,(when-actx.currentTime)*1000))); beat+=n.d; });
+    timers.push(setTimeout(stopPlay, beat*spb*1000+320)); }
+
+  /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
+  var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
+  function info(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1, ls=NAT[pc]; if(ls==null) ls=NAT[(pc+11)%12]; return { step:oct*7+ls, name:LET[ls] }; }
+  function renderMelody(mel){
+    var padL=44, gap=9, yBot=64, h=110, x=padL, beat=0;
+    var w=padL+10; mel.forEach(function(n){ w+=Math.max(32,n.d*24); });
+    var s='';
+    for(var i=0;i<5;i++){ var y=yBot-i*gap; s+='<line x1="8" y1="'+y+'" x2="'+(w-8)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>'; }
+    s+='<text x="12" y="'+(yBot-1)+'" font-family="Georgia,serif" font-size="48" fill="#17140E">𝄞</text>';
+    mel.forEach(function(n,i){
+      var nf=info(n.m), y=yBot-(nf.step-30)*(gap/2), wd=Math.max(32,n.d*24), cx=x+wd/2;
+      var led=''; if(nf.step<=28 && (30-nf.step)%2===0){ led='<line x1="'+(cx-9)+'" y1="'+y+'" x2="'+(cx+9)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>'; }
+      var open=n.d>=2, stem=n.d<4;
+      var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.3" ry="4.7" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':'#17140E')+'" stroke="#17140E" stroke-width="1.7"/>';
+      var st=stem?'<line x1="'+(cx+5.9)+'" y1="'+(y-1)+'" x2="'+(cx+5.9)+'" y2="'+(y-27)+'" stroke="#17140E" stroke-width="1.7"/>':'';
+      var lbl='<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="#6F6757">'+nf.name+'</text>';
+      s+='<g class="mnote" id="mn'+i+'">'+led+head+st+lbl+'</g>';
+      x+=wd; beat+=n.d;
+      if(beat%4===0 && i<mel.length-1){ s+='<line x1="'+x+'" y1="'+(yBot-4*gap)+'" x2="'+x+'" y2="'+yBot+'" stroke="#17140E" stroke-width="1.3"/>'; }
+    });
+    return '<svg class="staff" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
+  }
+
+  /* ===== exercises ===== */
+  function renderExercise(ex){
+    if(ex && ex.type==='melody'){
+      return '<div class="ex"><div class="exh">Listen</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="staffwrap">'+renderMelody(ex.mel)+'</div>'
+        + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button></div></div>';
+    }
+    return '<div class="ex"><div class="exd">Coming soon.</div></div>';
+  }
+  function wireExercise(ex){
+    if(ex && ex.type==='melody'){ el('mPlay').addEventListener('click', function(){ playMelody(ex.mel, ex.bpm||100); }); el('mStop').addEventListener('click', stopPlay); }
+  }
+
+  /* ===== course ===== */
+  var COURSE = [
+    { title:'Belt 1 — Melody & the Pentatonic', belt:'White Belt', lessons:[
+      { num:'1.1', title:'A melody you already know', teach:[
+          { html:"Welcome, little flyer. Before scales, before theory — you already carry melodies in your bones. Let's start with one everybody knows: <b>Mary Had a Little Lamb</b>." },
+          { html:"Hit <b>Play</b> and just listen. Hear how it rises, falls, and <em>rests</em>. That shape is melody — and improvising begins right here, not with strange new notes but with a tune you can already hum." },
+          { t:'qa', q:"That's it? A nursery rhyme?", a:"That's it. Every good solo is just a melody you invent as you go. Learn to hear a tune and bend it, and you're already flying. Give it a few listens." }
+        ], ex:{ type:'melody', title:'Mary Had a Little Lamb', mel:MARY, bpm:100,
+          desc:'Press Play and follow the note that lights up. This is our home melody for the whole belt. The letters under each note tell you its name.' } },
+      { num:'1.2', title:'The major pentatonic', teach:[
+          { html:"Here's the secret hiding in that tune: it uses only <b>five</b> notes. Gather them, line them up, and you have the <b>major pentatonic scale</b>." },
+          { html:"In the key of C those five are <b>C · D · E · G · A</b>. No note in there can truly clash with another — which makes it the safest, sweetest sandbox in all of music to start improvising in." },
+          { html:"Play the scale below and listen. Then play Mary again — <em>every</em> note she sings is one of these five. The melody was living inside the scale the whole time." }
+        ], ex:{ type:'melody', title:'C major pentatonic', mel:CPENT, bpm:120,
+          desc:'Five notes: C D E G A (then C on top and back down). Play it up and down until it sits in your ear.' } }
+    ]},
+    { title:'Belt 2 — The Blues', belt:'Yellow Belt', soon:true, blurb:'Add the blue note and take your first solo over a 12-bar blues.' }
+  ];
+  var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt }, les)); }); });
+  var idx=0;
+
+  /* ===== progress: save + sequential unlock + account sync + paywall ===== */
+  var PKEY='ltf.progress.v1', COURSE_ID='learning-to-fly', PRODUCT='course:learning-to-fly';
+  var FREE_LESSONS=(COURSE[0]&&COURSE[0].lessons)?COURSE[0].lessons.length:0;
+  var progress=(function(){ try{ var p=JSON.parse(localStorage.getItem(PKEY)); if(p&&p.done) return p; }catch(e){} return {done:{},last:0}; })();
+  function saveLocal(){ try{ localStorage.setItem(PKEY, JSON.stringify(progress)); }catch(e){} }
+  function saveProgress(){ saveLocal(); cloudPush(); }
+  function isDone(i){ return i>=0 && i<LESSONS.length && !!progress.done[LESSONS[i].num]; }
+  function maxOpen(){ var m=0; while(m<LESSONS.length-1 && isDone(m)) m++; return m; }
+  function markDone(i){ if(i<0||i>=LESSONS.length) return; var k=LESSONS[i].num; if(!progress.done[k]){ progress.done[k]=true; saveProgress(); buildToc(); } }
+  function entitled(){ return !!(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAccess(PRODUCT)); }
+  function paywalled(i){ return i>=FREE_LESSONS && !entitled(); }
+  function openCoursePaywall(){ if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'This lesson is Pro', body:'Belt 1 is free. Go Pro to fly through the rest of the course — and unlock every Dojo course.', product:PRODUCT }); else location.href='/upgrade.html?highlight='+encodeURIComponent(PRODUCT); }
+  function signedIn(){ return !!(window.MAAuth && MAAuth.user && MAAuth.user()); }
+  var cloudReady=false;
+  function cloudPush(){ if(signedIn() && cloudReady) MAAuth.progress.push(COURSE_ID, progress).catch(function(){}); }
+  function cloudPull(){ if(!signedIn()){ cloudReady=false; return; }
+    MAAuth.progress.pull(COURSE_ID).then(function(remote){
+      if(remote && remote.done){ var wasEmpty=!Object.keys(progress.done).length;
+        progress={ done:Object.assign({}, remote.done, progress.done), last:Math.max(progress.last||0, remote.last||0) }; saveLocal();
+        if(wasEmpty) go(Math.min(remote.last||0, maxOpen())); else { idx=Math.min(idx,maxOpen()); buildToc(); renderNav(); } }
+      cloudReady=true; MAAuth.progress.push(COURSE_ID, progress).catch(function(){});
+    }).catch(function(){ cloudReady=true; }); }
+
+  /* ===== dialogue ===== */
+  function buildPages(teach){ var p=[]; teach.forEach(function(t){ if(t.t==='qa'){ p.push({who:'student',html:t.q}); p.push({who:'master',html:t.a}); } else p.push({who:'master',html:t.html}); }); return p; }
+  function tokenize(html){ var t=[],i=0; while(i<html.length){ if(html[i]==='<'){ var j=html.indexOf('>',i); t.push({tag:html.slice(i,j+1)}); i=j+1; } else { t.push({ch:html[i]}); i++; } } return t; }
+  function nChars(t){ var c=0; t.forEach(function(x){ if(!('tag' in x)) c++; }); return c; }
+  var pages=[], pageIdx=0, dialogueDone=false, toks=[], shown=0, lineDone=false, typer=null;
+  function renderType(){ var out='',c=0; toks.forEach(function(t){ if('tag' in t) out+=t.tag; else { if(c<shown) out+=t.ch; c++; } }); el('line').innerHTML=out+(lineDone?'':'<span class="cursor">▍</span>'); }
+  function startType(html){ toks=tokenize(html); shown=0; lineDone=false; clearInterval(typer); renderType(); if(reduced){ finishLine(); return; } typer=setInterval(function(){ shown++; renderType(); if(shown>=nChars(toks)) finishLine(); }, 16); }
+  function finishLine(){ clearInterval(typer); shown=nChars(toks); lineDone=true; renderType(); var last=pageIdx>=pages.length-1; el('cont').textContent=last?'▼ let’s play':'▼ tap to continue'; el('cont').classList.add('show'); }
+  function showPage(){ var pg=pages[pageIdx]; el('scene').classList.toggle('student', pg.who==='student'); el('who').textContent=pg.who==='student'?'YOU':'THE MASTER'; startType(pg.html); }
+  function advance(){ if(dialogueDone) return; if(!lineDone){ finishLine(); return; } if(pageIdx<pages.length-1){ pageIdx++; showPage(); } else { dialogueDone=true; el('cont').classList.remove('show'); el('exwrap').hidden=false; } }
+
+  /* ===== lesson / nav / toc ===== */
+  function renderLesson(){ stopPlay(); var L=LESSONS[idx];
+    el('bk').textContent='LESSON '+L.num; el('btitle').textContent=L.title; el('belt').innerHTML='<span class="dot"></span>'+L.belt; el('pos').textContent='Lesson '+(idx+1)+' of '+LESSONS.length;
+    el('portrait').innerHTML=MASTER_SVG;
+    pages=buildPages(L.teach); pageIdx=0; dialogueDone=false; el('scene').classList.remove('student');
+    el('exwrap').hidden=true; el('exwrap').innerHTML=renderExercise(L.ex); wireExercise(L.ex);
+    showPage(); renderNav(); buildToc(); window.scrollTo({top:0, behavior:reduced?'auto':'smooth'}); }
+  function renderNav(){ el('prev').disabled=(idx===0); var slot=el('nextslot');
+    if(idx<LESSONS.length-1){ if(paywalled(idx+1)){ slot.innerHTML='<button class="btn ink" id="goPro">🔒 Unlock the rest — Go Pro</button>'; el('goPro').addEventListener('click', openCoursePaywall); }
+      else { slot.innerHTML='<button class="btn ink" id="next">Next →</button>'; el('next').addEventListener('click', function(){ markDone(idx); go(idx+1); }); } }
+    else { slot.innerHTML='<span class="endnote">The end of the belt for now — more of the flight is being written. Come back soon.</span>'; } }
+  function go(i){ i=Math.max(0,Math.min(LESSONS.length-1,i)); if(i>maxOpen()) return; if(paywalled(i)){ openCoursePaywall(); return; } idx=i; progress.last=idx; saveProgress(); renderLesson(); }
+  function buildToc(){ var mo=maxOpen();
+    var h=signedIn()?'<div class="synced">✓ Progress synced to your account</div>':'<div class="synced off">Saved on this device — <a id="syncSignin">sign in</a> to sync across devices</div>';
+    COURSE.forEach(function(mod){ h+='<h4>'+mod.title+'</h4>';
+      if(mod.lessons) mod.lessons.forEach(function(les){ var li=LESSONS.findIndex(function(x){ return x.num===les.num; });
+        var done=isDone(li), pay=paywalled(li), locked=!pay && li>mo;
+        var cls=[li===idx?'cur':'', pay?'pro':'', locked?'locked':'', done?'done':''].filter(Boolean).join(' ');
+        var mark=done?'✓ ':(pay?'':(locked?'🔒 ':''));
+        if(pay) h+='<a href="#" class="'+cls+'" data-pay="1">'+mark+les.num+' · '+les.title+'</a>';
+        else if(locked) h+='<a class="'+cls+'">'+mark+les.num+' · '+les.title+'</a>';
+        else h+='<a href="#" class="'+cls+'" data-go="'+li+'">'+mark+les.num+' · '+les.title+'</a>'; });
+      else if(mod.soon) h+='<a class="soon">'+mod.blurb+' <span class="tag">soon</span></a>'; });
+    var toc=el('toc'); toc.innerHTML=h;
+    toc.querySelectorAll('[data-go]').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); go(+a.dataset.go); toc.classList.add('hidden'); }); });
+    toc.querySelectorAll('[data-pay]').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); toc.classList.add('hidden'); openCoursePaywall(); }); });
+    var si=el('syncSignin'); if(si) si.addEventListener('click', function(e){ e.preventDefault(); if(window.MAAuth && MAAuth.open) MAAuth.open('signin'); }); }
+
+  /* ===== init ===== */
+  el('speech').addEventListener('click', advance);
+  el('tocBtn').addEventListener('click', function(){ el('toc').classList.toggle('hidden'); });
+  el('prev').addEventListener('click', function(){ go(idx-1); });
+  document.addEventListener('pointerdown', function(){ audio(); }, { once:true });
+  idx=Math.min(progress.last||0, maxOpen());
+  renderLesson();
+  (function waitAuth(){ if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(function(u){ if(u) cloudPull(); else cloudReady=false; buildToc(); }); else setTimeout(waitAuth,120); })();
+  (function waitEnt(){ if(window.MAAuth && MAAuth.onEntitlements) MAAuth.onEntitlements(function(){ idx=Math.min(idx,maxOpen()); buildToc(); renderNav(); }); else setTimeout(waitEnt,120); })();
+})();
+</script>
