@@ -17,11 +17,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // Find each in LS: Products → variant → the numeric id (or the API/variant URL).
 // Both Pro variants (monthly + annual) map to the single product 'pro'.
 const VARIANT_PRODUCT: Record<string, string> = {
-  '1998968': 'pro',                      // Music Arcade Pro (subscription)
+  '1998968': 'pro',                      // Music Arcade Pro — Annual
+  '1998986': 'pro',                      // Music Arcade Pro — Monthly
   '1998999': 'course:learning-to-walk',  // Learning to Walk
   '1999009': 'course:gradus',            // The Counterpoint Dojo
-  // If Pro Monthly turns out to be a SEPARATE variant, add its id here too:
-  // 'XXXXXXX': 'pro',                    // Pro — Monthly
 };
 const SUB_PRODUCTS = new Set(['pro']); // which products are subscriptions (vs one-time purchases)
 // --------------------------------------------------------------------------------
