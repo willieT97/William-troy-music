@@ -67,13 +67,15 @@
   .btn.sm{ font-family:var(--body); font-weight:800; font-size:.82rem; padding:7px 12px; box-shadow:2px 2px 0 var(--ink); }
   .tunepick{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .crmary{ font-size:.85rem; color:var(--muted); margin-bottom:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-  .bluesgrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px; }
-  .bcell{ position:relative; border:2px solid #e4dcc9; border-radius:8px; background:#fff; padding:9px 6px 6px; text-align:center; transition:transform .08s, background .08s; }
-  .bcell .bnum{ position:absolute; top:3px; left:6px; font-family:var(--mono); font-size:.52rem; color:var(--muted); }
-  .bcell .brom{ display:block; font-family:var(--disp); font-weight:800; font-size:1.3rem; color:var(--ink); line-height:1.05; }
-  .bcell .bch{ display:block; font-family:var(--mono); font-size:.6rem; color:var(--muted); margin-top:1px; }
-  .bcell.on{ background:var(--blue); border-color:var(--blue); transform:translateY(-2px); box-shadow:0 3px 0 rgba(0,0,0,.15); }
-  .bcell.on .brom, .bcell.on .bch, .bcell.on .bnum{ color:#fff; }
+  .slashwrap{ background:#fff; border:2px solid #e4dcc9; border-radius:10px; padding:12px 10px; margin-bottom:12px; overflow-x:auto; }
+  .slashsvg{ display:block; min-width:340px; }
+  .slash{ stroke:var(--ink); transition:stroke .08s; }
+  .schord{ fill:var(--ink); font-family:var(--disp); font-weight:800; transition:fill .08s; }
+  .srom{ fill:var(--muted); font-family:var(--mono); transition:fill .08s; }
+  .sbg{ fill:transparent; transition:fill .08s; }
+  .sbar.on .sbg{ fill:rgba(36,56,200,.12); }
+  .sbar.on .slash{ stroke:var(--blue); }
+  .sbar.on .schord, .sbar.on .srom{ fill:var(--blue); }
   .scaleref{ font-size:.85rem; color:var(--muted); margin-bottom:12px; } .scaleref .reflbl{ font-weight:700; color:var(--ink); }
   .toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); font-weight:700; font-size:.9rem; padding:11px 18px; border-radius:10px; opacity:0; transition:.2s; z-index:9999; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
@@ -248,14 +250,32 @@
 
   /* ===== 12-bar blues jam: loop I–IV–V with a bar-grid highlight ===== */
   var bluesOn=false, bluesTimer=null, bluesNext=0, bluesBar=0;
-  function hiBar(i){ var cs=document.querySelectorAll('.bcell'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('on'); var e=el('bcell'+i); if(e) e.classList.add('on'); }
+  function hiBar(i){ var cs=document.querySelectorAll('.sbar'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('on'); var e=el('sbar'+i); if(e) e.classList.add('on'); }
   function startBlues(chords, bpm){ audio(); stopBlues(); bluesOn=true; var spb=60/bpm; bluesNext=actx.currentTime+0.15; bluesBar=0;
     bluesTimer=setInterval(function(){ if(!bluesOn) return; var ahead=actx.currentTime+0.5;
       while(bluesNext<ahead){ var bi=bluesBar%chords.length; scheduleBar(bluesNext, spb, chords[bi]);
         (function(cell,when){ timers.push(setTimeout(function(){ hiBar(cell); }, Math.max(0,(when-actx.currentTime)*1000))); })(bi, bluesNext);
         bluesNext+=4*spb; bluesBar++; } }, 60); }
-  function stopBlues(){ bluesOn=false; if(bluesTimer){ clearInterval(bluesTimer); bluesTimer=null; } stopPlay(); var cs=document.querySelectorAll('.bcell.on'); for(var i=0;i<cs.length;i++) cs[i].classList.remove('on'); }
-  function bluesGridHTML(chords){ return chords.map(function(c,i){ return '<div class="bcell" id="bcell'+i+'"><span class="bnum">'+(i+1)+'</span><span class="brom">'+(ROMAN[c]||'')+'</span><span class="bch">'+c+'</span></div>'; }).join(''); }
+  function stopBlues(){ bluesOn=false; if(bluesTimer){ clearInterval(bluesTimer); bluesTimer=null; } stopPlay(); var cs=document.querySelectorAll('.sbar.on'); for(var i=0;i<cs.length;i++) cs[i].classList.remove('on'); }
+  // 12-bar chart in slash notation (self-contained SVG): 3 rows × 4 bars, treble staff, chord symbols, a slash per beat
+  function slashChartHTML(chords){
+    var gap=7, staffH=4*gap, clefW=30, bw=96, topPad=26, rowH=62, totalW=clefW+4*bw, totalH=topPad+3*rowH+8, s='';
+    function barline(x,y,w){ return '<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+staffH)+'" stroke="#17140E" stroke-width="'+w+'"/>'; }
+    for(var row=0; row<3; row++){ var sy=topPad+row*rowH;
+      for(var ln=0; ln<5; ln++){ var ly=sy+ln*gap; s+='<line x1="2" y1="'+ly+'" x2="'+(totalW-2)+'" y2="'+ly+'" stroke="#17140E" stroke-width="1.1"/>'; }
+      s+='<text x="1" y="'+(sy+staffH+3)+'" font-family="Georgia,serif" font-size="31" fill="#17140E">𝄞</text>';
+      if(row===0){ s+='<text x="'+(clefW-13)+'" y="'+(sy+2*gap)+'" font-family="Georgia,serif" font-weight="700" font-size="13" fill="#17140E">4</text><text x="'+(clefW-13)+'" y="'+(sy+4*gap)+'" font-family="Georgia,serif" font-weight="700" font-size="13" fill="#17140E">4</text>'; }
+      s+=barline(clefW, sy, 1.4);
+      for(var i=0;i<4;i++){ var idx=row*4+i, bx=clefW+i*bw, midY=sy+2*gap, inner='';
+        inner+='<rect class="sbg" x="'+(bx+1.5)+'" y="'+(sy-22)+'" width="'+(bw-3)+'" height="'+(staffH+27)+'" rx="5"/>';
+        inner+='<text class="srom" x="'+(bx+6)+'" y="'+(sy-17)+'" font-size="9">'+(ROMAN[chords[idx]]||'')+'</text>';
+        inner+='<text class="schord" x="'+(bx+6)+'" y="'+(sy-5)+'" font-size="14">'+chords[idx]+'</text>';
+        for(var b=0;b<4;b++){ var cx=bx+bw*(b+0.5)/4; inner+='<line class="slash" x1="'+(cx-5)+'" y1="'+(midY+6)+'" x2="'+(cx+5)+'" y2="'+(midY-6)+'" stroke-width="3" stroke-linecap="round"/>'; }
+        s+='<g class="sbar" id="sbar'+idx+'">'+inner+'</g>';
+        var rx=bx+bw; if(idx===11){ s+=barline(rx-3.5, sy, 1.2)+barline(rx, sy, 3); } else s+=barline(rx, sy, 1.4); }
+    }
+    return '<svg class="slashsvg" viewBox="0 0 '+totalW+' '+totalH+'" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
+  }
 
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
@@ -343,7 +363,7 @@
     }
     if(ex && ex.type==='bluesjam'){
       return '<div class="ex"><div class="exh">'+(ex.capstone?'Capstone':'The form')+'</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
-        + '<div class="bluesgrid" id="bluesGrid"></div>'
+        + '<div class="slashwrap" id="bluesGrid"></div>'
         + '<div class="scaleref"><span class="reflbl">Your notes:</span> '+ex.scaleName+'</div>'
         + (ex.mic ? '<div class="lab" id="lfLab"><div class="heard" id="lfHeard">—</div><div class="labstatus" id="lfStatus">Optional: enable your mic to see the notes you play.</div></div>' : '')
         + '<div class="row"><button class="btn blue" id="bPlay">&#9654; Play the blues</button><button class="btn" id="bStop">Stop</button>'+(ex.mic?'<button class="btn" id="lfMic">Enable microphone</button>':'')+'</div>'
@@ -402,7 +422,7 @@
       el('mDone').addEventListener('click', function(){ stopJam(); var fb=el('fb2'); if(fb){ fb.textContent='🎉 You played the head and flew your own chorus — that’s improvising! White belt earned.'; fb.className='fb ok'; } onSolve(); });
     }
     if(ex && ex.type==='bluesjam'){
-      el('bluesGrid').innerHTML=bluesGridHTML(ex.chords);
+      el('bluesGrid').innerHTML=slashChartHTML(ex.chords);
       if(ex.mic){ heardEl=el('lfHeard'); labEl=el('lfLab'); statusEl=el('lfStatus'); el('lfMic').addEventListener('click', ensureMic); }
       el('bPlay').addEventListener('click', function(){ startBlues(ex.chords, ex.bpm||96); });
       el('bStop').addEventListener('click', function(){ stopBlues(); });
