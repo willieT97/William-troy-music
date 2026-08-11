@@ -184,6 +184,23 @@
   }
   function stopMic(){ micRunning=false; capturing=false; if(micStream){ try{ micStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} micStream=null; } mAn=null; heardEl=null; labEl=null; statusEl=null; }
 
+  /* ===== capstone jam: a looping C / Am groove (pentatonic sits over both) ===== */
+  var jamOn=false, jamTimer=null, jamNext=0, jamBar=0;
+  function bassTone(t,m){ var f=440*Math.pow(2,(m-69)/12), o=actx.createOscillator(), g=actx.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.3,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5); o.start(t); o.stop(t+0.55); }
+  function pad(t,mids,dur){ mids.forEach(function(m){ var f=440*Math.pow(2,(m-69)/12), o=actx.createOscillator(), g=actx.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.05,t+0.05); g.gain.setValueAtTime(0.05,t+dur*0.8); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.start(t); o.stop(t+dur+0.05); }); }
+  function kick(t){ var o=actx.createOscillator(), g=actx.createGain(); o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(45,t+0.12); o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.16); o.start(t); o.stop(t+0.18); }
+  function scheduleBar(t, spb, bar){ var even=bar%2===0;
+    bassTone(t, even?36:33); bassTone(t+2*spb, even?43:40);        // C2/G2  |  A1/E2
+    pad(t, even?[60,64,67]:[57,60,64], spb*3.8);                    // C      |  Am
+    kick(t); kick(t+2*spb); click(t+spb); click(t+3*spb); }
+  function startJam(bpm){ audio(); stopJam(); jamOn=true; jamNext=actx.currentTime+0.15; jamBar=0;
+    jamTimer=setInterval(function(){ if(!jamOn) return; var spb=60/bpm, ahead=actx.currentTime+0.4;
+      while(jamNext<ahead){ scheduleBar(jamNext, spb, jamBar); jamNext+=4*spb; jamBar++; } }, 60); }
+  function stopJam(){ jamOn=false; if(jamTimer){ clearInterval(jamTimer); jamTimer=null; } }
+
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
   function info(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1, ls=NAT[pc]; if(ls==null) ls=NAT[(pc+11)%12]; return { step:oct*7+ls, name:LET[ls] }; }
@@ -239,6 +256,13 @@
         + '<div class="fb" id="fb2">Goal: after the call hangs on D, answer into the clicks and land home on C.</div>'
         + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">Fly on →</button></div></div>';
     }
+    if(ex && ex.type==='jam'){
+      return '<div class="ex"><div class="exh">Your first flight</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="lab" id="lfLab"><div class="heard" id="lfHeard">—</div><div class="labstatus" id="lfStatus">Hit Play and solo over the groove. Turn on your mic to watch your notes.</div></div>'
+        + '<div class="row"><button class="btn blue" id="jPlay">&#9654; Play groove</button><button class="btn" id="jStop">Stop</button><button class="btn" id="lfMic">Enable microphone</button></div>'
+        + '<div class="fb" id="fb2">Your tools: stay in the pentatonic · leave space · trade questions &amp; answers · land home on C.</div>'
+        + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">I flew — that’s my chorus ✈️</button></div></div>';
+    }
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
   function wireExercise(ex){
@@ -264,6 +288,13 @@
       el('mCall').addEventListener('click', function(){ tradeCall(ex.bpm||88); });
       el('mStop').addEventListener('click', function(){ stopPlay(); capturing=false; });
       el('mDone').addEventListener('click', function(){ var fb=el('fb2'); if(fb){ fb.textContent='Nice trading — that’s call and response. Fly on when you’re ready.'; fb.className='fb ok'; } onSolve(); });
+    }
+    if(ex && ex.type==='jam'){
+      heardEl=el('lfHeard'); labEl=el('lfLab'); statusEl=el('lfStatus');
+      el('jPlay').addEventListener('click', function(){ startJam(ex.bpm||90); if(statusEl) statusEl.textContent='Groove’s rolling — fly!'; });
+      el('jStop').addEventListener('click', function(){ stopJam(); if(statusEl) statusEl.textContent='Stopped. Play again whenever.'; });
+      el('lfMic').addEventListener('click', ensureMic);
+      el('mDone').addEventListener('click', function(){ stopJam(); var fb=el('fb2'); if(fb){ fb.textContent='🎉 That’s a chorus — you improvised! White belt earned. And this is only the beginning.'; fb.className='fb ok'; } onSolve(); });
     }
   }
 
@@ -299,14 +330,20 @@
           { html:"No grading here, no wrong notes to fear — you've got the pentatonic, so you truly can't miss. One aim only: after my question hangs on the <b>2</b>, bring your answer <b>home to the 1</b> (C)." },
           { t:'qa', q:"And if my answer's rubbish?", a:"Then you call up another question and answer again — that's how every player who ever lived learned to talk. Trade a few with me, and when it feels natural, fly on." }
         ], ex:{ type:'freecall', title:'Trade fours', bpm:88,
-          desc:'Turn on your mic, then tap “Hear a call” — a question you can’t see, ending on D. Answer it on your instrument in the four clicks that follow, landing home on C. The lab listens and cheers when you make it home. Wired headphones help.' } }
+          desc:'Turn on your mic, then tap “Hear a call” — a question you can’t see, ending on D. Answer it on your instrument in the four clicks that follow, landing home on C. The lab listens and cheers when you make it home. Wired headphones help.' } },
+      { num:'1.6', title:'Your first flight', teach:[
+          { html:"This is it — your first <b>flight</b>. Everything you've learned comes together now: I'll lay down a groove in C, and you're going to <b>improvise a whole chorus</b> over it." },
+          { html:"Remember your tools: stay in the <b>pentatonic</b> (you can't miss), leave <b>space</b>, trade little <b>questions and answers</b> with yourself — and when you want to land, come <b>home to C</b>." },
+          { t:'qa', q:"Just… play? Over the whole thing?", a:"Just play. No wrong notes, no clock — it loops till you stop. Noodle, breathe, tell a little story. Fly a chorus you're proud of and you've earned your white belt. Hit play and go." }
+        ], ex:{ type:'jam', title:'Fly a chorus', bpm:90,
+          desc:'A gentle C / Am groove on a loop. Solo over it with the pentatonic — melody, space, call and answer, landing home. No score, no clock. When you’ve flown a chorus you’re proud of, take your belt.' } }
     ]},
     { title:'Belt 2 — The Blues', belt:'Yellow Belt', soon:true, blurb:'Add the blue note and take your first solo over a 12-bar blues.' }
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt }, les)); }); });
   var idx=0, solved=false, work=null;
   var PSET=[60,62,64,67,69,72];   // C major pentatonic across the melody's range
-  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall'); }
+  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam'); }
   function playOne(m){ audio(); tone(actx.currentTime+0.02, m, 0.5); }
   function cyclePitch(i){ var n=work[i]; var ci=PSET.indexOf(n.m); if(ci<0) ci=0; n.m=PSET[(ci+1)%PSET.length]; }
   function drawWork(cid){ var c=el(cid); c.innerHTML=renderMelody(work, {interactive:true});
@@ -368,7 +405,7 @@
   function advance(){ if(dialogueDone) return; if(!lineDone){ finishLine(); return; } if(pageIdx<pages.length-1){ pageIdx++; showPage(); } else { dialogueDone=true; el('cont').classList.remove('show'); el('exwrap').hidden=false; } }
 
   /* ===== lesson / nav / toc ===== */
-  function renderLesson(){ stopPlay(); stopMic(); var L=LESSONS[idx];
+  function renderLesson(){ stopPlay(); stopMic(); stopJam(); var L=LESSONS[idx];
     el('bk').textContent='LESSON '+L.num; el('btitle').textContent=L.title; el('belt').innerHTML='<span class="dot"></span>'+L.belt; el('pos').textContent='Lesson '+(idx+1)+' of '+LESSONS.length;
     el('portrait').innerHTML=MASTER_SVG;
     pages=buildPages(L.teach); pageIdx=0; dialogueDone=false; solved=false; work=null; el('scene').classList.remove('student');
