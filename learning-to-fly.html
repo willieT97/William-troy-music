@@ -141,7 +141,7 @@
   ];
   // Belt 2: major blues scale (C D Eb E G A) — the Eb (63) is the blue note; and a busy phrase for the space drill
   var BLUESCALE = [60,62,63,64,67,69,72, 69,67,64,63,62,[60,2]].map(mk);
-  var BUSY = [67,69,67,64,62,64,67,69].map(mk);
+  var BUSY = [67,69,67,64,62,64,67,69,67,64,62,60].map(mk); // G A G E | D E G A | G E D C — a long run with no breath
 
   /* ===== audio ===== */
   var actx=null, master=null, timers=[];
@@ -414,11 +414,12 @@
         ], ex:{ type:'melody', title:'The major blues scale', mel:BLUESCALE, bpm:104,
           desc:'C D E♭ E G A — your pentatonic with the blue note (E♭) added. Play it up and down, and listen for the E♭ crying up into the E.' } },
       { num:'2.2', title:'Space & phrasing', teach:[
-          { html:"Here's the mistake every beginner makes: playing <em>all the notes, all the time</em>. Listen to this busy little phrase — every single beat filled, no room to breathe." },
-          { html:"The blues taught the world the opposite. <b>Space</b> — silence — is part of the phrase. A note lands twice as hard when there's air around it. B.B. King could say more with one note and a rest than most players say in a flurry." },
-          { t:'qa', q:"Won't it sound empty?", a:"That's the magic — the ear leans in to fill the gaps. Rests are where the groove breathes. Tap notes in the phrase below to turn them into rests, then play it — and hear it come alive." }
+          { html:"Here's the mistake every beginner makes: playing <em>all the notes, all the time</em>. Listen to this busy little line — every single beat filled, one long run with nowhere to breathe." },
+          { html:"Think of soloing like <b>talking</b>. You don't say every word in one breathless stream — you speak a <b>sentence</b>, then <b>breathe</b>, then say the next. A musical phrase is a sentence; a rest is the breath between." },
+          { html:"But here's the trap: a rest between <em>every</em> note isn't phrasing — that's a <b>stutter</b>. Keep your notes together into a whole idea, <em>then</em> take the breath. B.B. King said more with one held phrase and a silence than most players say in a flurry." },
+          { t:'qa', q:"So where do the breaths go?", a:"Between ideas, not between notes. In the line below, play a few notes that belong together — a sentence — then tap out the notes where you want to breathe before the next idea. Keep your sentences whole." }
         ], ex:{ type:'space', title:'Give it some air', phrase:BUSY, bpm:96,
-          desc:'This phrase plays on every beat — no room to breathe. Tap notes to turn them into rests (tap again to bring them back), then Play. Leave a few out and hear it open up.' } }
+          desc:'This line runs on every beat — no breath. Group it into <b>sentences</b>: keep a few notes in a row as one idea, then tap notes out to breathe before the next. A rest between every note is a stutter — keep your phrases whole.' } }
     ]},
     { title:'Belt 3 — Bluegrass', belt:'Green Belt', soon:true, blurb:'Flatpick clichés with an Appalachian master, then take a break at the jam.' }
   ];
@@ -433,11 +434,20 @@
       if(mode==='space'){ work[i].rest=!work[i].rest; if(!work[i].rest) playOne(work[i].m); }
       else { cyclePitch(i); playOne(work[i].m); }
       drawWork(cid, mode); }); }); }
-  function checkSpace(){ var rests=0; work.forEach(function(n){ if(n.rest) rests++; }); var notes=work.length-rests; var fb=el('fb');
-    if(rests===0){ fb.textContent='Every beat’s still full — tap notes to turn them into rests and let it breathe.'; fb.className='fb no'; return; }
-    if(notes<2){ fb.textContent='Whoa — nearly all silence! Leave a few notes in so it still says something.'; fb.className='fb no'; return; }
-    if(rests<3){ fb.textContent='Good start — leave out one or two more. Space is the point.'; fb.className='fb no'; return; }
-    fb.textContent='That’s it — hear how each note hits harder with room around it? That’s phrasing.'; fb.className='fb ok'; onSolve(); }
+  function checkSpace(){ var fb=el('fb');
+    // group the line into runs of notes ("sentences") and rests ("breaths")
+    var runs=[]; work.forEach(function(n){ var t=n.rest?'r':'n'; var last=runs[runs.length-1]; if(last && last.t===t){ last.len++; } else { runs.push({t:t,len:1}); } });
+    var noteRuns=runs.filter(function(r){ return r.t==='n'; }).map(function(r){ return r.len; });
+    var breaths=runs.filter(function(r){ return r.t==='r'; }).length;
+    var notes=0; work.forEach(function(n){ if(!n.rest) notes++; });
+    if(breaths===0){ fb.textContent='It’s wall-to-wall notes — nowhere to breathe. Play a few, then tap some out to leave a rest.'; fb.className='fb no'; return; }
+    if(notes<3){ fb.textContent='You’ve hollowed it out — keep enough notes in a row to actually say a sentence between the breaths.'; fb.className='fb no'; return; }
+    var longest=Math.max.apply(null, noteRuns);
+    var sentences=noteRuns.filter(function(l){ return l>=2; }).length;   // runs of 2+ notes = a real idea
+    var singles=noteRuns.filter(function(l){ return l===1; }).length;    // lone notes marooned between rests
+    var isPhrase = (longest>=3 && singles<=1) || (sentences>=2 && singles===0);
+    if(!isPhrase){ fb.textContent='That’s a stutter — note, gap, note, gap. Keep your notes together into one idea, THEN breathe. A sentence, then a rest.'; fb.className='fb no'; return; }
+    fb.textContent='Now it speaks — a sentence, a breath, another idea. That’s phrasing, not just filling beats.'; fb.className='fb ok'; onSolve(); }
   function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb');
     if(changed>=total){ fb.textContent='That’s YOUR Mary now — and because you stayed in the pentatonic, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
     else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the blue notes to make the rest your own.'; fb.className='fb no'; } }
