@@ -67,6 +67,14 @@
   .btn.sm{ font-family:var(--body); font-weight:800; font-size:.82rem; padding:7px 12px; box-shadow:2px 2px 0 var(--ink); }
   .tunepick{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .crmary{ font-size:.85rem; color:var(--muted); margin-bottom:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .bluesgrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px; }
+  .bcell{ position:relative; border:2px solid #e4dcc9; border-radius:8px; background:#fff; padding:9px 6px 6px; text-align:center; transition:transform .08s, background .08s; }
+  .bcell .bnum{ position:absolute; top:3px; left:6px; font-family:var(--mono); font-size:.52rem; color:var(--muted); }
+  .bcell .brom{ display:block; font-family:var(--disp); font-weight:800; font-size:1.3rem; color:var(--ink); line-height:1.05; }
+  .bcell .bch{ display:block; font-family:var(--mono); font-size:.6rem; color:var(--muted); margin-top:1px; }
+  .bcell.on{ background:var(--blue); border-color:var(--blue); transform:translateY(-2px); box-shadow:0 3px 0 rgba(0,0,0,.15); }
+  .bcell.on .brom, .bcell.on .bch, .bcell.on .bnum{ color:#fff; }
+  .scaleref{ font-size:.85rem; color:var(--muted); margin-bottom:12px; } .scaleref .reflbl{ font-weight:700; color:var(--ink); }
   .toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); font-weight:700; font-size:.9rem; padding:11px 18px; border-radius:10px; opacity:0; transition:.2s; z-index:9999; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
@@ -132,7 +140,10 @@
     C:  { bass:[36,43], pad:[60,64,67] },   // C2 G2 · C E G
     G:  { bass:[31,38], pad:[55,59,62] },   // G1 D2 · G B D
     F:  { bass:[29,36], pad:[53,57,60] },   // F1 C2 · F A C
-    Am: { bass:[33,40], pad:[57,60,64] }    // A1 E2 · A C E
+    Am: { bass:[33,40], pad:[57,60,64] },   // A1 E2 · A C E
+    C7: { bass:[36,43], pad:[60,64,67,70] },// C2 G2 · C E G B♭
+    F7: { bass:[29,36], pad:[53,57,60,63] },// F1 C2 · F A C E♭
+    G7: { bass:[31,38], pad:[55,59,62,65] } // G1 D2 · G B D F
   };
   var TUNES = [
     { name:'Mary Had a Little Lamb', mel:MARY, chords:['C','C','G','C','C','C','G','C'], bpm:96 },
@@ -142,6 +153,12 @@
   // Belt 2: major blues scale (C D Eb E G A) — the Eb (63) is the blue note; and a busy phrase for the space drill
   var BLUESCALE = [60,62,63,64,67,69,72, 69,67,64,63,62,[60,2]].map(mk);
   var BUSY = [67,69,67,64,62,64,67,69,67,64,62,60].map(mk); // G A G E | D E G A | G E D C — a long run with no breath
+  // 2.4 lick: bar 1 is the classic ♭3→3 curl (fixed); the answer's three notes are the student's
+  var LICK = [ {m:67,d:1},{m:63,d:1},{m:64,d:1},{m:67,d:1}, {rest:true,d:1},{m:69,d:1,chg:true},{m:67,d:1,chg:true},{m:64,d:1,chg:true}, {m:60,d:2} ];
+  var BLUES_PAL = [60,62,63,64,67,69,70,72];             // C D E♭ E G A B♭ C — palette for bending a blues lick
+  var BLUES_MINOR = [60,63,65,66,67,70,72, 70,67,66,65,63,[60,2]].map(mk); // C E♭ F G♭ G B♭ C — the minor blues scale (adds the ♭5)
+  var BLUES12 = ['C7','C7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7']; // the 12-bar blues in C
+  var ROMAN = { C7:'I', F7:'IV', G7:'V' };
 
   /* ===== audio ===== */
   var actx=null, master=null, timers=[];
@@ -229,6 +246,17 @@
       while(jamNext<ahead){ scheduleBar(jamNext, spb, tune.chords[jamBar % tune.chords.length]); jamNext+=4*spb; jamBar++; } }, 60); }
   function stopJam(){ jamOn=false; if(jamTimer){ clearInterval(jamTimer); jamTimer=null; } stopPlay(); }
 
+  /* ===== 12-bar blues jam: loop I–IV–V with a bar-grid highlight ===== */
+  var bluesOn=false, bluesTimer=null, bluesNext=0, bluesBar=0;
+  function hiBar(i){ var cs=document.querySelectorAll('.bcell'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('on'); var e=el('bcell'+i); if(e) e.classList.add('on'); }
+  function startBlues(chords, bpm){ audio(); stopBlues(); bluesOn=true; var spb=60/bpm; bluesNext=actx.currentTime+0.15; bluesBar=0;
+    bluesTimer=setInterval(function(){ if(!bluesOn) return; var ahead=actx.currentTime+0.5;
+      while(bluesNext<ahead){ var bi=bluesBar%chords.length; scheduleBar(bluesNext, spb, chords[bi]);
+        (function(cell,when){ timers.push(setTimeout(function(){ hiBar(cell); }, Math.max(0,(when-actx.currentTime)*1000))); })(bi, bluesNext);
+        bluesNext+=4*spb; bluesBar++; } }, 60); }
+  function stopBlues(){ bluesOn=false; if(bluesTimer){ clearInterval(bluesTimer); bluesTimer=null; } stopPlay(); var cs=document.querySelectorAll('.bcell.on'); for(var i=0;i<cs.length;i++) cs[i].classList.remove('on'); }
+  function bluesGridHTML(chords){ return chords.map(function(c,i){ return '<div class="bcell" id="bcell'+i+'"><span class="bnum">'+(i+1)+'</span><span class="brom">'+(ROMAN[c]||'')+'</span><span class="bch">'+c+'</span></div>'; }).join(''); }
+
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
   function info(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1;
@@ -313,6 +341,15 @@
         + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button><button class="btn" id="mCheck">Check</button></div>'
         + '<div class="fb" id="fb"></div></div>';
     }
+    if(ex && ex.type==='bluesjam'){
+      return '<div class="ex"><div class="exh">'+(ex.capstone?'Capstone':'The form')+'</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="bluesgrid" id="bluesGrid"></div>'
+        + '<div class="scaleref"><span class="reflbl">Your notes:</span> '+ex.scaleName+'</div>'
+        + (ex.mic ? '<div class="lab" id="lfLab"><div class="heard" id="lfHeard">—</div><div class="labstatus" id="lfStatus">Optional: enable your mic to see the notes you play.</div></div>' : '')
+        + '<div class="row"><button class="btn blue" id="bPlay">&#9654; Play the blues</button><button class="btn" id="bStop">Stop</button>'+(ex.mic?'<button class="btn" id="lfMic">Enable microphone</button>':'')+'</div>'
+        + '<div class="fb" id="fb2">'+ex.goal+'</div>'
+        + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">'+ex.doneLabel+'</button></div></div>';
+    }
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
   function wireExercise(ex){
@@ -325,7 +362,8 @@
       el('mCheck').addEventListener('click', checkSpace);
     }
     if(ex && ex.type==='embellish'){
-      work=ex.mel.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg }; });
+      pal = ex.pal || PSET;
+      work=ex.mel.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg, rest:!!n.rest }; });
       drawWork('workStaff');
       el('mPlay').addEventListener('click', function(){ playMelody(work, ex.bpm||100); });
       el('mStop').addEventListener('click', stopPlay);
@@ -363,6 +401,13 @@
       el('lfMic').addEventListener('click', ensureMic);
       el('mDone').addEventListener('click', function(){ stopJam(); var fb=el('fb2'); if(fb){ fb.textContent='🎉 You played the head and flew your own chorus — that’s improvising! White belt earned.'; fb.className='fb ok'; } onSolve(); });
     }
+    if(ex && ex.type==='bluesjam'){
+      el('bluesGrid').innerHTML=bluesGridHTML(ex.chords);
+      if(ex.mic){ heardEl=el('lfHeard'); labEl=el('lfLab'); statusEl=el('lfStatus'); el('lfMic').addEventListener('click', ensureMic); }
+      el('bPlay').addEventListener('click', function(){ startBlues(ex.chords, ex.bpm||96); });
+      el('bStop').addEventListener('click', function(){ stopBlues(); });
+      el('mDone').addEventListener('click', function(){ stopBlues(); var fb=el('fb2'); if(fb){ fb.textContent=ex.win; fb.className='fb ok'; } onSolve(); });
+    }
   }
 
   /* ===== course ===== */
@@ -385,6 +430,7 @@
           { html:"On the staff below, four notes glow <b>blue</b> — those are yours. Tap one and it hops to the next note in the pentatonic; keep tapping to try them all. Each tap plays it, so you can hear your choice." },
           { t:'qa', q:"But what if I pick a bad one?", a:"There are no bad ones here — that's the point of the pentatonic sandbox. All five work. Change all four blue notes, hit Play, and listen to a melody that's now a little bit <em>yours</em>." }
         ], ex:{ type:'embellish', title:'Make it your own', mel:MARY_EMB, bpm:100,
+          embWin:'That’s YOUR Mary now — and because you stayed in the pentatonic, every choice still sings. That, right there, is improvising. 🎉',
           desc:'The four blue notes are yours — tap each to move it to another pentatonic note (it plays as you tap). Change all four, then Play the whole tune and hear your version.' } },
       { num:'1.4', title:'Call & response', teach:[
           { html:"Music is a conversation. One phrase asks a <b>question</b>, the next gives an <b>answer</b> — that back-and-forth is <b>call and response</b>, the heartbeat of the blues, of jazz, of all of it." },
@@ -419,16 +465,47 @@
           { html:"But here's the trap: a rest between <em>every</em> note isn't phrasing — that's a <b>stutter</b>. Keep your notes together into a whole idea, <em>then</em> take the breath. B.B. King said more with one held phrase and a silence than most players say in a flurry." },
           { t:'qa', q:"So where do the breaths go?", a:"Between ideas, not between notes. In the line below, play a few notes that belong together — a sentence — then tap out the notes where you want to breathe before the next idea. Keep your sentences whole." }
         ], ex:{ type:'space', title:'Give it some air', phrase:BUSY, bpm:96,
-          desc:'This line runs on every beat — no breath. Group it into <b>sentences</b>: keep a few notes in a row as one idea, then tap notes out to breathe before the next. A rest between every note is a stutter — keep your phrases whole.' } }
+          desc:'This line runs on every beat — no breath. Group it into <b>sentences</b>: keep a few notes in a row as one idea, then tap notes out to breathe before the next. A rest between every note is a stutter — keep your phrases whole.' } },
+      { num:'2.3', title:'The 12-bar blues', teach:[
+          { html:"One note gave you the blues sound. Now the <b>form</b> — the 12-bar road that nearly every blues in the world drives down. Twelve bars, three chords, then it loops. Learn it once and you can sit in almost anywhere." },
+          { html:"It's built from three chords: the <b>I</b> (home — C7), the <b>IV</b> (F7), and the <b>V</b> (G7). Watch the grid light up: four bars of I, two of IV, back to I, then the <b>turnaround</b> — V, IV, I, V — which spins you round to the top again." },
+          { t:'qa', q:"Do I have to memorise all twelve?", a:"You'll feel it faster than you'd think — it's the same shape every time. Hit Play, watch the bar light up, and count along: 1-2-3-4, 2-2-3-4… When you can feel where the IV and the V land, you own the form. Your blues scale sits over the <em>whole</em> thing." }
+        ], ex:{ type:'bluesjam', title:'The 12-bar blues', chords:BLUES12, bpm:92,
+          desc:'Twelve bars, three chords, looping forever. Press Play and watch each bar light up as it goes by — count along and feel the shape.',
+          scaleName:'C major blues — C D E♭ E G A', goal:'Play it and count along. Bar 5 jumps up to the IV; the last two bars are the turnaround (V–IV–I–V) that sends you round again.',
+          doneLabel:'I can feel the 12 bars', win:'That’s the form — twelve bars, looping forever. Now you can solo over it.' } },
+      { num:'2.4', title:'Steal this lick', teach:[
+          { html:"Every blues player carries a bag of <b>licks</b> — little ready-made phrases they mix and match. A lick is just a sentence you've said so often it plays itself. Here's a classic one to steal." },
+          { html:"Listen to bar 1: <b>G</b>, then the blue slide <b>E♭ → E</b>, back to <b>G</b>. That ♭3 → 3 curl is pure blues. Then a <b>breath</b> (there's your space from 2.2), and a little answer that lands home on <b>C</b>." },
+          { t:'qa', q:"I can just copy it?", a:"That's exactly how everyone learns — steal a lick, then bend it. Bar 1 is mine and stays put. The three green notes in the answer are <b>yours</b> — tap each to move it around the blues scale, then play the whole lick and make the answer your own." }
+        ], ex:{ type:'embellish', title:'Steal this lick', mel:LICK, bpm:96, pal:BLUES_PAL,
+          embWin:'That’s YOUR lick now — same blue curl, your own answer. Steal it, bend it, and it belongs to you. 🎉',
+          desc:'Bar 1 is the classic blues curl — keep it. The three green notes in the answer are yours: tap each to move it through the blues scale, then Play the whole lick and hear your version.' } },
+      { num:'2.5', title:'The other blue note', teach:[
+          { html:"There's a second blue note, darker than the first: the <b>flat five</b> (in C, that's <b>G♭</b>). It lives right between the 4 and the 5, and it sounds <em>mean</em> — in the best way." },
+          { html:"You don't sit on it — you <b>pass through</b> it. Slide <b>4 → ♭5 → 5</b> (F → G♭ → G) and out comes that gritty, rock-and-roll growl. Add it to your minor pentatonic and you've got <b>the blues scale</b> everyone means when they say those words." },
+          { t:'qa', q:"So which blues scale do I use?", a:"Both! The bright <b>major blues</b> from 2.1 sings sweet; this darker <b>minor blues</b> growls. Great players flip between them mid-solo. Play this one below — lean on that ♭5 as you slide past it, and hear the grit." }
+        ], ex:{ type:'melody', title:'The blues scale (minor)', mel:BLUES_MINOR, bpm:100,
+          desc:'C E♭ F G♭ G B♭ C — the minor pentatonic with the ♭5 (G♭) slipped in. Play it up and down and feel the ♭5 as a passing tone between the 4 and the 5.' } },
+      { num:'2.6', title:'Solo over the blues', teach:[
+          { html:"Yellow-belt time. It all comes together now: the <b>form</b> (twelve bars), the <b>blue notes</b>, <b>space</b>, and <b>licks</b>. The 12-bar loop plays under you — and you solo over the whole thing." },
+          { html:"No head to play this time. It's all you. Start simple: a lick, then a breath. Lean on the E♭, pass through the ♭5, leave room to breathe — and land your phrases <b>home on C</b> when the I comes back around at the top." },
+          { t:'qa', q:"A whole chorus, on my own?", a:"A whole chorus. Turn on the mic if you'd like to watch your notes, hit Play, and take twelve bars — then take twelve more. When you've flown a chorus that sounds like <em>you</em>, claim your yellow belt." }
+        ], ex:{ type:'bluesjam', title:'Solo over the blues', chords:BLUES12, bpm:92, capstone:true, mic:true,
+          desc:'The 12-bar blues loops under you — no head this time, just your solo. Take as many choruses as you like, then claim your belt.',
+          scaleName:'C blues — C D E♭ E G A, plus the ♭5 (G♭) as you pass by',
+          goal:'Play the 12-bar loop and solo over it. Lick, breath, lick. Land home on C at the top of each chorus. Take as long as you like.',
+          doneLabel:'I flew a chorus 🎷', win:'🎉 You soloed a full chorus over the blues — form, blue notes, space and all. Yellow belt earned!' } }
     ]},
     { title:'Belt 3 — Bluegrass', belt:'Green Belt', soon:true, blurb:'Flatpick clichés with an Appalachian master, then take a break at the jam.' }
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt }, les)); }); });
   var idx=0, solved=false, work=null;
   var PSET=[60,62,64,67,69,72];   // C major pentatonic across the melody's range
-  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam' || ex.type==='space'); }
+  var pal=PSET;                    // active palette for tap-to-change (set per embellish exercise)
+  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam' || ex.type==='space' || ex.type==='bluesjam'); }
   function playOne(m){ audio(); tone(actx.currentTime+0.02, m, 0.5); }
-  function cyclePitch(i){ var n=work[i]; var ci=PSET.indexOf(n.m); if(ci<0) ci=0; n.m=PSET[(ci+1)%PSET.length]; }
+  function cyclePitch(i){ var n=work[i]; var ci=pal.indexOf(n.m); if(ci<0) ci=0; n.m=pal[(ci+1)%pal.length]; }
   function drawWork(cid, mode){ var c=el(cid); c.innerHTML=renderMelody(work, {interactive:true, editAll: mode==='space'});
     c.querySelectorAll('[data-i]').forEach(function(g){ g.addEventListener('click', function(){ var i=+g.dataset.i;
       if(mode==='space'){ work[i].rest=!work[i].rest; if(!work[i].rest) playOne(work[i].m); }
@@ -448,9 +525,9 @@
     var isPhrase = (longest>=3 && singles<=1) || (sentences>=2 && singles===0);
     if(!isPhrase){ fb.textContent='That’s a stutter — note, gap, note, gap. Keep your notes together into one idea, THEN breathe. A sentence, then a rest.'; fb.className='fb no'; return; }
     fb.textContent='Now it speaks — a sentence, a breath, another idea. That’s phrasing, not just filling beats.'; fb.className='fb ok'; onSolve(); }
-  function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb');
-    if(changed>=total){ fb.textContent='That’s YOUR Mary now — and because you stayed in the pentatonic, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
-    else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the blue notes to make the rest your own.'; fb.className='fb no'; } }
+  function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb'); var xe=LESSONS[idx]&&LESSONS[idx].ex;
+    if(total>0 && changed>=total){ fb.textContent=(xe&&xe.embWin)||'That’s YOUR version now — and because you stayed in the scale, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
+    else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the highlighted notes to make the rest your own.'; fb.className='fb no'; } }
   function checkAnswer(){ var last=null; work.forEach(function(n){ if(n.chg) last=n; }); var pc=last?(((last.m%12)+12)%12):-1; var fb=el('fb');
     if(pc===0){ fb.textContent='Home. Hear how it settles? Ending on degree 1 — the tonic C — is what turns a phrase into an answer.'; fb.className='fb ok'; onSolve(); }
     else if(pc===2){ fb.textContent='Still hanging — that’s degree 2 (D), a question, not an answer. Tap the blue note home to C (degree 1).'; fb.className='fb no'; }
@@ -505,7 +582,7 @@
   function advance(){ if(dialogueDone) return; if(!lineDone){ finishLine(); return; } if(pageIdx<pages.length-1){ pageIdx++; showPage(); } else { dialogueDone=true; el('cont').classList.remove('show'); el('exwrap').hidden=false; } }
 
   /* ===== lesson / nav / toc ===== */
-  function renderLesson(){ stopPlay(); stopMic(); stopJam(); var L=LESSONS[idx];
+  function renderLesson(){ stopPlay(); stopMic(); stopJam(); stopBlues(); var L=LESSONS[idx];
     el('bk').textContent='LESSON '+L.num; el('btitle').textContent=L.title; el('belt').innerHTML='<span class="dot"></span>'+L.belt; el('pos').textContent='Lesson '+(idx+1)+' of '+LESSONS.length;
     el('portrait').innerHTML=MASTER_SVG;
     pages=buildPages(L.teach); pageIdx=0; dialogueDone=false; solved=false; work=null; el('scene').classList.remove('student');
