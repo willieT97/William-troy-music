@@ -48,7 +48,9 @@
   .ex .exd{ font-size:.92rem; color:#3a352a; margin:0 0 14px; }
   .staffwrap{ overflow-x:auto; background:#fff; border:2px solid #e4dcc9; border-radius:8px; padding:8px; margin-bottom:14px; }
   .staff{ display:block; }
-  .mnote.on ellipse{ fill:var(--pink)!important; stroke:var(--pink); } .mnote.on text{ fill:var(--pink); font-weight:700; }
+  .mnote.on ellipse{ fill:var(--pink)!important; stroke:var(--pink)!important; } .mnote.on text{ fill:var(--pink); font-weight:700; }
+  .mnote[data-i]:hover ellipse{ opacity:.72; } .mnote[data-i]:hover circle{ opacity:1; }
+  .fb{ font-weight:700; font-size:.9rem; margin-top:12px; min-height:1.2em; } .fb.ok{ color:var(--green); } .fb.no{ color:#C0453B; }
   .row{ display:flex; gap:10px; flex-wrap:wrap; }
   .btn{ cursor:pointer; border:2.5px solid var(--ink); border-radius:10px; background:var(--card); color:var(--ink); font-family:var(--disp); font-weight:800; font-size:.98rem; padding:10px 18px; box-shadow:3px 3px 0 var(--ink); }
   .btn:active{ transform:translate(3px,3px); box-shadow:none; } .btn[disabled]{ opacity:.5; }
@@ -106,6 +108,7 @@
     .map(function(x){ return Array.isArray(x)?{m:x[0],d:x[1]}:{m:x,d:1}; });
   var CPENT = [60,62,64,67,69,72,69,67,64,62,[60,2]]
     .map(function(x){ return Array.isArray(x)?{m:x[0],d:x[1]}:{m:x,d:1}; });
+  var MARY_EMB = MARY.map(function(n,i){ return { m:n.m, d:n.d, chg:[5,8,18,22].indexOf(i)>=0 }; });
 
   /* ===== audio ===== */
   var actx=null, master=null, timers=[];
@@ -122,7 +125,8 @@
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
   function info(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1, ls=NAT[pc]; if(ls==null) ls=NAT[(pc+11)%12]; return { step:oct*7+ls, name:LET[ls] }; }
-  function renderMelody(mel){
+  function renderMelody(mel, opts){
+    opts=opts||{}; var inter=!!opts.interactive;
     var padL=44, gap=9, yBot=64, h=110, x=padL, beat=0;
     var w=padL+10; mel.forEach(function(n){ w+=Math.max(32,n.d*24); });
     var s='';
@@ -130,12 +134,17 @@
     s+='<text x="12" y="'+(yBot-1)+'" font-family="Georgia,serif" font-size="48" fill="#17140E">𝄞</text>';
     mel.forEach(function(n,i){
       var nf=info(n.m), y=yBot-(nf.step-30)*(gap/2), wd=Math.max(32,n.d*24), cx=x+wd/2;
-      var led=''; if(nf.step<=28 && (30-nf.step)%2===0){ led='<line x1="'+(cx-9)+'" y1="'+y+'" x2="'+(cx+9)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>'; }
+      var chg=inter && n.chg, moved=chg && n.m0!=null && n.m!==n.m0;
+      var col = chg ? (moved?'#1F9D55':'#2438C8') : '#17140E';
+      var led=(nf.step<=28 && (30-nf.step)%2===0) ? '<line x1="'+(cx-9)+'" y1="'+y+'" x2="'+(cx+9)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>' : '';
       var open=n.d>=2, stem=n.d<4;
-      var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.3" ry="4.7" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':'#17140E')+'" stroke="#17140E" stroke-width="1.7"/>';
-      var st=stem?'<line x1="'+(cx+5.9)+'" y1="'+(y-1)+'" x2="'+(cx+5.9)+'" y2="'+(y-27)+'" stroke="#17140E" stroke-width="1.7"/>':'';
-      var lbl='<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="#6F6757">'+nf.name+'</text>';
-      s+='<g class="mnote" id="mn'+i+'">'+led+head+st+lbl+'</g>';
+      var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.4" ry="4.8" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':col)+'" stroke="'+col+'" stroke-width="'+(chg?2.4:1.7)+'"/>';
+      var ring = chg ? '<circle cx="'+cx+'" cy="'+y+'" r="10.5" fill="none" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="2 2" opacity=".75"/>' : '';
+      var st=stem?'<line x1="'+(cx+6)+'" y1="'+(y-1)+'" x2="'+(cx+6)+'" y2="'+(y-27)+'" stroke="'+col+'" stroke-width="1.7"/>':'';
+      var lbl='<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="'+(chg?col:'#6F6757')+'" font-weight="'+(chg?'700':'400')+'">'+nf.name+'</text>';
+      var hit = chg ? '<rect x="'+x+'" y="6" width="'+wd+'" height="'+(h-24)+'" fill="transparent"/>' : '';
+      var attr = chg ? ' data-i="'+i+'" style="cursor:pointer"' : '';
+      s+='<g class="mnote" id="mn'+i+'"'+attr+'>'+hit+led+ring+head+st+lbl+'</g>';
       x+=wd; beat+=n.d;
       if(beat%4===0 && i<mel.length-1){ s+='<line x1="'+x+'" y1="'+(yBot-4*gap)+'" x2="'+x+'" y2="'+yBot+'" stroke="#17140E" stroke-width="1.3"/>'; }
     });
@@ -149,10 +158,23 @@
         + '<div class="staffwrap">'+renderMelody(ex.mel)+'</div>'
         + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button></div></div>';
     }
+    if(ex && ex.type==='embellish'){
+      return '<div class="ex"><div class="exh">Your turn</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="staffwrap" id="workStaff"></div>'
+        + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button><button class="btn" id="mCheck">Check</button></div>'
+        + '<div class="fb" id="fb"></div></div>';
+    }
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
   function wireExercise(ex){
     if(ex && ex.type==='melody'){ el('mPlay').addEventListener('click', function(){ playMelody(ex.mel, ex.bpm||100); }); el('mStop').addEventListener('click', stopPlay); }
+    if(ex && ex.type==='embellish'){
+      work=ex.mel.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg }; });
+      drawWork('workStaff');
+      el('mPlay').addEventListener('click', function(){ playMelody(work, ex.bpm||100); });
+      el('mStop').addEventListener('click', stopPlay);
+      el('mCheck').addEventListener('click', checkEmbellish);
+    }
   }
 
   /* ===== course ===== */
@@ -169,12 +191,28 @@
           { html:"In the key of C those five are <b>C · D · E · G · A</b>. No note in there can truly clash with another — which makes it the safest, sweetest sandbox in all of music to start improvising in." },
           { html:"Play the scale below and listen. Then play Mary again — <em>every</em> note she sings is one of these five. The melody was living inside the scale the whole time." }
         ], ex:{ type:'melody', title:'C major pentatonic', mel:CPENT, bpm:120,
-          desc:'Five notes: C D E G A (then C on top and back down). Play it up and down until it sits in your ear.' } }
+          desc:'Five notes: C D E G A (then C on top and back down). Play it up and down until it sits in your ear.' } },
+      { num:'1.3', title:'Make it your own', teach:[
+          { html:"Time to <b>fly</b> a little. You know Mary, and you know she lives in the pentatonic. So here's the leap: change a few of her notes — to <em>other</em> notes in the scale — and she'll still sound good. That's the whole magic of the pentatonic." },
+          { html:"On the staff below, four notes glow <b>blue</b> — those are yours. Tap one and it hops to the next note in the pentatonic; keep tapping to try them all. Each tap plays it, so you can hear your choice." },
+          { t:'qa', q:"But what if I pick a bad one?", a:"There are no bad ones here — that's the point of the pentatonic sandbox. All five work. Change all four blue notes, hit Play, and listen to a melody that's now a little bit <em>yours</em>." }
+        ], ex:{ type:'embellish', title:'Make it your own', mel:MARY_EMB, bpm:100,
+          desc:'The four blue notes are yours — tap each to move it to another pentatonic note (it plays as you tap). Change all four, then Play the whole tune and hear your version.' } }
     ]},
     { title:'Belt 2 — The Blues', belt:'Yellow Belt', soon:true, blurb:'Add the blue note and take your first solo over a 12-bar blues.' }
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt }, les)); }); });
-  var idx=0;
+  var idx=0, solved=false, work=null;
+  var PSET=[60,62,64,67,69,72];   // C major pentatonic across the melody's range
+  function isGatedType(ex){ return !!ex && ex.type==='embellish'; }
+  function playOne(m){ audio(); tone(actx.currentTime+0.02, m, 0.5); }
+  function cyclePitch(i){ var n=work[i]; var ci=PSET.indexOf(n.m); if(ci<0) ci=0; n.m=PSET[(ci+1)%PSET.length]; }
+  function drawWork(cid){ var c=el(cid); c.innerHTML=renderMelody(work, {interactive:true});
+    c.querySelectorAll('[data-i]').forEach(function(g){ g.addEventListener('click', function(){ var i=+g.dataset.i; cyclePitch(i); playOne(work[i].m); drawWork(cid); }); }); }
+  function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb');
+    if(changed>=total){ fb.textContent='That’s YOUR Mary now — and because you stayed in the pentatonic, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
+    else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the blue notes to make the rest your own.'; fb.className='fb no'; } }
+  function onSolve(){ if(!solved){ solved=true; markDone(idx); renderNav(); } }
 
   /* ===== progress: save + sequential unlock + account sync + paywall ===== */
   var PKEY='ltf.progress.v1', COURSE_ID='learning-to-fly', PRODUCT='course:learning-to-fly';
@@ -214,11 +252,13 @@
   function renderLesson(){ stopPlay(); var L=LESSONS[idx];
     el('bk').textContent='LESSON '+L.num; el('btitle').textContent=L.title; el('belt').innerHTML='<span class="dot"></span>'+L.belt; el('pos').textContent='Lesson '+(idx+1)+' of '+LESSONS.length;
     el('portrait').innerHTML=MASTER_SVG;
-    pages=buildPages(L.teach); pageIdx=0; dialogueDone=false; el('scene').classList.remove('student');
+    pages=buildPages(L.teach); pageIdx=0; dialogueDone=false; solved=false; work=null; el('scene').classList.remove('student');
     el('exwrap').hidden=true; el('exwrap').innerHTML=renderExercise(L.ex); wireExercise(L.ex);
     showPage(); renderNav(); buildToc(); window.scrollTo({top:0, behavior:reduced?'auto':'smooth'}); }
-  function renderNav(){ el('prev').disabled=(idx===0); var slot=el('nextslot');
-    if(idx<LESSONS.length-1){ if(paywalled(idx+1)){ slot.innerHTML='<button class="btn ink" id="goPro">🔒 Unlock the rest — Go Pro</button>'; el('goPro').addEventListener('click', openCoursePaywall); }
+  function renderNav(){ el('prev').disabled=(idx===0); var L=LESSONS[idx], slot=el('nextslot');
+    if(idx<LESSONS.length-1){
+      if(paywalled(idx+1)){ slot.innerHTML='<button class="btn ink" id="goPro">🔒 Unlock the rest — Go Pro</button>'; el('goPro').addEventListener('click', openCoursePaywall); }
+      else if(isGatedType(L.ex) && !solved && !isDone(idx)){ slot.innerHTML='<span class="endnote">Finish the exercise above, then fly on →</span>'; }
       else { slot.innerHTML='<button class="btn ink" id="next">Next →</button>'; el('next').addEventListener('click', function(){ markDone(idx); go(idx+1); }); } }
     else { slot.innerHTML='<span class="endnote">The end of the belt for now — more of the flight is being written. Come back soon.</span>'; } }
   function go(i){ i=Math.max(0,Math.min(LESSONS.length-1,i)); if(i>maxOpen()) return; if(paywalled(i)){ openCoursePaywall(); return; } idx=i; progress.last=idx; saveProgress(); renderLesson(); }
