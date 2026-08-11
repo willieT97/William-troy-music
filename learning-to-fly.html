@@ -58,13 +58,19 @@
   .nav{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:22px; padding-top:16px; border-top:2px solid var(--ink); }
   .nav a{ font-family:var(--mono); font-size:.62rem; letter-spacing:.06em; color:var(--blue); text-decoration:none; }
   .endnote{ font-family:var(--mono); font-size:.62rem; color:var(--muted); text-align:right; max-width:280px; }
+  .course .bird{ width:38px; height:38px; vertical-align:-7px; margin-right:8px; }
+  .btn.go{ background:var(--green); color:#fff; }
+  .lab{ text-align:center; border:2px solid #e4dcc9; border-radius:10px; background:#fff; padding:14px; margin-bottom:12px; }
+  .lab .heard{ font-family:var(--disp); font-weight:800; font-size:2.6rem; line-height:1; } .lab .heard .oct{ font-size:1rem; color:var(--muted); vertical-align:super; }
+  .lab .labstatus{ font-family:var(--mono); font-size:.68rem; letter-spacing:.04em; color:var(--muted); margin-top:6px; min-height:1em; }
+  .lab.live{ border-color:var(--green); }
   .toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); font-weight:700; font-size:.9rem; padding:11px 18px; border-radius:10px; opacity:0; transition:.2s; z-index:9999; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 
 <div class="wrap">
   <header class="top">
-    <div class="course">Learning to Fly</div>
+    <div class="course"><svg class="bird" viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="52" rx="26" ry="28" fill="#E0922A" stroke="#17140E" stroke-width="4"/><path d="M50 30 Q70 30 72 52 Q72 72 50 76 Z" fill="#f2b45a"/><circle cx="42" cy="46" r="11" fill="#FFFDF7" stroke="#17140E" stroke-width="3"/><circle cx="44" cy="47" r="4" fill="#17140E"/><path d="M28 50 L14 46 L28 42 Z" fill="#FF4E86" stroke="#17140E" stroke-width="3" stroke-linejoin="round"/><path d="M40 24 Q46 12 52 22" stroke="#17140E" stroke-width="3" fill="none" stroke-linecap="round"/></svg>Learning to Fly</div>
     <div class="belt" id="belt"></div>
     <div class="lessline"><span id="pos"></span><button class="tocbtn" id="tocBtn">☰ Lessons</button></div>
   </header>
@@ -89,18 +95,20 @@
   var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function toast(m){ var t=el('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){ t.classList.remove('show'); },2200); }
 
-  /* ===== the master (a little songbird mentor) ===== */
+  /* ===== the master (Belt 1: a warm human music teacher; bird stays as the course emblem) ===== */
   var MASTER_SVG = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
-    + '<ellipse cx="50" cy="88" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
-    + '<path d="M20 78 Q50 84 80 78" stroke="#8a6a3a" stroke-width="4" fill="none" stroke-linecap="round"/>'
-    + '<ellipse cx="50" cy="52" rx="26" ry="28" fill="#E0922A" stroke="#17140E" stroke-width="3"/>'
-    + '<path d="M50 30 Q70 30 72 52 Q72 72 50 76 Z" fill="#f2b45a" stroke="#17140E" stroke-width="2.5"/>'
-    + '<circle cx="42" cy="46" r="12" fill="#FFFDF7" stroke="#17140E" stroke-width="2.5"/>'
-    + '<circle cx="44" cy="47" r="4.5" fill="#17140E"/><circle cx="45.6" cy="45.6" r="1.4" fill="#fff"/>'
-    + '<path d="M28 50 L14 46 L28 42 Z" fill="#FF4E86" stroke="#17140E" stroke-width="2.5" stroke-linejoin="round"/>'
-    + '<path d="M50 40 Q64 46 62 62 Q54 60 50 54 Z" fill="#c97f1f" stroke="#17140E" stroke-width="2"/>'
-    + '<path d="M40 24 Q46 12 52 22" stroke="#17140E" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
-    + '<path d="M62 74 L70 84 M52 76 L56 88" stroke="#c97f1f" stroke-width="3" stroke-linecap="round"/>'
+    + '<ellipse cx="50" cy="95" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
+    + '<path d="M16 100 Q20 72 50 70 Q80 72 84 100 Z" fill="#2438C8" stroke="#17140E" stroke-width="3"/>'
+    + '<path d="M42 72 L50 82 L58 72" fill="none" stroke="#17140E" stroke-width="2.4"/>'
+    + '<rect x="43" y="58" width="14" height="16" rx="5" fill="#E8B183" stroke="#17140E" stroke-width="2.6"/>'
+    + '<ellipse cx="50" cy="42" rx="21" ry="23" fill="#F0C29A" stroke="#17140E" stroke-width="3"/>'
+    + '<path d="M28 40 Q26 16 50 16 Q74 16 72 40 Q67 28 50 28 Q33 28 28 40 Z" fill="#4a3220" stroke="#17140E" stroke-width="2.6"/>'
+    + '<circle cx="41" cy="43" r="6.5" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
+    + '<circle cx="59" cy="43" r="6.5" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
+    + '<line x1="47.5" y1="43" x2="52.5" y2="43" stroke="#17140E" stroke-width="2"/>'
+    + '<circle cx="41" cy="43" r="2.2" fill="#17140E"/><circle cx="59" cy="43" r="2.2" fill="#17140E"/>'
+    + '<path d="M41 54 Q50 61 59 54" fill="none" stroke="#17140E" stroke-width="2.6" stroke-linecap="round"/>'
+    + '<g transform="translate(62 86)"><circle cx="0" cy="5" r="2.6" fill="#FF4E86" stroke="#17140E" stroke-width="1.6"/><line x1="2.4" y1="5" x2="2.4" y2="-5" stroke="#17140E" stroke-width="1.6"/><path d="M2.4 -5 L7 -3.5" fill="none" stroke="#17140E" stroke-width="1.6"/></g>'
     + '</svg>';
 
   /* ===== melodies (key of C — midi + duration in beats) ===== */
@@ -132,6 +140,49 @@
     call.forEach(function(n){ tone(t+beat*spb, n.m, Math.max(0.14, n.d*spb*0.9)); beat+=n.d; });
     for(var k=0;k<4;k++){ click(t+(beat+k)*spb); }   // four clicks of space for your answer
   }
+
+  /* ===== mic pitch detection (McLeod Pitch Method — same engine as the Listening Lab) ===== */
+  var NOTES12=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  var FFT=2048, CLARITY_MIN=0.86, RMS_MIN=0.008, KT=0.9;
+  function detectPitch(buf, sr){
+    var SIZE=buf.length, rms=0, i;
+    for(i=0;i<SIZE;i++) rms+=buf[i]*buf[i]; rms=Math.sqrt(rms/SIZE);
+    if(rms<RMS_MIN) return { freq:-1, clarity:0, rms:rms };
+    var maxLag=SIZE>>1, nsdf=new Float32Array(maxLag), tau;
+    for(tau=0;tau<maxLag;tau++){ var acf=0,m=0; for(i=0;i<SIZE-tau;i++){ var a=buf[i],b=buf[i+tau]; acf+=a*b; m+=a*a+b*b; } nsdf[tau]=m>0?(2*acf)/m:0; }
+    tau=0; while(tau<maxLag-1 && nsdf[tau]>0) tau++;
+    var peaks=[];
+    while(tau<maxLag-1){ if(nsdf[tau]>0){ var mT=tau,mV=nsdf[tau]; while(tau<maxLag-1 && nsdf[tau]>0){ if(nsdf[tau]>mV){mV=nsdf[tau];mT=tau;} tau++; } peaks.push([mT,mV]); } else tau++; }
+    if(!peaks.length) return { freq:-1, clarity:0, rms:rms };
+    var gMax=0; for(i=0;i<peaks.length;i++) if(peaks[i][1]>gMax) gMax=peaks[i][1];
+    var thr=KT*gMax, chosen=peaks[0];
+    for(i=0;i<peaks.length;i++){ if(peaks[i][1]>=thr){ chosen=peaks[i]; break; } }
+    var pt=chosen[0], bt=pt;
+    if(pt>0 && pt<maxLag-1){ var x1=nsdf[pt-1],x2=nsdf[pt],x3=nsdf[pt+1],d=x1-2*x2+x3; if(d!==0) bt=pt+0.5*(x1-x3)/d; }
+    return { freq: sr/bt, clarity:chosen[1], rms:rms };
+  }
+  function freqToMidi(f){ return Math.round(69 + 12*Math.log2(f/440)); }
+  var micStream=null, mAn=null, mBuf=null, micRunning=false;
+  var heardEl=null, labEl=null, statusEl=null;
+  var capturing=false, answerNotes=[], armed=true, rmsSlow=0;
+  function ensureMic(){
+    audio(); if(micRunning) return;
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ if(statusEl) statusEl.textContent='This browser blocks the mic — open the site over https.'; return; }
+    navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } }).then(function(s){
+      micStream=s; var src=actx.createMediaStreamSource(s); mAn=actx.createAnalyser(); mAn.fftSize=FFT; mBuf=new Float32Array(FFT); src.connect(mAn);
+      micRunning=true; var b=el('lfMic'); if(b){ b.textContent='● Mic live'; b.classList.add('go'); } if(labEl) labEl.classList.add('live'); if(statusEl) statusEl.textContent='Listening — hear a call, then answer it.';
+      requestAnimationFrame(micLoop);
+    }).catch(function(err){ if(statusEl) statusEl.textContent = (err&&err.name==='NotAllowedError') ? 'Mic blocked — allow it in the address bar.' : 'Mic error — try again.'; });
+  }
+  function micLoop(){ if(!micRunning) return; requestAnimationFrame(micLoop); if(!mAn) return;
+    mAn.getFloatTimeDomainData(mBuf); var r=detectPitch(mBuf, actx.sampleRate), freq=r.freq, rms=r.rms, clar=r.clarity;
+    if(freq>0 && clar>=CLARITY_MIN){ var mm=freqToMidi(freq); if(heardEl) heardEl.innerHTML=NOTES12[((mm%12)+12)%12]+'<span class="oct">'+(Math.floor(mm/12)-1)+'</span>'; }
+    var attack = rms>rmsSlow*2.4 && rms>0.03; rmsSlow=rmsSlow*0.9+rms*0.1;
+    var valid = freq>0 && clar>=CLARITY_MIN && freq>60 && freq<2000;
+    if(capturing && valid && armed && attack){ answerNotes.push({ midi:freqToMidi(freq) }); armed=false; }
+    if(rms<0.012) armed=true;
+  }
+  function stopMic(){ micRunning=false; capturing=false; if(micStream){ try{ micStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} micStream=null; } mAn=null; heardEl=null; labEl=null; statusEl=null; }
 
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
@@ -183,9 +234,10 @@
     }
     if(ex && ex.type==='freecall'){
       return '<div class="ex"><div class="exh">Trade with me</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
-        + '<div class="row"><button class="btn blue" id="mCall">&#9654; Hear a call</button><button class="btn" id="mStop">Stop</button></div>'
-        + '<div class="fb" id="fb2">Aim: after the call hangs on D, answer into the clicks and land home on C.</div>'
-        + '<div class="row" style="margin-top:10px"><button class="btn ink" id="mDone">I’ve got it — fly on →</button></div></div>';
+        + '<div class="lab" id="lfLab"><div class="heard" id="lfHeard">—</div><div class="labstatus" id="lfStatus">Enable your mic, then hear a call and answer it.</div></div>'
+        + '<div class="row"><button class="btn" id="lfMic">Enable microphone</button><button class="btn blue" id="mCall">&#9654; Hear a call</button><button class="btn" id="mStop">Stop</button></div>'
+        + '<div class="fb" id="fb2">Goal: after the call hangs on D, answer into the clicks and land home on C.</div>'
+        + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">Fly on →</button></div></div>';
     }
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
@@ -207,9 +259,11 @@
       el('mCheck').addEventListener('click', checkAnswer);
     }
     if(ex && ex.type==='freecall'){
-      el('mCall').addEventListener('click', function(){ playFreeCall(genCall(), ex.bpm||88); });
-      el('mStop').addEventListener('click', stopPlay);
-      el('mDone').addEventListener('click', function(){ var fb=el('fb2'); fb.textContent='Nice — you’re trading fours with the pentatonic. That’s call and response.'; fb.className='fb ok'; onSolve(); });
+      heardEl=el('lfHeard'); labEl=el('lfLab'); statusEl=el('lfStatus');
+      el('lfMic').addEventListener('click', ensureMic);
+      el('mCall').addEventListener('click', function(){ tradeCall(ex.bpm||88); });
+      el('mStop').addEventListener('click', function(){ stopPlay(); capturing=false; });
+      el('mDone').addEventListener('click', function(){ var fb=el('fb2'); if(fb){ fb.textContent='Nice trading — that’s call and response. Fly on when you’re ready.'; fb.className='fb ok'; } onSolve(); });
     }
   }
 
@@ -245,7 +299,7 @@
           { html:"No grading here, no wrong notes to fear — you've got the pentatonic, so you truly can't miss. One aim only: after my question hangs on the <b>2</b>, bring your answer <b>home to the 1</b> (C)." },
           { t:'qa', q:"And if my answer's rubbish?", a:"Then you call up another question and answer again — that's how every player who ever lived learned to talk. Trade a few with me, and when it feels natural, fly on." }
         ], ex:{ type:'freecall', title:'Trade fours', bpm:88,
-          desc:'Tap “Hear a call” — a question you can’t see, ending on D. Answer it in the four clicks that follow, landing home on C. No score, just play — trade as many as you like.' } }
+          desc:'Turn on your mic, then tap “Hear a call” — a question you can’t see, ending on D. Answer it on your instrument in the four clicks that follow, landing home on C. The lab listens and cheers when you make it home. Wired headphones help.' } }
     ]},
     { title:'Belt 2 — The Blues', belt:'Yellow Belt', soon:true, blurb:'Add the blue note and take your first solo over a 12-bar blues.' }
   ];
@@ -264,6 +318,19 @@
     if(pc===0){ fb.textContent='Home. Hear how it settles? Ending on degree 1 — the tonic C — is what turns a phrase into an answer.'; fb.className='fb ok'; onSolve(); }
     else if(pc===2){ fb.textContent='Still hanging — that’s degree 2 (D), a question, not an answer. Tap the blue note home to C (degree 1).'; fb.className='fb no'; }
     else { fb.textContent='Not settled yet — tap the blue note until it lands on C, the home note (degree 1).'; fb.className='fb no'; } }
+  function tradeCall(bpm){ audio(); stopPlay(); var call=genCall(), spb=60/bpm, t=actx.currentTime+0.12, beat=0;
+    call.forEach(function(n){ tone(t+beat*spb, n.m, Math.max(0.14, n.d*spb*0.9)); beat+=n.d; });
+    for(var k=0;k<4;k++){ click(t+(beat+k)*spb); }
+    answerNotes=[]; armed=true; rmsSlow=0;
+    var winStart=(t-actx.currentTime)*1000 + beat*spb*1000;   // ms from now until the answer clicks begin
+    setTimeout(function(){ capturing=true; if(statusEl) statusEl.textContent='Your turn — answer, and land on C!'; }, Math.max(0,winStart));
+    setTimeout(function(){ capturing=false; evalAnswer(); }, Math.max(0,winStart + 4*spb*1000 + 250)); }
+  function evalAnswer(){ var fb=el('fb2'); if(!fb) return;
+    if(!micRunning){ if(statusEl) statusEl.textContent='Turn on the mic to hear how you did — or just keep trading.'; return; }
+    if(!answerNotes.length){ if(statusEl) statusEl.textContent='Didn’t catch your answer — play a little louder into the space.'; return; }
+    var last=answerNotes[answerNotes.length-1], pc=((last.midi%12)+12)%12;
+    if(pc===0){ fb.textContent='🏠 You landed home on C — that’s a real answer! Trade another, or fly on.'; fb.className='fb ok'; onSolve(); }
+    else { fb.textContent='You landed on '+NOTES12[pc]+' — so close. Aim your next answer to finish on C (home).'; fb.className='fb no'; } }
   function onSolve(){ if(!solved){ solved=true; markDone(idx); renderNav(); } }
 
   /* ===== progress: save + sequential unlock + account sync + paywall ===== */
@@ -297,11 +364,11 @@
   function renderType(){ var out='',c=0; toks.forEach(function(t){ if('tag' in t) out+=t.tag; else { if(c<shown) out+=t.ch; c++; } }); el('line').innerHTML=out+(lineDone?'':'<span class="cursor">▍</span>'); }
   function startType(html){ toks=tokenize(html); shown=0; lineDone=false; clearInterval(typer); renderType(); if(reduced){ finishLine(); return; } typer=setInterval(function(){ shown++; renderType(); if(shown>=nChars(toks)) finishLine(); }, 16); }
   function finishLine(){ clearInterval(typer); shown=nChars(toks); lineDone=true; renderType(); var last=pageIdx>=pages.length-1; el('cont').textContent=last?'▼ let’s play':'▼ tap to continue'; el('cont').classList.add('show'); }
-  function showPage(){ var pg=pages[pageIdx]; el('scene').classList.toggle('student', pg.who==='student'); el('who').textContent=pg.who==='student'?'YOU':'THE MASTER'; startType(pg.html); }
+  function showPage(){ var pg=pages[pageIdx]; el('scene').classList.toggle('student', pg.who==='student'); el('who').textContent=pg.who==='student'?'YOU':'YOUR TEACHER'; startType(pg.html); }
   function advance(){ if(dialogueDone) return; if(!lineDone){ finishLine(); return; } if(pageIdx<pages.length-1){ pageIdx++; showPage(); } else { dialogueDone=true; el('cont').classList.remove('show'); el('exwrap').hidden=false; } }
 
   /* ===== lesson / nav / toc ===== */
-  function renderLesson(){ stopPlay(); var L=LESSONS[idx];
+  function renderLesson(){ stopPlay(); stopMic(); var L=LESSONS[idx];
     el('bk').textContent='LESSON '+L.num; el('btitle').textContent=L.title; el('belt').innerHTML='<span class="dot"></span>'+L.belt; el('pos').textContent='Lesson '+(idx+1)+' of '+LESSONS.length;
     el('portrait').innerHTML=MASTER_SVG;
     pages=buildPages(L.teach); pageIdx=0; dialogueDone=false; solved=false; work=null; el('scene').classList.remove('student');
