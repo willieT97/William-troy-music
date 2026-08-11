@@ -76,7 +76,7 @@
     hasAccess: function (product) { return window.MAAuth.isPro() || window.MAAuth.owns(product); },
     onEntitlements: function (cb) { entListeners.push(cb); if (booted) { try { cb(entitlements); } catch (e) {} } return function () { var i = entListeners.indexOf(cb); if (i >= 0) entListeners.splice(i, 1); }; },
     // re-fetch entitlements now (e.g. right after a checkout, while the webhook lands)
-    refreshEntitlements: function () { return ensureSb().then(loadEntitlements).then(function (e) { emitEnt(); return e; }); }
+    refreshEntitlements: function () { return ensureSb().then(loadEntitlements).then(function (e) { renderControl(); emitEnt(); return e; }); }
   };
 
   // ---- per-user creations (save & sync); requires a signed-in user ----
@@ -202,7 +202,9 @@
   function injectStyles() {
     if (document.getElementById('maa-styles')) return;
     var css = '' +
-      '.maa-ctl{position:fixed;top:10px;right:12px;z-index:9000;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}' +
+      '.maa-ctl{position:fixed;top:10px;right:12px;z-index:9000;display:flex;gap:8px;align-items:center;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}' +
+      '.maa-pro{cursor:pointer;text-decoration:none;border:2.5px solid #17140E;border-radius:999px;background:#FF4E86;color:#fff;font-weight:800;font-size:.8rem;line-height:1;padding:7px 12px;box-shadow:2px 2px 0 #17140E;white-space:nowrap;}' +
+      '.maa-pro:active{transform:translate(2px,2px);box-shadow:none;}' +
       '.maa-btn{cursor:pointer;border:2.5px solid #17140E;border-radius:999px;background:#fff;color:#17140E;font-weight:800;font-size:.82rem;' +
         'padding:7px 14px;box-shadow:2px 2px 0 #17140E;display:inline-flex;align-items:center;gap:7px;line-height:1;max-width:46vw;}' +
       '.maa-btn:active{transform:translate(2px,2px);box-shadow:none;}' +
@@ -246,6 +248,11 @@
   function renderControl() {
     if (!ctl) { ctl = document.createElement('div'); ctl.className = 'maa-ctl'; (document.body || document.documentElement).appendChild(ctl); }
     ctl.innerHTML = '';
+    if (user && !(window.MAAuth.isPro && window.MAAuth.isPro())) {   // signed in but not Pro → discoverable upgrade
+      var pro = document.createElement('a'); pro.className = 'maa-pro'; pro.href = '/upgrade.html';
+      pro.textContent = '✦ Go Pro'; pro.title = 'Unlock every course & pack';
+      ctl.appendChild(pro);
+    }
     var b = document.createElement('button'); b.type = 'button'; b.className = 'maa-btn';
     if (user) {
       var nm = displayName();
@@ -410,6 +417,13 @@
     cardBody.appendChild(un.wrap);
     var msg = el('div', 'maa-msg'); cardBody.appendChild(msg);
     var save = el('button', 'maa-go', 'Save username'); save.type = 'button'; cardBody.appendChild(save);
+    if (window.MAAuth.isPro && window.MAAuth.isPro()) {
+      var mng = el('a', 'maa-alt', 'Manage subscription →'); mng.href = 'https://app.lemonsqueezy.com/my-orders'; mng.target = '_blank'; mng.rel = 'noopener';
+      mng.style.display = 'block'; mng.style.textDecoration = 'none'; mng.style.textAlign = 'center'; mng.style.boxSizing = 'border-box'; cardBody.appendChild(mng);
+    } else {
+      var gp = el('a', 'maa-alt', '✦ Go Pro'); gp.href = '/upgrade.html';
+      gp.style.display = 'block'; gp.style.textDecoration = 'none'; gp.style.textAlign = 'center'; gp.style.boxSizing = 'border-box'; cardBody.appendChild(gp);
+    }
     var page = el('a', 'maa-alt', 'Your saved work & songs →'); page.href = '/account.html'; page.style.display = 'block'; page.style.textDecoration = 'none'; page.style.textAlign = 'center'; page.style.boxSizing = 'border-box'; cardBody.appendChild(page);
     var out = el('button', 'maa-alt', 'Sign out'); out.type = 'button'; cardBody.appendChild(out);
     save.addEventListener('click', function () {

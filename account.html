@@ -45,6 +45,10 @@
   .emailrow{ font-weight:700; color:#5a5343; margin-bottom:12px; } .emailrow b{ color:var(--ink); }
   .gate{ text-align:center; padding:26px 10px; } .gate p{ color:#5a5343; font-weight:600; margin:0 0 14px; }
   .foot{ margin-top:26px; text-align:center; color:var(--muted); font-weight:700; font-size:.82rem; } .foot a{ color:var(--blue); text-decoration:none; }
+  .planbadge{ display:inline-block; font-family:var(--mono); font-weight:700; font-size:.64rem; letter-spacing:.12em; text-transform:uppercase; padding:5px 12px; border-radius:999px; border:2px solid var(--ink); background:#FFE9A8; color:#8a5a00; margin-bottom:10px; }
+  .planbadge.free{ background:#fff; color:var(--muted); }
+  .planline{ color:#5a5343; font-weight:600; margin:0 0 14px; }
+  .btn.pro{ background:var(--pink); color:#fff; text-decoration:none; display:inline-block; }
 </style>
 </head>
 <body>
@@ -70,6 +74,11 @@
 
   <!-- signed in -->
   <div id="hub" hidden>
+    <div class="card">
+      <h2>Your plan</h2>
+      <div id="plan"></div>
+    </div>
+
     <div class="card">
       <h2>Profile</h2>
       <div class="emailrow" id="emailRow"></div>
@@ -97,6 +106,9 @@
   var KINDS=[ {kind:'songlab', label:'Song Lab', tool:'songlab.html'},
               {kind:'jamtrack', label:'Jam Track', tool:'jam-track.html'},
               {kind:'songmaker', label:'Song Maker', tool:'composer.html'} ];
+  var PRODUCTS=[ {id:'course:learning-to-walk', label:'Learning to Walk'},
+                 {id:'course:gradus', label:'The Counterpoint Dojo'},
+                 {id:'course:oldman', label:'Old Man and the C'} ];
   function el(t,c,x){ var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; }
   function isLab(d){ return !!(d && d.sections); }
 
@@ -105,7 +117,23 @@
     document.getElementById('gate').hidden=true; document.getElementById('hub').hidden=false;
     var er=document.getElementById('emailRow'); er.innerHTML=''; er.appendChild(document.createTextNode('Signed in as ')); var b=el('b',null,user.email); er.appendChild(b);
     document.getElementById('uname').value = (profile && profile.username) || '';
-    renderCreations(); renderPublished(user, profile);
+    renderPlan(); renderCreations(); renderPublished(user, profile);
+  }
+
+  function renderPlan(){
+    var host=document.getElementById('plan'); if(!host) return; host.innerHTML='';
+    var A=window.MAAuth||{};
+    if(A.isPro && A.isPro()){
+      host.appendChild(el('div','planbadge','✦ Music Arcade Pro'));
+      host.appendChild(el('p','planline','Everything unlocked — every Dojo course and premium pack. Thank you for supporting Music Arcade! 🎉'));
+      var m=el('a','btn','Manage subscription'); m.href='https://app.lemonsqueezy.com/my-orders'; m.target='_blank'; m.rel='noopener'; m.style.textDecoration='none'; m.style.display='inline-block'; host.appendChild(m);
+    } else {
+      host.appendChild(el('div','planbadge free','Free plan'));
+      var owned=PRODUCTS.filter(function(p){ return A.owns && A.owns(p.id); });
+      if(owned.length) host.appendChild(el('p','planline','You own: '+owned.map(function(p){ return p.label; }).join(', ')+'. Everything else is on the free plan.'));
+      else host.appendChild(el('p','planline','You’re on the free plan — arcade games, the first module of each Dojo course, and all the tools.'));
+      var g=el('a','btn pro','✦ Go Pro'); g.href='/upgrade.html'; host.appendChild(g);
+    }
   }
 
   function renderCreations(){
@@ -167,7 +195,10 @@
   });
 
   // react to auth (fires on load + on sign in/out)
-  function wire(){ window.MAAuth.onChange(function(user, profile){ if(user) renderHub(user, profile); else renderGate(); }); }
+  function wire(){
+    window.MAAuth.onChange(function(user, profile){ if(user) renderHub(user, profile); else renderGate(); });
+    if(window.MAAuth.onEntitlements) window.MAAuth.onEntitlements(function(){ if(window.MAAuth.user && window.MAAuth.user()) renderPlan(); });
+  }
   (function boot(){ if(window.MAAuth && window.MAAuth.onChange) wire(); else setTimeout(boot, 80); })();
 })();
 </script>
