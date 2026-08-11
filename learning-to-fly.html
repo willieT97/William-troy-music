@@ -513,11 +513,11 @@
           desc:'A C D E♭ E G A — the A minor pentatonic (A C D E G) plus the blue note. It’s the same E♭ from C, but here it’s the ♭5 sliding up to E. Same six notes as the C major blues — new home, darker mood.' } },
       { num:'2.6', title:'Solo over the blues', teach:[
           { html:"Yellow-belt time. It all comes together now: the <b>form</b> (twelve bars), the <b>blue notes</b>, <b>space</b>, and <b>licks</b>. The 12-bar loop plays under you — and you solo over the whole thing." },
-          { html:"No head to play this time — it's all you. Keep the rhythm dead simple: <b>one note per beat</b> (crotchets) and <b>rests</b> where you breathe. Lean on the E♭, pass through the ♭5, leave space — and land your phrases <b>home on C</b> when the I comes round at the top." },
+          { html:"No head to play this time — it's all you. Keep the rhythm dead simple: <b>one note per beat</b> (crotchets) and <b>rests</b> where you breathe. Lean on the <b>E♭ blue note</b>, leave plenty of space — and land your phrases <b>home on C</b> when the I comes round at the top." },
           { t:'qa', q:"A whole chorus, on my own?", a:"A whole chorus. Turn on the mic, hit Play, and take twelve bars — one note per beat, rests where you breathe. When you're done, tap “Check my solo” and I'll write your notes out and show you how many stayed in the pentatonic. Then the yellow belt is yours." }
         ], ex:{ type:'bluesjam', title:'Solo over the blues', chords:BLUES12, bpm:92, capstone:true, mic:true,
           desc:'The 12-bar blues loops under you — no head this time, just your solo. Play crotchets and rests (one note per beat), then check it back.',
-          scaleName:'C blues — C D E♭ E G A, plus the ♭5 (G♭) as you pass by',
+          scaleName:'C blues — C D E♭ E G A (the E♭ is your blue note)',
           goal:'Enable the mic, hit Play, and solo — one note per beat, rests where you breathe. When you’re done, tap “Check my solo” to see your notes written out and how many stayed in the pentatonic.',
           doneLabel:'Check my solo 🎷', win:'🎉 You soloed a full chorus over the blues — form, blue notes, space and all. Yellow belt earned!' } }
     ]},
@@ -551,7 +551,7 @@
     fb.textContent='Now it speaks — a sentence, a breath, another idea. That’s phrasing, not just filling beats.'; fb.className='fb ok'; onSolve(); }
   // capstone: quantise the captured solo to crotchets + rests and check each note against the pentatonic
   function checkSolo(ex){ var fb=el('fb2'), back=el('soloBack');
-    var PENTA={0:1,2:1,4:1,7:1,9:1}, BLUE={3:1,6:1}, spb=60/(ex.bpm||92);
+    var PENTA={0:1,2:1,4:1,7:1,9:1}, BLUE={3:1}, spb=60/(ex.bpm||92);
     var evs=[], inP=0, inB=0, out=0, prevT=null;
     for(var i=0;i<soloNotes.length && evs.length<24;i++){ var nt=soloNotes[i];
       if(prevT!=null){ var rb=Math.max(0, Math.min(2, Math.round((nt.t-prevT)/spb)-1)); for(var r=0;r<rb && evs.length<24;r++) evs.push({rest:true,d:1}); }
