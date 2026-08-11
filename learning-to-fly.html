@@ -158,7 +158,7 @@
   // 2.4 lick: bar 1 is the classic ♭3→3 curl (fixed); the answer's three notes are the student's
   var LICK = [ {m:67,d:1},{m:63,d:1},{m:64,d:1},{m:67,d:1}, {rest:true,d:1},{m:69,d:1,chg:true},{m:67,d:1,chg:true},{m:64,d:1,chg:true}, {m:60,d:2} ];
   var BLUES_PAL = [60,62,63,64,67,69,70,72];             // C D E♭ E G A B♭ C — palette for bending a blues lick
-  var BLUES_MINOR = [60,63,65,66,67,70,72, 70,67,66,65,63,[60,2]].map(mk); // C E♭ F G♭ G B♭ C — the minor blues scale (adds the ♭5)
+  var ABLUES = [57,60,62,63,64,67,69, 67,64,63,62,60,[57,2]].map(mk); // A C D E♭ E G A — A minor blues (relative minor of C); SAME six notes as the C major blues, same blue note E♭
   var BLUES12 = ['C7','C7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7']; // the 12-bar blues in C
   var ROMAN = { C7:'I', F7:'IV', G7:'V' };
 
@@ -303,7 +303,8 @@
         var nf=info(n.m), y=yBot-(nf.step-30)*(gap/2);
         var chg=inter && n.chg, moved=chg && n.m0!=null && n.m!==n.m0;
         var col = chg ? (moved?'#1F9D55':'#2438C8') : (n.col || '#17140E');
-        var led=(nf.step<=28 && (30-nf.step)%2===0) ? '<line x1="'+(cx-9)+'" y1="'+y+'" x2="'+(cx+9)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>' : '';
+        var led=''; for(var lk=1; yBot+lk*gap <= y+0.1; lk++){ led+='<line x1="'+(cx-9)+'" y1="'+(yBot+lk*gap)+'" x2="'+(cx+9)+'" y2="'+(yBot+lk*gap)+'" stroke="#17140E" stroke-width="1.3"/>'; }
+        for(var uk=1; (yBot-4*gap)-uk*gap >= y-0.1; uk++){ var uy=(yBot-4*gap)-uk*gap; led+='<line x1="'+(cx-9)+'" y1="'+uy+'" x2="'+(cx+9)+'" y2="'+uy+'" stroke="#17140E" stroke-width="1.3"/>'; }
         var open=n.d>=2, stem=n.d<4;
         var flat = nf.acc==='b' ? '<text x="'+(cx-13)+'" y="'+(y+5)+'" font-family="Georgia,serif" font-size="17" fill="'+col+'">♭</text>' : '';
         var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.4" ry="4.8" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':col)+'" stroke="'+col+'" stroke-width="'+(chg?2.4:1.7)+'"/>';
@@ -505,11 +506,11 @@
           embWin:'That’s YOUR lick now — same blue curl, your own answer. Steal it, bend it, and it belongs to you. 🎉',
           desc:'Bar 1 is the classic blues curl — keep it. The three green notes in the answer are yours: tap each to move it through the blues scale, then Play the whole lick and hear your version.' } },
       { num:'2.5', title:'The minor blues', teach:[
-          { html:"So far you've been playing the <b>major blues</b> — bright and sweet, your pentatonic plus the ♭3. But the blues has a darker twin: the <b>minor blues</b>. Same feeling, meaner mood — the sound of rock, of a rainy-day blues." },
-          { html:"It's built on a different five notes: the <b>minor pentatonic</b> — <b>C E♭ F G B♭</b> (root, ♭3, 4, 5, ♭7). Then drop in the darkest blue note of all, the <b>♭5 (G♭)</b>, as a passing tone, and you've got the <b>minor blues scale</b> — the one most people mean when they say “the blues scale.”" },
-          { t:'qa', q:"When do I use it instead?", a:"Reach for the minor blues when you want grit and edge — it's darker than the major blues and it snarls over the same twelve bars. Play it below: slide <b>4 → ♭5 → 5</b> (F → G♭ → G) and feel that growl. Keep both scales in your pocket and switch them for the mood." }
-        ], ex:{ type:'melody', title:'The minor blues scale', mel:BLUES_MINOR, bpm:100,
-          desc:'C E♭ F G♭ G B♭ C — the minor pentatonic (C E♭ F G B♭) with the ♭5 (G♭) added. Play it up and down; slide through the ♭5 between the 4 and the 5 and feel the darker, grittier blues.' } },
+          { html:"The blues has a darker side — the <b>minor blues</b>. And it's closer than you'd think, because every major key has a shadow: its <b>relative minor</b>, built on the 6th degree. The relative minor of <b>C</b> is <b>A minor</b> — the very same notes, heard from a moodier home." },
+          { html:"So take the <b>A minor pentatonic</b> (A C D E G) and add a blue note — and here's the magic: that blue note is <b>still E♭</b>, the exact same note you leaned on in C. In C major blues it was the <b>♭3</b>; here in A minor it's the <b>♭5</b>. Same note, same cry <b>E♭ → E</b> — it just has a new job." },
+          { t:'qa', q:"So it's the same notes?", a:"The same six notes as your C major blues scale — because A minor <em>is</em> the relative minor of C. You already know them; you're just making <b>A</b> home instead of C, and it turns moody. Play it below and hear your blues put on its dark coat." }
+        ], ex:{ type:'melody', title:'The A minor blues scale', mel:ABLUES, bpm:100,
+          desc:'A C D E♭ E G A — the A minor pentatonic (A C D E G) plus the blue note. It’s the same E♭ from C, but here it’s the ♭5 sliding up to E. Same six notes as the C major blues — new home, darker mood.' } },
       { num:'2.6', title:'Solo over the blues', teach:[
           { html:"Yellow-belt time. It all comes together now: the <b>form</b> (twelve bars), the <b>blue notes</b>, <b>space</b>, and <b>licks</b>. The 12-bar loop plays under you — and you solo over the whole thing." },
           { html:"No head to play this time — it's all you. Keep the rhythm dead simple: <b>one note per beat</b> (crotchets) and <b>rests</b> where you breathe. Lean on the E♭, pass through the ♭5, leave space — and land your phrases <b>home on C</b> when the I comes round at the top." },
