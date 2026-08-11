@@ -1,0 +1,34 @@
+<!-- Music Arcade — Supabase Auth "Confirm signup" template.
+     Paste into: Supabase → Authentication → Email Templates → Confirm signup.
+     Suggested subject:  Confirm your email — Music Arcade
+     Keep the {{ .ConfirmationURL }} placeholders exactly as-is. -->
+<div style="margin:0;padding:0;background:#F4EEE2;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4EEE2;">
+    <tr><td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#FFFDF7;border:3px solid #17140E;border-radius:16px;">
+        <tr><td style="padding:28px 28px 6px;font-family:'Trebuchet MS','Segoe UI',Helvetica,Arial,sans-serif;">
+          <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#E0922A;font-weight:700;">Music Arcade</div>
+          <h1 style="margin:8px 0 0;font-size:26px;line-height:1.1;color:#17140E;font-weight:800;">Confirm your email&nbsp;&#127925;</h1>
+        </td></tr>
+        <tr><td style="padding:12px 28px 4px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#3a352a;">
+          Welcome aboard! Tap the button below to confirm your address and start playing.
+        </td></tr>
+        <tr><td style="padding:20px 28px 6px;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="border-radius:12px;background:#1F9D55;border:2.5px solid #17140E;">
+              <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-family:'Trebuchet MS','Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:800;color:#ffffff;text-decoration:none;">Confirm my email&nbsp;&rarr;</a>
+            </td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:14px 28px 4px;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#6F6757;">
+          Or paste this link into your browser:<br>
+          <a href="{{ .ConfirmationURL }}" style="color:#2438C8;word-break:break-all;">{{ .ConfirmationURL }}</a>
+        </td></tr>
+        <tr><td style="padding:16px 28px 26px;margin-top:8px;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#6F6757;border-top:1px solid #e4dcc9;">
+          If you didn't create a Music Arcade account, you can safely ignore this email.
+        </td></tr>
+      </table>
+      <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#a99f8a;padding:16px 0 0;">williamtroymusic.com</div>
+    </td></tr>
+  </table>
+</div>
