@@ -109,6 +109,8 @@
   var CPENT = [60,62,64,67,69,72,69,67,64,62,[60,2]]
     .map(function(x){ return Array.isArray(x)?{m:x[0],d:x[1]}:{m:x,d:1}; });
   var MARY_EMB = MARY.map(function(n,i){ return { m:n.m, d:n.d, chg:[5,8,18,22].indexOf(i)>=0 }; });
+  // call (A G E D — ends on degree 2, hangs) | answer (A G E _ — last note yours, resolve to C)
+  var CR_PHRASE = [ {m:69,d:1},{m:67,d:1},{m:64,d:1},{m:62,d:1},  {m:69,d:1},{m:67,d:1},{m:64,d:1},{m:67,d:1,chg:true} ];
 
   /* ===== audio ===== */
   var actx=null, master=null, timers=[];
@@ -118,9 +120,18 @@
     g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.26,t+0.02); g.gain.setValueAtTime(0.26,t+dur*0.6); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.start(t); o.stop(t+dur+0.03); }
   function hi(i){ var on=document.querySelectorAll('.mnote.on'); for(var k=0;k<on.length;k++) on[k].classList.remove('on'); var e=el('mn'+i); if(e) e.classList.add('on'); }
   function playMelody(mel, bpm){ audio(); stopPlay(); var spb=60/bpm, t=actx.currentTime+0.12, beat=0;
-    mel.forEach(function(n,i){ var when=t+beat*spb; tone(when, n.m, Math.max(0.14, n.d*spb*0.9));
+    mel.forEach(function(n,i){ var when=t+beat*spb; if(!n.rest) tone(when, n.m, Math.max(0.14, n.d*spb*0.9));
       timers.push(setTimeout(function(){ hi(i); }, Math.max(0,(when-actx.currentTime)*1000))); beat+=n.d; });
     timers.push(setTimeout(stopPlay, beat*spb*1000+320)); }
+  function playSeq(notes, bpm){ audio(); stopPlay(); var spb=60/bpm, t=actx.currentTime+0.12, beat=0;
+    notes.forEach(function(n){ if(!n.rest) tone(t+beat*spb, n.m, Math.max(0.14, n.d*spb*0.9)); beat+=n.d; }); }
+  function click(t){ var o=actx.createOscillator(), g=actx.createGain(); o.type='square'; o.frequency.value=1100; o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.18,t+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05); o.start(t); o.stop(t+0.06); }
+  function genCall(){ var pool=[60,62,64,67,69], a=[]; for(var i=0;i<3;i++) a.push({m:pool[Math.floor(Math.random()*pool.length)],d:1}); a.push({m:62,d:2}); return a; }  // question: ends on D (degree 2)
+  function playFreeCall(call, bpm){ audio(); stopPlay(); var spb=60/bpm, t=actx.currentTime+0.12, beat=0;
+    call.forEach(function(n){ tone(t+beat*spb, n.m, Math.max(0.14, n.d*spb*0.9)); beat+=n.d; });
+    for(var k=0;k<4;k++){ click(t+(beat+k)*spb); }   // four clicks of space for your answer
+  }
 
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
@@ -164,6 +175,18 @@
         + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button><button class="btn" id="mCheck">Check</button></div>'
         + '<div class="fb" id="fb"></div></div>';
     }
+    if(ex && ex.type==='answer'){
+      return '<div class="ex"><div class="exh">Finish the answer</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="staffwrap" id="workStaff"></div>'
+        + '<div class="row"><button class="btn" id="mCall">&#9654; Question</button><button class="btn" id="mAns">&#9654; Your answer</button><button class="btn blue" id="mBoth">&#9654; Both</button><button class="btn" id="mCheck">Check</button></div>'
+        + '<div class="fb" id="fb"></div></div>';
+    }
+    if(ex && ex.type==='freecall'){
+      return '<div class="ex"><div class="exh">Trade with me</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="row"><button class="btn blue" id="mCall">&#9654; Hear a call</button><button class="btn" id="mStop">Stop</button></div>'
+        + '<div class="fb" id="fb2">Aim: after the call hangs on D, answer into the clicks and land home on C.</div>'
+        + '<div class="row" style="margin-top:10px"><button class="btn ink" id="mDone">I’ve got it — fly on →</button></div></div>';
+    }
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
   function wireExercise(ex){
@@ -174,6 +197,19 @@
       el('mPlay').addEventListener('click', function(){ playMelody(work, ex.bpm||100); });
       el('mStop').addEventListener('click', stopPlay);
       el('mCheck').addEventListener('click', checkEmbellish);
+    }
+    if(ex && ex.type==='answer'){
+      work=ex.phrase.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg }; });
+      drawWork('workStaff');
+      el('mCall').addEventListener('click', function(){ playSeq(work.slice(0, ex.split), ex.bpm||96); });
+      el('mAns').addEventListener('click', function(){ playSeq(work.slice(ex.split), ex.bpm||96); });
+      el('mBoth').addEventListener('click', function(){ playSeq(work, ex.bpm||96); });
+      el('mCheck').addEventListener('click', checkAnswer);
+    }
+    if(ex && ex.type==='freecall'){
+      el('mCall').addEventListener('click', function(){ playFreeCall(genCall(), ex.bpm||88); });
+      el('mStop').addEventListener('click', stopPlay);
+      el('mDone').addEventListener('click', function(){ var fb=el('fb2'); fb.textContent='Nice — you’re trading fours with the pentatonic. That’s call and response.'; fb.className='fb ok'; onSolve(); });
     }
   }
 
@@ -197,14 +233,26 @@
           { html:"On the staff below, four notes glow <b>blue</b> — those are yours. Tap one and it hops to the next note in the pentatonic; keep tapping to try them all. Each tap plays it, so you can hear your choice." },
           { t:'qa', q:"But what if I pick a bad one?", a:"There are no bad ones here — that's the point of the pentatonic sandbox. All five work. Change all four blue notes, hit Play, and listen to a melody that's now a little bit <em>yours</em>." }
         ], ex:{ type:'embellish', title:'Make it your own', mel:MARY_EMB, bpm:100,
-          desc:'The four blue notes are yours — tap each to move it to another pentatonic note (it plays as you tap). Change all four, then Play the whole tune and hear your version.' } }
+          desc:'The four blue notes are yours — tap each to move it to another pentatonic note (it plays as you tap). Change all four, then Play the whole tune and hear your version.' } },
+      { num:'1.4', title:'Call & response', teach:[
+          { html:"Music is a conversation. One phrase asks a <b>question</b>, the next gives an <b>answer</b> — that back-and-forth is <b>call and response</b>, the heartbeat of the blues, of jazz, of all of it." },
+          { html:"Here's the trick that makes it feel like real Q&A. The <b>question</b> leaves you hanging — it ends on <b>degree 2</b> (in C, that's <b>D</b>), a note that sounds unfinished. The <b>answer</b> comes <b>home</b> — it ends on <b>degree 1</b>, the tonic <b>C</b>." },
+          { t:'qa', q:"Just the last note matters that much?", a:"The last note does the heavy lifting. Land on the 2 and the ear leans in for more; land on the 1 and it's settled. Below, my question hangs on D — finish the answer so it lands home on C." }
+        ], ex:{ type:'answer', title:'Land it home', phrase:CR_PHRASE, split:4, bpm:96,
+          desc:'Bar 1 is my question — it ends on D and hangs. Bar 2 is your answer, and its last note is blue. Tap it until the whole thing lands home on C (degree 1), then hear Both.' } },
+      { num:'1.5', title:'Answer me', teach:[
+          { html:"Now we play for real. I'll ask a question — you won't see the notes, you'll just <em>hear</em> it. Then it's your turn: answer out loud, on your instrument, into the space." },
+          { html:"No grading here, no wrong notes to fear — you've got the pentatonic, so you truly can't miss. One aim only: after my question hangs on the <b>2</b>, bring your answer <b>home to the 1</b> (C)." },
+          { t:'qa', q:"And if my answer's rubbish?", a:"Then you call up another question and answer again — that's how every player who ever lived learned to talk. Trade a few with me, and when it feels natural, fly on." }
+        ], ex:{ type:'freecall', title:'Trade fours', bpm:88,
+          desc:'Tap “Hear a call” — a question you can’t see, ending on D. Answer it in the four clicks that follow, landing home on C. No score, just play — trade as many as you like.' } }
     ]},
     { title:'Belt 2 — The Blues', belt:'Yellow Belt', soon:true, blurb:'Add the blue note and take your first solo over a 12-bar blues.' }
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt }, les)); }); });
   var idx=0, solved=false, work=null;
   var PSET=[60,62,64,67,69,72];   // C major pentatonic across the melody's range
-  function isGatedType(ex){ return !!ex && ex.type==='embellish'; }
+  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall'); }
   function playOne(m){ audio(); tone(actx.currentTime+0.02, m, 0.5); }
   function cyclePitch(i){ var n=work[i]; var ci=PSET.indexOf(n.m); if(ci<0) ci=0; n.m=PSET[(ci+1)%PSET.length]; }
   function drawWork(cid){ var c=el(cid); c.innerHTML=renderMelody(work, {interactive:true});
@@ -212,6 +260,10 @@
   function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb');
     if(changed>=total){ fb.textContent='That’s YOUR Mary now — and because you stayed in the pentatonic, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
     else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the blue notes to make the rest your own.'; fb.className='fb no'; } }
+  function checkAnswer(){ var last=null; work.forEach(function(n){ if(n.chg) last=n; }); var pc=last?(((last.m%12)+12)%12):-1; var fb=el('fb');
+    if(pc===0){ fb.textContent='Home. Hear how it settles? Ending on degree 1 — the tonic C — is what turns a phrase into an answer.'; fb.className='fb ok'; onSolve(); }
+    else if(pc===2){ fb.textContent='Still hanging — that’s degree 2 (D), a question, not an answer. Tap the blue note home to C (degree 1).'; fb.className='fb no'; }
+    else { fb.textContent='Not settled yet — tap the blue note until it lands on C, the home note (degree 1).'; fb.className='fb no'; } }
   function onSolve(){ if(!solved){ solved=true; markDone(idx); renderNav(); } }
 
   /* ===== progress: save + sequential unlock + account sync + paywall ===== */
