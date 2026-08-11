@@ -139,6 +139,9 @@
     { name:'Old MacDonald',          mel:OLDMAC, chords:['C','C','G','C'], bpm:100 },
     { name:'Hot Cross Buns',         mel:HOTCROSS, chords:['C','G','C','G'], bpm:96 }
   ];
+  // Belt 2: major blues scale (C D Eb E G A) — the Eb (63) is the blue note; and a busy phrase for the space drill
+  var BLUESCALE = [60,62,63,64,67,69,72, 69,67,64,63,62,[60,2]].map(mk);
+  var BUSY = [67,69,67,64,62,64,67,69].map(mk);
 
   /* ===== audio ===== */
   var actx=null, master=null, timers=[];
@@ -228,7 +231,10 @@
 
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
-  function info(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1, ls=NAT[pc]; if(ls==null) ls=NAT[(pc+11)%12]; return { step:oct*7+ls, name:LET[ls] }; }
+  function info(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1;
+    if(NAT[pc]!=null) return { step:oct*7+NAT[pc], name:LET[NAT[pc]], acc:'' };
+    var ls=NAT[(pc+1)%12];                              // accidentals spelled as a flat of the letter above (E♭, G♭, B♭…)
+    return { step:oct*7+ls, name:LET[ls]+'♭', acc:'b' }; }
   function renderMelody(mel, opts){
     opts=opts||{}; var inter=!!opts.interactive;
     var padL=44, gap=9, yBot=64, h=110, x=padL, beat=0;
@@ -237,18 +243,28 @@
     for(var i=0;i<5;i++){ var y=yBot-i*gap; s+='<line x1="8" y1="'+y+'" x2="'+(w-8)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>'; }
     s+='<text x="12" y="'+(yBot-1)+'" font-family="Georgia,serif" font-size="48" fill="#17140E">𝄞</text>';
     mel.forEach(function(n,i){
-      var nf=info(n.m), y=yBot-(nf.step-30)*(gap/2), wd=Math.max(32,n.d*24), cx=x+wd/2;
-      var chg=inter && n.chg, moved=chg && n.m0!=null && n.m!==n.m0;
-      var col = chg ? (moved?'#1F9D55':'#2438C8') : '#17140E';
-      var led=(nf.step<=28 && (30-nf.step)%2===0) ? '<line x1="'+(cx-9)+'" y1="'+y+'" x2="'+(cx+9)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>' : '';
-      var open=n.d>=2, stem=n.d<4;
-      var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.4" ry="4.8" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':col)+'" stroke="'+col+'" stroke-width="'+(chg?2.4:1.7)+'"/>';
-      var ring = chg ? '<circle cx="'+cx+'" cy="'+y+'" r="10.5" fill="none" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="2 2" opacity=".75"/>' : '';
-      var st=stem?'<line x1="'+(cx+6)+'" y1="'+(y-1)+'" x2="'+(cx+6)+'" y2="'+(y-27)+'" stroke="'+col+'" stroke-width="1.7"/>':'';
-      var lbl='<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="'+(chg?col:'#6F6757')+'" font-weight="'+(chg?'700':'400')+'">'+nf.name+'</text>';
-      var hit = chg ? '<rect x="'+x+'" y="6" width="'+wd+'" height="'+(h-24)+'" fill="transparent"/>' : '';
-      var attr = chg ? ' data-i="'+i+'" style="cursor:pointer"' : '';
-      s+='<g class="mnote" id="mn'+i+'"'+attr+'>'+hit+led+ring+head+st+lbl+'</g>';
+      var wd=Math.max(32,n.d*24), cx=x+wd/2, inner;
+      var editable = inter && (n.chg || opts.editAll);
+      if(n.rest){
+        var ry=yBot-2*gap;
+        inner='<path d="M'+(cx-4)+' '+(ry-9)+' L'+(cx+3)+' '+(ry-2)+' L'+(cx-3)+' '+(ry+1)+' L'+(cx+4)+' '+(ry+8)+'" fill="none" stroke="#9a8f78" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>'
+          + '<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="#c3b79e">·</text>';
+      } else {
+        var nf=info(n.m), y=yBot-(nf.step-30)*(gap/2);
+        var chg=inter && n.chg, moved=chg && n.m0!=null && n.m!==n.m0;
+        var col = chg ? (moved?'#1F9D55':'#2438C8') : '#17140E';
+        var led=(nf.step<=28 && (30-nf.step)%2===0) ? '<line x1="'+(cx-9)+'" y1="'+y+'" x2="'+(cx+9)+'" y2="'+y+'" stroke="#17140E" stroke-width="1.3"/>' : '';
+        var open=n.d>=2, stem=n.d<4;
+        var flat = nf.acc==='b' ? '<text x="'+(cx-13)+'" y="'+(y+5)+'" font-family="Georgia,serif" font-size="17" fill="'+col+'">♭</text>' : '';
+        var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.4" ry="4.8" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':col)+'" stroke="'+col+'" stroke-width="'+(chg?2.4:1.7)+'"/>';
+        var ring = chg ? '<circle cx="'+cx+'" cy="'+y+'" r="10.5" fill="none" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="2 2" opacity=".75"/>' : '';
+        var st=stem?'<line x1="'+(cx+6)+'" y1="'+(y-1)+'" x2="'+(cx+6)+'" y2="'+(y-27)+'" stroke="'+col+'" stroke-width="1.7"/>':'';
+        var lbl='<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="'+(chg?col:'#6F6757')+'" font-weight="'+(chg?'700':'400')+'">'+nf.name+'</text>';
+        inner=led+flat+ring+head+st+lbl;
+      }
+      var hit = editable ? '<rect x="'+x+'" y="6" width="'+wd+'" height="'+(h-24)+'" fill="transparent"/>' : '';
+      var attr = editable ? ' data-i="'+i+'" style="cursor:pointer"' : '';
+      s+='<g class="mnote" id="mn'+i+'"'+attr+'>'+hit+inner+'</g>';
       x+=wd; beat+=n.d;
       if(beat%4===0 && i<mel.length-1){ s+='<line x1="'+x+'" y1="'+(yBot-4*gap)+'" x2="'+x+'" y2="'+yBot+'" stroke="#17140E" stroke-width="1.3"/>'; }
     });
@@ -291,10 +307,23 @@
         + '<div class="fb" id="fb2">Chorus 1: play the melody over the chords. Chorus 2 on: improvise — space, call &amp; answer, land home.</div>'
         + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">I flew — that’s my chorus ✈️</button></div></div>';
     }
+    if(ex && ex.type==='space'){
+      return '<div class="ex"><div class="exh">Give it some air</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="staffwrap" id="workStaff"></div>'
+        + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button><button class="btn" id="mCheck">Check</button></div>'
+        + '<div class="fb" id="fb"></div></div>';
+    }
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
   function wireExercise(ex){
     if(ex && ex.type==='melody'){ el('mPlay').addEventListener('click', function(){ playMelody(ex.mel, ex.bpm||100); }); el('mStop').addEventListener('click', stopPlay); }
+    if(ex && ex.type==='space'){
+      work=ex.phrase.map(function(n){ return { m:n.m, d:n.d, rest:!!n.rest }; });
+      drawWork('workStaff', 'space');
+      el('mPlay').addEventListener('click', function(){ playMelody(work, ex.bpm||96); });
+      el('mStop').addEventListener('click', stopPlay);
+      el('mCheck').addEventListener('click', checkSpace);
+    }
     if(ex && ex.type==='embellish'){
       work=ex.mel.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg }; });
       drawWork('workStaff');
@@ -377,16 +406,38 @@
         ], ex:{ type:'jam', title:'Fly a chorus', bpm:96,
           desc:'Pick a tune. Chorus 1: play its melody (the head) over the chords. Chorus 2 and on: improvise with the pentatonic — space, call &amp; answer, land home. Try all three tunes when you’re ready.' } }
     ]},
-    { title:'Belt 2 — The Blues', belt:'Yellow Belt', soon:true, blurb:'Add the blue note and take your first solo over a 12-bar blues.' }
+    { title:'Belt 2 — The Blues', belt:'Yellow Belt', lessons:[
+      { num:'2.1', title:'The blue note', teach:[
+          { html:"Welcome to the blues. It starts with one note — the <b>blue note</b>. Take your pentatonic and squeeze a new note in between the 2 and the 3: the <b>flat third</b> (in C, that's <b>E♭</b>)." },
+          { html:"On its own it sounds “wrong” — and that's the point. The magic is the <b>slide</b>: play E♭ and slither up to E (the natural 3rd). That little cry, ♭3 → 3, <em>is</em> the sound of the blues." },
+          { t:'qa', q:"So it's just one extra note?", a:"One note, and everything changes. Pentatonic plus that ♭3 is the <b>major blues scale</b>. Play it below — hear how the E♭ leans into the E. Lean on that note and you're playing the blues." }
+        ], ex:{ type:'melody', title:'The major blues scale', mel:BLUESCALE, bpm:104,
+          desc:'C D E♭ E G A — your pentatonic with the blue note (E♭) added. Play it up and down, and listen for the E♭ crying up into the E.' } },
+      { num:'2.2', title:'Space & phrasing', teach:[
+          { html:"Here's the mistake every beginner makes: playing <em>all the notes, all the time</em>. Listen to this busy little phrase — every single beat filled, no room to breathe." },
+          { html:"The blues taught the world the opposite. <b>Space</b> — silence — is part of the phrase. A note lands twice as hard when there's air around it. B.B. King could say more with one note and a rest than most players say in a flurry." },
+          { t:'qa', q:"Won't it sound empty?", a:"That's the magic — the ear leans in to fill the gaps. Rests are where the groove breathes. Tap notes in the phrase below to turn them into rests, then play it — and hear it come alive." }
+        ], ex:{ type:'space', title:'Give it some air', phrase:BUSY, bpm:96,
+          desc:'This phrase plays on every beat — no room to breathe. Tap notes to turn them into rests (tap again to bring them back), then Play. Leave a few out and hear it open up.' } }
+    ]},
+    { title:'Belt 3 — Bluegrass', belt:'Green Belt', soon:true, blurb:'Flatpick clichés with an Appalachian master, then take a break at the jam.' }
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt }, les)); }); });
   var idx=0, solved=false, work=null;
   var PSET=[60,62,64,67,69,72];   // C major pentatonic across the melody's range
-  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam'); }
+  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam' || ex.type==='space'); }
   function playOne(m){ audio(); tone(actx.currentTime+0.02, m, 0.5); }
   function cyclePitch(i){ var n=work[i]; var ci=PSET.indexOf(n.m); if(ci<0) ci=0; n.m=PSET[(ci+1)%PSET.length]; }
-  function drawWork(cid){ var c=el(cid); c.innerHTML=renderMelody(work, {interactive:true});
-    c.querySelectorAll('[data-i]').forEach(function(g){ g.addEventListener('click', function(){ var i=+g.dataset.i; cyclePitch(i); playOne(work[i].m); drawWork(cid); }); }); }
+  function drawWork(cid, mode){ var c=el(cid); c.innerHTML=renderMelody(work, {interactive:true, editAll: mode==='space'});
+    c.querySelectorAll('[data-i]').forEach(function(g){ g.addEventListener('click', function(){ var i=+g.dataset.i;
+      if(mode==='space'){ work[i].rest=!work[i].rest; if(!work[i].rest) playOne(work[i].m); }
+      else { cyclePitch(i); playOne(work[i].m); }
+      drawWork(cid, mode); }); }); }
+  function checkSpace(){ var rests=0; work.forEach(function(n){ if(n.rest) rests++; }); var notes=work.length-rests; var fb=el('fb');
+    if(rests===0){ fb.textContent='Every beat’s still full — tap notes to turn them into rests and let it breathe.'; fb.className='fb no'; return; }
+    if(notes<2){ fb.textContent='Whoa — nearly all silence! Leave a few notes in so it still says something.'; fb.className='fb no'; return; }
+    if(rests<3){ fb.textContent='Good start — leave out one or two more. Space is the point.'; fb.className='fb no'; return; }
+    fb.textContent='That’s it — hear how each note hits harder with room around it? That’s phrasing.'; fb.className='fb ok'; onSolve(); }
   function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb');
     if(changed>=total){ fb.textContent='That’s YOUR Mary now — and because you stayed in the pentatonic, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
     else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the blue notes to make the rest your own.'; fb.className='fb no'; } }
