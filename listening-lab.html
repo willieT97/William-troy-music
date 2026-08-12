@@ -87,7 +87,7 @@
     <div class="fld" style="margin-bottom:10px"><label>What’s allowable — a note is good if it fits ANY ticked rule</label>
       <div class="allow">
         <label class="tick"><input type="checkbox" id="alScale" checked> <select id="scaleSel" style="box-shadow:none;border-width:2px;padding:4px 6px;font-size:.78rem"></select> notes</label>
-        <label class="tick"><input type="checkbox" id="alBlue" checked> Blue notes (♭3 ♭5 ♭7)</label>
+        <label class="tick"><input type="checkbox" id="alBlue" checked> <span id="blueLbl">Blue note (♭3)</span></label>
         <label class="tick" id="tickChord"><input type="checkbox" id="alChord"> Chord tones of the bar <span class="lock" hidden>🔒 Pro</span></label>
         <label class="tick" id="tickPass"><input type="checkbox" id="alPass"> Passing tones on weak beats <span class="lock" hidden>🔒 Pro</span></label>
       </div>
@@ -149,9 +149,13 @@
     majblues:{ name:'Major blues', pcs:[0,2,3,4,7,9] },
     minblues:{ name:'Minor blues', pcs:[0,3,5,6,7,10] },
     major:{ name:'Major scale', pcs:[0,2,4,5,7,9,11] },
-    mixo:{ name:'Mixolydian', pcs:[0,2,4,5,7,9,10] }
+    mixo:{ name:'Mixolydian', pcs:[0,2,4,5,7,9,10] },
+    chords:{ name:'Match the chords', perChord:true }
   };
-  var BLUE_REL=[3,6,10];
+  // per-chord scales (chord-scale thinking): dominant -> mixolydian, m7 -> dorian
+  var CS_MIXO={0:1,2:1,4:1,5:1,7:1,9:1,10:1}, CS_DORIAN={0:1,2:1,3:1,5:1,7:1,9:1,10:1};
+  // the blue note: b3 on a major tune, b5 on a minor tune; when matching chords, the CHORD's b3
+  function blueRel(){ return P.form==='minor' ? 6 : 3; }
 
   var P={ key:0, form:'blues', grid:1, bpm:96, scale:'majblues', alScale:true, alBlue:true, alChord:false, alPass:false };
   function keyObj(){ return KEYS[P.key]; }
@@ -279,18 +283,21 @@
     var fb=el('fb'), out=el('staffOut');
     if(!notes.length){ fb.textContent = micRunning ? 'Didn’t catch anything — hit Play and take a chorus first (play a little louder).' : 'Enable the mic first, then Play, then take a chorus.'; fb.className='fb no'; return; }
     var f=FORMS[P.form], k=keyObj(), spb=60/P.bpm, grid=P.grid, cap=grid<1?32:24;
-    var scaleSet={}; SCALES[P.scale].pcs.forEach(function(p){ scaleSet[p]=1; });
-    var blueSet={}; BLUE_REL.forEach(function(p){ blueSet[p]=1; });
+    var matching=!!SCALES[P.scale].perChord;
+    var scaleSet={}; if(!matching) SCALES[P.scale].pcs.forEach(function(p){ scaleSet[p]=1; });
     var evs=[], prevT=null, n={chord:0,scale:0,blue:0,pass:0,out:0};
     for(var i=0;i<notes.length && evs.length<cap;i++){ var nt=notes[i];
       if(prevT!=null){ var rb=Math.max(0, Math.min(grid<1?4:2, Math.round((nt.t-prevT)/(spb*grid))-1)); for(var r=0;r<rb && evs.length<cap;r++) evs.push({rest:true,d:grid,m:nt.midi}); }
       var bar=Math.floor((nt.t-T0)/(4*spb)); if(bar<0) bar=0; bar%=f.bars.length;
       var beatIn=((nt.t-T0)/spb)%4; if(beatIn<0) beatIn+=4;
       var strong=near(beatIn,0)||near(beatIn,2);
-      var pc=((nt.midi%12)+12)%12, rel=(pc-k.pc+12)%12, next=notes[i+1], col, cat;
-      if(P.alChord && chordPcs(f.bars[bar]).indexOf(pc)>=0){ col='#1F9D55'; cat='chord'; }
-      else if(P.alScale && scaleSet[rel]){ col='#1F9D55'; cat='scale'; }
-      else if(P.alBlue && blueSet[rel]){ col='#2438C8'; cat='blue'; }
+      var chord=f.bars[bar], rootPc=(k.pc+chord[0])%12;
+      var pc=((nt.midi%12)+12)%12, relKey=(pc-k.pc+12)%12, relCh=(pc-rootPc+12)%12, next=notes[i+1], col, cat;
+      var scaleOK = matching ? !!(chord[1]==='m7' ? CS_DORIAN : CS_MIXO)[relCh] : !!scaleSet[relKey];
+      var blueOK = matching ? relCh===3 : relKey===blueRel();
+      if(P.alChord && chordPcs(chord).indexOf(pc)>=0){ col='#1F9D55'; cat='chord'; }
+      else if(P.alScale && scaleOK){ col='#1F9D55'; cat='scale'; }
+      else if(P.alBlue && blueOK){ col='#2438C8'; cat='blue'; }
       else if(P.alPass && !strong && next && Math.abs(nt.midi-next.midi)<=2){ col='#2438C8'; cat='pass'; }
       else { col='#C0453B'; cat='out'; }
       n[cat]++; evs.push({ m:nt.midi, d:grid, col:col }); prevT=nt.t; }
@@ -302,7 +309,7 @@
     if(n.blue) bits.push(n.blue+' blue note'+(n.blue===1?'':'s'));
     if(n.pass) bits.push(n.pass+' passing tone'+(n.pass===1?'':'s'));
     var total=n.chord+n.scale+n.blue+n.pass+n.out;
-    fb.textContent='You played '+total+' notes: '+(bits.length?bits.join(', '):'none inside your rules')+(n.out?', '+n.out+' outside the rules':'')+'.'+(n.out===0?' Clean chorus! 🎷':'');
+    fb.textContent='You played '+total+' note'+(total===1?'':'s')+': '+(bits.length?bits.join(', '):'none inside your rules')+(n.out?', '+n.out+' outside the rules':'')+'.'+(n.out===0?' Clean chorus! 🎷':'');
     fb.className='fb '+(n.out===0?'ok':'no');
     el('carveRow').hidden = !entitled();
   }
@@ -326,9 +333,15 @@
   function apply(p){ if(!p) return; Object.keys(params()).forEach(function(k){ if(p[k]!=null) P[k]=p[k]; });
     if(!entitled()){ P.alChord=false; P.alPass=false; }
     syncUI(); drawChart(); }
+  function updateBlueLbl(){ var t;
+    if(SCALES[P.scale].perChord) t='Blue note of each chord (its ♭3)';
+    else if(P.form==='minor') t='The blue note (♭5)';
+    else t='The blue note (♭3)';
+    el('blueLbl').textContent=t; }
   function syncUI(){ el('keySel').value=P.key; el('formSel').value=P.form; el('gridSel').value=String(P.grid);
     el('tempo').value=P.bpm; el('tempoVal').textContent=P.bpm; el('scaleSel').value=P.scale;
-    el('alScale').checked=P.alScale; el('alBlue').checked=P.alBlue; el('alChord').checked=P.alChord; el('alPass').checked=P.alPass; }
+    el('alScale').checked=P.alScale; el('alBlue').checked=P.alBlue; el('alChord').checked=P.alChord; el('alPass').checked=P.alPass;
+    updateBlueLbl(); }
 
   /* ===== wire up ===== */
   KEYS.forEach(function(k,i){ var o=document.createElement('option'); o.value=i; o.textContent=k.n; el('keySel').appendChild(o); });
@@ -337,10 +350,10 @@
   el('keySel').addEventListener('change', function(){ P.key=+this.value; stopJam(); drawChart(); });
   el('formSel').addEventListener('change', function(){ P.form=this.value; stopJam();
     if(P.form==='minor' && (P.scale==='majpent'||P.scale==='majblues')){ P.scale='minblues'; el('scaleSel').value='minblues'; }
-    drawChart(); });
+    updateBlueLbl(); drawChart(); });
   el('gridSel').addEventListener('change', function(){ P.grid=+this.value; });
   el('tempo').addEventListener('input', function(){ P.bpm=+this.value; el('tempoVal').textContent=P.bpm; });
-  el('scaleSel').addEventListener('change', function(){ P.scale=this.value; });
+  el('scaleSel').addEventListener('change', function(){ P.scale=this.value; updateBlueLbl(); });
   el('alScale').addEventListener('change', function(){ P.alScale=this.checked; });
   el('alBlue').addEventListener('change', function(){ P.alBlue=this.checked; });
   el('alChord').addEventListener('change', function(){ P.alChord=this.checked; });
