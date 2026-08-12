@@ -49,6 +49,22 @@
   .planbadge.free{ background:#fff; color:var(--muted); }
   .planline{ color:#5a5343; font-weight:600; margin:0 0 14px; }
   .btn.pro{ background:var(--pink); color:#fff; text-decoration:none; display:inline-block; }
+  /* accomplishments */
+  .beltrow{ margin-bottom:13px; }
+  .beltcourse{ font-weight:800; font-size:.86rem; margin-bottom:6px; display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+  .beltcourse .cdone{ font-family:var(--mono); font-size:.6rem; letter-spacing:.08em; color:var(--green); }
+  .belts{ display:flex; gap:6px; flex-wrap:wrap; }
+  .beltchip{ display:inline-flex; align-items:center; gap:6px; border:2px solid var(--ink); border-radius:999px; padding:3px 10px 3px 5px; font-weight:800; font-size:.68rem; background:#fff; }
+  .beltchip .dot{ width:12px; height:12px; border-radius:50%; border:2px solid var(--ink); flex:none; }
+  .beltchip.off{ opacity:.3; border-style:dashed; }
+  .trophies{ display:flex; gap:7px; flex-wrap:wrap; }
+  .trophy{ display:inline-flex; gap:7px; align-items:center; border:2px solid var(--ink); border-radius:11px; background:#FFE9A8; padding:6px 11px; font-weight:800; font-size:.74rem; box-shadow:2px 2px 0 var(--ink); }
+  .trophy.off{ background:#fff; opacity:.32; box-shadow:none; border-style:dashed; }
+  .statchips{ display:flex; gap:8px; flex-wrap:wrap; }
+  .statchip{ border:2px solid #e4dcc9; border-radius:11px; padding:7px 12px; font-weight:700; font-size:.8rem; background:#fff; }
+  .statchip b{ font-family:var(--disp); font-size:.95rem; }
+  .statchip .dev{ color:var(--muted); font-size:.68rem; }
+  .accnote{ color:var(--muted); font-size:.72rem; font-weight:700; margin-top:9px; }
 </style>
 </head>
 <body>
@@ -77,6 +93,11 @@
     <div class="card">
       <h2>Your plan</h2>
       <div id="plan"></div>
+    </div>
+
+    <div class="card">
+      <h2>Accomplishments <span class="sub">— belts, trophies, and things you’ve made</span></h2>
+      <div id="accomp"></div>
     </div>
 
     <div class="card">
@@ -112,12 +133,82 @@
   function el(t,c,x){ var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; }
   function isLab(d){ return !!(d && d.sections); }
 
+  // ---- accomplishments: belts + trophies derived from Dojo progress; counts from creations ----
+  var DOJO=[
+    { id:'learning-to-walk', pkey:'ltw.progress.v1', name:'Learning to Walk',
+      belts:[ {b:'White',l:'1.2'},{b:'Yellow',l:'2.5'},{b:'Orange',l:'3.3'},{b:'Green',l:'4.5'},{b:'Blue',l:'5.5'},{b:'Black',l:'6.5'} ],
+      trophies:[ {l:'6.5', name:'The Cutting Session', icon:'🎷'} ] },
+    { id:'gradus', pkey:'gradus.progress.v1', name:'The Counterpoint Dojo',
+      belts:[ {b:'White',l:'0.7'},{b:'Grey',l:'M.6'},{b:'Yellow',l:'1.6'},{b:'Orange',l:'2.3'},{b:'Green',l:'3.1'} ],
+      trophies:[ {l:'3.1', name:'The Running Line', icon:'🎼'} ] },
+    { id:'learning-to-fly', pkey:'ltf.progress.v1', name:'Learning to Fly',
+      belts:[ {b:'White',l:'1.6'},{b:'Yellow',l:'2.6'},{b:'Green',l:'3.9'},{b:'Blue',l:'4.9'},{b:'Black',l:'5.13'} ],
+      trophies:[ {l:'1.6',name:'Your First Flight',icon:'✈️'},{l:'3.9',name:'The Porch Jam',icon:'🪕'},
+                 {l:'4.9',name:'The Uptown Jam',icon:'🎺'},{l:'5.13',name:'The Last Flight',icon:'🥋'} ] }
+  ];
+  var BELT_COL={ White:'#FFFDF7', Grey:'#9AA0A6', Yellow:'#FFD34D', Orange:'#F5893B', Green:'#1F9D55', Blue:'#2438C8', Brown:'#7A4A1E', Black:'#17140E' };
+  function localProg(pkey){ try{ var p=JSON.parse(localStorage.getItem(pkey)); if(p && p.done) return p; }catch(e){} return { done:{} }; }
+
+  function renderAccomp(){
+    var host=document.getElementById('accomp'); if(!host) return;
+    var state={}, oldmanDone=false, counts={ songs:null, jams:null };
+    DOJO.forEach(function(c){ state[c.id]=localProg(c.pkey); });
+    try{ oldmanDone = localStorage.getItem('oldman.progress.v1')==='done'; }catch(e){}
+    var licks=0; try{ licks=(JSON.parse(localStorage.getItem('wtm_phrasebook_v1'))||[]).length; }catch(e){}
+
+    function draw(){
+      host.innerHTML='';
+      host.appendChild(el('div','grouplbl','Belts'));
+      DOJO.forEach(function(c){
+        var done=state[c.id].done||{}, row=el('div','beltrow');
+        var head=el('div','beltcourse', c.name);
+        if(c.belts.every(function(b){ return done[b.l]; })) head.appendChild(el('span','cdone','✓ COURSE COMPLETE'));
+        row.appendChild(head);
+        var bl=el('div','belts');
+        c.belts.forEach(function(b){ var chip=el('span','beltchip'+(done[b.l]?'':' off'));
+          var dot=el('span','dot'); dot.style.background=BELT_COL[b.b]||'#fff'; chip.appendChild(dot);
+          chip.appendChild(document.createTextNode(b.b)); bl.appendChild(chip); });
+        row.appendChild(bl); host.appendChild(row);
+      });
+      host.appendChild(el('div','grouplbl','Trophies'));
+      var shelf=el('div','trophies');
+      var tr=[]; DOJO.forEach(function(c){ (c.trophies||[]).forEach(function(t){ tr.push({ name:t.name, icon:t.icon, got:!!(state[c.id].done||{})[t.l] }); }); });
+      tr.push({ name:'The C, Charted', icon:'🌊', got:oldmanDone });
+      tr.forEach(function(t){ var s=el('span','trophy'+(t.got?'':' off')); s.appendChild(el('span',null,t.icon)); s.appendChild(el('span',null,t.name)); shelf.appendChild(s); });
+      host.appendChild(shelf);
+      host.appendChild(el('div','grouplbl','Made by you'));
+      var stats=el('div','statchips'); host.appendChild(stats);
+      function chip(n,label,dev){ var s=el('span','statchip'); s.appendChild(el('b',null, n==null?'…':String(n)));
+        s.appendChild(document.createTextNode(' '+label)); if(dev) s.appendChild(el('span','dev',' · '+dev)); stats.appendChild(s); }
+      chip(counts.songs,'songs written');
+      chip(counts.jams,'jam tracks built');
+      chip(licks,'licks in the Phrasebook','this device');
+      host.appendChild(el('div','accnote','Belts and trophies come straight from your Dojo progress. Arcade high scores join this shelf soon.'));
+    }
+    draw();
+    var A=window.MAAuth||{};
+    if(A.creations && A.creations.list){
+      A.creations.list('progress').then(function(rows){
+        (rows||[]).forEach(function(r){ if(!r || !r.data) return;
+          if(r.title==='oldman'){ if(r.data.done) oldmanDone=true; return; }
+          DOJO.forEach(function(c){ if(c.id===r.title && r.data.done && typeof r.data.done==='object'){
+            state[c.id]={ done:Object.assign({}, state[c.id].done, r.data.done) }; } });
+        }); draw();
+      }).catch(function(){});
+      Promise.all([
+        A.creations.list('songlab').catch(function(){ return []; }),
+        A.creations.list('songmaker').catch(function(){ return []; }),
+        A.creations.list('jamtrack').catch(function(){ return []; })
+      ]).then(function(r){ counts.songs=(r[0]||[]).length+(r[1]||[]).length; counts.jams=(r[2]||[]).length; draw(); });
+    } else { counts.songs=0; counts.jams=0; draw(); }
+  }
+
   function renderGate(){ document.getElementById('gate').hidden=false; document.getElementById('hub').hidden=true; }
   function renderHub(user, profile){
     document.getElementById('gate').hidden=true; document.getElementById('hub').hidden=false;
     var er=document.getElementById('emailRow'); er.innerHTML=''; er.appendChild(document.createTextNode('Signed in as ')); var b=el('b',null,user.email); er.appendChild(b);
     document.getElementById('uname').value = (profile && profile.username) || '';
-    renderPlan(); renderCreations(); renderPublished(user, profile);
+    renderPlan(); renderAccomp(); renderCreations(); renderPublished(user, profile);
   }
 
   function renderPlan(){
