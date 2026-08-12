@@ -203,8 +203,12 @@
   var BOILEM = [71,71,71,71, 72,72,72,72, 71,71,71,71, 69,69,69,69, 71,71,71,71, 72,72,72,72, 71,71,69,69, [67,4]].map(mk); // Boil Them Cabbage Down
   var BOILEM_CH = ['G','C','G','D','G','C','D','G'];
   var GPENT = [67,69,71,74,76,79, 76,74,71,69,[67,2]].map(mk); // G A B D E G — the same pentatonic shape, moved home to G
+  // 3.3: say your piece (3 changeable notes + a breath), then sign it with the classic Flatt G-run: G A B G | E F# G
+  var GRUN = [ {m:71,d:1,chg:true},{m:74,d:1,chg:true},{m:71,d:1,chg:true},{rest:true,d:1}, {m:67,d:1},{m:69,d:1},{m:71,d:1},{m:67,d:1}, {m:64,d:1},{m:66,d:1},{m:67,d:2} ];
+  var GPSET = [62,64,67,69,71,74,76];                     // D E G A B D E — G pentatonic palette across the range
+  var GMAJ_PCS = [7,9,11,0,2,4,6];                        // G A B C D E F# — chord tones of G, C and D all live here
   var BLUES12 = ['C7','C7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7']; // the 12-bar blues in C
-  var ROMAN = { C7:'I', F7:'IV', G7:'V' };
+  var ROMAN = { C7:'I', F7:'IV', G7:'V', G:'I', C:'IV', D:'V' };               // C7/F7/G7 read in C; G/C/D read in G (the bluegrass key)
 
   /* ===== audio ===== */
   var actx=null, master=null, timers=[];
@@ -303,11 +307,11 @@
         (function(cell,when){ timers.push(setTimeout(function(){ hiBar(cell); }, Math.max(0,(when-actx.currentTime)*1000))); })(bi, bluesNext);
         bluesNext+=4*spb; bluesBar++; } }, 60); }
   function stopBlues(){ bluesOn=false; if(bluesTimer){ clearInterval(bluesTimer); bluesTimer=null; } stopPlay(); var cs=document.querySelectorAll('.sbar.on'); for(var i=0;i<cs.length;i++) cs[i].classList.remove('on'); }
-  // 12-bar chart in slash notation (self-contained SVG): 3 rows × 4 bars, treble staff, chord symbols, a slash per beat
+  // chord chart in slash notation (self-contained SVG): 4 bars a row, treble staff, chord symbols, a slash per beat
   function slashChartHTML(chords){
-    var gap=7, staffH=4*gap, clefW=30, bw=96, topPad=26, rowH=62, totalW=clefW+4*bw, totalH=topPad+3*rowH+8, s='';
+    var gap=7, staffH=4*gap, clefW=30, bw=96, topPad=26, rowH=62, rows=Math.ceil(chords.length/4), totalW=clefW+4*bw, totalH=topPad+rows*rowH+8, s='';
     function barline(x,y,w){ return '<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+staffH)+'" stroke="#17140E" stroke-width="'+w+'"/>'; }
-    for(var row=0; row<3; row++){ var sy=topPad+row*rowH;
+    for(var row=0; row<rows; row++){ var sy=topPad+row*rowH;
       for(var ln=0; ln<5; ln++){ var ly=sy+ln*gap; s+='<line x1="2" y1="'+ly+'" x2="'+(totalW-2)+'" y2="'+ly+'" stroke="#17140E" stroke-width="1.1"/>'; }
       s+='<text x="1" y="'+(sy+staffH+3)+'" font-family="Georgia,serif" font-size="31" fill="#17140E">𝄞</text>';
       if(row===0){ s+='<text x="'+(clefW-13)+'" y="'+(sy+2*gap)+'" font-family="Georgia,serif" font-weight="700" font-size="13" fill="#17140E">4</text><text x="'+(clefW-13)+'" y="'+(sy+4*gap)+'" font-family="Georgia,serif" font-weight="700" font-size="13" fill="#17140E">4</text>'; }
@@ -318,16 +322,18 @@
         inner+='<text class="schord" x="'+(bx+6)+'" y="'+(sy-5)+'" font-size="14">'+chords[idx]+'</text>';
         for(var b=0;b<4;b++){ var cx=bx+bw*(b+0.5)/4; inner+='<line class="slash" x1="'+(cx-5)+'" y1="'+(midY+6)+'" x2="'+(cx+5)+'" y2="'+(midY-6)+'" stroke-width="3" stroke-linecap="round"/>'; }
         s+='<g class="sbar" id="sbar'+idx+'">'+inner+'</g>';
-        var rx=bx+bw; if(idx===11){ s+=barline(rx-3.5, sy, 1.2)+barline(rx, sy, 3); } else s+=barline(rx, sy, 1.4); }
+        var rx=bx+bw; if(idx===chords.length-1){ s+=barline(rx-3.5, sy, 1.2)+barline(rx, sy, 3); } else s+=barline(rx, sy, 1.4); }
     }
     return '<svg class="slashsvg" viewBox="0 0 '+totalW+' '+totalH+'" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
   }
 
   /* ===== staff renderer (treble; naturals only — Belt 1 is C major pentatonic) ===== */
   var NAT={0:0,2:1,4:2,5:3,7:4,9:5,11:6}, LET=['C','D','E','F','G','A','B'];
-  function info(m){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1;
+  function info(m, sharp){ var pc=((m%12)+12)%12, oct=Math.floor(m/12)-1;
     if(NAT[pc]!=null) return { step:oct*7+NAT[pc], name:LET[NAT[pc]], acc:'' };
-    var ls=NAT[(pc+1)%12];                              // accidentals spelled as a flat of the letter above (E♭, G♭, B♭…)
+    if(sharp){ var lsS=NAT[(pc+11)%12];                 // sharp keys (G major etc.): spell as a sharp of the letter below (F♯, C♯…)
+      return { step:oct*7+lsS, name:LET[lsS]+'♯', acc:'#' }; }
+    var ls=NAT[(pc+1)%12];                              // default: accidentals spelled as a flat of the letter above (E♭, G♭, B♭…)
     return { step:oct*7+ls, name:LET[ls]+'♭', acc:'b' }; }
   function renderMelody(mel, opts){
     opts=opts||{}; var inter=!!opts.interactive;
@@ -344,13 +350,13 @@
         inner='<path d="M'+(cx-4)+' '+(ry-9)+' L'+(cx+3)+' '+(ry-2)+' L'+(cx-3)+' '+(ry+1)+' L'+(cx+4)+' '+(ry+8)+'" fill="none" stroke="#9a8f78" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>'
           + '<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="#c3b79e">·</text>';
       } else {
-        var nf=info(n.m), y=yBot-(nf.step-30)*(gap/2);
+        var nf=info(n.m, opts.sharp), y=yBot-(nf.step-30)*(gap/2);
         var chg=inter && n.chg, moved=chg && n.m0!=null && n.m!==n.m0;
         var col = chg ? (moved?'#1F9D55':'#2438C8') : (n.col || '#17140E');
         var led=''; for(var lk=1; yBot+lk*gap <= y+0.1; lk++){ led+='<line x1="'+(cx-9)+'" y1="'+(yBot+lk*gap)+'" x2="'+(cx+9)+'" y2="'+(yBot+lk*gap)+'" stroke="#17140E" stroke-width="1.3"/>'; }
         for(var uk=1; (yBot-4*gap)-uk*gap >= y-0.1; uk++){ var uy=(yBot-4*gap)-uk*gap; led+='<line x1="'+(cx-9)+'" y1="'+uy+'" x2="'+(cx+9)+'" y2="'+uy+'" stroke="#17140E" stroke-width="1.3"/>'; }
         var open=n.d>=2, stem=n.d<4;
-        var flat = nf.acc==='b' ? '<text x="'+(cx-13)+'" y="'+(y+5)+'" font-family="Georgia,serif" font-size="17" fill="'+col+'">♭</text>' : '';
+        var flat = nf.acc ? '<text x="'+(cx-13)+'" y="'+(y+5)+'" font-family="Georgia,serif" font-size="'+(nf.acc==='b'?17:15)+'" fill="'+col+'">'+(nf.acc==='b'?'♭':'♯')+'</text>' : '';
         var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.4" ry="4.8" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':col)+'" stroke="'+col+'" stroke-width="'+(chg?2.4:1.7)+'"/>';
         var ring = chg ? '<circle cx="'+cx+'" cy="'+y+'" r="10.5" fill="none" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="2 2" opacity=".75"/>' : '';
         var st=stem?'<line x1="'+(cx+6)+'" y1="'+(y-1)+'" x2="'+(cx+6)+'" y2="'+(y-27)+'" stroke="'+col+'" stroke-width="1.7"/>':'';
@@ -370,7 +376,7 @@
   function renderExercise(ex){
     if(ex && ex.type==='melody'){
       return '<div class="ex"><div class="exh">Listen</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
-        + '<div class="staffwrap">'+renderMelody(ex.mel)+'</div>'
+        + '<div class="staffwrap">'+renderMelody(ex.mel,{sharp:ex.sharp})+'</div>'
         + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button></div></div>';
     }
     if(ex && ex.type==='embellish'){
@@ -394,13 +400,13 @@
         + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">Fly on →</button></div></div>';
     }
     if(ex && ex.type==='jam'){
-      return '<div class="ex"><div class="exh">Your first flight</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+      return '<div class="ex"><div class="exh">'+(ex.exh||'Your first flight')+'</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
         + '<div class="tunepick" id="tunePick"></div>'
         + '<div class="staffwrap" id="headStaff"></div>'
         + '<div class="lab" id="lfLab"><div class="heard" id="lfHeard">—</div><div class="labstatus" id="lfStatus">Pick a tune, then play the head — improvise on the repeat.</div></div>'
         + '<div class="row"><button class="btn" id="jHead">&#9654; Play the head</button><button class="btn blue" id="jGo">&#9654; Head, then solo</button><button class="btn" id="jStop">Stop</button><button class="btn" id="lfMic">Enable microphone</button></div>'
         + '<div class="fb" id="fb2">Chorus 1: play the melody over the chords. Chorus 2 on: improvise — space, call &amp; answer, land home.</div>'
-        + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">I flew — that’s my chorus ✈️</button></div></div>';
+        + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">'+(ex.doneLabel||'I flew — that’s my chorus ✈️')+'</button></div></div>';
     }
     if(ex && ex.type==='space'){
       return '<div class="ex"><div class="exh">Give it some air</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
@@ -409,7 +415,7 @@
         + '<div class="fb" id="fb"></div></div>';
     }
     if(ex && ex.type==='bluesjam'){
-      return '<div class="ex"><div class="exh">'+(ex.capstone?'Capstone':'The form')+'</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+      return '<div class="ex"><div class="exh">'+(ex.exh||(ex.capstone?'Capstone':'The form'))+'</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
         + '<div class="slashwrap" id="bluesGrid"></div>'
         + '<div class="scaleref"><span class="reflbl">Your notes:</span> '+ex.scaleName+'</div>'
         + (ex.mic ? '<div class="lab" id="lfLab"><div class="heard" id="lfHeard">—</div><div class="labstatus" id="lfStatus">Optional: enable your mic to see the notes you play.</div></div>' : '')
@@ -456,18 +462,18 @@
     }
     if(ex && ex.type==='jam'){
       heardEl=el('lfHeard'); labEl=el('lfLab'); statusEl=el('lfStatus');
-      var cur=0;
+      var cur=0, tset=ex.tunes||TUNES;
       var drawTune=function(){
-        el('headStaff').innerHTML=renderMelody(TUNES[cur].mel);
-        el('tunePick').innerHTML=TUNES.map(function(t,i){ return '<button class="btn sm'+(i===cur?' blue':'')+'" data-t="'+i+'">'+t.name+'</button>'; }).join('');
+        el('headStaff').innerHTML=renderMelody(tset[cur].mel,{sharp:ex.sharp});
+        el('tunePick').innerHTML=tset.map(function(t,i){ return '<button class="btn sm'+(i===cur?' blue':'')+'" data-t="'+i+'">'+t.name+'</button>'; }).join('');
         el('tunePick').querySelectorAll('[data-t]').forEach(function(b){ b.addEventListener('click', function(){ stopJam(); cur=+b.dataset.t; drawTune(); }); });
       };
       drawTune();
-      el('jHead').addEventListener('click', function(){ playMelody(TUNES[cur].mel, TUNES[cur].bpm); });
-      el('jGo').addEventListener('click', function(){ startJam(TUNES[cur], true); if(statusEl) statusEl.textContent='Chorus 1: play the head. Then keep going — improvise!'; });
+      el('jHead').addEventListener('click', function(){ playMelody(tset[cur].mel, tset[cur].bpm); });
+      el('jGo').addEventListener('click', function(){ startJam(tset[cur], true); if(statusEl) statusEl.textContent='Chorus 1: play the head. Then keep going — improvise!'; });
       el('jStop').addEventListener('click', function(){ stopJam(); if(statusEl) statusEl.textContent='Stopped. Pick a tune and go again.'; });
       el('lfMic').addEventListener('click', ensureMic);
-      el('mDone').addEventListener('click', function(){ stopJam(); var fb=el('fb2'); if(fb){ fb.textContent='🎉 You played the head and flew your own chorus — that’s improvising! White belt earned.'; fb.className='fb ok'; } onSolve(); });
+      el('mDone').addEventListener('click', function(){ stopJam(); var fb=el('fb2'); if(fb){ fb.textContent=ex.win||'🎉 You played the head and flew your own chorus — that’s improvising! White belt earned.'; fb.className='fb ok'; } onSolve(); });
     }
     if(ex && ex.type==='bluesjam'){
       el('bluesGrid').innerHTML=slashChartHTML(ex.chords);
@@ -564,7 +570,8 @@
           desc:'The 12-bar blues loops under you — no head this time, just your solo. Play crotchets and rests (one note per beat), then check it back.',
           scaleName:'C blues — C D E♭ E G A (the E♭ is your blue note)',
           goal:'Enable the mic, hit Play, and solo — one note per beat, rests where you breathe. When you’re done, tap “Check my solo” to see your notes written out and how many stayed in the pentatonic.',
-          doneLabel:'Check my solo 🎷', win:'🎉 You soloed a full chorus over the blues — form, blue notes, space and all. Yellow belt earned!' } }
+          doneLabel:'Check my solo 🎷', checkTail:'Yellow belt earned — that solo was yours. 🎷',
+          win:'🎉 You soloed a full chorus over the blues — form, blue notes, space and all. Yellow belt earned!' } }
     ]},
     { title:'Belt 3 — Bluegrass', belt:'Green Belt', master:'appalachian', lessons:[
       { num:'3.1', title:'Up the mountain', teach:[
@@ -578,7 +585,33 @@
           { html:"Same wings, new sky. Every trick you've learned — space, call and answer, landing home — comes right along with you. The only thing that moves is <b>home</b>: up here, home is <b>G</b>." },
           { t:'qa', q:"So I already know how to fly here?", a:"That you do. Play the G pentatonic below till your ear finds the new home note. Next time you're up, I'll show you the runs every flatpicker keeps in their pocket." }
         ], ex:{ type:'melody', title:'G major pentatonic', mel:GPENT, bpm:120,
-          desc:'G A B D E — the same five-note shape you know from C, moved up to a new home. Play it up and down till G feels like the ground under your feet.' } }
+          desc:'G A B D E — the same five-note shape you know from C, moved up to a new home. Play it up and down till G feels like the ground under your feet.' } },
+      { num:'3.3', title:'The G-run', teach:[
+          { html:"Time you learned the most famous lick in all of bluegrass: the <b>G-run</b>. Lester Flatt stamped it on a thousand records, and every picker since keeps it in their pocket. It's how a mountain player says <em>“that's the end of my sentence.”</em>" },
+          { html:"Here it is: <b>G A B G</b>, then climb home — <b>E F♯ G</b>. See that <b>F♯</b>? First sharp you've met — in the key of G it's a scale note, and it pulls up into G like a foot finding a stair." },
+          { t:'qa', q:"When do I play it?", a:"At the end of a phrase, same place Papa Sonny taught you to breathe. Say your piece, take the breath, then <em>sign it</em> with the G-run. The three green notes below are your piece — move 'em where you like, then let the run do the talking." }
+        ], ex:{ type:'embellish', title:'Sign it with the G-run', mel:GRUN, bpm:112, pal:GPSET, sharp:true,
+          embWin:'There it is — your phrase, a breath, and the G-run signature. Play that at any jam on Earth and the pickers will nod. 🪕',
+          desc:'Bar 1 is yours — tap the three green notes anywhere in the G pentatonic. Then the breath, then the famous run: G A B G, E F♯ G. The run stays put — it’s the signature.' } },
+      { num:'3.4', title:'Outline the changes', teach:[
+          { html:"Now the deepest mountain secret. A bluegrass break isn't scale-wandering — the good ones <b>follow the chords</b>. Cabbage uses three: <b>G</b>, <b>C</b> and <b>D</b>, and each one is a little family of notes: G is <b>G–B–D</b>, C is <b>C–E–G</b>, D is <b>D–F♯–A</b>." },
+          { html:"When the chord changes, <b>lean on its family</b>. Land one of its notes on the first beat of the bar and your solo sounds like it knows the road — that's called <b>outlining the changes</b>, and it's what separates the pickers from the noodlers." },
+          { t:'qa', q:"How do I know which chord is coming?", a:"Same way you know the next line of a song you've sung a hundred times — the form below is Cabbage's own eight bars, looping. Watch the chart light up, aim for the chord's family as each bar lands, and check your solo when you're done." }
+        ], ex:{ type:'bluesjam', exh:'Follow the chords', title:'Outline the changes', chords:BOILEM_CH, bpm:112, mic:true, sharp:true,
+          scalePcs:GMAJ_PCS, scaleLabel:'the G major scale', checkTail:'That’s outlining — your solo knows the road. 🎻',
+          desc:'Boil Them Cabbage Down’s own eight bars, looping. Solo over them — and when the chord changes, aim for its family: G–B–D, C–E–G, D–F♯–A.',
+          scaleName:'G major — G A B C D E F♯ (every chord tone of G, C and D lives in here)',
+          goal:'Play the loop and solo over it — one note per beat, rests to breathe. Land a chord-family note on beat 1 of each bar. Then check your solo.',
+          doneLabel:'Check my solo 🎻', win:'You followed the changes round the loop — that’s outlining, and your ear did the driving.' } },
+      { num:'3.5', title:'The porch jam', teach:[
+          { html:"Green-belt time — the <b>porch jam</b>. Here's how it goes: I kick off <b>Boil Them Cabbage Down</b>, everybody plays the head together, then we go round the circle and each picker takes a <b>break</b> — that's your solo. Pentatonic, chord families, and the G-run to sign off." },
+          { html:"And fair warning: once everybody's had a turn, somebody always hollers <b>“kick it up!”</b> — same tune, but <em>fast</em>. Don't panic. Speed is just the same tune with the nerves taken out: play <b>half the notes</b>, leave twice the space, and let the G-run land." },
+          { t:'qa', q:"What if I can't keep up?", a:"Then you grin and keep picking — nobody at a porch jam ever got thrown off the porch. Take the slow one first: head, then your break. When that feels good, call the fast one and hold on. Fly through both and the green belt's yours." }
+        ], ex:{ type:'jam', exh:'Capstone', title:'The porch jam', bpm:112, sharp:true,
+          tunes:[ { name:'Boil Them Cabbage Down', mel:BOILEM, chords:BOILEM_CH, bpm:112 },
+                  { name:'Kick it up! 🔥', mel:BOILEM, chords:BOILEM_CH, bpm:152 } ],
+          doneLabel:'I held my own 🪕', win:'🎉 Head, break, and the fast one — you held your own at the porch jam. Green belt earned!',
+          desc:'Chorus 1: the head, all together. Then your break — pentatonic, chord families, G-run to sign off. When the slow one feels good, call “Kick it up!” and ride the fast one.' } }
     ]},
     { title:'Belt 4 — Jazz Blues', belt:'Blue Belt', soon:true, blurb:'An old jazz cat you might know saunters in — swing, seventh chords, and the 12-bar in a sharp suit.' }
   ];
@@ -589,7 +622,8 @@
   function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam' || ex.type==='space' || ex.type==='bluesjam'); }
   function playOne(m){ audio(); tone(actx.currentTime+0.02, m, 0.5); }
   function cyclePitch(i){ var n=work[i]; var ci=pal.indexOf(n.m); if(ci<0) ci=0; n.m=pal[(ci+1)%pal.length]; }
-  function drawWork(cid, mode){ var c=el(cid); c.innerHTML=renderMelody(work, {interactive:true, editAll: mode==='space'});
+  function drawWork(cid, mode){ var c=el(cid), xs=!!(LESSONS[idx]&&LESSONS[idx].ex&&LESSONS[idx].ex.sharp);
+    c.innerHTML=renderMelody(work, {interactive:true, editAll: mode==='space', sharp:xs});
     c.querySelectorAll('[data-i]').forEach(function(g){ g.addEventListener('click', function(){ var i=+g.dataset.i;
       if(mode==='space'){ work[i].rest=!work[i].rest; if(!work[i].rest) playOne(work[i].m); }
       else { cyclePitch(i); playOne(work[i].m); }
@@ -608,20 +642,22 @@
     var isPhrase = (longest>=3 && singles<=1) || (sentences>=2 && singles===0);
     if(!isPhrase){ fb.textContent='That’s a stutter — note, gap, note, gap. Keep your notes together into one idea, THEN breathe. A sentence, then a rest.'; fb.className='fb no'; return; }
     fb.textContent='Now it speaks — a sentence, a breath, another idea. That’s phrasing, not just filling beats.'; fb.className='fb ok'; onSolve(); }
-  // capstone: quantise the captured solo to crotchets + rests and check each note against the pentatonic
+  // capstones: quantise the captured solo to crotchets + rests and check each note against the lesson's scale
   function checkSolo(ex){ var fb=el('fb2'), back=el('soloBack');
-    var PENTA={0:1,2:1,4:1,7:1,9:1}, BLUE={3:1}, spb=60/(ex.bpm||92);
+    var PENTA={}, BLUE={}, spb=60/(ex.bpm||92);
+    (ex.scalePcs||[0,2,4,7,9]).forEach(function(p){ PENTA[p]=1; });
+    (ex.bluePcs||(ex.scalePcs?[]:[3])).forEach(function(p){ BLUE[p]=1; });
     var evs=[], inP=0, inB=0, out=0, prevT=null;
     for(var i=0;i<soloNotes.length && evs.length<24;i++){ var nt=soloNotes[i];
       if(prevT!=null){ var rb=Math.max(0, Math.min(2, Math.round((nt.t-prevT)/spb)-1)); for(var r=0;r<rb && evs.length<24;r++) evs.push({rest:true,d:1}); }
       var pc=((nt.midi%12)+12)%12, col;
       if(PENTA[pc]){ col='#1F9D55'; inP++; } else if(BLUE[pc]){ col='#2438C8'; inB++; } else { col='#C0453B'; out++; }
       evs.push({ m:nt.midi, d:1, col:col }); prevT=nt.t; }
-    if(back){ back.hidden=false; back.innerHTML=renderMelody(evs); }
-    var total=inP+inB+out, head;
+    if(back){ back.hidden=false; back.innerHTML=renderMelody(evs,{sharp:ex.sharp}); }
+    var total=inP+inB+out, label=ex.scaleLabel||'the pentatonic', head;
     if(out===0) head='🎉 Every note landed in the scale'+(inB?' — with '+inB+' blue note'+(inB>1?'s':'')+' for grit':'')+'! ';
-    else head='You played '+total+' notes: '+inP+' in the pentatonic'+(inB?', '+inB+' blue note'+(inB>1?'s':''):'')+', '+out+' outside. ';
-    if(fb){ fb.textContent=head+'Above: green = pentatonic, blue = blue note'+(out?', red = outside — reach back into the scale next time':'')+'. Yellow belt earned — that solo was yours. 🎷'; fb.className='fb ok'; }
+    else head='You played '+total+' notes: '+inP+' in '+label+(inB?', '+inB+' blue note'+(inB>1?'s':''):'')+', '+out+' outside. ';
+    if(fb){ fb.textContent=head+'Above: green = in the scale, blue = blue note'+(out?', red = outside — reach back into the scale next time':'')+'. '+(ex.checkTail||'That solo was yours. 🎷'); fb.className='fb ok'; }
     onSolve(); }
   function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb'); var xe=LESSONS[idx]&&LESSONS[idx].ex;
     if(total>0 && changed>=total){ fb.textContent=(xe&&xe.embWin)||'That’s YOUR version now — and because you stayed in the scale, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
