@@ -51,6 +51,7 @@
   .mnote.on ellipse{ fill:var(--pink)!important; stroke:var(--pink)!important; } .mnote.on text{ fill:var(--pink); font-weight:700; }
   .mnote[data-i]:hover ellipse{ opacity:.72; } .mnote[data-i]:hover circle{ opacity:1; }
   .fb{ font-weight:700; font-size:.9rem; margin-top:12px; min-height:1.2em; } .fb.ok{ color:var(--green); } .fb.no{ color:#C0453B; }
+  .exd a{ color:var(--blue); font-weight:700; }
   .row{ display:flex; gap:10px; flex-wrap:wrap; }
   .btn{ cursor:pointer; border:2.5px solid var(--ink); border-radius:10px; background:var(--card); color:var(--ink); font-family:var(--disp); font-weight:800; font-size:.98rem; padding:10px 18px; box-shadow:3px 3px 0 var(--ink); }
   .btn:active{ transform:translate(3px,3px); box-shadow:none; } .btn[disabled]{ opacity:.5; }
@@ -207,6 +208,33 @@
   var GRUN = [ {m:71,d:1,chg:true},{m:74,d:1,chg:true},{m:71,d:1,chg:true},{rest:true,d:1}, {m:67,d:1},{m:69,d:1},{m:71,d:1},{m:67,d:1}, {m:64,d:1},{m:66,d:1},{m:67,d:2} ];
   var GPSET = [62,64,67,69,71,74,76];                     // D E G A B D E — G pentatonic palette across the range
   var GMAJ_PCS = [7,9,11,0,2,4,6];                        // G A B C D E F# — chord tones of G, C and D all live here
+  // 3.4: the G-run shape (1 2 3 1 · 6 7 1) in the five common bluegrass keys
+  var RUNKEYS = [['G',67],['C',72],['D',62],['A',69],['E',64]].map(function(p){ var r=p[1];
+    return { name:p[0], run:[{m:r,d:1},{m:r+2,d:1},{m:r+4,d:1},{m:r,d:1},{m:r-3,d:1},{m:r-1,d:1},{m:r,d:2}] }; });
+  // 3.5: Old Joe Clark, A part (from tunes/american-fiddle.abc, transposed A->G; quavers = d 0.5)
+  var OLDJOE = [
+    [74,1],[74,.5],[76,.5],[78,1],[76,1],
+    [74,.5],[76,.5],[74,.5],[72,.5],[71,.5],[67,.5],[71,.5],[72,.5],
+    [74,.5],[71,.5],[74,.5],[76,.5],[78,.5],[76,.5],[78,.5],[76,.5],
+    [74,1],[74,.5],[76,.5],[74,1],[71,.5],[72,.5],
+    [74,1],[74,.5],[76,.5],[78,1],[76,1],
+    [74,.5],[76,.5],[74,.5],[72,.5],[71,.5],[69,.5],[67,.5],[69,.5],
+    [71,.5],[69,.5],[67,.5],[71,.5],[69,.5],[67,.5],[66,.5],[69,.5],
+    [67,1],[67,1],[67,2]
+  ].map(mk);
+  var OLDJOE_CH = ['G','G','G','D','G','G','D','G'];
+  // 3.6: a lick mined straight out of Old Joe's bar 6 — then a breath and your own ending
+  var OJLICK = [ {m:74,d:.5},{m:76,d:.5},{m:74,d:.5},{m:72,d:.5},{m:71,d:.5},{m:69,d:.5},{m:67,d:.5},{m:69,d:.5},
+    {rest:true,d:1},{m:71,d:1,chg:true},{m:69,d:1,chg:true},{m:71,d:1,chg:true},{m:67,d:2} ];
+  // 3.7: an outlining break in quavers — each bar starts inside its chord (G-B-D, C-E-G, D-F#-A)
+  var OUTLINE8 = [
+    [67,.5],[69,.5],[71,.5],[74,.5],[71,.5],[67,.5],[69,.5],[71,.5],
+    [72,.5],[76,.5],[74,.5],[72,.5],[76,.5],[74,.5],[72,.5],[74,.5],
+    [71,.5],[69,.5],[67,.5],[71,.5],[74,.5],[71,.5],[69,.5],[67,.5],
+    [62,.5],[64,.5],[66,.5],[69,.5],[66,.5],[64,.5],[62,.5],[66,.5],
+    [67,4]
+  ].map(mk);
+  var OUTLINE8_CH = ['G','C','G','D','G'];
   var BLUES12 = ['C7','C7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7']; // the 12-bar blues in C
   var ROMAN = { C7:'I', F7:'IV', G7:'V', G:'I', C:'IV', D:'V' };               // C7/F7/G7 read in C; G/C/D read in G (the bluegrass key)
 
@@ -360,6 +388,7 @@
         var head='<ellipse cx="'+cx+'" cy="'+y+'" rx="6.4" ry="4.8" transform="rotate(-18 '+cx+' '+y+')" fill="'+(open?'#FFFDF7':col)+'" stroke="'+col+'" stroke-width="'+(chg?2.4:1.7)+'"/>';
         var ring = chg ? '<circle cx="'+cx+'" cy="'+y+'" r="10.5" fill="none" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="2 2" opacity=".75"/>' : '';
         var st=stem?'<line x1="'+(cx+6)+'" y1="'+(y-1)+'" x2="'+(cx+6)+'" y2="'+(y-27)+'" stroke="'+col+'" stroke-width="1.7"/>':'';
+        if(stem && n.d<1) st+='<path d="M'+(cx+6)+' '+(y-27)+' Q'+(cx+13)+' '+(y-22)+' '+(cx+9)+' '+(y-13)+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linecap="round"/>';
         var lbl='<text x="'+cx+'" y="'+(h-8)+'" text-anchor="middle" font-family="\'Space Mono\',monospace" font-size="10" fill="'+(chg?col:(n.col||'#6F6757'))+'" font-weight="'+((chg||n.col)?'700':'400')+'">'+nf.name+'</text>';
         inner=led+flat+ring+head+st+lbl;
       }
@@ -414,6 +443,13 @@
         + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button><button class="btn" id="mCheck">Check</button></div>'
         + '<div class="fb" id="fb"></div></div>';
     }
+    if(ex && ex.type==='keyrun'){
+      return '<div class="ex"><div class="exh">Round the keys</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+        + '<div class="tunepick" id="keyPick"></div>'
+        + '<div class="staffwrap" id="workStaff"></div>'
+        + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button></div>'
+        + '<div class="fb" id="fb"></div></div>';
+    }
     if(ex && ex.type==='bluesjam'){
       return '<div class="ex"><div class="exh">'+(ex.exh||(ex.capstone?'Capstone':'The form'))+'</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
         + '<div class="slashwrap" id="bluesGrid"></div>'
@@ -427,7 +463,9 @@
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
   function wireExercise(ex){
-    if(ex && ex.type==='melody'){ el('mPlay').addEventListener('click', function(){ playMelody(ex.mel, ex.bpm||100); }); el('mStop').addEventListener('click', stopPlay); }
+    if(ex && ex.type==='melody'){
+      el('mPlay').addEventListener('click', function(){ if(ex.chords){ startJam({ mel:ex.mel, chords:ex.chords, bpm:ex.bpm||100 }, true); } else playMelody(ex.mel, ex.bpm||100); });
+      el('mStop').addEventListener('click', function(){ stopJam(); stopPlay(); }); }
     if(ex && ex.type==='space'){
       work=ex.phrase.map(function(n){ return { m:n.m, d:n.d, rest:!!n.rest }; });
       drawWork('workStaff', 'space');
@@ -474,6 +512,22 @@
       el('jStop').addEventListener('click', function(){ stopJam(); if(statusEl) statusEl.textContent='Stopped. Pick a tune and go again.'; });
       el('lfMic').addEventListener('click', ensureMic);
       el('mDone').addEventListener('click', function(){ stopJam(); var fb=el('fb2'); if(fb){ fb.textContent=ex.win||'🎉 You played the head and flew your own chorus — that’s improvising! White belt earned.'; fb.className='fb ok'; } onSolve(); });
+    }
+    if(ex && ex.type==='keyrun'){
+      var kcur=0, kdone={};
+      var selectKey=function(i, quiet){
+        kcur=i; var K=ex.keys[kcur];
+        if(!quiet){ playMelody(K.run, ex.bpm||112); kdone[K.name]=1; }
+        el('workStaff').innerHTML=renderMelody(K.run, {sharp:true});
+        el('keyPick').innerHTML=ex.keys.map(function(k,j){ return '<button class="btn sm'+(j===kcur?' blue':'')+'" data-k="'+j+'">'+(kdone[k.name]?'✓ ':'')+'Key of '+k.name+'</button>'; }).join('');
+        el('keyPick').querySelectorAll('[data-k]').forEach(function(b){ b.addEventListener('click', function(){ selectKey(+b.dataset.k); }); });
+        var fb=el('fb'), left=ex.keys.filter(function(k){ return !kdone[k.name]; }).length;
+        if(!left){ fb.textContent='All five keys — same stairs, five front doors. Wherever the fiddler calls it, you’ve got the run. 🪕'; fb.className='fb ok'; onSolve(); }
+        else if(!quiet){ fb.textContent=(5-left)+' of 5 keys — keep going round.'; fb.className='fb no'; }
+      };
+      selectKey(0, true);
+      el('mPlay').addEventListener('click', function(){ selectKey(kcur); });
+      el('mStop').addEventListener('click', stopPlay);
     }
     if(ex && ex.type==='bluesjam'){
       el('bluesGrid').innerHTML=slashChartHTML(ex.chords);
@@ -593,17 +647,42 @@
         ], ex:{ type:'embellish', title:'Sign it with the G-run', mel:GRUN, bpm:112, pal:GPSET, sharp:true,
           embWin:'There it is — your phrase, a breath, and the G-run signature. Play that at any jam on Earth and the pickers will nod. 🪕',
           desc:'Bar 1 is yours — tap the three green notes anywhere in the G pentatonic. Then the breath, then the famous run: G A B G, E F♯ G. The run stays put — it’s the signature.' } },
-      { num:'3.4', title:'Outline the changes', teach:[
-          { html:"Now the deepest mountain secret. A bluegrass break isn't scale-wandering — the good ones <b>follow the chords</b>. Cabbage uses three: <b>G</b>, <b>C</b> and <b>D</b>, and each one is a little family of notes: G is <b>G–B–D</b>, C is <b>C–E–G</b>, D is <b>D–F♯–A</b>." },
-          { html:"When the chord changes, <b>lean on its family</b>. Land one of its notes on the first beat of the bar and your solo sounds like it knows the road — that's called <b>outlining the changes</b>, and it's what separates the pickers from the noodlers." },
-          { t:'qa', q:"How do I know which chord is coming?", a:"Same way you know the next line of a song you've sung a hundred times — the form below is Cabbage's own eight bars, looping. Watch the chart light up, aim for the chord's family as each bar lands, and check your solo when you're done." }
-        ], ex:{ type:'bluesjam', exh:'Follow the chords', title:'Outline the changes', chords:BOILEM_CH, bpm:112, mic:true, sharp:true,
-          scalePcs:GMAJ_PCS, scaleLabel:'the G major scale', checkTail:'That’s outlining — your solo knows the road. 🎻',
-          desc:'Boil Them Cabbage Down’s own eight bars, looping. Solo over them — and when the chord changes, aim for its family: G–B–D, C–E–G, D–F♯–A.',
+      { num:'3.4', title:'Round the keys', teach:[
+          { html:"Here's the thing about a jam: nobody asks what key <em>you</em> like. The fiddler calls it — <b>G</b> today, <b>A</b> for the singer tomorrow, <b>C</b>, <b>D</b> or <b>E</b> the day after. Those five are the common calls, and a picker has to live in all of them." },
+          { html:"But you already own the trick — you used it when C pentatonic became G pentatonic. <b>Shapes move.</b> The G-run is just degrees <b>1 2 3 1, then 6 7 1</b> — same stairs, different front door. Slide it to any key and it's the same signature." },
+          { t:'qa', q:"Is it still called a G-run in the key of A?", a:"Ha — it is! Pickers call it the G-run wherever it lives; that's the joke and the badge. Tap each key below and play the run there. When all five feel like the same old friend, you're ready." }
+        ], ex:{ type:'keyrun', title:'The run in five keys', keys:RUNKEYS, bpm:112,
+          desc:'The same run — 1 2 3 1, 6 7 1 — in the five common bluegrass keys: G, C, D, A and E. Tap a key to hear it move in. Play all five to fly on.' } },
+      { num:'3.5', title:'Old Joe Clark', teach:[
+          { html:"Time for a proper second tune: <b>Old Joe Clark</b> — sung on porches since the 1800s, called at every jam since. And here's what's new: this one <b>runs</b>. It moves in <b>quavers</b> — two notes to every beat, the true bluegrass gait." },
+          { html:"Don't let the crowd of notes spook you. Quavers are just walking with quicker feet — count <em>“one-and-two-and”</em> and they fall right in. Notice the little <b>flags</b> on the stems: that's how a quaver looks on the page." },
+          { t:'qa', q:"That's twice the notes of Cabbage!", a:"It always looks like a lot till you hum it — and you've hummed this one all your life, I'd wager. Learn it a bar at a time. The Play button runs it over the chords, so you can pick along till it's yours." }
+        ], ex:{ type:'melody', title:'Old Joe Clark (A part)', mel:OLDJOE, chords:OLDJOE_CH, bpm:100, sharp:true,
+          desc:'The A part of Old Joe Clark in G — eight bars of quavers, straight from the fiddle-tune book. Play it over the chords and pick along; the F♯ is a scale note here, same as the G-run.' } },
+      { num:'3.6', title:'Mine the tune', teach:[
+          { html:"Now I'll tell you where licks <em>really</em> come from. Nobody invents them out of thin air — you <b>mine them out of tunes</b>. Every tune you know is a seam of licks waiting for a shovel." },
+          { html:"Take Old Joe: that run in bar six — <b>D E D C, B A G A</b> — dig it out of the tune and it stands on its own. Drop it anywhere the G chord lives and it sounds like you've been picking for forty years." },
+          { t:'qa', q:"Can I take licks from any tune?", a:"Any tune you can hum, cher— hm, that's Papa Sonny rubbing off on me. <em>Any tune at all.</em> Smart pickers write theirs down: there's a <b>Phrasebook</b> over in the Training hall for exactly that. Dig the lick below out of Old Joe, bend the ending, and it's yours." }
+        ], ex:{ type:'embellish', title:'Dig a lick from Old Joe', mel:OJLICK, bpm:100, pal:GPSET, sharp:true,
+          embWin:'Dug from the tune, bent into your own — that’s how a lick bag gets filled. Jot it in your Phrasebook before it flies off! 🪕',
+          desc:'Bar 1 is mined straight out of Old Joe Clark’s sixth bar. Then a breath — and the ending is yours: tap the three green notes anywhere in the G pentatonic. Keep the licks you like in your <a href="phrasebook.html">Phrasebook</a>.' } },
+      { num:'3.7', title:'Outline the changes', teach:[
+          { html:"Now the deepest mountain secret. A bluegrass break isn't scale-wandering — the good ones <b>follow the chords</b>. Cabbage uses three: <b>G</b>, <b>C</b> and <b>D</b>, and each is a little family of notes: G is <b>G–B–D</b>, C is <b>C–E–G</b>, D is <b>D–F♯–A</b>." },
+          { html:"A real break does it <b>in quavers</b> — the feet keep moving, and the first note of each bar lands <b>inside the new chord's family</b>. Do that one thing and your solo sounds like it knows the road. That's <b>outlining the changes</b>." },
+          { t:'qa', q:"How do I know which chord is coming?", a:"Same way you know the next line of a song you've sung a hundred times — the form tells you. Listen to the break below: quavers all the way, and watch how every bar <em>opens</em> on its own chord. That downbeat note is the whole secret." }
+        ], ex:{ type:'melody', title:'A break that knows the road', mel:OUTLINE8, chords:OUTLINE8_CH, bpm:96, sharp:true,
+          desc:'Four bars of quavers over G, C, G, D — each bar opens inside its chord family (G–B–D, C–E–G, D–F♯–A), and the F♯ at the end pulls home to G. Play it a few times and hear the road in it.' } },
+      { num:'3.8', title:'Play the changes', teach:[
+          { html:"Your turn — and this time the <b>lab is listening</b>. Cabbage's eight bars loop below; you solo over them <b>in quavers</b>, two notes to the beat, aiming each bar at its chord family." },
+          { html:"Don't chase perfect. Land the <b>first note of each bar</b> inside the chord, keep the feet moving, and breathe when you need to — the lab will write your break out afterwards and show you how it sat in the scale." },
+          { t:'qa', q:"What if I fall off the road?", a:"Then you climb back on at the next bar — that's what every picker does. Take it round a few times, then check your break and look at it written out. Green means you knew the road." }
+        ], ex:{ type:'bluesjam', exh:'The listening lab', title:'Play the changes', chords:BOILEM_CH, bpm:100, mic:true, sharp:true, grid:0.5,
+          scalePcs:GMAJ_PCS, scaleLabel:'the G major scale', checkTail:'That’s a real bluegrass break — quavers that know the road. 🎻',
+          desc:'Cabbage’s own eight bars, looping. Solo in quavers — two notes a beat, rests to breathe — and open each bar inside its chord: G–B–D, C–E–G, D–F♯–A.',
           scaleName:'G major — G A B C D E F♯ (every chord tone of G, C and D lives in here)',
-          goal:'Play the loop and solo over it — one note per beat, rests to breathe. Land a chord-family note on beat 1 of each bar. Then check your solo.',
-          doneLabel:'Check my solo 🎻', win:'You followed the changes round the loop — that’s outlining, and your ear did the driving.' } },
-      { num:'3.5', title:'The porch jam', teach:[
+          goal:'Enable the mic, hit Play, and take a break in quavers. Open each bar on a chord-family note. When you’re done, check your break — the lab writes it out in quavers.',
+          doneLabel:'Check my break 🎻', win:'You followed the changes round the loop — that’s outlining, and your ear did the driving.' } },
+      { num:'3.9', title:'The porch jam', teach:[
           { html:"Green-belt time — the <b>porch jam</b>. Here's how it goes: I kick off <b>Boil Them Cabbage Down</b>, everybody plays the head together, then we go round the circle and each picker takes a <b>break</b> — that's your solo. Pentatonic, chord families, and the G-run to sign off." },
           { html:"And fair warning: once everybody's had a turn, somebody always hollers <b>“kick it up!”</b> — same tune, but <em>fast</em>. Don't panic. Speed is just the same tune with the nerves taken out: play <b>half the notes</b>, leave twice the space, and let the G-run land." },
           { t:'qa', q:"What if I can't keep up?", a:"Then you grin and keep picking — nobody at a porch jam ever got thrown off the porch. Take the slow one first: head, then your break. When that feels good, call the fast one and hold on. Fly through both and the green belt's yours." }
@@ -619,7 +698,7 @@
   var idx=0, solved=false, work=null;
   var PSET=[60,62,64,67,69,72];   // C major pentatonic across the melody's range
   var pal=PSET;                    // active palette for tap-to-change (set per embellish exercise)
-  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam' || ex.type==='space' || ex.type==='bluesjam'); }
+  function isGatedType(ex){ return !!ex && (ex.type==='embellish' || ex.type==='answer' || ex.type==='freecall' || ex.type==='jam' || ex.type==='space' || ex.type==='bluesjam' || ex.type==='keyrun'); }
   function playOne(m){ audio(); tone(actx.currentTime+0.02, m, 0.5); }
   function cyclePitch(i){ var n=work[i]; var ci=pal.indexOf(n.m); if(ci<0) ci=0; n.m=pal[(ci+1)%pal.length]; }
   function drawWork(cid, mode){ var c=el(cid), xs=!!(LESSONS[idx]&&LESSONS[idx].ex&&LESSONS[idx].ex.sharp);
@@ -644,15 +723,15 @@
     fb.textContent='Now it speaks — a sentence, a breath, another idea. That’s phrasing, not just filling beats.'; fb.className='fb ok'; onSolve(); }
   // capstones: quantise the captured solo to crotchets + rests and check each note against the lesson's scale
   function checkSolo(ex){ var fb=el('fb2'), back=el('soloBack');
-    var PENTA={}, BLUE={}, spb=60/(ex.bpm||92);
+    var PENTA={}, BLUE={}, spb=60/(ex.bpm||92), grid=ex.grid||1, cap=grid<1?32:24;
     (ex.scalePcs||[0,2,4,7,9]).forEach(function(p){ PENTA[p]=1; });
     (ex.bluePcs||(ex.scalePcs?[]:[3])).forEach(function(p){ BLUE[p]=1; });
     var evs=[], inP=0, inB=0, out=0, prevT=null;
-    for(var i=0;i<soloNotes.length && evs.length<24;i++){ var nt=soloNotes[i];
-      if(prevT!=null){ var rb=Math.max(0, Math.min(2, Math.round((nt.t-prevT)/spb)-1)); for(var r=0;r<rb && evs.length<24;r++) evs.push({rest:true,d:1}); }
+    for(var i=0;i<soloNotes.length && evs.length<cap;i++){ var nt=soloNotes[i];
+      if(prevT!=null){ var rb=Math.max(0, Math.min(grid<1?4:2, Math.round((nt.t-prevT)/(spb*grid))-1)); for(var r=0;r<rb && evs.length<cap;r++) evs.push({rest:true,d:grid}); }
       var pc=((nt.midi%12)+12)%12, col;
       if(PENTA[pc]){ col='#1F9D55'; inP++; } else if(BLUE[pc]){ col='#2438C8'; inB++; } else { col='#C0453B'; out++; }
-      evs.push({ m:nt.midi, d:1, col:col }); prevT=nt.t; }
+      evs.push({ m:nt.midi, d:grid, col:col }); prevT=nt.t; }
     if(back){ back.hidden=false; back.innerHTML=renderMelody(evs,{sharp:ex.sharp}); }
     var total=inP+inB+out, label=ex.scaleLabel||'the pentatonic', head;
     if(out===0) head='🎉 Every note landed in the scale'+(inB?' — with '+inB+' blue note'+(inB>1?'s':'')+' for grit':'')+'! ';
