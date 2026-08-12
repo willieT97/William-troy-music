@@ -151,6 +151,19 @@ textarea.field{resize:vertical;min-height:56px}
 .formrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .formrow .field{flex:1;min-width:110px}
 .hint{font-family:var(--mono);font-size:.68rem;color:rgba(23,20,14,.6);margin-top:6px}
+/* ---------- sign-in gate ---------- */
+#gate{display:none;padding:60px 22px 40px}
+#gate.show{display:block}
+body.gated header .weeknav,body.gated header .weeklabel,body.gated header #syncStatus,
+body.gated header #openManage,body.gated main,body.gated #demoBanner{display:none}
+.gatecard{max-width:520px;margin:0 auto;border:3px solid var(--ink);background:#fff;
+  box-shadow:8px 8px 0 var(--ink);padding:32px 30px 28px;text-align:center}
+.gatecard .lock{font-size:2.4rem;line-height:1}
+.gatecard h1{font-family:var(--display);font-weight:800;font-size:1.6rem;margin:10px 0 12px}
+.gatecard p{margin:0 auto 12px;max-width:42ch}
+.gatecard .fine{font-family:var(--mono);font-size:.72rem;color:rgba(23,20,14,.62);line-height:1.6}
+.gatecard .grow{display:flex;gap:14px;align-items:center;justify-content:center;margin:18px 0 14px;flex-wrap:wrap}
+.gatecard .backlink{font-family:var(--mono);font-size:.78rem;color:var(--blue);text-decoration:none}
 #demoBanner{display:none;margin:0 22px;max-width:1400px}
 #demoBanner.show{display:block}
 #demoBanner .inner{margin:14px auto 0;border:2px dashed var(--ink);background:#fff;padding:10px 14px;font-size:.9rem}
@@ -172,6 +185,18 @@ textarea.field{resize:vertical;min-height:56px}
 </header>
 
 <div id="demoBanner"></div>
+
+<div id="gate">
+  <div class="gatecard">
+    <div class="lock" aria-hidden="true">🔒</div>
+    <h1>Your rollbook is private</h1>
+    <p>This is your teaching book — students' names, lesson notes, the lot. Sign in and it opens; sign out and it closes behind you.</p>
+    <p class="fine">Only your account can read it. Nothing here is public, and it never appears anywhere else on the site.</p>
+    <div class="grow"><button class="btn primary" id="gateSignin">Sign in</button>
+    <a class="backlink" href="index.html">← Music Arcade</a></div>
+    <p class="fine" id="gateWait">Checking your account…</p>
+  </div>
+</div>
 
 <main>
   <div class="grid" id="grid"></div>
@@ -268,12 +293,23 @@ const colourOf=p=>p.colour||COLOURS[Math.max(0,state.people.indexOf(p))%COLOURS.
    Every change is written to localStorage first, so the rollbook keeps working offline
    and mid-lesson; when you're signed in it's mirrored to your account (owner-only) so
    the same book follows you from laptop to phone. Newest copy wins on load. */
-const LKEY='rollbook.state.v1';
+const LBASE='rollbook.state.v1';
 let cloudRowId=null;
 const signedIn=()=>!!(window.MAAuth&&MAAuth.user&&MAAuth.user());
+const userId=()=>{const u=window.MAAuth&&MAAuth.user&&MAAuth.user();return u?u.id:null;};
+/* the on-device copy is filed under the signed-in account, so two teachers sharing
+   a laptop never see each other's book */
+const lkey=()=>LBASE+':'+(userId()||'anon');
 function setStatus(cls,txt){const el=$('#syncStatus');el.className=cls;el.textContent=txt;}
-function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(state));}catch(e){}}
-function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LKEY));if(j&&Array.isArray(j.people))return j;}catch(e){}return null;}
+function saveLocal(){try{localStorage.setItem(lkey(),JSON.stringify(state));}catch(e){}}
+function loadLocal(){
+  try{
+    let raw=localStorage.getItem(lkey());
+    if(!raw){ const legacy=localStorage.getItem(LBASE); if(legacy){ raw=legacy; localStorage.removeItem(LBASE); } }
+    const j=JSON.parse(raw);if(j&&Array.isArray(j.people))return j;
+  }catch(e){}
+  return null;
+}
 function countOf(d){return d?((d.people||[]).length+(d.slots||[]).length+(d.lessons||[]).length):0;}
 
 function markDirty(){
@@ -292,8 +328,7 @@ async function pushCloud(){
   }catch(e){setStatus('error','save failed — retrying');clearTimeout(saveTimer);saveTimer=setTimeout(pushCloud,6000);}
 }
 async function pullCloud(){
-  renderAccountBanner();
-  if(!signedIn()){cloudRowId=null;setStatus('local','this device');render();return;}
+  if(!signedIn())return;
   setStatus('saving','loading…');
   try{
     const rows=await MAAuth.creations.list('rollbook');
@@ -313,13 +348,13 @@ async function pullCloud(){
   }catch(e){setStatus('error','couldn’t reach your account');}
   render();
 }
-function renderAccountBanner(){
-  const b=$('#demoBanner');
-  if(signedIn()){b.classList.remove('show');return;}
-  b.innerHTML='<div class="inner"><b>Saved on this device.</b> Your rollbook lives in this browser only — '+
-    '<button class="btn small" id="rbSignin">Sign in</button> to sync it between your laptop and phone, and keep a private backup.</div>';
-  b.classList.add('show');
-  const s=$('#rbSignin');if(s)s.onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
+/* ---------- the gate: no book without a login ---------- */
+function applyGate(known){
+  const open=signedIn();
+  document.body.classList.toggle('gated',!open);
+  $('#gate').classList.toggle('show',!open);
+  const w=$('#gateWait'); if(w) w.style.display=known?'none':'';
+  if(!open){ closeDrawer(); $('#manage').classList.remove('open'); }
 }
 
 /* ---------- week grid ---------- */
@@ -596,16 +631,28 @@ function demoData(){
 /* ---------- boot ---------- */
 window.addEventListener('beforeunload',e=>{if(dirty&&signedIn()){e.preventDefault();e.returnValue='';}});
 
-const saved=loadLocal();
-if(saved)state=Object.assign({people:[],slots:[],lessons:[],exceptions:[],updatedAt:''},saved);
-setStatus('local','this device');
-renderAccountBanner();
-render();
+const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],updatedAt:''});
+applyGate(false);
+$('#gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
+
 /* MAAuth.onChange fires on load and on every sign in/out */
 (function waitAuth(){
-  if(window.MAAuth&&MAAuth.onChange) MAAuth.onChange(()=>{pullCloud();});
+  if(window.MAAuth&&MAAuth.onChange) MAAuth.onChange(onAuth);
   else setTimeout(waitAuth,120);
 })();
+function onAuth(){
+  applyGate(true);
+  if(signedIn()){
+    const saved=loadLocal();
+    state=saved?Object.assign(EMPTY(),saved):EMPTY();
+    render();            // show the device copy straight away, then reconcile
+    pullCloud();
+  } else {
+    clearTimeout(saveTimer); dirty=false; cloudRowId=null;
+    state=EMPTY();       // nothing stays on screen once you're out
+    render();
+  }
+}
 </script>
 </body>
 </html>
