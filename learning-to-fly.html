@@ -161,7 +161,27 @@
       + '<circle cx="34" cy="51" r="3" fill="#FF9A8B" opacity=".5"/><circle cx="66" cy="51" r="3" fill="#FF9A8B" opacity=".5"/>'
       + '<path d="M42 55 Q50 62 58 55" fill="none" stroke="#17140E" stroke-width="2.6" stroke-linecap="round"/>'
       + '<g transform="translate(62 86)"><circle cx="0" cy="3.5" r="3" fill="#FFFDF7" stroke="#17140E" stroke-width="1.6"/><line x1="0" y1="0.5" x2="0" y2="-6" stroke="#17140E" stroke-width="1.6"/></g>'
-      + '</svg>' }
+      + '</svg>' },
+    // Belt 4: THE CAT — the old jazz cat from Learning to Walk, upright bass and all
+    jazzcat: { who:'THE CAT', svg: '<svg viewBox="0 0 200 220" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">'
+      + '<g stroke="#17140E" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'
+      + '<rect x="150" y="66" width="7" height="86" rx="2" fill="#7A4A1E"/>'
+      + '<path d="M153 66 q-9 -3 -5 -12 q7 -5 9 3" fill="none" stroke-width="3"/>'
+      + '<path d="M150 206 C124 206 122 172 143 170 C124 168 126 128 153 130 C180 128 182 168 163 170 C184 172 176 206 150 206 Z" fill="#C77B33"/>'
+      + '<line x1="153" y1="70" x2="153" y2="150" stroke="#F4EEE2" stroke-width="1.2"/>'
+      + '<path d="M34 216 C34 178 56 160 92 160 C128 160 150 178 150 216 Z" fill="#2438C8"/>'
+      + '<path d="M78 162 L92 188 L106 162 Z" fill="#F4EEE2"/>'
+      + '<path d="M92 188 l0 22" stroke-width="2"/>'
+      + '<circle cx="92" cy="118" r="35" fill="#C98A52"/>'
+      + '<path d="M80 140 q12 18 24 0 q-3 16 -12 16 q-9 0 -12 -16 Z" fill="#3a2f26" stroke="none"/>'
+      + '<path d="M80 140 q12 18 24 0" fill="none"/>'
+      + '<rect x="62" y="110" width="24" height="13" rx="4" fill="#17140E" stroke="none"/>'
+      + '<rect x="98" y="110" width="24" height="13" rx="4" fill="#17140E" stroke="none"/>'
+      + '<line x1="86" y1="115" x2="98" y2="115"/>'
+      + '<path d="M50 100 q42 -20 84 0 q6 8 -6 10 q-36 -13 -72 0 q-12 -2 -6 -10 Z" fill="#17140E" stroke-width="2.5"/>'
+      + '<path d="M64 100 q0 -34 28 -34 q28 0 28 34 Z" fill="#17140E" stroke-width="2.5"/>'
+      + '<rect x="64" y="90" width="56" height="7" fill="#FF4E86" stroke="none"/>'
+      + '</g></svg>' }
   };
 
   /* ===== melodies (key of C — midi + duration in beats) ===== */
@@ -186,7 +206,11 @@
     C7: { bass:[36,43], pad:[60,64,67,70] },// C2 G2 · C E G B♭
     F7: { bass:[29,36], pad:[53,57,60,63] },// F1 C2 · F A C E♭
     G7: { bass:[31,38], pad:[55,59,62,65] },// G1 D2 · G B D F
-    D:  { bass:[38,45], pad:[62,66,69] }    // D2 A2 · D F# A (bluegrass V of G)
+    D:  { bass:[38,45], pad:[62,66,69] },   // D2 A2 · D F# A (bluegrass V of G)
+    A7: { bass:[33,40], pad:[57,61,64,67] },// A1 E2 · A C# E G (the VI7 of the jazz blues)
+    Dm7:{ bass:[38,45], pad:[62,65,69,72] },// D2 A2 · D F A C (the ii)
+    Am7:{ bass:[33,40], pad:[57,60,64,67] },// A1 E2 · A C E G (minor blues home)
+    E7: { bass:[40,47], pad:[64,68,71,74] } // E2 B2 · E G# B D (minor blues V — the G# is the leading tone)
   };
   var TUNES = [
     { name:'Mary Had a Little Lamb', mel:MARY, chords:['C','C','G','C','C','C','G','C'], bpm:96 },
@@ -235,6 +259,41 @@
     [67,4]
   ].map(mk);
   var OUTLINE8_CH = ['G','C','G','D','G'];
+  // ===== Belt 4 (jazz blues, key of C — straight quavers throughout) =====
+  var JAZZ12 = ['C7','F7','C7','C7','F7','F7','C7','A7','Dm7','G7','C7','G7']; // quick change, VI7 in bar 8, ii-V, turnaround
+  var JAZZ_ROMAN = { C7:'I7', F7:'IV7', G7:'V7', A7:'VI7', Dm7:'ii7' };
+  var AMINOR12 = ['Am7','Am7','Am7','Am7','Dm7','Dm7','Am7','Am7','F7','E7','Am7','E7']; // the minor blues in A
+  var AMIN_ROMAN = { Am7:'i7', Dm7:'iv7', F7:'♭VI7', E7:'V7' };
+  // 4.2: seventh-chord arpeggios in straight quavers — the ♭7 is the jazz colour
+  var ARP7 = [ [60,.5],[64,.5],[67,.5],[70,.5],[72,.5],[70,.5],[67,.5],[64,.5],
+    [65,.5],[69,.5],[72,.5],[75,.5],[72,.5],[69,.5],[65,.5],[69,.5],
+    [67,.5],[71,.5],[74,.5],[77,.5],[74,.5],[71,.5],[67,.5],[71,.5],
+    [72,4] ].map(mk);
+  var ARP7_CH = ['C7','F7','G7','C7'];
+  // 4.3: approach tones — bar 1 shows it (B->C, D#->E, F#->G); bar 2 the three approaches are yours to tune
+  var APPR = [ {m:71,d:.5},{m:72,d:.5},{m:63,d:.5},{m:64,d:.5},{m:66,d:.5},{m:67,d:.5},{m:64,d:1},
+    {m:62,d:.5,chg:true},{m:64,d:.5},{m:65,d:.5,chg:true},{m:67,d:.5},{m:70,d:.5,chg:true},{m:72,d:.5},{m:72,d:1} ];
+  var CHROMA = [59,60,61,62,63,64,65,66,67,68,69,70,71];
+  // 4.4: a dominant-seventh lick over C7 — sing the ♭7, step down home
+  var LICK7 = [ {m:64,d:.5},{m:67,d:.5},{m:70,d:.5},{m:69,d:.5},{m:67,d:.5},{m:64,d:.5},{m:62,d:.5},{m:60,d:.5},
+    {rest:true,d:1},{m:64,d:1,chg:true},{m:62,d:1,chg:true},{m:64,d:1,chg:true},{m:60,d:2} ];
+  var LICK7_PAL = [60,62,64,65,67,69,70,72];              // C mixolydian palette
+  // 4.5: the same lick moved onto each chord of the form (per-key spelling)
+  var LICK7KEYS = [ {name:'C7',label:'Over C7 — the I',r:60,sharp:false}, {name:'F7',label:'Over F7 — the IV',r:65,sharp:false},
+    {name:'G7',label:'Over G7 — the V',r:67,sharp:false}, {name:'A7',label:'Over A7 — the VI7',r:69,sharp:true} ].map(function(k){
+    var run=[4,7,10,9,7,4,2,0].map(function(v){ return {m:k.r+v,d:.5}; }); run.push({m:k.r,d:2});
+    return { name:k.name, label:k.label, sharp:k.sharp, run:run }; });
+  // 4.7: Tin Roof Blues (New Orleans Rhythm Kings, 1923 — public domain; tunes/trad-jazz.abc, transposed Bb->C).
+  // One two-bar sentence said three times (I, I, IV), a hang on the 6th, an answer, and a whole bar of breath.
+  var TINROOF = [
+    [67,.5],[66,.5],[65,.5],[64,.5],[67,.5],[66,.5],[65,.5],[64,.5],  [67,1],[60,.5],[64,2.5],
+    [67,.5],[66,.5],[65,.5],[64,.5],[67,.5],[66,.5],[65,.5],[64,.5],  [67,1],[60,.5],[64,2.5],
+    [72,.5],[71,.5],[70,.5],[69,.5],[72,.5],[71,.5],[70,.5],[69,.5],  [72,1],[65,.5],[69,2.5],
+    [67,.5],[66,.5],[65,.5],[64,.5],[67,.5],[66,.5],[65,.5],[64,.5],  [67,1],[60,.5],[69,1.5],[69,.5],[69,.5],
+    [69,4],
+    [67,.5],[67,.5],[69,.5],[72,.5],[75,1],[74,.5],[72,.5],
+    [72,4]
+  ].map(mk).concat([{rest:true,d:4}]);
   var BLUES12 = ['C7','C7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7']; // the 12-bar blues in C
   var ROMAN = { C7:'I', F7:'IV', G7:'V', G:'I', C:'IV', D:'V' };               // C7/F7/G7 read in C; G/C/D read in G (the bluegrass key)
 
@@ -336,7 +395,8 @@
         bluesNext+=4*spb; bluesBar++; } }, 60); }
   function stopBlues(){ bluesOn=false; if(bluesTimer){ clearInterval(bluesTimer); bluesTimer=null; } stopPlay(); var cs=document.querySelectorAll('.sbar.on'); for(var i=0;i<cs.length;i++) cs[i].classList.remove('on'); }
   // chord chart in slash notation (self-contained SVG): 4 bars a row, treble staff, chord symbols, a slash per beat
-  function slashChartHTML(chords){
+  function slashChartHTML(chords, roman){
+    roman=roman||ROMAN;
     var gap=7, staffH=4*gap, clefW=30, bw=96, topPad=26, rowH=62, rows=Math.ceil(chords.length/4), totalW=clefW+4*bw, totalH=topPad+rows*rowH+8, s='';
     function barline(x,y,w){ return '<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+staffH)+'" stroke="#17140E" stroke-width="'+w+'"/>'; }
     for(var row=0; row<rows; row++){ var sy=topPad+row*rowH;
@@ -346,7 +406,7 @@
       s+=barline(clefW, sy, 1.4);
       for(var i=0;i<4;i++){ var idx=row*4+i, bx=clefW+i*bw, midY=sy+2*gap, inner='';
         inner+='<rect class="sbg" x="'+(bx+1.5)+'" y="'+(sy-22)+'" width="'+(bw-3)+'" height="'+(staffH+27)+'" rx="5"/>';
-        inner+='<text class="srom" x="'+(bx+6)+'" y="'+(sy-17)+'" font-size="9">'+(ROMAN[chords[idx]]||'')+'</text>';
+        inner+='<text class="srom" x="'+(bx+6)+'" y="'+(sy-17)+'" font-size="9">'+(roman[chords[idx]]||'')+'</text>';
         inner+='<text class="schord" x="'+(bx+6)+'" y="'+(sy-5)+'" font-size="14">'+chords[idx]+'</text>';
         for(var b=0;b<4;b++){ var cx=bx+bw*(b+0.5)/4; inner+='<line class="slash" x1="'+(cx-5)+'" y1="'+(midY+6)+'" x2="'+(cx+5)+'" y2="'+(midY-6)+'" stroke-width="3" stroke-linecap="round"/>'; }
         s+='<g class="sbar" id="sbar'+idx+'">'+inner+'</g>';
@@ -444,7 +504,7 @@
         + '<div class="fb" id="fb"></div></div>';
     }
     if(ex && ex.type==='keyrun'){
-      return '<div class="ex"><div class="exh">Round the keys</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
+      return '<div class="ex"><div class="exh">'+(ex.exh||'Round the keys')+'</div><div class="exttl">'+ex.title+'</div><div class="exd">'+ex.desc+'</div>'
         + '<div class="tunepick" id="keyPick"></div>'
         + '<div class="staffwrap" id="workStaff"></div>'
         + '<div class="row"><button class="btn blue" id="mPlay">&#9654; Play</button><button class="btn" id="mStop">Stop</button></div>'
@@ -479,7 +539,7 @@
       drawWork('workStaff');
       el('mPlay').addEventListener('click', function(){ playMelody(work, ex.bpm||100); });
       el('mStop').addEventListener('click', stopPlay);
-      el('mCheck').addEventListener('click', checkEmbellish);
+      el('mCheck').addEventListener('click', ex.approach ? checkApproach : checkEmbellish);
     }
     if(ex && ex.type==='answer'){
       work=ex.phrase.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg }; });
@@ -516,21 +576,21 @@
     if(ex && ex.type==='keyrun'){
       var kcur=0, kdone={};
       var selectKey=function(i, quiet){
-        kcur=i; var K=ex.keys[kcur];
+        kcur=i; var K=ex.keys[kcur], total=ex.keys.length;
         if(!quiet){ playMelody(K.run, ex.bpm||112); kdone[K.name]=1; }
-        el('workStaff').innerHTML=renderMelody(K.run, {sharp:true});
-        el('keyPick').innerHTML=ex.keys.map(function(k,j){ return '<button class="btn sm'+(j===kcur?' blue':'')+'" data-k="'+j+'">'+(kdone[k.name]?'✓ ':'')+'Key of '+k.name+'</button>'; }).join('');
+        el('workStaff').innerHTML=renderMelody(K.run, {sharp: K.sharp!==undefined ? K.sharp : true});
+        el('keyPick').innerHTML=ex.keys.map(function(k,j){ return '<button class="btn sm'+(j===kcur?' blue':'')+'" data-k="'+j+'">'+(kdone[k.name]?'✓ ':'')+(k.label||('Key of '+k.name))+'</button>'; }).join('');
         el('keyPick').querySelectorAll('[data-k]').forEach(function(b){ b.addEventListener('click', function(){ selectKey(+b.dataset.k); }); });
         var fb=el('fb'), left=ex.keys.filter(function(k){ return !kdone[k.name]; }).length;
-        if(!left){ fb.textContent='All five keys — same stairs, five front doors. Wherever the fiddler calls it, you’ve got the run. 🪕'; fb.className='fb ok'; onSolve(); }
-        else if(!quiet){ fb.textContent=(5-left)+' of 5 keys — keep going round.'; fb.className='fb no'; }
+        if(!left){ fb.textContent=ex.allDone||'All five keys — same stairs, five front doors. Wherever the fiddler calls it, you’ve got the run. 🪕'; fb.className='fb ok'; onSolve(); }
+        else if(!quiet){ fb.textContent=(total-left)+' of '+total+' — keep going round.'; fb.className='fb no'; }
       };
       selectKey(0, true);
       el('mPlay').addEventListener('click', function(){ selectKey(kcur); });
       el('mStop').addEventListener('click', stopPlay);
     }
     if(ex && ex.type==='bluesjam'){
-      el('bluesGrid').innerHTML=slashChartHTML(ex.chords);
+      el('bluesGrid').innerHTML=slashChartHTML(ex.chords, ex.roman);
       if(ex.mic){ heardEl=el('lfHeard'); labEl=el('lfLab'); statusEl=el('lfStatus'); el('lfMic').addEventListener('click', function(){ ensureMic(); soloCapturing=true; }); }
       el('bPlay').addEventListener('click', function(){ if(ex.mic){ soloNotes=[]; soloCapturing=true; var b=el('soloBack'); if(b){ b.hidden=true; b.innerHTML=''; } } startBlues(ex.chords, ex.bpm||96); });
       el('bStop').addEventListener('click', function(){ stopBlues(); });
@@ -692,7 +752,73 @@
           doneLabel:'I held my own 🪕', win:'🎉 Head, break, and the fast one — you held your own at the porch jam. Green belt earned!',
           desc:'Chorus 1: the head, all together. Then your break — pentatonic, chord families, G-run to sign off. When the slow one feels good, call “Kick it up!” and ride the fast one.' } }
     ]},
-    { title:'Belt 4 — Jazz Blues', belt:'Blue Belt', soon:true, blurb:'An old jazz cat you might know saunters in — swing, seventh chords, and the 12-bar in a sharp suit.' }
+    { title:'Belt 4 — Jazz Blues', belt:'Blue Belt', master:'jazzcat', lessons:[
+      { num:'4.1', title:'The 12 bars in a suit', teach:[
+          { html:"Hey, kid. Pull up a stool. Granny Mae says you can pick, Papa Sonny says you can moan — so now you get the suit. Folks call me <b>the Cat</b>. If you ever learned to <em>walk</em> with me, you know I don't waste words." },
+          { html:"Jazz took Papa Sonny's 12 bars and dressed 'em up three ways. Bar 2 jumps early to the IV — the <b>quick change</b>. Bar 8 borrows a little trouble on purpose: <b>A7</b>, the <b>VI7</b>. And bars 9–10 got civilized: <b>Dm7 to G7</b> — the <b>ii–V</b>, the most famous handshake in jazz." },
+          { t:'qa', q:"It's still the blues though?", a:"Same road, better shoes. One more thing: real cats <em>lean</em> their quavers — that lope is called <b>swing</b>. We'll write everything straight on the page; you lean it on your instrument when your feet find it. Now count the form below till bar 8 stops surprising you." }
+        ], ex:{ type:'bluesjam', exh:'The form', title:'The jazz blues', chords:JAZZ12, roman:JAZZ_ROMAN, bpm:96,
+          desc:'Twelve bars in C, dressed up: quick change to F7 in bar 2, the A7 surprise in bar 8, and the ii–V (Dm7–G7) bringing you round. Play it and count.',
+          scaleName:'C blues — C D E♭ E G A (and B♭ starts sneaking in over the 7th chords)',
+          goal:'Count along: 1-2-3-4 each bar. Catch the quick change (bar 2), the A7 (bar 8), and the ii–V (bars 9–10).',
+          doneLabel:'I can hear the new road', win:'That’s the jazz blues — same 12 bars, richer road. Every lesson in this belt drives down it.' } },
+      { num:'4.2', title:'The seventh', teach:[
+          { html:"In the mountains your chord families had three notes. In jazz every family adopts a fourth: the <b>seventh</b>. C7 is <b>C–E–G–B♭</b>. That B♭ — the <b>♭7</b> — is the sound of jazz the way E♭ was the sound of the blues." },
+          { html:"Every chord in the form carries one: F7 has an <b>E♭</b>, G7 an <b>F</b>, A7 a <b>G</b>, Dm7 a <b>C</b>. Papa Sonny used blue notes as seasoning — in jazz, the ♭7 moves in permanent. Chord tones now come <b>four to a family</b>." },
+          { t:'qa', q:"So I aim for four notes now instead of three?", a:"Four doors into every bar, kid — more ways in, not more ways wrong. Run the arpeggios below in straight quavers: C7, F7, G7, and land home. Get those under your fingers and the changes start playing <em>you</em>." }
+        ], ex:{ type:'melody', title:'Seventh-chord arpeggios', mel:ARP7, chords:ARP7_CH, bpm:96,
+          desc:'C7, F7 and G7 spelled out in straight quavers — up through the family (1 3 5 ♭7) and back down. Listen for the ♭7 leaning each chord forward.' } },
+      { num:'4.3', title:'Approach tones', teach:[
+          { html:"Now the jazz secret that scares people, made simple: <b>any note is legal if it's going somewhere</b>. The trick is the <b>approach tone</b> — a note one <b>half-step below</b> a chord tone, played on the way in." },
+          { html:"Hear it in bar 1 below: <b>B slides into C</b>, <b>D♯ into E</b>, <b>F♯ into G</b>. Alone, those notes are strangers to the key. In motion, they're the lean that makes a line sound like jazz instead of a scale." },
+          { t:'qa', q:"So wrong notes are… allowed?", a:"There are no wrong notes, kid — only notes that ain't going anywhere yet. Bar 2 is yours: three green notes sit in front of three landings. Tap each one till it sits exactly a half-step <em>below</em> the note it walks into, then play the line and feel the pull." }
+        ], ex:{ type:'embellish', approach:true, title:'Slide in from below', mel:APPR, pal:CHROMA, sharp:true, bpm:96,
+          desc:'Bar 1 shows it: B→C, D♯→E, F♯→G. Bar 2 is yours — tap each green note until it’s exactly one half-step below its landing, then Play and Check.' } },
+      { num:'4.4', title:'Steal this lick', teach:[
+          { html:"You stole from Papa Sonny, you dug licks out of Old Joe — now steal from the suit-wearers. Here's a <b>dominant-seventh lick</b>: it sings the <b>♭7</b> (there's your B♭) and steps down home like it owns the stairs." },
+          { html:"Listen to bar 1: up the family — <b>E, G, B♭</b> — catch the <b>A</b>, then walk down <b>G, E, D, C</b>. Chord tones and steps, nothing fancy — that's why it works over <em>any</em> seventh chord you'll ever meet." },
+          { t:'qa', q:"Any seventh chord?", a:"Hold that thought — it's next lesson. First make it yours: the breath comes, then three green notes. Bend the ending till it sounds like you, and jot the keeper in your Phrasebook. A jazz cat's bag is half stolen, half bent." }
+        ], ex:{ type:'embellish', title:'A lick in a suit', mel:LICK7, pal:LICK7_PAL, bpm:96,
+          embWin:'Stolen, bent, yours — that lick will pay your way into any jam with a 7th chord in it. Phrasebook it. 🎺',
+          desc:'Bar 1 is the lick — up the C7 family, down the stairs to C. Then the breath, and the three green notes are your ending. Keep the keepers in your <a href="phrasebook.html">Phrasebook</a>.' } },
+      { num:'4.5', title:'Move the lick round the form', teach:[
+          { html:"Now the payoff. That lick isn't a C7 lick — it's a <b>dominant lick</b>, and the jazz blues is <em>full</em> of dominants. Slide the whole shape onto <b>F7</b> and it works in bars 5 and 6. Onto <b>G7</b> — bars 10 and 12. Onto <b>A7</b> — bar 8, the tricky one, handled." },
+          { html:"Same stairs, four doors — Granny Mae taught you this trick with the G-run, round the keys. In jazz you move it round the <b>form</b>: one sentence, and suddenly you've got something to say in nearly every bar of the tune." },
+          { t:'qa', q:"So one lick covers the whole blues?", a:"One lick, four addresses — that's a working musician's economy, kid. Tap each chord below and hear the lick move house. Play all four and it's in your fingers for good." }
+        ], ex:{ type:'keyrun', exh:'Move the lick', title:'One lick, four doors', keys:LICK7KEYS, bpm:96,
+          allDone:'Four doors, one lick — bars 1, 5, 8, 10 and 12, all covered by a single sentence. That’s how cats think. 🎺',
+          desc:'The same lick built on each dominant of the form: C7 (bars 1–4), F7 (5–6), A7 (8), G7 (10 and 12). Tap each one to hear it move in. Play all four to fly on.' } },
+      { num:'4.6', title:'The minor blues', teach:[
+          { html:"One more room in the house: the <b>minor blues</b>. Take it back to <b>A minor</b> — Papa Sonny's dark twin key, same six notes you know. The form below is the 12-bar in a minor mood: <b>Am7</b> home, <b>Dm7</b> the iv, then <b>F7 to E7</b> bringing you round." },
+          { html:"Now the lesson inside the lesson. Everything in this form is soft and minor — except the <b>V chord</b>. It stays <b>dominant</b>: <b>E7</b>, with a <b>G♯</b> in it. That G♯ is the <b>leading tone</b> — one bright, borrowed note whose only job is to <em>pull you home to A</em>." },
+          { t:'qa', q:"Why not just keep the V minor too?", a:"Try it in your head — Em7 to Am7 just… strolls off. E7 to Am7 <em>arrives</em>. That half-step, G♯ up to A, is the strongest pull in music — the same lean as your approach tones, built right into the harmony. Loop the form and listen for the bright note in the dark room." }
+        ], ex:{ type:'bluesjam', exh:'The minor form', title:'The minor blues in A', chords:AMINOR12, roman:AMIN_ROMAN, bpm:92,
+          desc:'The 12-bar blues in a minor mood: Am7 home, Dm7 the iv, F7–E7 the turn. Every chord is dark except E7 — listen for its G♯ pulling home to A.',
+          scaleName:'A minor blues — A C D E♭ E G, plus G♯ (the leading tone) over E7',
+          goal:'Loop the form and count. When E7 lands (bars 10 and 12), listen for the G♯ — the one bright note, leaning hard into A.',
+          doneLabel:'I can hear the G♯ pull home', win:'That’s the minor blues — and the leading tone is the whole engine of it. Dominant V, bright G♯, home to A.' } },
+      { num:'4.7', title:'Tin Roof Blues', teach:[
+          { html:"Capstone time, kid — and for that you learn a <b>real</b> tune. <b>Tin Roof Blues</b>, New Orleans Rhythm Kings, nineteen twenty-three. Older than me, and I've been on this stool a while. Papa Sonny's hometown, in a suit." },
+          { html:"Look at the head: it's built on one slow, sly sentence — <b>G, G♭, F, E</b> — a chromatic slide, twice on the C7, then the <em>same sentence</em> moved up for the F7. And catch that <b>G♭</b>: Papa Sonny's dark blue note, walking down the stairs like it lives here." },
+          { t:'qa', q:"It looks almost… easy?", a:"That's the deepest thing I'll tell you all belt: the tune is easy so the <em>feel</em> can be hard. Every note has room to mean something. Play it slow, over and over, till you stop reading and start <em>saying</em> it." }
+        ], ex:{ type:'melody', title:'Tin Roof Blues (head)', mel:TINROOF, chords:JAZZ12, bpm:88,
+          desc:'The 1923 head in C, over the jazz-blues form you learned in 4.1. One chromatic sentence — G G♭ F E — said on the I, said again, moved to the IV, then answered. Play it till you can hum it.' } },
+      { num:'4.8', title:'How the tune breathes', teach:[
+          { html:"Before you solo on a tune, you study how it <b>talks</b>. Listen again, and count the sentences. Bars 1–2: the sentence. Bars 3–4: <em>same sentence</em>. Bars 5–6: same sentence, <b>moved onto the IV</b> — the tune plays the lick-moving game from 4.5, forty years early." },
+          { html:"Then bars 8–9: the melody climbs and <b>hangs</b> on one long A — a question left in the air. Bars 10–11 tumble down and <b>answer it home to C</b>. And bar 12? <b>Silence.</b> A whole bar of breath while the band turns the corner. The tune breathes exactly like Papa Sonny taught you to." },
+          { t:'qa', q:"So it's call and response, sentences and breaths — all of it?", a:"Every trick you've learned since Belt 1, sitting in one 1923 chorus — that's <em>why</em> it's a classic. Play it once more and hear the phrasing, not the notes. Then we solo." }
+        ], ex:{ type:'melody', title:'Listen for the phrases', mel:TINROOF, chords:JAZZ12, bpm:88,
+          desc:'Same head, new ears. Count it: sentence (1–2), sentence again (3–4), sentence moved to the IV (5–6), the hang on A (8–9), the answer home to C (10–11), and a full bar of breath (12).' } },
+      { num:'4.9', title:'The uptown jam', teach:[
+          { html:"Blue-belt time. Here's how it goes uptown: the band plays the <b>head</b> of Tin Roof together, then you take your <b>chorus</b> — twelve bars, all yours, then the head takes it out. Tonight the middle belongs to you." },
+          { html:"You know everything the tune needs: the form and its A7, four-note families, approach tones sliding in from below, one lick with four addresses, and phrasing that breathes. Say a sentence. Breathe. Move it. Land it home." },
+          { t:'qa', q:"And if I get lost in the middle?", a:"Then you lay out till the top comes round — laying out <em>is</em> jazz, kid. Play the head, take your chorus, and when it feels like yours, step off the stand. The blue belt's waiting." }
+        ], ex:{ type:'jam', exh:'Capstone', title:'The uptown jam', bpm:88,
+          tunes:[ { name:'Tin Roof Blues', mel:TINROOF, chords:JAZZ12, bpm:88 } ],
+          doneLabel:'That was my chorus 🎺', win:'🎉 Head, chorus, and out — you just soloed on a real jazz blues. Blue belt earned, kid. Wear the suit.',
+          desc:'Chorus 1: the head, with the band. Chorus 2 on: your solo — families, approach tones, the lick round its four doors, and room to breathe. Mic on if you want to watch your notes.' } }
+    ]},
+    { title:'Belt 5 — The Jazz Standard', belt:'Black Belt', soon:true, blurb:'The last flight: a real standard, approach tones in full dress, and the bandstand waiting.' }
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt, master:mod.master||'teacher' }, les)); }); });
   var idx=0, solved=false, work=null;
@@ -741,6 +867,10 @@
   function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb'); var xe=LESSONS[idx]&&LESSONS[idx].ex;
     if(total>0 && changed>=total){ fb.textContent=(xe&&xe.embWin)||'That’s YOUR version now — and because you stayed in the scale, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
     else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the highlighted notes to make the rest your own.'; fb.className='fb no'; } }
+  function checkApproach(){ var fb=el('fb'), bad=0, total=0;
+    work.forEach(function(n,i){ if(n.chg){ total++; var target=work[i+1]; if(!target || n.m!==target.m-1) bad++; } });
+    if(bad===0){ fb.textContent='All three slide in from a half-step below — hear how each one leans into its landing? That’s the chromatic pull, and now it’s yours. 🎺'; fb.className='fb ok'; onSolve(); }
+    else { fb.textContent=(total-bad)+' of '+total+' approaches lean right — tap the green notes until each one sits exactly one half-step BELOW the note it walks into.'; fb.className='fb no'; } }
   function checkAnswer(){ var last=null; work.forEach(function(n){ if(n.chg) last=n; }); var pc=last?(((last.m%12)+12)%12):-1; var fb=el('fb');
     if(pc===0){ fb.textContent='Home. Hear how it settles? Ending on degree 1 — the tonic C — is what turns a phrase into an answer.'; fb.className='fb ok'; onSolve(); }
     else if(pc===2){ fb.textContent='Still hanging — that’s degree 2 (D), a question, not an answer. Tap the blue note home to C (degree 1).'; fb.className='fb no'; }
