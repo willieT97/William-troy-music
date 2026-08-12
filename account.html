@@ -147,11 +147,16 @@
                  {l:'4.9',name:'The Uptown Jam',icon:'🎺'},{l:'5.13',name:'The Last Flight',icon:'🥋'} ] }
   ];
   var BELT_COL={ White:'#FFFDF7', Grey:'#9AA0A6', Yellow:'#FFD34D', Orange:'#F5893B', Green:'#1F9D55', Blue:'#2438C8', Brown:'#7A4A1E', Black:'#17140E' };
+  var GAMES=[ {id:'pitch-invaders_2', label:'Pitch Invaders'},
+              {id:'pitch-invaders-chromatic', label:'Pitch Invaders — Chromatic'},
+              {id:'pitch-invaders-fifths', label:'Pitch Invaders — Fifths'},
+              {id:'chord-progress', label:'Chord Progress'} ];
   function localProg(pkey){ try{ var p=JSON.parse(localStorage.getItem(pkey)); if(p && p.done) return p; }catch(e){} return { done:{} }; }
 
   function renderAccomp(){
     var host=document.getElementById('accomp'); if(!host) return;
-    var state={}, oldmanDone=false, counts={ songs:null, jams:null };
+    var state={}, oldmanDone=false, counts={ songs:null, jams:null }, bests=null;
+    var uname=((window.MAAuth&&window.MAAuth.profile&&window.MAAuth.profile())||{}).username||'';
     DOJO.forEach(function(c){ state[c.id]=localProg(c.pkey); });
     try{ oldmanDone = localStorage.getItem('oldman.progress.v1')==='done'; }catch(e){}
     var licks=0; try{ licks=(JSON.parse(localStorage.getItem('wtm_phrasebook_v1'))||[]).length; }catch(e){}
@@ -183,7 +188,15 @@
       chip(counts.songs,'songs written');
       chip(counts.jams,'jam tracks built');
       chip(licks,'licks in the Phrasebook','this device');
-      host.appendChild(el('div','accnote','Belts and trophies come straight from your Dojo progress. Arcade high scores join this shelf soon.'));
+      host.appendChild(el('div','grouplbl','Arcade high scores'));
+      if(!uname){ host.appendChild(el('div','empty','Set a username below — arcade scores you post while signed in go up under it, and your bests land here.')); }
+      else if(bests===null){ host.appendChild(el('div','empty','Loading…')); }
+      else{
+        var got=GAMES.filter(function(g){ return bests[g.id]!=null; });
+        if(!got.length){ var e=el('div','empty','No scores under “'+uname+'” yet — go post some in the '); var a=el('a',null,'Arcade'); a.href='arcade-index.html'; e.appendChild(a); e.appendChild(document.createTextNode('!')); host.appendChild(e); }
+        else{ var sc=el('div','statchips'); got.forEach(function(g){ var s=el('span','statchip'); s.appendChild(el('b',null,String(bests[g.id]))); s.appendChild(document.createTextNode(' '+g.label)); sc.appendChild(s); }); host.appendChild(sc); }
+      }
+      host.appendChild(el('div','accnote','Belts and trophies come straight from your Dojo progress. High scores count plays made while signed in — they post to the leaderboard under your username.'));
     }
     draw();
     var A=window.MAAuth||{};
@@ -201,6 +214,11 @@
         A.creations.list('jamtrack').catch(function(){ return []; })
       ]).then(function(r){ counts.songs=(r[0]||[]).length+(r[1]||[]).length; counts.jams=(r[2]||[]).length; draw(); });
     } else { counts.songs=0; counts.jams=0; draw(); }
+    if(uname && A.client){
+      A.client().then(function(sb){ return sb.from('scores').select('game,score').eq('initials', uname).order('score',{ascending:false}).limit(400); })
+        .then(function(res){ bests={}; ((res&&res.data)||[]).forEach(function(r){ if(bests[r.game]==null || r.score>bests[r.game]) bests[r.game]=r.score; }); draw(); })
+        .catch(function(){ bests={}; draw(); });
+    }
   }
 
   function renderGate(){ document.getElementById('gate').hidden=false; document.getElementById('hub').hidden=true; }
