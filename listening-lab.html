@@ -43,6 +43,8 @@
   .tick.any{ border-style:dashed; }
   .tick.any input{ accent-color:var(--pink); }
   .tick.stood-down{ opacity:.35; }
+  .cshint{ font-size:.74rem; font-weight:700; color:var(--muted); margin-top:8px; line-height:1.5; }
+  .cshint b{ color:var(--ink); }
   .chartwrap{ background:#fff; border:2px solid #e4dcc9; border-radius:10px; padding:12px 10px; overflow-x:auto; }
   .slashsvg{ display:block; min-width:340px; }
   .slash{ stroke:var(--ink); } .schord{ fill:var(--ink); font-family:var(--disp); font-weight:800; } .srom{ fill:var(--muted); font-family:var(--mono); }
@@ -89,12 +91,13 @@
     </div>
     <div class="fld" style="margin-bottom:10px"><label>What’s allowable — a note is good if it fits ANY ticked rule</label>
       <div class="allow">
-        <label class="tick"><input type="checkbox" id="alScale" checked> <select id="scaleSel" style="box-shadow:none;border-width:2px;padding:4px 6px;font-size:.78rem"></select> notes</label>
+        <label class="tick"><input type="checkbox" id="alScale" checked> <select id="scaleSel" style="box-shadow:none;border-width:2px;padding:4px 6px;font-size:.78rem"></select> <span id="scaleWord">notes</span></label>
         <label class="tick"><input type="checkbox" id="alBlue" checked> <span id="blueLbl">Blue note (♭3)</span></label>
         <label class="tick" id="tickChord"><input type="checkbox" id="alChord"> Chord tones of the bar <span class="lock" hidden>🔒 Pro</span></label>
         <label class="tick" id="tickPass"><input type="checkbox" id="alPass"> Passing tones on weak beats <span class="lock" hidden>🔒 Pro</span></label>
         <label class="tick any" id="tickAny"><input type="checkbox" id="alAny"> Anything goes — just write it out</label>
       </div>
+      <div class="cshint" id="csHint" hidden></div>
     </div>
     <div class="chartwrap" id="chart"></div>
   </div>
@@ -156,7 +159,7 @@
     minblues:{ name:'Minor blues', pcs:[0,3,5,6,7,10] },
     major:{ name:'Major scale', pcs:[0,2,4,5,7,9,11] },
     mixo:{ name:'Mixolydian', pcs:[0,2,4,5,7,9,10] },
-    chords:{ name:'Match the chords', perChord:true }
+    chords:{ name:'A different scale on each chord', perChord:true }
   };
   // per-chord scales (chord-scale thinking), intervals from the chord root.
   // Defaults: dominant -> mixolydian, m7 -> dorian. The minor blues names its own per bar:
@@ -353,6 +356,7 @@
     RULE_IDS.forEach(function(id){ var c=el(id), t=c.parentNode; t.classList.toggle('stood-down', on); if(on) c.disabled=true; });
     el('scaleSel').disabled=on;
     if(!on){ el('alScale').disabled=false; el('alBlue').disabled=false; refreshLocks(); }
+    updateScaleMode();
   }
   function openPaywall(){ if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'That rule is Pro', body:'Chord-tone and passing-tone grading (and the carve tool) come from the Learning to Fly course. Go Pro — or grab the course — to switch them on.', product:PRODUCT }); else location.href='/upgrade.html?highlight='+encodeURIComponent(PRODUCT); }
 
@@ -366,10 +370,19 @@
     else if(P.form==='minor') t='The blue note (♭5)';
     else t='The blue note (♭3)';
     el('blueLbl').textContent=t; }
+  // spell out what the per-chord mode actually grades against — "a scale per chord", not "chord tones"
+  var CS_HINT={
+    minor:'<b>A scale on each chord:</b> natural minor over the i · dorian over the iv · lydian dominant over the ♭VI7 · harmonic minor over the V7. Whole scales, not just chord tones — tick “chord tones” as well if you want those marked separately.',
+    other:'<b>A scale on each chord:</b> mixolydian over every dominant (C mixolydian on C7, F mixolydian on F7…) and dorian over every m7. Whole scales, not just chord tones — tick “chord tones” as well if you want those marked separately.'
+  };
+  function updateScaleMode(){ var per=!!SCALES[P.scale].perChord;
+    el('scaleWord').textContent = per ? '' : 'notes';
+    var h=el('csHint'); h.hidden = !(per && P.alScale && !P.alAny);
+    if(!h.hidden) h.innerHTML = P.form==='minor' ? CS_HINT.minor : CS_HINT.other; }
   function syncUI(){ el('keySel').value=P.key; el('formSel').value=P.form; el('gridSel').value=String(P.grid);
     el('tempo').value=P.bpm; el('tempoVal').textContent=P.bpm; el('scaleSel').value=P.scale;
     el('alScale').checked=P.alScale; el('alBlue').checked=P.alBlue; el('alChord').checked=P.alChord; el('alPass').checked=P.alPass;
-    el('alAny').checked=P.alAny; updateBlueLbl(); setAnyMode(); }
+    el('alAny').checked=P.alAny; updateBlueLbl(); updateScaleMode(); setAnyMode(); }
 
   /* ===== wire up ===== */
   KEYS.forEach(function(k,i){ var o=document.createElement('option'); o.value=i; o.textContent=k.n; el('keySel').appendChild(o); });
@@ -378,11 +391,11 @@
   el('keySel').addEventListener('change', function(){ P.key=+this.value; stopJam(); drawChart(); });
   el('formSel').addEventListener('change', function(){ P.form=this.value; stopJam();
     if(P.form==='minor' && (P.scale==='majpent'||P.scale==='majblues')){ P.scale='minblues'; el('scaleSel').value='minblues'; }
-    updateBlueLbl(); drawChart(); });
+    updateBlueLbl(); updateScaleMode(); drawChart(); });
   el('gridSel').addEventListener('change', function(){ P.grid=+this.value; });
   el('tempo').addEventListener('input', function(){ P.bpm=+this.value; el('tempoVal').textContent=P.bpm; });
-  el('scaleSel').addEventListener('change', function(){ P.scale=this.value; updateBlueLbl(); });
-  el('alScale').addEventListener('change', function(){ P.alScale=this.checked; });
+  el('scaleSel').addEventListener('change', function(){ P.scale=this.value; updateBlueLbl(); updateScaleMode(); });
+  el('alScale').addEventListener('change', function(){ P.alScale=this.checked; updateScaleMode(); });
   el('alBlue').addEventListener('change', function(){ P.alBlue=this.checked; });
   el('alChord').addEventListener('change', function(){ P.alChord=this.checked; });
   el('alPass').addEventListener('change', function(){ P.alPass=this.checked; });
