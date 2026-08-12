@@ -137,7 +137,9 @@
     groove:{ name:'One-chord groove', bars:[[0,'7'],[0,'7'],[0,'7'],[0,'7']], rom:['I7','I7','I7','I7'] },
     blues:{ name:'12-bar blues', bars:[[0,'7'],[0,'7'],[0,'7'],[0,'7'],[5,'7'],[5,'7'],[0,'7'],[0,'7'],[7,'7'],[5,'7'],[0,'7'],[7,'7']],
       rom:['I7','I7','I7','I7','IV7','IV7','I7','I7','V7','IV7','I7','V7'] },
-    minor:{ name:'Minor blues', bars:[[0,'m7'],[0,'m7'],[0,'m7'],[0,'m7'],[5,'m7'],[5,'m7'],[0,'m7'],[0,'m7'],[8,'7'],[7,'7'],[0,'m7'],[7,'7']],
+    minor:{ name:'Minor blues', bars:[[0,'m7','aeolian'],[0,'m7','aeolian'],[0,'m7','aeolian'],[0,'m7','aeolian'],
+      [5,'m7','dorian'],[5,'m7','dorian'],[0,'m7','aeolian'],[0,'m7','aeolian'],
+      [8,'7','lyddom'],[7,'7','phrygdom'],[0,'m7','aeolian'],[7,'7','phrygdom']],
       rom:['i7','i7','i7','i7','iv7','iv7','i7','i7','♭VI7','V7','i7','V7'] },
     jazz:{ name:'Jazz blues', bars:[[0,'7'],[5,'7'],[0,'7'],[0,'7'],[5,'7'],[5,'7'],[0,'7'],[9,'7'],[2,'m7'],[7,'7'],[0,'7'],[7,'7']],
       rom:['I7','IV7','I7','I7','IV7','IV7','I7','VI7','ii7','V7','I7','V7'] }
@@ -152,8 +154,17 @@
     mixo:{ name:'Mixolydian', pcs:[0,2,4,5,7,9,10] },
     chords:{ name:'Match the chords', perChord:true }
   };
-  // per-chord scales (chord-scale thinking): dominant -> mixolydian, m7 -> dorian
-  var CS_MIXO={0:1,2:1,4:1,5:1,7:1,9:1,10:1}, CS_DORIAN={0:1,2:1,3:1,5:1,7:1,9:1,10:1};
+  // per-chord scales (chord-scale thinking), intervals from the chord root.
+  // Defaults: dominant -> mixolydian, m7 -> dorian. The minor blues names its own per bar:
+  // natural minor over i, dorian over iv, lydian dominant (1 2 3 #4 5 6 b7) over bVI7,
+  // and the key's harmonic minor over V7 (from the chord root: phrygian dominant — the leading tone is its 3rd).
+  var CS={
+    mixo:     {0:1,2:1,4:1,5:1,7:1,9:1,10:1},
+    dorian:   {0:1,2:1,3:1,5:1,7:1,9:1,10:1},
+    aeolian:  {0:1,2:1,3:1,5:1,7:1,8:1,10:1},
+    lyddom:   {0:1,2:1,4:1,6:1,7:1,9:1,10:1},
+    phrygdom: {0:1,1:1,4:1,5:1,7:1,8:1,10:1}
+  };
   // the blue note: b3 on a major tune, b5 on a minor tune; when matching chords, the CHORD's b3
   function blueRel(){ return P.form==='minor' ? 6 : 3; }
 
@@ -293,7 +304,7 @@
       var strong=near(beatIn,0)||near(beatIn,2);
       var chord=f.bars[bar], rootPc=(k.pc+chord[0])%12;
       var pc=((nt.midi%12)+12)%12, relKey=(pc-k.pc+12)%12, relCh=(pc-rootPc+12)%12, next=notes[i+1], col, cat;
-      var scaleOK = matching ? !!(chord[1]==='m7' ? CS_DORIAN : CS_MIXO)[relCh] : !!scaleSet[relKey];
+      var scaleOK = matching ? !!CS[chord[2] || (chord[1]==='m7' ? 'dorian' : 'mixo')][relCh] : !!scaleSet[relKey];
       var blueOK = matching ? relCh===3 : relKey===blueRel();
       if(P.alChord && chordPcs(chord).indexOf(pc)>=0){ col='#1F9D55'; cat='chord'; }
       else if(P.alScale && scaleOK){ col='#1F9D55'; cat='scale'; }
