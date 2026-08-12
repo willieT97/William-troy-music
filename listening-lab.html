@@ -40,6 +40,9 @@
   .tick input{ accent-color:var(--blue); width:15px; height:15px; }
   .tick.locked{ opacity:.45; border-style:dashed; }
   .tick .lock{ font-size:.72rem; }
+  .tick.any{ border-style:dashed; }
+  .tick.any input{ accent-color:var(--pink); }
+  .tick.stood-down{ opacity:.35; }
   .chartwrap{ background:#fff; border:2px solid #e4dcc9; border-radius:10px; padding:12px 10px; overflow-x:auto; }
   .slashsvg{ display:block; min-width:340px; }
   .slash{ stroke:var(--ink); } .schord{ fill:var(--ink); font-family:var(--disp); font-weight:800; } .srom{ fill:var(--muted); font-family:var(--mono); }
@@ -90,6 +93,7 @@
         <label class="tick"><input type="checkbox" id="alBlue" checked> <span id="blueLbl">Blue note (♭3)</span></label>
         <label class="tick" id="tickChord"><input type="checkbox" id="alChord"> Chord tones of the bar <span class="lock" hidden>🔒 Pro</span></label>
         <label class="tick" id="tickPass"><input type="checkbox" id="alPass"> Passing tones on weak beats <span class="lock" hidden>🔒 Pro</span></label>
+        <label class="tick any" id="tickAny"><input type="checkbox" id="alAny"> Anything goes — just write it out</label>
       </div>
     </div>
     <div class="chartwrap" id="chart"></div>
@@ -168,7 +172,7 @@
   // the blue note: b3 on a major tune, b5 on a minor tune; when matching chords, the CHORD's b3
   function blueRel(){ return P.form==='minor' ? 6 : 3; }
 
-  var P={ key:0, form:'blues', grid:1, bpm:96, scale:'majblues', alScale:true, alBlue:true, alChord:false, alPass:false };
+  var P={ key:0, form:'blues', grid:1, bpm:96, scale:'majblues', alScale:true, alBlue:true, alChord:false, alPass:false, alAny:false };
   function keyObj(){ return KEYS[P.key]; }
   function chordName(bar){ var k=keyObj(); var pc=(k.pc+bar[0])%12; return (k.sharp?NAMES_S:NAMES_F)[pc]+(bar[1]==='m7'?'m7':'7'); }
   function chordPcs(bar){ var k=keyObj(); return QUAL[bar[1]].map(function(iv){ return (k.pc+bar[0]+iv)%12; }); }
@@ -296,7 +300,7 @@
     var f=FORMS[P.form], k=keyObj(), spb=60/P.bpm, grid=P.grid, cap=grid<1?32:24;
     var matching=!!SCALES[P.scale].perChord;
     var scaleSet={}; if(!matching) SCALES[P.scale].pcs.forEach(function(p){ scaleSet[p]=1; });
-    var evs=[], prevT=null, n={chord:0,scale:0,blue:0,pass:0,out:0};
+    var evs=[], prevT=null, n={chord:0,scale:0,blue:0,pass:0,out:0,any:0};
     for(var i=0;i<notes.length && evs.length<cap;i++){ var nt=notes[i];
       if(prevT!=null){ var rb=Math.max(0, Math.min(grid<1?4:2, Math.round((nt.t-prevT)/(spb*grid))-1)); for(var r=0;r<rb && evs.length<cap;r++) evs.push({rest:true,d:grid,m:nt.midi}); }
       var bar=Math.floor((nt.t-T0)/(4*spb)); if(bar<0) bar=0; bar%=f.bars.length;
@@ -306,7 +310,8 @@
       var pc=((nt.midi%12)+12)%12, relKey=(pc-k.pc+12)%12, relCh=(pc-rootPc+12)%12, next=notes[i+1], col, cat;
       var scaleOK = matching ? !!CS[chord[2] || (chord[1]==='m7' ? 'dorian' : 'mixo')][relCh] : !!scaleSet[relKey];
       var blueOK = matching ? relCh===3 : relKey===blueRel();
-      if(P.alChord && chordPcs(chord).indexOf(pc)>=0){ col='#1F9D55'; cat='chord'; }
+      if(P.alAny){ col=null; cat='any'; }              // no rules — plain ink, no verdict
+      else if(P.alChord && chordPcs(chord).indexOf(pc)>=0){ col='#1F9D55'; cat='chord'; }
       else if(P.alScale && scaleOK){ col='#1F9D55'; cat='scale'; }
       else if(P.alBlue && blueOK){ col='#2438C8'; cat='blue'; }
       else if(P.alPass && !strong && next && Math.abs(nt.midi-next.midi)<=2){ col='#2438C8'; cat='pass'; }
@@ -314,6 +319,10 @@
       n[cat]++; evs.push({ m:nt.midi, d:grid, col:col }); prevT=nt.t; }
     work=evs; carving=false;
     out.hidden=false; out.innerHTML=renderMelody(evs,{sharp:k.sharp});
+    if(P.alAny){
+      fb.textContent='Here’s your chorus, written out — '+n.any+' note'+(n.any===1?'':'s')+'. No rules on, so nothing’s wrong: play it back, carve it, or tick a rule and go again.';
+      fb.className='fb'; el('carveRow').hidden = !entitled(); return;
+    }
     var bits=[];
     if(n.chord) bits.push(n.chord+' chord tone'+(n.chord===1?'':'s'));
     if(n.scale) bits.push(n.scale+' scale note'+(n.scale===1?'':'s'));
@@ -336,11 +345,19 @@
       t.classList.toggle('locked', !pro); lock.hidden=pro; c.disabled=!pro; if(!pro) { c.checked=false; P[pair[1]]=false; }
     });
     if(!pro) el('carveRow').hidden=true;
+    if(P.alAny) setAnyMode();
+  }
+  // "anything goes" overrides the rules — stand them down rather than letting them argue
+  var RULE_IDS=['alScale','alBlue','alChord','alPass'];
+  function setAnyMode(){ var on=P.alAny;
+    RULE_IDS.forEach(function(id){ var c=el(id), t=c.parentNode; t.classList.toggle('stood-down', on); if(on) c.disabled=true; });
+    el('scaleSel').disabled=on;
+    if(!on){ el('alScale').disabled=false; el('alBlue').disabled=false; refreshLocks(); }
   }
   function openPaywall(){ if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'That rule is Pro', body:'Chord-tone and passing-tone grading (and the carve tool) come from the Learning to Fly course. Go Pro — or grab the course — to switch them on.', product:PRODUCT }); else location.href='/upgrade.html?highlight='+encodeURIComponent(PRODUCT); }
 
   /* ===== params / recipes ===== */
-  function params(){ return { key:P.key, form:P.form, grid:P.grid, bpm:P.bpm, scale:P.scale, alScale:P.alScale, alBlue:P.alBlue, alChord:P.alChord, alPass:P.alPass }; }
+  function params(){ return { key:P.key, form:P.form, grid:P.grid, bpm:P.bpm, scale:P.scale, alScale:P.alScale, alBlue:P.alBlue, alChord:P.alChord, alPass:P.alPass, alAny:P.alAny }; }
   function apply(p){ if(!p) return; Object.keys(params()).forEach(function(k){ if(p[k]!=null) P[k]=p[k]; });
     if(!entitled()){ P.alChord=false; P.alPass=false; }
     syncUI(); drawChart(); }
@@ -352,7 +369,7 @@
   function syncUI(){ el('keySel').value=P.key; el('formSel').value=P.form; el('gridSel').value=String(P.grid);
     el('tempo').value=P.bpm; el('tempoVal').textContent=P.bpm; el('scaleSel').value=P.scale;
     el('alScale').checked=P.alScale; el('alBlue').checked=P.alBlue; el('alChord').checked=P.alChord; el('alPass').checked=P.alPass;
-    updateBlueLbl(); }
+    el('alAny').checked=P.alAny; updateBlueLbl(); setAnyMode(); }
 
   /* ===== wire up ===== */
   KEYS.forEach(function(k,i){ var o=document.createElement('option'); o.value=i; o.textContent=k.n; el('keySel').appendChild(o); });
@@ -369,7 +386,9 @@
   el('alBlue').addEventListener('change', function(){ P.alBlue=this.checked; });
   el('alChord').addEventListener('change', function(){ P.alChord=this.checked; });
   el('alPass').addEventListener('change', function(){ P.alPass=this.checked; });
-  [['tickChord'],['tickPass']].forEach(function(p){ el(p[0]).addEventListener('click', function(e){ if(this.classList.contains('locked')){ e.preventDefault(); openPaywall(); } }); });
+  el('alAny').addEventListener('change', function(){ P.alAny=this.checked; setAnyMode(); });
+  [['tickChord'],['tickPass']].forEach(function(p){ el(p[0]).addEventListener('click', function(e){ if(P.alAny){ e.preventDefault(); return; }
+    if(this.classList.contains('locked')){ e.preventDefault(); openPaywall(); } }); });
   el('micBtn').addEventListener('click', ensureMic);
   el('playBtn').addEventListener('click', function(){ notes=[]; capturing=true; armed=true; rmsSlow=0;
     el('staffOut').hidden=true; el('fb').textContent=''; el('carveRow').hidden=true; startJam();
