@@ -108,21 +108,60 @@
   var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function toast(m){ var t=el('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){ t.classList.remove('show'); },2200); }
 
-  /* ===== the master (Belt 1: a warm human music teacher; bird stays as the course emblem) ===== */
-  var MASTER_SVG = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
-    + '<ellipse cx="50" cy="95" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
-    + '<path d="M16 100 Q20 72 50 70 Q80 72 84 100 Z" fill="#2438C8" stroke="#17140E" stroke-width="3"/>'
-    + '<path d="M42 72 L50 82 L58 72" fill="none" stroke="#17140E" stroke-width="2.4"/>'
-    + '<rect x="43" y="58" width="14" height="16" rx="5" fill="#E8B183" stroke="#17140E" stroke-width="2.6"/>'
-    + '<ellipse cx="50" cy="42" rx="21" ry="23" fill="#F0C29A" stroke="#17140E" stroke-width="3"/>'
-    + '<path d="M28 40 Q26 16 50 16 Q74 16 72 40 Q67 28 50 28 Q33 28 28 40 Z" fill="#4a3220" stroke="#17140E" stroke-width="2.6"/>'
-    + '<circle cx="41" cy="43" r="6.5" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
-    + '<circle cx="59" cy="43" r="6.5" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
-    + '<line x1="47.5" y1="43" x2="52.5" y2="43" stroke="#17140E" stroke-width="2"/>'
-    + '<circle cx="41" cy="43" r="2.2" fill="#17140E"/><circle cx="59" cy="43" r="2.2" fill="#17140E"/>'
-    + '<path d="M41 54 Q50 61 59 54" fill="none" stroke="#17140E" stroke-width="2.6" stroke-linecap="round"/>'
-    + '<g transform="translate(62 86)"><circle cx="0" cy="5" r="2.6" fill="#FF4E86" stroke="#17140E" stroke-width="1.6"/><line x1="2.4" y1="5" x2="2.4" y2="-5" stroke="#17140E" stroke-width="1.6"/><path d="M2.4 -5 L7 -3.5" fill="none" stroke="#17140E" stroke-width="1.6"/></g>'
-    + '</svg>';
+  /* ===== the masters (one per belt — the bird stays as the course emblem) ===== */
+  var MASTERS = {
+    // Belt 1: a warm human music teacher
+    teacher: { who:'YOUR TEACHER', svg: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      + '<ellipse cx="50" cy="95" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
+      + '<path d="M16 100 Q20 72 50 70 Q80 72 84 100 Z" fill="#2438C8" stroke="#17140E" stroke-width="3"/>'
+      + '<path d="M42 72 L50 82 L58 72" fill="none" stroke="#17140E" stroke-width="2.4"/>'
+      + '<rect x="43" y="58" width="14" height="16" rx="5" fill="#E8B183" stroke="#17140E" stroke-width="2.6"/>'
+      + '<ellipse cx="50" cy="42" rx="21" ry="23" fill="#F0C29A" stroke="#17140E" stroke-width="3"/>'
+      + '<path d="M28 40 Q26 16 50 16 Q74 16 72 40 Q67 28 50 28 Q33 28 28 40 Z" fill="#4a3220" stroke="#17140E" stroke-width="2.6"/>'
+      + '<circle cx="41" cy="43" r="6.5" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
+      + '<circle cx="59" cy="43" r="6.5" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
+      + '<line x1="47.5" y1="43" x2="52.5" y2="43" stroke="#17140E" stroke-width="2"/>'
+      + '<circle cx="41" cy="43" r="2.2" fill="#17140E"/><circle cx="59" cy="43" r="2.2" fill="#17140E"/>'
+      + '<path d="M41 54 Q50 61 59 54" fill="none" stroke="#17140E" stroke-width="2.6" stroke-linecap="round"/>'
+      + '<g transform="translate(62 86)"><circle cx="0" cy="5" r="2.6" fill="#FF4E86" stroke="#17140E" stroke-width="1.6"/><line x1="2.4" y1="5" x2="2.4" y2="-5" stroke="#17140E" stroke-width="1.6"/><path d="M2.4 -5 L7 -3.5" fill="none" stroke="#17140E" stroke-width="1.6"/></g>'
+      + '</svg>' },
+    // Belt 2: Papa Sonny — an old blues head out of New Orleans (fedora w/ crescent pin, shades, grey beard)
+    blues: { who:'PAPA SONNY', svg: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      + '<ellipse cx="50" cy="95" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
+      + '<path d="M16 100 Q20 72 50 70 Q80 72 84 100 Z" fill="#A63D2F" stroke="#17140E" stroke-width="3"/>'
+      + '<path d="M42 72 L50 82 L58 72" fill="none" stroke="#17140E" stroke-width="2.4"/>'
+      + '<rect x="43" y="58" width="14" height="16" rx="5" fill="#8A5A3B" stroke="#17140E" stroke-width="2.6"/>'
+      + '<ellipse cx="50" cy="42" rx="21" ry="23" fill="#9C6644" stroke="#17140E" stroke-width="3"/>'
+      + '<path d="M31 44 Q29 68 50 70 Q71 68 69 44 Q64 61 50 61 Q36 61 31 44 Z" fill="#D8D2C7" stroke="#17140E" stroke-width="2.4"/>'
+      + '<path d="M44 55 Q50 59 56 55" fill="none" stroke="#17140E" stroke-width="2.4" stroke-linecap="round"/>'
+      + '<circle cx="41" cy="42" r="6.5" fill="#17140E" stroke="#17140E" stroke-width="2"/>'
+      + '<circle cx="59" cy="42" r="6.5" fill="#17140E" stroke="#17140E" stroke-width="2"/>'
+      + '<line x1="47.5" y1="42" x2="52.5" y2="42" stroke="#17140E" stroke-width="2"/>'
+      + '<circle cx="43" cy="40" r="1.6" fill="#FFFDF7" opacity=".85"/><circle cx="61" cy="40" r="1.6" fill="#FFFDF7" opacity=".85"/>'
+      + '<path d="M34 25 Q34 8 50 8 Q66 8 66 25 Z" fill="#2B2620" stroke="#17140E" stroke-width="2.6"/>'
+      + '<rect x="34" y="18" width="32" height="7" fill="#D9A03F" stroke="#17140E" stroke-width="1.8"/>'
+      + '<circle cx="50" cy="21.5" r="2.7" fill="#FFFDF7" stroke="#17140E" stroke-width="1.2"/><circle cx="51.5" cy="20.8" r="2.2" fill="#D9A03F"/>'
+      + '<ellipse cx="50" cy="25" rx="26" ry="5.5" fill="#2B2620" stroke="#17140E" stroke-width="2.6"/>'
+      + '</svg>' },
+    // Belt 3: Granny Mae — an Appalachian flatpicking granny (grey bun, round specs, plaid shirt, banjo pin)
+    appalachian: { who:'GRANNY MAE', svg: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      + '<ellipse cx="50" cy="95" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
+      + '<path d="M16 100 Q20 72 50 70 Q80 72 84 100 Z" fill="#2E7D4F" stroke="#17140E" stroke-width="3"/>'
+      + '<path d="M34 76 L32 100 M66 76 L68 100 M23 88 L77 88" fill="none" stroke="#1D5C38" stroke-width="3" opacity=".75"/>'
+      + '<path d="M42 72 L50 82 L58 72" fill="none" stroke="#17140E" stroke-width="2.4"/>'
+      + '<rect x="43" y="58" width="14" height="16" rx="5" fill="#EFC9A6" stroke="#17140E" stroke-width="2.6"/>'
+      + '<ellipse cx="50" cy="42" rx="21" ry="23" fill="#F6D7B8" stroke="#17140E" stroke-width="3"/>'
+      + '<circle cx="50" cy="12" r="7" fill="#C9C4BA" stroke="#17140E" stroke-width="2.6"/>'
+      + '<path d="M28 40 Q26 15 50 15 Q74 15 72 40 Q67 27 50 27 Q33 27 28 40 Z" fill="#C9C4BA" stroke="#17140E" stroke-width="2.6"/>'
+      + '<circle cx="41" cy="43" r="6" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
+      + '<circle cx="59" cy="43" r="6" fill="#FFFDF7" stroke="#17140E" stroke-width="2"/>'
+      + '<line x1="47" y1="43" x2="53" y2="43" stroke="#17140E" stroke-width="2"/>'
+      + '<circle cx="41" cy="43" r="2.1" fill="#17140E"/><circle cx="59" cy="43" r="2.1" fill="#17140E"/>'
+      + '<circle cx="34" cy="51" r="3" fill="#FF9A8B" opacity=".5"/><circle cx="66" cy="51" r="3" fill="#FF9A8B" opacity=".5"/>'
+      + '<path d="M42 55 Q50 62 58 55" fill="none" stroke="#17140E" stroke-width="2.6" stroke-linecap="round"/>'
+      + '<g transform="translate(62 86)"><circle cx="0" cy="3.5" r="3" fill="#FFFDF7" stroke="#17140E" stroke-width="1.6"/><line x1="0" y1="0.5" x2="0" y2="-6" stroke="#17140E" stroke-width="1.6"/></g>'
+      + '</svg>' }
+  };
 
   /* ===== melodies (key of C — midi + duration in beats) ===== */
   var MARY = [64,62,60,62, 64,64,[64,2], 62,62,[62,2], 64,67,[67,2], 64,62,60,62, 64,64,64,64, 62,62,64,62, [60,4]]
@@ -476,11 +515,12 @@
         ], ex:{ type:'jam', title:'Fly a chorus', bpm:96,
           desc:'Pick a tune. Chorus 1: play its melody (the head) over the chords. Chorus 2 and on: improvise with the pentatonic — space, call &amp; answer, land home. Try all three tunes when you’re ready.' } }
     ]},
-    { title:'Belt 2 — The Blues', belt:'Yellow Belt', lessons:[
+    { title:'Belt 2 — The Blues', belt:'Yellow Belt', master:'blues', lessons:[
       { num:'2.1', title:'The blue note', teach:[
-          { html:"Welcome to the blues. It starts with one note — the <b>blue note</b>. Take your pentatonic and squeeze a new note in between the 2 and the 3: the <b>flat third</b> (in C, that's <b>E♭</b>)." },
-          { html:"On its own it sounds “wrong” — and that's the point. The magic is the <b>slide</b>: play E♭ and slither up to E (the natural 3rd). That little cry, ♭3 → 3, <em>is</em> the sound of the blues." },
-          { t:'qa', q:"So it's just one extra note?", a:"One note, and everything changes. Pentatonic plus that ♭3 is the <b>major blues scale</b>. Play it below — hear how the E♭ leans into the E. Lean on that note and you're playing the blues." }
+          { html:"Well, well. Your teacher sent word you'd be coming. <b>Papa Sonny</b>'s the name — been playing the blues on porches from New Orleans clear up to Memphis since before your teacher could hum. Pull up a chair, child." },
+          { html:"The blues starts with one note. Take that pentatonic of yours and squeeze a new note in between the 2 and the 3: the <b>flat third</b> (in C, that's <b>E♭</b>). We call it the <b>blue note</b>." },
+          { html:"By itself it sounds “wrong” — and that's exactly right. The magic is the <b>slide</b>: play E♭ and slither on up to E (the natural 3rd). That little cry, ♭3 → 3, <em>is</em> the sound of the blues." },
+          { t:'qa', q:"So it's just one extra note?", a:"One note, and everything changes. Pentatonic plus that ♭3 is the <b>major blues scale</b>. Play it below — hear that E♭ lean into the E like a long Sunday sigh. Lean on that note and you're playing the blues, cher." }
         ], ex:{ type:'melody', title:'The major blues scale', mel:BLUESCALE, bpm:104,
           desc:'C D E♭ E G A — your pentatonic with the blue note (E♭) added. Play it up and down, and listen for the E♭ crying up into the E.' } },
       { num:'2.2', title:'Space & phrasing', teach:[
@@ -491,7 +531,7 @@
         ], ex:{ type:'space', title:'Give it some air', phrase:BUSY, bpm:96,
           desc:'This line runs on every beat — no breath. Group it into <b>sentences</b>: keep a few notes in a row as one idea, then tap notes out to breathe before the next. A rest between every note is a stutter — keep your phrases whole.' } },
       { num:'2.3', title:'The 12-bar blues', teach:[
-          { html:"One note gave you the blues sound. Now the <b>form</b> — the 12-bar road that nearly every blues in the world drives down. Twelve bars, three chords, then it loops. Learn it once and you can sit in almost anywhere." },
+          { html:"One note gave you the blues sound. Now the <b>form</b> — the 12-bar road that nearly every blues in the world drives down. Twelve bars, three chords, then it loops. Learn it once and you can sit in anywhere — a porch in New Orleans, a club in Chicago." },
           { html:"It's built from three chords: the <b>I</b> (home — C7), the <b>IV</b> (F7), and the <b>V</b> (G7). Watch the grid light up: four bars of I, two of IV, back to I, then the <b>turnaround</b> — V, IV, I, V — which spins you round to the top again." },
           { t:'qa', q:"Do I have to memorise all twelve?", a:"You'll feel it faster than you'd think — it's the same shape every time. Hit Play, watch the bar light up, and count along: 1-2-3-4, 2-2-3-4… When you can feel where the IV and the V land, you own the form. Your blues scale sits over the <em>whole</em> thing." }
         ], ex:{ type:'bluesjam', title:'The 12-bar blues', chords:BLUES12, bpm:92,
@@ -499,9 +539,9 @@
           scaleName:'C major blues — C D E♭ E G A', goal:'Play it and count along. Bar 5 jumps up to the IV; the last two bars are the turnaround (V–IV–I–V) that sends you round again.',
           doneLabel:'I can feel the 12 bars', win:'That’s the form — twelve bars, looping forever. Now you can solo over it.' } },
       { num:'2.4', title:'Steal this lick', teach:[
-          { html:"Every blues player carries a bag of <b>licks</b> — little ready-made phrases they mix and match. A lick is just a sentence you've said so often it plays itself. Here's a classic one to steal." },
+          { html:"Every blues head carries a bag of <b>licks</b> — little ready-made phrases we mix and match. A lick is just a sentence you've said so often it plays itself. Here's one out of my own bag — go on and steal it." },
           { html:"Listen to bar 1: <b>G</b>, then the blue slide <b>E♭ → E</b>, back to <b>G</b>. That ♭3 → 3 curl is pure blues. Then a <b>breath</b> (there's your space from 2.2), and a little answer that lands home on <b>C</b>." },
-          { t:'qa', q:"I can just copy it?", a:"That's exactly how everyone learns — steal a lick, then bend it. Bar 1 is mine and stays put. The three green notes in the answer are <b>yours</b> — tap each to move it around the blues scale, then play the whole lick and make the answer your own." }
+          { t:'qa', q:"I can just copy it?", a:"That's how every player who ever lived learned — me included; I lifted mine off the old cats back home. Steal it, then bend it. Bar 1 is mine and stays put. The three green notes in the answer are <b>yours</b> — tap each to move it around the blues scale, then play the whole lick and make the answer your own." }
         ], ex:{ type:'embellish', title:'Steal this lick', mel:LICK, bpm:96, pal:BLUES_PAL,
           embWin:'That’s YOUR lick now — same blue curl, your own answer. Steal it, bend it, and it belongs to you. 🎉',
           desc:'Bar 1 is the classic blues curl — keep it. The three green notes in the answer are yours: tap each to move it through the blues scale, then Play the whole lick and hear your version.' } },
@@ -523,7 +563,7 @@
     ]},
     { title:'Belt 3 — Bluegrass', belt:'Green Belt', soon:true, blurb:'Flatpick clichés with an Appalachian master, then take a break at the jam.' }
   ];
-  var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt }, les)); }); });
+  var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt, master:mod.master||'teacher' }, les)); }); });
   var idx=0, solved=false, work=null;
   var PSET=[60,62,64,67,69,72];   // C major pentatonic across the melody's range
   var pal=PSET;                    // active palette for tap-to-change (set per embellish exercise)
@@ -617,13 +657,13 @@
   function renderType(){ var out='',c=0; toks.forEach(function(t){ if('tag' in t) out+=t.tag; else { if(c<shown) out+=t.ch; c++; } }); el('line').innerHTML=out+(lineDone?'':'<span class="cursor">▍</span>'); }
   function startType(html){ toks=tokenize(html); shown=0; lineDone=false; clearInterval(typer); renderType(); if(reduced){ finishLine(); return; } typer=setInterval(function(){ shown++; renderType(); if(shown>=nChars(toks)) finishLine(); }, 16); }
   function finishLine(){ clearInterval(typer); shown=nChars(toks); lineDone=true; renderType(); var last=pageIdx>=pages.length-1; el('cont').textContent=last?'▼ let’s play':'▼ tap to continue'; el('cont').classList.add('show'); }
-  function showPage(){ var pg=pages[pageIdx]; el('scene').classList.toggle('student', pg.who==='student'); el('who').textContent=pg.who==='student'?'YOU':'YOUR TEACHER'; startType(pg.html); }
+  function showPage(){ var pg=pages[pageIdx]; var M=MASTERS[(LESSONS[idx]||{}).master]||MASTERS.teacher; el('scene').classList.toggle('student', pg.who==='student'); el('who').textContent=pg.who==='student'?'YOU':M.who; startType(pg.html); }
   function advance(){ if(dialogueDone) return; if(!lineDone){ finishLine(); return; } if(pageIdx<pages.length-1){ pageIdx++; showPage(); } else { dialogueDone=true; el('cont').classList.remove('show'); el('exwrap').hidden=false; } }
 
   /* ===== lesson / nav / toc ===== */
   function renderLesson(){ stopPlay(); stopMic(); stopJam(); stopBlues(); var L=LESSONS[idx];
     el('bk').textContent='LESSON '+L.num; el('btitle').textContent=L.title; el('belt').innerHTML='<span class="dot"></span>'+L.belt; el('pos').textContent='Lesson '+(idx+1)+' of '+LESSONS.length;
-    el('portrait').innerHTML=MASTER_SVG;
+    el('portrait').innerHTML=(MASTERS[L.master]||MASTERS.teacher).svg;
     pages=buildPages(L.teach); pageIdx=0; dialogueDone=false; solved=false; work=null; el('scene').classList.remove('student');
     el('exwrap').hidden=true; el('exwrap').innerHTML=renderExercise(L.ex); wireExercise(L.ex);
     showPage(); renderNav(); buildToc(); window.scrollTo({top:0, behavior:reduced?'auto':'smooth'}); }
