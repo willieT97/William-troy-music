@@ -184,7 +184,8 @@
     Am: { bass:[33,40], pad:[57,60,64] },   // A1 E2 · A C E
     C7: { bass:[36,43], pad:[60,64,67,70] },// C2 G2 · C E G B♭
     F7: { bass:[29,36], pad:[53,57,60,63] },// F1 C2 · F A C E♭
-    G7: { bass:[31,38], pad:[55,59,62,65] } // G1 D2 · G B D F
+    G7: { bass:[31,38], pad:[55,59,62,65] },// G1 D2 · G B D F
+    D:  { bass:[38,45], pad:[62,66,69] }    // D2 A2 · D F# A (bluegrass V of G)
   };
   var TUNES = [
     { name:'Mary Had a Little Lamb', mel:MARY, chords:['C','C','G','C','C','C','G','C'], bpm:96 },
@@ -198,6 +199,10 @@
   var LICK = [ {m:67,d:1},{m:63,d:1},{m:64,d:1},{m:67,d:1}, {rest:true,d:1},{m:69,d:1,chg:true},{m:67,d:1,chg:true},{m:64,d:1,chg:true}, {m:60,d:2} ];
   var BLUES_PAL = [60,62,63,64,67,69,70,72];             // C D E♭ E G A B♭ C — palette for bending a blues lick
   var ABLUES = [57,60,62,63,64,67,69, 67,64,63,62,60,[57,2]].map(mk); // A C D E♭ E G A — A minor blues (relative minor of C); SAME six notes as the C major blues, same blue note E♭
+  // Belt 3 (bluegrass, key of G): the first jam tune + the G major pentatonic
+  var BOILEM = [71,71,71,71, 72,72,72,72, 71,71,71,71, 69,69,69,69, 71,71,71,71, 72,72,72,72, 71,71,69,69, [67,4]].map(mk); // Boil Them Cabbage Down
+  var BOILEM_CH = ['G','C','G','D','G','C','D','G'];
+  var GPENT = [67,69,71,74,76,79, 76,74,71,69,[67,2]].map(mk); // G A B D E G — the same pentatonic shape, moved home to G
   var BLUES12 = ['C7','C7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7']; // the 12-bar blues in C
   var ROMAN = { C7:'I', F7:'IV', G7:'V' };
 
@@ -561,7 +566,21 @@
           goal:'Enable the mic, hit Play, and solo — one note per beat, rests where you breathe. When you’re done, tap “Check my solo” to see your notes written out and how many stayed in the pentatonic.',
           doneLabel:'Check my solo 🎷', win:'🎉 You soloed a full chorus over the blues — form, blue notes, space and all. Yellow belt earned!' } }
     ]},
-    { title:'Belt 3 — Bluegrass', belt:'Green Belt', soon:true, blurb:'Flatpick clichés with an Appalachian master, then take a break at the jam.' }
+    { title:'Belt 3 — Bluegrass', belt:'Green Belt', master:'appalachian', lessons:[
+      { num:'3.1', title:'Up the mountain', teach:[
+          { html:"Well howdy, young flyer! <b>Granny Mae</b>'s the name. Papa Sonny wired ahead — said you'd earned your yellow belt fair and square. Up here in the mountains we play <b>bluegrass</b>: fiddle tunes, fast flatpicking, and everybody gets a turn to shine." },
+          { html:"Bluegrass lives in the key of <b>G</b>, and every jam starts the same way: somebody kicks off a tune everybody knows — the <b>head</b> — then we go round the circle and each picker makes it their own. Sound familiar? It's your head-then-solo game, played on a porch." },
+          { t:'qa', q:"Do I need to know the tunes already?", a:"You'll learn 'em one at a time, same as everybody ever did. Start with the first tune every picker learns: <b>Boil Them Cabbage Down</b>. Play it below till you could hum it in your sleep — the jam moves quick, and knowing the head is your ticket in." }
+        ], ex:{ type:'melody', title:'Boil Them Cabbage Down', mel:BOILEM, bpm:112,
+          desc:'The first tune at every bluegrass jam — eight bars in the key of G. Learn the head cold: it leans on B, C and A, and comes home to G at the end.' } },
+      { num:'3.2', title:'Same wings, new sky', teach:[
+          { html:"Now, your solo notes. You know the <b>major pentatonic</b> from Belt 1 — five friendly notes, can't hit a wrong one. Here's the mountain secret: that shape isn't glued to C. Slide the whole thing up to <b>G</b> and you get <b>G A B D E</b> — the <b>G major pentatonic</b>." },
+          { html:"Same wings, new sky. Every trick you've learned — space, call and answer, landing home — comes right along with you. The only thing that moves is <b>home</b>: up here, home is <b>G</b>." },
+          { t:'qa', q:"So I already know how to fly here?", a:"That you do. Play the G pentatonic below till your ear finds the new home note. Next time you're up, I'll show you the runs every flatpicker keeps in their pocket." }
+        ], ex:{ type:'melody', title:'G major pentatonic', mel:GPENT, bpm:120,
+          desc:'G A B D E — the same five-note shape you know from C, moved up to a new home. Play it up and down till G feels like the ground under your feet.' } }
+    ]},
+    { title:'Belt 4 — Jazz Blues', belt:'Blue Belt', soon:true, blurb:'An old jazz cat you might know saunters in — swing, seventh chords, and the 12-bar in a sharp suit.' }
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt, master:mod.master||'teacher' }, les)); }); });
   var idx=0, solved=false, work=null;
