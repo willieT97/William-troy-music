@@ -47,7 +47,7 @@ header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
 #syncStatus.saving{background:var(--ink);color:var(--paper)}
 #syncStatus.saved{background:var(--green);color:#fff}
 #syncStatus.error{background:var(--pink);color:#fff}
-#syncStatus.demo{background:#fff;color:var(--ink);border-style:dashed}
+#syncStatus.demo,#syncStatus.local{background:#fff;color:var(--ink);border-style:dashed}
 
 /* ---------- week grid ---------- */
 main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
@@ -171,7 +171,7 @@ textarea.field{resize:vertical;min-height:56px}
   <button class="btn" id="openManage">Set up</button>
 </header>
 
-<div id="demoBanner"><div class="inner"><b>Demo mode.</b> No storage connected — changes live in this tab only. Paste your Apps Script URL into CONFIG at the top of this file to sync with your Google Sheet.</div></div>
+<div id="demoBanner"></div>
 
 <main>
   <div class="grid" id="grid"></div>
@@ -241,15 +241,9 @@ textarea.field{resize:vertical;min-height:56px}
 </div>
 
 <script>
-/* ================= CONFIG =================
-   Paste your Google Apps Script web-app URL between the quotes.
-   Leave empty to run in demo mode (nothing is saved).            */
-const CONFIG = { SCRIPT_URL: "" };
-/* ========================================== */
-
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const COLOURS=['c-blue','c-pink','c-amber','c-green'];
-let state={people:[],slots:[],lessons:[],exceptions:[]};
+let state={people:[],slots:[],lessons:[],exceptions:[],updatedAt:''};
 let weekStart=mondayOf(new Date());
 let drawerCtx=null;           // {personId, dateISO, slotId}
 let editingLessonId=null;
@@ -270,39 +264,62 @@ function shortDate(isoStr){const d=new Date(isoStr+'T12:00:00');return d.toLocal
 const person=id=>state.people.find(p=>p.id===id);
 const colourOf=p=>p.colour||COLOURS[Math.max(0,state.people.indexOf(p))%COLOURS.length];
 
-/* ---------- sync ---------- */
+/* ---------- storage: this device, and your account when you're signed in ----------
+   Every change is written to localStorage first, so the rollbook keeps working offline
+   and mid-lesson; when you're signed in it's mirrored to your account (owner-only) so
+   the same book follows you from laptop to phone. Newest copy wins on load. */
+const LKEY='rollbook.state.v1';
+let cloudRowId=null;
+const signedIn=()=>!!(window.MAAuth&&MAAuth.user&&MAAuth.user());
 function setStatus(cls,txt){const el=$('#syncStatus');el.className=cls;el.textContent=txt;}
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(state));}catch(e){}}
+function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LKEY));if(j&&Array.isArray(j.people))return j;}catch(e){}return null;}
+function countOf(d){return d?((d.people||[]).length+(d.slots||[]).length+(d.lessons||[]).length):0;}
+
 function markDirty(){
-  dirty=true;
-  if(!CONFIG.SCRIPT_URL){render();return;}
-  setStatus('dirty','unsaved');
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(saveRemote,2000);
+  dirty=true; state.updatedAt=new Date().toISOString(); saveLocal();
+  if(signedIn()){setStatus('dirty','unsaved');clearTimeout(saveTimer);saveTimer=setTimeout(pushCloud,1200);}
+  else setStatus('local','this device');
   render();
 }
-async function saveRemote(){
-  if(!CONFIG.SCRIPT_URL)return;
+async function pushCloud(){
+  if(!signedIn())return;
   setStatus('saving','saving…');
   try{
-    const r=await fetch(CONFIG.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'save',state})});
-    const j=await r.json();
-    if(!j.ok)throw new Error('bad response');
-    dirty=false;setStatus('saved','saved');
-  }catch(e){setStatus('error','save failed — retrying');clearTimeout(saveTimer);saveTimer=setTimeout(saveRemote,6000);}
+    const row=await MAAuth.creations.save('rollbook',{id:cloudRowId,title:'rollbook',data:state});
+    if(row&&row.id)cloudRowId=row.id;
+    dirty=false;setStatus('saved','synced');
+  }catch(e){setStatus('error','save failed — retrying');clearTimeout(saveTimer);saveTimer=setTimeout(pushCloud,6000);}
 }
-async function loadRemote(){
-  if(!CONFIG.SCRIPT_URL){
-    demoData();setStatus('demo','demo mode');$('#demoBanner').classList.add('show');render();return;
-  }
+async function pullCloud(){
+  renderAccountBanner();
+  if(!signedIn()){cloudRowId=null;setStatus('local','this device');render();return;}
   setStatus('saving','loading…');
   try{
-    const r=await fetch(CONFIG.SCRIPT_URL);
-    const j=await r.json();
-    state={people:j.people||[],slots:j.slots||[],lessons:j.lessons||[],exceptions:j.exceptions||[]};
-    setStatus('saved','saved');
-  }catch(e){setStatus('error','couldn\u2019t load — check CONFIG url');}
+    const rows=await MAAuth.creations.list('rollbook');
+    const row=(rows||[]).filter(r=>r.title==='rollbook')[0]||(rows||[])[0];
+    if(row){
+      cloudRowId=row.id;
+      const cloud=row.data||{},cloudAt=cloud.updatedAt||'',localAt=state.updatedAt||'';
+      if(countOf(cloud)&&(!countOf(state)||cloudAt>=localAt)){
+        state={people:cloud.people||[],slots:cloud.slots||[],lessons:cloud.lessons||[],exceptions:cloud.exceptions||[],updatedAt:cloudAt};
+        saveLocal();setStatus('saved','synced');
+      }
+      else if(countOf(state)&&localAt>cloudAt) await pushCloud();  /* this device is ahead */
+      else setStatus('saved','synced');
+    }
+    else if(countOf(state)) await pushCloud();                     /* first sign-in: lift this device's book up */
+    else setStatus('saved','synced');
+  }catch(e){setStatus('error','couldn’t reach your account');}
   render();
+}
+function renderAccountBanner(){
+  const b=$('#demoBanner');
+  if(signedIn()){b.classList.remove('show');return;}
+  b.innerHTML='<div class="inner"><b>Saved on this device.</b> Your rollbook lives in this browser only — '+
+    '<button class="btn small" id="rbSignin">Sign in</button> to sync it between your laptop and phone, and keep a private backup.</div>';
+  b.classList.add('show');
+  const s=$('#rbSignin');if(s)s.onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
 }
 
 /* ---------- week grid ---------- */
@@ -324,7 +341,12 @@ function render(){
     end.toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'});
 
   if(!state.slots.length){
-    g.innerHTML='<div class="emptyweek"><h2>Nothing on the timetable yet</h2><p class="muted">Open <b>Set up</b> to add your students and their weekly times.</p></div>';
+    g.innerHTML='<div class="emptyweek"><h2>Nothing on the timetable yet</h2>'+
+      '<p class="muted">Open <b>Set up</b> to add your students and their weekly times.</p>'+
+      (state.people.length?'':'<p style="margin-top:14px"><button class="btn small" id="loadDemo">Show me a sample week</button></p>')+
+      '</div>';
+    const dm=$('#loadDemo');
+    if(dm)dm.onclick=()=>{if(confirm('Load four sample students to look around? You can delete them in Set up.')){demoData();markDirty();}};
     return;
   }
   const[rs,re]=weekRange(); const hours=(re-rs)/60;
@@ -572,8 +594,18 @@ function demoData(){
 }
 
 /* ---------- boot ---------- */
-window.addEventListener('beforeunload',e=>{if(dirty&&CONFIG.SCRIPT_URL){e.preventDefault();e.returnValue='';}});
-loadRemote();
+window.addEventListener('beforeunload',e=>{if(dirty&&signedIn()){e.preventDefault();e.returnValue='';}});
+
+const saved=loadLocal();
+if(saved)state=Object.assign({people:[],slots:[],lessons:[],exceptions:[],updatedAt:''},saved);
+setStatus('local','this device');
+renderAccountBanner();
+render();
+/* MAAuth.onChange fires on load and on every sign in/out */
+(function waitAuth(){
+  if(window.MAAuth&&MAAuth.onChange) MAAuth.onChange(()=>{pullCloud();});
+  else setTimeout(waitAuth,120);
+})();
 </script>
 </body>
 </html>
