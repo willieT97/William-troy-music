@@ -181,7 +181,24 @@
       + '<path d="M50 100 q42 -20 84 0 q6 8 -6 10 q-36 -13 -72 0 q-12 -2 -6 -10 Z" fill="#17140E" stroke-width="2.5"/>'
       + '<path d="M64 100 q0 -34 28 -34 q28 0 28 34 Z" fill="#17140E" stroke-width="2.5"/>'
       + '<rect x="64" y="90" width="56" height="7" fill="#FF4E86" stroke="none"/>'
-      + '</g></svg>' }
+      + '</g></svg>' },
+    // Belt 5, lesson 5.12 only: Monk, in a daydream (closed eyes, cap, goatee, a little dream-sparkle)
+    monk: { who:'MONK — IN A DREAM', svg: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      + '<ellipse cx="50" cy="95" rx="30" ry="5" fill="#17140E" opacity=".12"/>'
+      + '<path d="M16 100 Q20 72 50 70 Q80 72 84 100 Z" fill="#23202B" stroke="#17140E" stroke-width="3"/>'
+      + '<path d="M42 72 L50 82 L58 72" fill="none" stroke="#F4EEE2" stroke-width="2.4"/>'
+      + '<rect x="43" y="58" width="14" height="16" rx="5" fill="#7C4A2E" stroke="#17140E" stroke-width="2.6"/>'
+      + '<ellipse cx="50" cy="42" rx="21" ry="23" fill="#8A5535" stroke="#17140E" stroke-width="3"/>'
+      + '<path d="M43 58 q7 7 14 0 q-2 8 -7 8 q-5 0 -7 -8 Z" fill="#2A231D" stroke="none"/>'
+      + '<path d="M44 54 Q50 58 56 54" fill="none" stroke="#17140E" stroke-width="2.2" stroke-linecap="round"/>'
+      + '<path d="M36 43 q5 4 10 0" fill="none" stroke="#17140E" stroke-width="2.2" stroke-linecap="round"/>'
+      + '<path d="M54 43 q5 4 10 0" fill="none" stroke="#17140E" stroke-width="2.2" stroke-linecap="round"/>'
+      + '<path d="M31 26 Q31 12 50 12 Q69 12 69 26 L69 30 Q50 24 31 30 Z" fill="#17140E" stroke="#17140E" stroke-width="2.4"/>'
+      + '<path d="M29 30 Q50 22 71 30 L71 34 Q50 27 29 34 Z" fill="#6B5FA8" stroke="#17140E" stroke-width="1.8"/>'
+      + '<text x="16" y="22" font-family="Georgia,serif" font-size="11" fill="#FF4E86">✦</text>'
+      + '<text x="76" y="14" font-family="Georgia,serif" font-size="14" fill="#D9A03F">✦</text>'
+      + '<text x="80" y="34" font-family="Georgia,serif" font-size="9" fill="#2438C8">✦</text>'
+      + '</svg>' }
   };
 
   /* ===== melodies (key of C — midi + duration in beats) ===== */
@@ -210,7 +227,12 @@
     A7: { bass:[33,40], pad:[57,61,64,67] },// A1 E2 · A C# E G (the VI7 of the jazz blues)
     Dm7:{ bass:[38,45], pad:[62,65,69,72] },// D2 A2 · D F A C (the ii)
     Am7:{ bass:[33,40], pad:[57,60,64,67] },// A1 E2 · A C E G (minor blues home)
-    E7: { bass:[40,47], pad:[64,68,71,74] } // E2 B2 · E G# B D (minor blues V — the G# is the leading tone)
+    E7: { bass:[40,47], pad:[64,68,71,74] },// E2 B2 · E G# B D (minor blues V — the G# is the leading tone)
+    D7: { bass:[38,45], pad:[62,66,69,72] },// D2 A2 · D F# A C (Indiana's V7)
+    B7: { bass:[35,42], pad:[59,63,66,69] },// B1 F#2 · B D# F# A (V of Em)
+    Em: { bass:[40,47], pad:[64,67,71] },   // E2 B2 · E G B (the shadow)
+    'C♯dim': { bass:[37,43], pad:[61,64,67,70] }, // C#2 G2 · C# E G Bb (the stairstep)
+    'E♭7':   { bass:[39,46], pad:[63,67,70,73] }  // Eb2 Bb2 · Eb G Bb Db (one bar of shade)
   };
   var TUNES = [
     { name:'Mary Had a Little Lamb', mel:MARY, chords:['C','C','G','C','C','C','G','C'], bpm:96 },
@@ -294,6 +316,69 @@
     [67,.5],[67,.5],[69,.5],[72,.5],[75,1],[74,.5],[72,.5],
     [72,4]
   ].map(mk).concat([{rest:true,d:4}]);
+  // ===== Belt 5 (the jazz standard: Indiana, 1917 — key of G, 32 bars) =====
+  // head transcribed from tunes/trad-jazz.abc (pickup dropped; cross-bar ties restated to keep bars aligned)
+  function mkR(x){ return Array.isArray(x)?{m:x[0],d:x[1]}:x; }
+  var INDIANA = [
+    [74,4],
+    {rest:true,d:1},[76,1],[74,1],[71,1],
+    [69,2],[64,2],  [64,2],[66,1],[67,1],
+    [71,3],[66,1],  [71,2],[69,2],
+    [67,4],
+    {rest:true,d:1},[67,1],[66,1],[65,1],
+    [64,1],[67,1],[72,2],  [72,2],[64,2],
+    [62,1],[67,1],[71,2],  [71,2],[71,1],[72,1],
+    [73,1],[71,1],[66,2],  [66,2],[64,2],
+    [69,4],
+    {rest:true,d:1},[62,1],[67,1],[71,1],
+    [74,4],
+    {rest:true,d:1},[76,1],[74,1],[71,1],
+    [69,2],[64,2],  [64,2],[66,1],[67,1],
+    [71,3],[66,1],  [71,2],[69,2],
+    [67,4],
+    {rest:true,d:2},[67,1],[69,1],
+    [71,1],[70,1],[71,1],[67,1],
+    [69,1],[71,1],[69,1],[66,1],
+    [67,2],[64,2],  [64,1],{rest:true,d:1},[66,1],[64,1],
+    [62,2],[67,1],[71,1],
+    [74,1],[69,1],[72,1],[71,1],
+    [67,4],
+    [67,1],{rest:true,d:3}
+  ].map(mkR);
+  var INDIANA_CH = ['G','E7','A7','A7','D7','D7','G','G7','C','C♯dim','G','E7','A7','A7','D7','D7',
+                    'G','E7','A7','A7','D7','B7','Em','E♭7','G','B7','Em','C♯dim','G','D7','G','G'];
+  var IND_ROMAN = { G:'I', E7:'VI7', A7:'II7', D7:'V7', G7:'I7', C:'IV', 'C♯dim':'♯iv°', B7:'III7', Em:'vi', 'E♭7':'♭VI7' };
+  // 5.2: the wheel — dominants falling in fifths, arpeggio ride home
+  var WHEEL = [ [64,.5],[68,.5],[71,.5],[74,.5],[71,.5],[68,.5],[64,.5],[68,.5],
+    [69,.5],[73,.5],[76,.5],[79,.5],[76,.5],[73,.5],[69,.5],[73,.5],
+    [62,.5],[66,.5],[69,.5],[72,.5],[69,.5],[66,.5],[62,.5],[66,.5],
+    [67,.5],[71,.5],[74,.5],[71,.5],[67,2] ].map(mkR);
+  var WHEEL_CH = ['E7','A7','D7','G'];
+  // 5.5: a ii-V-I lick in G — climb the ii, ride the V from its leading tone, land on the 3rd
+  var LICK25 = [ {m:69,d:.5},{m:72,d:.5},{m:76,d:.5},{m:74,d:.5},{m:72,d:.5},{m:71,d:.5},{m:69,d:.5},{m:67,d:.5},
+    {m:66,d:.5},{m:69,d:.5},{m:72,d:.5},{m:74,d:.5},{m:72,d:2},
+    {m:71,d:2},{rest:true,d:1},{m:74,d:1,chg:true},
+    {m:72,d:1,chg:true},{m:69,d:1,chg:true},{m:67,d:2} ];
+  var LICK25_CH = ['Am7','D7','G','G'];
+  var LICK25_PAL = [62,64,66,67,69,71,72,74,76];
+  // 5.6: the same cell aimed at the tune's other doors (minor door lands the b3)
+  var LICK25KEYS = [ {name:'G',label:'Home to G (bars 5–7)',r:67}, {name:'D',label:'Into D (bars 15–17)',r:62},
+    {name:'A7',label:'Into A7 (bars 12–13)',r:69}, {name:'Em',label:'Into Em — the shadow (26–27)',r:64,minor:true} ].map(function(k){
+    var run=[2,5,9,7,-1,2,5,7].map(function(v){ return {m:k.r+v,d:.5}; }); run.push({m:k.r+(k.minor?3:4),d:2});
+    return { name:k.name, label:k.label, run:run }; });
+  // 5.7: guide tones — the 3rd of each chord threads the A section
+  var GUIDE = [ {m:71,d:4}, {m:64,d:4,chg:true},{m:69,d:4,chg:true},{m:69,d:4,chg:true},
+    {m:62,d:4,chg:true},{m:62,d:4,chg:true},{m:67,d:4,chg:true},{m:67,d:4,chg:true} ];
+  var GUIDE_CH = ['G','E7','A7','A7','D7','D7','G','G7'];
+  var GUIDE_TARGETS = [68,73,73,66,66,71,71];
+  var CHROMA2 = [59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76];
+  // 5.11: the rhythm motif — bar 1 states it; say it again on each chord with new notes
+  var MOTIF = [ {m:71,d:1},{m:69,d:.5},{m:71,d:.5},{m:67,d:1},{rest:true,d:1},
+    {m:71,d:1,chg:true},{m:69,d:.5,chg:true},{m:71,d:.5,chg:true},{m:67,d:1,chg:true},{rest:true,d:1},
+    {m:71,d:1,chg:true},{m:69,d:.5,chg:true},{m:71,d:.5,chg:true},{m:67,d:1,chg:true},{rest:true,d:1},
+    {m:71,d:1,chg:true},{m:69,d:.5,chg:true},{m:71,d:.5,chg:true},{m:67,d:1,chg:true},{rest:true,d:1} ];
+  var MOTIF_CH = ['G','A7','D7','G'];
+  var MOTIF_PAL = [62,64,66,67,69,71,72,74];
   var BLUES12 = ['C7','C7','C7','C7','F7','F7','C7','C7','G7','F7','C7','G7']; // the 12-bar blues in C
   var ROMAN = { C7:'I', F7:'IV', G7:'V', G:'I', C:'IV', D:'V' };               // C7/F7/G7 read in C; G/C/D read in G (the bluegrass key)
 
@@ -386,9 +471,9 @@
   function stopJam(){ jamOn=false; if(jamTimer){ clearInterval(jamTimer); jamTimer=null; } stopPlay(); }
 
   /* ===== 12-bar blues jam: loop I–IV–V with a bar-grid highlight ===== */
-  var bluesOn=false, bluesTimer=null, bluesNext=0, bluesBar=0;
+  var bluesOn=false, bluesTimer=null, bluesNext=0, bluesBar=0, bluesT0=0;
   function hiBar(i){ var cs=document.querySelectorAll('.sbar'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('on'); var e=el('sbar'+i); if(e) e.classList.add('on'); }
-  function startBlues(chords, bpm){ audio(); stopBlues(); bluesOn=true; var spb=60/bpm; bluesNext=actx.currentTime+0.15; bluesBar=0;
+  function startBlues(chords, bpm){ audio(); stopBlues(); bluesOn=true; var spb=60/bpm; bluesNext=actx.currentTime+0.15; bluesT0=bluesNext; bluesBar=0;
     bluesTimer=setInterval(function(){ if(!bluesOn) return; var ahead=actx.currentTime+0.5;
       while(bluesNext<ahead){ var bi=bluesBar%chords.length; scheduleBar(bluesNext, spb, chords[bi]);
         (function(cell,when){ timers.push(setTimeout(function(){ hiBar(cell); }, Math.max(0,(when-actx.currentTime)*1000))); })(bi, bluesNext);
@@ -518,7 +603,9 @@
         + '<div class="row"><button class="btn blue" id="bPlay">&#9654; Play the blues</button><button class="btn" id="bStop">Stop</button>'+(ex.mic?'<button class="btn" id="lfMic">Enable microphone</button>':'')+'</div>'
         + (ex.mic ? '<div class="staffwrap" id="soloBack" hidden></div>' : '')
         + '<div class="fb" id="fb2">'+ex.goal+'</div>'
-        + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">'+ex.doneLabel+'</button></div></div>';
+        + '<div class="row" style="margin-top:8px"><button class="btn ink" id="mDone">'+ex.doneLabel+'</button>'
+        + (ex.checkMode==='carve' ? '<button class="btn" id="mCarvePlay" hidden>&#9654; Play my solo</button><button class="btn" id="mCarveCheck" hidden>Check my phrasing</button>' : '')
+        + '</div></div>';
     }
     return '<div class="ex"><div class="exd">Coming soon.</div></div>';
   }
@@ -537,9 +624,9 @@
       pal = ex.pal || PSET;
       work=ex.mel.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg, rest:!!n.rest }; });
       drawWork('workStaff');
-      el('mPlay').addEventListener('click', function(){ playMelody(work, ex.bpm||100); });
-      el('mStop').addEventListener('click', stopPlay);
-      el('mCheck').addEventListener('click', ex.approach ? checkApproach : checkEmbellish);
+      el('mPlay').addEventListener('click', function(){ if(ex.chords){ startJam({ mel:work, chords:ex.chords, bpm:ex.bpm||100 }, true); } else playMelody(work, ex.bpm||100); });
+      el('mStop').addEventListener('click', function(){ stopJam(); stopPlay(); });
+      el('mCheck').addEventListener('click', ex.targets ? checkTargets : (ex.approach ? checkApproach : checkEmbellish));
     }
     if(ex && ex.type==='answer'){
       work=ex.phrase.map(function(n){ return { m:n.m, m0:n.m, d:n.d, chg:!!n.chg }; });
@@ -592,9 +679,18 @@
     if(ex && ex.type==='bluesjam'){
       el('bluesGrid').innerHTML=slashChartHTML(ex.chords, ex.roman);
       if(ex.mic){ heardEl=el('lfHeard'); labEl=el('lfLab'); statusEl=el('lfStatus'); el('lfMic').addEventListener('click', function(){ ensureMic(); soloCapturing=true; }); }
-      el('bPlay').addEventListener('click', function(){ if(ex.mic){ soloNotes=[]; soloCapturing=true; var b=el('soloBack'); if(b){ b.hidden=true; b.innerHTML=''; } } startBlues(ex.chords, ex.bpm||96); });
+      el('bPlay').addEventListener('click', function(){ if(ex.mic){ soloNotes=[]; soloCapturing=true; var b=el('soloBack'); if(b){ b.hidden=true; b.innerHTML=''; } var cb=el('mCarveCheck'), cp=el('mCarvePlay'); if(cb) cb.hidden=true; if(cp) cp.hidden=true; } startBlues(ex.chords, ex.bpm||96); });
       el('bStop').addEventListener('click', function(){ stopBlues(); });
-      el('mDone').addEventListener('click', function(){ stopBlues(); if(ex.mic && soloNotes.length) checkSolo(ex); else { var fb=el('fb2'); if(fb){ fb.textContent=ex.win; fb.className='fb ok'; } onSolve(); } });
+      el('mDone').addEventListener('click', function(){ stopBlues();
+        if(ex.checkMode==='carve'){
+          if(!soloNotes.length && !micRunning){ var fbc=el('fb2'); if(fbc){ fbc.textContent=ex.win; fbc.className='fb ok'; } onSolve(); return; }
+          carveOut(ex); var cp=el('mCarvePlay'); if(cp && soloNotes.length) cp.hidden=false; return; }
+        if(ex.checkMode==='chord' && soloNotes.length){ checkChordTones(ex); return; }
+        if(ex.checkMode==='strongweak' && soloNotes.length){ checkStrongWeak(ex); return; }
+        if(ex.mic && soloNotes.length){ checkSolo(ex); return; }
+        var fb=el('fb2'); if(fb){ fb.textContent=ex.win; fb.className='fb ok'; } onSolve(); });
+      if(ex.checkMode==='carve'){ el('mCarveCheck').addEventListener('click', checkCarve);
+        el('mCarvePlay').addEventListener('click', function(){ playMelody(work, ex.bpm||92); }); }
     }
   }
 
@@ -818,7 +914,117 @@
           doneLabel:'That was my chorus 🎺', win:'🎉 Head, chorus, and out — you just soloed on a real jazz blues. Blue belt earned, kid. Wear the suit.',
           desc:'Chorus 1: the head, with the band. Chorus 2 on: your solo — families, approach tones, the lick round its four doors, and room to breathe. Mic on if you want to watch your notes.' } }
     ]},
-    { title:'Belt 5 — The Jazz Standard', belt:'Black Belt', soon:true, blurb:'The last flight: a real standard, approach tones in full dress, and the bandstand waiting.' }
+    { title:'Belt 5 — The Jazz Standard', belt:'Black Belt', master:'jazzcat', lessons:[
+      { num:'5.1', title:'The bandstand', teach:[
+          { html:"Last belt, kid. Everything till now was the woodshed — this is the <b>bandstand</b>. And on a bandstand, the common language is the <b>standard</b>: a tune every player in every city already knows, so strangers can make music like old friends." },
+          { html:"Ours is <b>Indiana</b> — 1917, older than the word “jazz” being respectable. Louis Armstrong opened shows with it half his life. It's <b>32 bars</b> instead of 12 — a longer road, but count it in four rows of eight and it's just four short stories." },
+          { t:'qa', q:"Thirty-two bars is a lot of chords…", a:"And here's the sweet part — it's in <b>G</b>. Back home in the key Granny Mae gave you. <em>Back home again in Indiana</em>, you dig? Loop the form below and just count till the corners feel familiar." }
+        ], ex:{ type:'bluesjam', exh:'The form', title:'Indiana — 32 bars', chords:INDIANA_CH, roman:IND_ROMAN, bpm:92,
+          desc:'The full form: four 8-bar phrases. Watch the wheel bars (E7–A7–D7–G), the C→C♯dim stairstep, and the turn into Em near the end.',
+          scaleName:'G major — G A B C D E F♯ (your Belt 3 home, dressed for town)',
+          goal:'Loop it and count each row of eight. When bar 9’s C→C♯dim and bar 23’s Em stop surprising you, you know the road.',
+          doneLabel:'I can count the form', win:'Thirty-two bars, four stories — and you can count your way round. That’s the map; now we learn the engine.' } },
+      { num:'5.2', title:'The wheel', teach:[
+          { html:"Now the engine under the hood. Indiana's A section runs <b>E7 → A7 → D7 → G</b>. Look at those roots: E, A, D, G — each one a <b>fifth below</b> the last. That's the <b>circle of fifths</b>, the wheel that turns half the songs ever written." },
+          { html:"Every dominant seventh is a <b>lean</b> — it wants to fall a fifth. E7 leans on A7, A7 leans on D7, D7 leans on home. One push after another, all the way down to G. The tune isn't wandering; it's <em>rolling downhill home</em>." },
+          { t:'qa', q:"So if I know where the wheel is, I always know what's next?", a:"That's the black-belt secret in one sentence, kid. Ride the arpeggios below — each bar is one turn of the wheel. Feel each chord hand you to the next." }
+        ], ex:{ type:'melody', title:'Ride the wheel home', mel:WHEEL, chords:WHEEL_CH, bpm:96, sharp:true,
+          desc:'E7, A7, D7, G — four arpeggios in quavers, each falling a fifth into the next. Play it till the pull home feels inevitable.' } },
+      { num:'5.3', title:'Learn the head', teach:[
+          { html:"Time to learn the tune itself — the whole 32, straight off the 1917 sheet. Good news: it's a <b>singer's melody</b>. Long notes, easy steps, room to breathe. Nothing here is fast; everything here is <em>placed</em>." },
+          { html:"Watch for three landmarks as you play: the little chromatic slide <b>G–F♯–F♮</b> in bar 8, the held <b>A</b> that floats over bar 15, and the moody turn into <b>Em</b> after bar 22 — the relative-minor shadow you've known since Papa Sonny." },
+          { t:'qa', q:"Do I have to learn ALL of it?", a:"Every note, kid — this one's your ticket for life. Play it over the changes, a row of eight at a time. When you can hum tomorrow's bar before it comes, you own it." }
+        ], ex:{ type:'melody', title:'Indiana (head)', mel:INDIANA, chords:INDIANA_CH, bpm:92, sharp:true,
+          desc:'The full 32-bar head in G, over the real changes. Learn it a row at a time — the staff scrolls. Landmarks: bar 8’s chromatic slide, bar 15’s long A, the Em shadow at bar 23.' } },
+      { num:'5.4', title:'How the tune breathes', teach:[
+          { html:"Same drill as Tin Roof: before you solo on a tune, study how it <b>talks</b>. Indiana breathes like a singer because it <em>was</em> sung: almost every phrase starts <b>after</b> beat one — a little breath first — and ends on a note held long enough to mean it." },
+          { html:"Count the shape: a four-bar call that climbs, a four-bar answer that settles. Again. Then the long <b>A</b> hangs over the wheel like a question… and the last row walks it all home. And that <b>C♯dim stairstep</b>? The melody steps right up it — tension you can sing." },
+          { t:'qa', q:"So the long notes ARE the phrasing?", a:"Now you're hearing it. A held note over moving chords is the cheapest magic in jazz — the floor moves, you stand still. Play it once more and listen for the breaths, not the notes. Then we go to work." }
+        ], ex:{ type:'melody', title:'Listen for the breaths', mel:INDIANA, chords:INDIANA_CH, bpm:92, sharp:true,
+          desc:'Same head, new ears: breaths before the phrases, long notes over moving chords, the climb up the C♯dim stairs, the Em shadow, the walk home.' } },
+      { num:'5.5', title:'The ii–V–I', teach:[
+          { html:"Now the most famous three words in jazz: <b>ii–V–I</b>. Modern cats take a plain V7 bar and split it — put its <b>ii</b> in front. In G: <b>Am7, then D7, then G</b>. Look at the chart from 5.1 — the subs are already pencilled over the D7 bars. Every jazz musician since bebop reads them there." },
+          { html:"Why bother? Because ii–V–I is a <b>runway</b>: the smoothest possible glide home, two steps of lean and a landing. Learn ONE good lick over it and you've got a key that opens the last two bars of nearly every tune ever written." },
+          { t:'qa', q:"So it's the jazz handshake?", a:"THE handshake. Here's mine: climb the Am7, catch D7 from its leading tone F♯, land square on <b>B — the 3rd of G</b>. Steal it, bend the ending, Phrasebook it. Next lesson we take it round the whole tune." }
+        ], ex:{ type:'embellish', title:'The handshake lick', mel:LICK25, chords:LICK25_CH, pal:LICK25_PAL, bpm:92, sharp:true,
+          embWin:'Climb the ii, ride the V, land on the 3rd — with your own ending. That lick is a skeleton key now. Phrasebook it. 🗝️',
+          desc:'Bars 1–2 are the lick: up the Am7, down onto D7 from its F♯, landing on B — the 3rd of G. The breath, then three green notes: your ending. Keep it in your <a href="phrasebook.html">Phrasebook</a>.' } },
+      { num:'5.6', title:'Fit it into the tune', teach:[
+          { html:"A lick you can only play in one bar is a party trick. A lick you can land <b>anywhere</b> is vocabulary. Indiana's wheel means the same ii–V glide happens all over the tune — aimed at different homes." },
+          { html:"So we move it: aim it <b>home to G</b> (bars 5–7), aim it <b>into D</b> (15–17), <b>into A7</b> (12–13) — same shape, new address, just like the G-run round the keys. And one door needs a bent key: aiming <b>into Em</b>, the landing drops a half-step to the minor 3rd. Same glide, darker room." },
+          { t:'qa', q:"Transpose it… or bend it?", a:"Both — that's the craft. Major doors: slide the whole shape. The minor door: slide it AND flatten the landing. Tap every door below till the lick fits each one like it was written there." }
+        ], ex:{ type:'keyrun', exh:'Every door in the tune', title:'One glide, four landings', keys:LICK25KEYS, bpm:92,
+          allDone:'Home, D, A7, and the minor shadow — the same glide fits every corner of the tune, straight or bent. That’s vocabulary, not a trick. 🗝️',
+          desc:'The handshake lick aimed at the tune’s doors: home to G, into D, into A7 — and into Em, where the landing bends down a half-step. Play all four.' } },
+      { num:'5.7', title:'Guide tones', teach:[
+          { html:"Here's how the pros never get lost in 32 bars: they don't track chords — they follow a <b>thread</b>. Every chord has one note that names it: the <b>3rd</b>. String the 3rds together and they walk bar to bar almost by step. That line is the <b>guide-tone line</b>." },
+          { html:"Watch the A section: G's third is <b>B</b>… E7's is <b>G♯</b>… A7's is <b>C♯</b>… D7's is <b>F♯</b>… back to <b>B</b>. Half-steps and small slides, all the way round the wheel. Hang your solo on that thread and every bar names itself." },
+          { t:'qa', q:"Just one note per chord?", a:"One <em>right</em> note, kid — remember Monk's pin. Below, bar 1 gives you B for free. The rest show each chord's <b>root</b> — tap each up to its <b>3rd</b> (count 1–3 up the family) and listen against the chord till the thread appears." }
+        ], ex:{ type:'embellish', title:'Find the thread', mel:GUIDE, chords:GUIDE_CH, pal:CHROMA2, targets:GUIDE_TARGETS, bpm:92, sharp:true,
+          desc:'One note per bar over the A section. Bar 1 is B — the 3rd of G. Every other bar starts on its chord’s ROOT: tap each note up until it’s the chord’s 3rd, and hear the guide-tone thread appear.' } },
+      { num:'5.8', title:'The lab I — chord tones', teach:[
+          { html:"Lab coat on — three sessions on the bandstand's own science. First: <b>chord tones only</b>. The loop plays the full 32; you solo using each bar's <b>family notes</b> — the lab knows which chord is under you, bar by bar, and checks every note against it." },
+          { html:"Crotchets are fine here — this drill is about <b>choosing</b>, not running. Guide tones, arpeggio steps, roots when in doubt. Boring on purpose: this is the skeleton every great chorus hangs on." },
+          { t:'qa', q:"No passing notes at all?", a:"Save 'em — they're next session. Chord tones read <b>green</b>, a stray scale note reads blue, outside reads red. Take a chorus and see how green you can make the page." }
+        ], ex:{ type:'bluesjam', exh:'The listening lab', title:'Chord tones only', chords:INDIANA_CH, roman:IND_ROMAN, bpm:92, mic:true, sharp:true, checkMode:'chord',
+          scalePcs:GMAJ_PCS, checkTail:'That’s the skeleton of a real chorus — bones first, flesh next.',
+          desc:'The full 32 loops. Solo in chord tones — the lab knows the chord under every bar and grades each note against it: green = that bar’s family, blue = passing, red = outside.',
+          scaleName:'Each bar’s chord family (the lab follows the changes with you)',
+          goal:'Enable the mic, hit Play, and take a chorus in chord tones — crotchets are plenty. Then check: how green is your page?',
+          doneLabel:'Check my chorus 🔬', win:'You walked the changes on family notes — the skeleton stands.' } },
+      { num:'5.9', title:'The lab II — strong and weak', teach:[
+          { html:"Session two — now we add motion. The rule of every great line: <b>strong beats anchor, weak beats travel</b>. Beats 1 and 3: land a <b>chord tone</b>. The beats between: <b>approach tones and passing notes</b>, sliding into the next landing." },
+          { html:"That's the whole grammar of bebop in one sentence — anchor, travel, anchor, travel. Your 4.3 half-step approaches finally get their day job: they live on the weak beats, walking you into every strong one." },
+          { t:'qa', q:"Quavers this time?", a:"Quavers, kid — anchor on the beat, travel on the “and”. The lab checks both: strong beats against the chord, travellers for whether they're actually going somewhere. Take it slow and let the grammar do the talking." }
+        ], ex:{ type:'bluesjam', exh:'The listening lab', title:'Anchor and travel', chords:INDIANA_CH, roman:IND_ROMAN, bpm:88, mic:true, sharp:true, checkMode:'strongweak', grid:0.5,
+          scalePcs:GMAJ_PCS, checkTail:'Anchor, travel, anchor — that’s the grammar of a jazz line.',
+          desc:'Solo in quavers: chord tones on beats 1 and 3, approach and passing notes in between. The lab grades strong beats against the chord and checks your travellers are going somewhere.',
+          scaleName:'Strong beats: the bar’s chord family · weak beats: approaches & passing notes',
+          goal:'Mic on, Play, and take a chorus in quavers — anchor the strong beats, travel between them. Then check the grammar.',
+          doneLabel:'Check my grammar 🔬', win:'Anchored and travelling — that’s a line with grammar.' } },
+      { num:'5.10', title:'The lab III — carve it', teach:[
+          { html:"Last session, and it's the deep one. You've filled choruses with notes — now learn the other half of the art: <b>taking them out</b>. Record a chorus, and the lab writes it out. Then you <b>carve</b>: tap notes away until what's left is sentences and breaths." },
+          { html:"This is 2.2 come full circle, kid — Papa Sonny's space lesson, applied to <em>your own playing</em>. Every master solo you love was edited like this, just in real time. Tonight you get to do it slow." },
+          { t:'qa', q:"Won't it feel like losing notes?", a:"It'll feel like <em>finding</em> the good ones. Keep your best runs whole, cut the filler between them, and play it back. Same chorus — but now it speaks." }
+        ], ex:{ type:'bluesjam', exh:'The listening lab', title:'Carve your chorus', chords:INDIANA_CH, roman:IND_ROMAN, bpm:88, mic:true, sharp:true, checkMode:'carve', grid:0.5,
+          scalePcs:GMAJ_PCS,
+          desc:'Record a chorus, write it out, then carve: tap notes OUT to cut breaths between your sentences, play it back, and check the phrasing.',
+          scaleName:'Your own chorus — then the chisel',
+          goal:'Mic on, Play, take a chorus. Then “Write my solo out” — and carve it into sentences and breaths.',
+          doneLabel:'Write my solo out ✍️', win:'Sentences and breaths — you edited yourself like a master. (No mic? Practise the carve on your instrument: play a run, then say it again with half the notes.)' } },
+      { num:'5.11', title:'The motif', teach:[
+          { html:"One more secret before the stand. A solo that hangs together isn't the same <b>lick</b> everywhere — it's the same <b>rhythm</b> everywhere. Cats call it a <b>motif</b>: a little rhythmic cell you keep saying with <em>different notes</em>." },
+          { html:"Listen to bar 1 below: <em>DAH da-da DAH… breath</em>. That's the cell. Now say it again over A7 — new notes, same rhythm. Again over D7. Again home. Four different sentences, one voice. <em>That's</em> what makes a chorus sound composed instead of wandered." },
+          { t:'qa', q:"So rhythm is the glue, not the notes?", a:"Rhythm is the glue, the signature, and half the swing, kid. Bar 1 is mine. Bars 2–4 are yours: keep my rhythm, move the notes to fit each chord. Make one voice say four things." }
+        ], ex:{ type:'embellish', title:'Same rhythm, new rooms', mel:MOTIF, chords:MOTIF_CH, pal:MOTIF_PAL, bpm:92, sharp:true,
+          embWin:'Four bars, four sentences, one voice — that’s motif playing, and it’s what choruses are made of. 🎺',
+          desc:'Bar 1 states the cell: DAH da-da DAH, breath. Bars 2–4 keep the rhythm — tap the green notes to new pitches that fit A7, D7 and home. Same voice, new rooms.' } },
+      { num:'5.12', title:'Monk, in a dream', master:'monk', teach:[
+          { html:"The night before the stand, you fall asleep with the horn case still open… and <b>Thelonious Monk</b> is sitting at a piano made of moonlight, hat first, saying: <em>“I wrote some things down for a saxophone player once. Steve kept the list. Now you keep it.”</em>" },
+          { html:"He plays one note — small as a pin, big as the world — and slides the list across the dream. <em>“Everything they taught you is on here already,”</em> he says. <em>“The porch, the mountains, the suit. Read it, then go back to sleep. You got it.”</em>" },
+          { t:'qa', q:"…was it really him?", a:"It's a dream, kid — it's as really him as you need. The list below is the real thing though: jotted down by Steve Lacy in Monk's band, 1960. Read all ten, then do what rule three says — play the melody one more time, and go get your belt." }
+        ], ex:{ type:'melody', title:'Play the melody', mel:INDIANA, chords:INDIANA_CH, bpm:92, sharp:true,
+          desc:'<b>Monk’s advice</b> (as Steve Lacy wrote it down, 1960):<ol style="margin:8px 0 10px 20px; line-height:1.55;">'
+            + '<li>Just because you’re not a drummer doesn’t mean you don’t have to keep time.</li>'
+            + '<li>Pat your foot and sing the melody in your head when you play.</li>'
+            + '<li>Stop playing all those weird notes — <b>play the melody!</b></li>'
+            + '<li>Make the drummer sound good.</li>'
+            + '<li>Don’t play everything (or every time); let some things go by.</li>'
+            + '<li>What you don’t play can be more important than what you do play.</li>'
+            + '<li>A note can be as small as a pin or as big as the world — it depends on your imagination.</li>'
+            + '<li>The inside of the tune is the part that makes the outside sound good.</li>'
+            + '<li>When you are swinging, swing some more!</li>'
+            + '<li>Always leave them wanting more.</li></ol>'
+            + 'Rule three, then: play Indiana’s melody once more, and mean it.' } },
+      { num:'5.13', title:'The last flight', teach:[
+          { html:"Morning. The stand is lit, the case is open, and word came in from everywhere: your <b>teacher</b> says she always knew; <b>Papa Sonny</b> says leave 'em a little hungry, cher; <b>Granny Mae</b> says keep your sentences whole. Me? I'll just say: you walked in a student." },
+          { html:"You know the ritual: the band plays the <b>head</b> together, then the middle is <b>yours</b> — the wheel, the thread, the handshake at every door, your motif, your breaths. Then the head takes it out and you step off like you've done it a thousand times." },
+          { t:'qa', q:"And after this?", a:"After this, every jam on Earth is your dojo, kid. Play the head, take your chorus, remember the dream: keep time, play the melody, leave 'em wanting more. The black belt's on the stand. Go take it." }
+        ], ex:{ type:'jam', exh:'The last flight', title:'Indiana — on the stand', bpm:92, sharp:true,
+          tunes:[ { name:'Indiana', mel:INDIANA, chords:INDIANA_CH, bpm:92 } ],
+          doneLabel:'That was my chorus 🥋', win:'🎉 Head, chorus, head out — a real standard, soloed for real. BLACK BELT. The bandstand is yours now, kid — Learning to Fly, complete. ✈️',
+          desc:'The full ritual: chorus 1 is the head with the band; then your solo — the wheel, guide tones, the handshake lick at its doors, your motif, your breaths; then out. Mic on if you want the lab watching.' } }
+    ]}
   ];
   var LESSONS=[]; COURSE.forEach(function(mod){ if(mod.lessons) mod.lessons.forEach(function(les){ LESSONS.push(Object.assign({ belt:mod.belt, master:mod.master||'teacher' }, les)); }); });
   var idx=0, solved=false, work=null;
@@ -864,9 +1070,61 @@
     else head='You played '+total+' notes: '+inP+' in '+label+(inB?', '+inB+' blue note'+(inB>1?'s':''):'')+', '+out+' outside. ';
     if(fb){ fb.textContent=head+'Above: green = in the scale, blue = blue note'+(out?', red = outside — reach back into the scale next time':'')+'. '+(ex.checkTail||'That solo was yours. 🎷'); fb.className='fb ok'; }
     onSolve(); }
+  // Belt 5 labs — the checkers know the bar clock (bluesT0) so they can judge notes against each bar's chord
+  function chordPcs(name){ var c=CHORDS[name], s={}; (c?c.pad:[]).forEach(function(m){ s[((m%12)+12)%12]=1; }); return s; }
+  function soloBarOf(t, spb, len){ var b=Math.floor((t-bluesT0)/(4*spb)); if(b<0) b=0; return b%len; }
+  function checkChordTones(ex){ var fb=el('fb2'), back=el('soloBack'), spb=60/(ex.bpm||92);
+    var SCALE={}; (ex.scalePcs||GMAJ_PCS).forEach(function(p){ SCALE[p]=1; });
+    var evs=[], hit=0, pass=0, out=0, prevT=null;
+    for(var i=0;i<soloNotes.length && evs.length<24;i++){ var nt=soloNotes[i];
+      if(prevT!=null){ var rb=Math.max(0, Math.min(2, Math.round((nt.t-prevT)/spb)-1)); for(var r=0;r<rb && evs.length<24;r++) evs.push({rest:true,d:1}); }
+      var pc=((nt.midi%12)+12)%12, CT=chordPcs(ex.chords[soloBarOf(nt.t, spb, ex.chords.length)]), col;
+      if(CT[pc]){ col='#1F9D55'; hit++; } else if(SCALE[pc]){ col='#2438C8'; pass++; } else { col='#C0453B'; out++; }
+      evs.push({ m:nt.midi, d:1, col:col }); prevT=nt.t; }
+    if(back){ back.hidden=false; back.innerHTML=renderMelody(evs,{sharp:ex.sharp}); }
+    if(fb){ fb.textContent='You landed '+hit+' chord tone'+(hit===1?'':'s')+(pass?', '+pass+' passing scale note'+(pass===1?'':'s'):'')+(out?', '+out+' outside':'')+'. Green = the chord of that very bar, blue = passing, red = outside. '+(ex.checkTail||'That’s playing the changes.'); fb.className='fb ok'; }
+    onSolve(); }
+  function checkStrongWeak(ex){ var fb=el('fb2'), back=el('soloBack'), spb=60/(ex.bpm||92);
+    var SCALE={}; (ex.scalePcs||GMAJ_PCS).forEach(function(p){ SCALE[p]=1; });
+    function near(a,b){ var d=Math.abs(a-b); return Math.min(d,4-d)<0.3; }
+    var evs=[], sHit=0, sMiss=0, wApp=0, wStray=0, prevT=null;
+    for(var i=0;i<soloNotes.length && evs.length<32;i++){ var nt=soloNotes[i];
+      if(prevT!=null){ var rb=Math.max(0, Math.min(4, Math.round((nt.t-prevT)/(spb*0.5))-1)); for(var r=0;r<rb && evs.length<32;r++) evs.push({rest:true,d:0.5}); }
+      var pc=((nt.midi%12)+12)%12, CT=chordPcs(ex.chords[soloBarOf(nt.t, spb, ex.chords.length)]);
+      var inBar=((nt.t-bluesT0)/spb)%4; if(inBar<0) inBar+=4;
+      var strong=near(inBar,0)||near(inBar,2), next=soloNotes[i+1], col;
+      if(strong){ if(CT[pc]){ col='#1F9D55'; sHit++; } else { col='#C0453B'; sMiss++; } }
+      else { if(CT[pc]){ col='#1F9D55'; wApp++; } else if((next && nt.midi===next.midi-1) || SCALE[pc]){ col='#2438C8'; wApp++; } else { col='#C0453B'; wStray++; } }
+      evs.push({ m:nt.midi, d:0.5, col:col }); prevT=nt.t; }
+    if(back){ back.hidden=false; back.innerHTML=renderMelody(evs,{sharp:ex.sharp}); }
+    if(fb){ fb.textContent='Strong beats: '+sHit+' landed on chord tones'+(sMiss?', '+sMiss+' missed':'')+'. In between: '+wApp+' approaches and passing notes'+(wStray?', '+wStray+' strays':'')+'. '+(ex.checkTail||'Strong beats anchor, weak beats travel.'); fb.className='fb ok'; }
+    onSolve(); }
+  function carveOut(ex){ var fb=el('fb2'), back=el('soloBack'), spb=60/(ex.bpm||92);
+    if(!soloNotes.length){ if(fb){ fb.textContent='Nothing captured yet — enable the mic, hit Play, and take a chorus first.'; fb.className='fb no'; } return; }
+    var evs=[], prevT=null, prevM=67;
+    for(var i=0;i<soloNotes.length && evs.length<32;i++){ var nt=soloNotes[i];
+      if(prevT!=null){ var rb=Math.max(0, Math.min(4, Math.round((nt.t-prevT)/(spb*0.5))-1)); for(var r=0;r<rb && evs.length<32;r++) evs.push({rest:true,d:0.5,m:prevM}); }
+      evs.push({ m:nt.midi, d:0.5, rest:false }); prevT=nt.t; prevM=nt.midi; }
+    work=evs; if(back){ back.hidden=false; } drawWork('soloBack','space');
+    var cb=el('mCarveCheck'); if(cb) cb.hidden=false;
+    if(fb){ fb.textContent='There’s your solo, written out. Now carve it: tap notes OUT to cut breaths between your sentences, then check the phrasing.'; fb.className='fb no'; } }
+  function checkCarve(){ var fb=el('fb2');
+    var runs=[]; work.forEach(function(n){ var t=n.rest?'r':'n'; var last=runs[runs.length-1]; if(last && last.t===t){ last.len++; } else { runs.push({t:t,len:1}); } });
+    var noteRuns=runs.filter(function(r){ return r.t==='n'; }).map(function(r){ return r.len; });
+    var breaths=runs.filter(function(r){ return r.t==='r'; }).length;
+    var notes=0; work.forEach(function(n){ if(!n.rest) notes++; });
+    if(breaths<2){ fb.textContent='Barely a breath in it — carve out at least a couple of gaps so the sentences show.'; fb.className='fb no'; return; }
+    if(notes<4){ fb.textContent='You’ve carved it to the bone — leave enough notes to still say something.'; fb.className='fb no'; return; }
+    var longest=Math.max.apply(null, noteRuns), singles=noteRuns.filter(function(l){ return l===1; }).length;
+    if(!(longest>=3 && singles<=2)){ fb.textContent='It’s gone choppy — keep your best runs together as whole sentences, and breathe BETWEEN them, not inside them.'; fb.className='fb no'; return; }
+    fb.textContent='Now listen to it — same notes, but it speaks. Sentences, breaths, shape. That’s editing, and every great soloist does it in real time. 🕊️'; fb.className='fb ok'; onSolve(); }
   function checkEmbellish(){ var changed=0,total=0; work.forEach(function(n){ if(n.chg){ total++; if(n.m!==n.m0) changed++; } }); var fb=el('fb'); var xe=LESSONS[idx]&&LESSONS[idx].ex;
     if(total>0 && changed>=total){ fb.textContent=(xe&&xe.embWin)||'That’s YOUR version now — and because you stayed in the scale, every choice still sings. That, right there, is improvising. 🎉'; fb.className='fb ok'; onSolve(); }
     else { fb.textContent='You’ve changed '+changed+' of '+total+' — tap the highlighted notes to make the rest your own.'; fb.className='fb no'; } }
+  function checkTargets(){ var ex=LESSONS[idx].ex, fb=el('fb'), i=0, good=0, total=0;
+    work.forEach(function(n){ if(n.chg){ var t=ex.targets[i++]; total++; if(n.m===t) good++; } });
+    if(good===total){ fb.textContent='That’s the thread — the 3rd of every chord, walking the form almost by step. Follow that line and you can never get lost in a standard. 🧵'; fb.className='fb ok'; onSolve(); }
+    else { fb.textContent=good+' of '+total+' guide tones found — for each bar, hunt the chord’s 3rd (count 1–3 up its family). Tap and listen: the right one glows against the chord.'; fb.className='fb no'; } }
   function checkApproach(){ var fb=el('fb'), bad=0, total=0;
     work.forEach(function(n,i){ if(n.chg){ total++; var target=work[i+1]; if(!target || n.m!==target.m-1) bad++; } });
     if(bad===0){ fb.textContent='All three slide in from a half-step below — hear how each one leans into its landing? That’s the chromatic pull, and now it’s yours. 🎺'; fb.className='fb ok'; onSolve(); }
