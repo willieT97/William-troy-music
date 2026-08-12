@@ -80,6 +80,14 @@
     if (!r.ok) throw new Error('read ' + r.status);
     return await r.json();
   }
+  async function remoteBestFor(game, name) {
+    const url = CONFIG.url + '/rest/v1/scores?select=score' +
+      '&game=eq.' + encodeURIComponent(game) + '&initials=eq.' + encodeURIComponent(name) +
+      '&order=score.desc&limit=1';
+    const r = await fetch(url, { headers: headers() });
+    if (!r.ok) throw new Error('read ' + r.status);
+    const a = await r.json(); return a.length ? a[0].score : null;
+  }
   async function remoteAdd(game, initials, score) {
     const r = await fetch(CONFIG.url + '/rest/v1/scores', {
       method: 'POST',
@@ -120,6 +128,14 @@
     async isHigh(game, score, n = 10) {
       const t = await this.top(game, n);
       return t.length < n || score > (t[t.length - 1].score || 0);
+    },
+
+    /** the signed-in player's own recorded best for a game (null if none / signed out) */
+    async myBest(game) {
+      const nm = this.accountName(); if (!nm) return null;
+      if (configured()) { try { return await remoteBestFor(game, nm); } catch (_) {} }
+      const mine = localTop(game, 100).filter(r => r.initials === nm);
+      return mine.length ? mine[0].score : null;
     },
 
     /** true when signed in with a username → scores post under that name automatically */
@@ -225,6 +241,10 @@
         if (value > 0 && await self.isHigh(game, value, n)) {
           const nm = await self.enterName(self.playerName());
           if (nm) { await self.submit(game, value, nm); await refresh(value); return true; }
+        } else if (value > 0 && self.accountName()) {
+          // missed the public chart, but signed-in players keep their personal best on
+          // record (quietly, no prompt) — the account page reads these back
+          try { const b = await self.myBest(game); if (b == null || value > b) await self.submit(game, value, self.accountName()); } catch (_) {}
         }
         await refresh(); return false;
       }
