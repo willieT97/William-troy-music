@@ -159,6 +159,7 @@
     minblues:{ name:'Minor blues', pcs:[0,3,5,6,7,10] },
     major:{ name:'Major scale', pcs:[0,2,4,5,7,9,11] },
     mixo:{ name:'Mixolydian', pcs:[0,2,4,5,7,9,10] },
+    chordpent:{ name:'The pentatonic of each chord', perChord:true, pent:true },
     chords:{ name:'A different scale on each chord', perChord:true }
   };
   // per-chord scales (chord-scale thinking), intervals from the chord root.
@@ -170,8 +171,15 @@
     dorian:   {0:1,2:1,3:1,5:1,7:1,9:1,10:1},
     aeolian:  {0:1,2:1,3:1,5:1,7:1,8:1,10:1},
     lyddom:   {0:1,2:1,4:1,6:1,7:1,9:1,10:1},
-    phrygdom: {0:1,1:1,4:1,5:1,7:1,8:1,10:1}
+    phrygdom: {0:1,1:1,4:1,5:1,7:1,8:1,10:1},
+    majpent:  {0:1,2:1,4:1,7:1,9:1},          // over a dominant: 1 2 3 5 6
+    minpent:  {0:1,3:1,5:1,7:1,10:1}          // over an m7: 1 ♭3 4 5 ♭7
   };
+  // the chord-scale for a bar: pentatonic mode goes by quality; otherwise the form's own name, else the default
+  function csFor(chord){ if(SCALES[P.scale].pent) return chord[1]==='m7' ? 'minpent' : 'majpent';
+    return chord[2] || (chord[1]==='m7' ? 'dorian' : 'mixo'); }
+  // the blue note of a chord: ♭3 on a dominant, ♭5 on a minor — the same rule the tune-level blue note follows
+  function blueOf(chord){ return chord[1]==='m7' ? 6 : 3; }
   // the blue note: b3 on a major tune, b5 on a minor tune; when matching chords, the CHORD's b3
   function blueRel(){ return P.form==='minor' ? 6 : 3; }
 
@@ -311,8 +319,8 @@
       var strong=near(beatIn,0)||near(beatIn,2);
       var chord=f.bars[bar], rootPc=(k.pc+chord[0])%12;
       var pc=((nt.midi%12)+12)%12, relKey=(pc-k.pc+12)%12, relCh=(pc-rootPc+12)%12, next=notes[i+1], col, cat;
-      var scaleOK = matching ? !!CS[chord[2] || (chord[1]==='m7' ? 'dorian' : 'mixo')][relCh] : !!scaleSet[relKey];
-      var blueOK = matching ? relCh===3 : relKey===blueRel();
+      var scaleOK = matching ? !!CS[csFor(chord)][relCh] : !!scaleSet[relKey];
+      var blueOK = matching ? relCh===blueOf(chord) : relKey===blueRel();
       if(P.alAny){ col=null; cat='any'; }              // no rules — plain ink, no verdict
       else if(P.alChord && chordPcs(chord).indexOf(pc)>=0){ col='#1F9D55'; cat='chord'; }
       else if(P.alScale && scaleOK){ col='#1F9D55'; cat='scale'; }
@@ -366,19 +374,20 @@
     if(!entitled()){ P.alChord=false; P.alPass=false; }
     syncUI(); drawChart(); }
   function updateBlueLbl(){ var t;
-    if(SCALES[P.scale].perChord) t='Blue note of each chord (its ♭3)';
+    if(SCALES[P.scale].perChord) t='Blue note of each chord (♭3 on a dominant, ♭5 on a minor)';
     else if(P.form==='minor') t='The blue note (♭5)';
     else t='The blue note (♭3)';
     el('blueLbl').textContent=t; }
   // spell out what the per-chord mode actually grades against — "a scale per chord", not "chord tones"
   var CS_HINT={
     minor:'<b>A scale on each chord:</b> natural minor over the i · dorian over the iv · lydian dominant over the ♭VI7 · harmonic minor over the V7. Whole scales, not just chord tones — tick “chord tones” as well if you want those marked separately.',
-    other:'<b>A scale on each chord:</b> mixolydian over every dominant (C mixolydian on C7, F mixolydian on F7…) and dorian over every m7. Whole scales, not just chord tones — tick “chord tones” as well if you want those marked separately.'
+    other:'<b>A scale on each chord:</b> mixolydian over every dominant (C mixolydian on C7, F mixolydian on F7…) and dorian over every m7. Whole scales, not just chord tones — tick “chord tones” as well if you want those marked separately.',
+    pent:'<b>The pentatonic of each chord:</b> five safe notes built on whatever chord you’re on — the major pentatonic over a dominant (C pentatonic on C7, F pentatonic on F7…), the minor pentatonic over an m7. Tick the blue note too and each chord gets its own blues scale.'
   };
-  function updateScaleMode(){ var per=!!SCALES[P.scale].perChord;
+  function updateScaleMode(){ var S=SCALES[P.scale], per=!!S.perChord;
     el('scaleWord').textContent = per ? '' : 'notes';
     var h=el('csHint'); h.hidden = !(per && P.alScale && !P.alAny);
-    if(!h.hidden) h.innerHTML = P.form==='minor' ? CS_HINT.minor : CS_HINT.other; }
+    if(!h.hidden) h.innerHTML = S.pent ? CS_HINT.pent : (P.form==='minor' ? CS_HINT.minor : CS_HINT.other); }
   function syncUI(){ el('keySel').value=P.key; el('formSel').value=P.form; el('gridSel').value=String(P.grid);
     el('tempo').value=P.bpm; el('tempoVal').textContent=P.bpm; el('scaleSel').value=P.scale;
     el('alScale').checked=P.alScale; el('alBlue').checked=P.alBlue; el('alChord').checked=P.alChord; el('alPass').checked=P.alPass;
