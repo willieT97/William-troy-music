@@ -36,6 +36,10 @@
   h1{ font-family:var(--disp); font-weight:700; font-size:clamp(2rem,6vw,3rem); margin:.45rem 0 .2rem; }
   .lede{ max-width:52ch; margin:.3rem auto 0; color:var(--muted); font-weight:600; }
 
+  /* a chord arrived at from a lesson link */
+  .chord.spot{ outline:4px solid var(--ink); outline-offset:3px; }
+  @keyframes spotpulse{ 0%,100%{ outline-color:var(--ink);} 50%{ outline-color:transparent;} }
+  .chord.spot{ animation:spotpulse 1s ease-in-out 3; }
   /* instrument tabs */
   .insttabs{ display:flex; justify-content:center; margin:18px 0 12px; }
   .insttabs .seg{ display:inline-flex; background:#fff; border-radius:999px; padding:4px;
@@ -294,6 +298,7 @@
     var accent=isMinor?accentMin:accentMaj, tint=isMinor?tintMin:tintMaj, thirdInt=isMinor?3:4, q=isMinor?'minor':'major';
     var box=document.createElement('div'); box.className='chord '+(isMinor?'min':'maj');
     box.setAttribute('role','button'); box.setAttribute('tabindex','0');
+    box.dataset.pc=root.pc; box.dataset.q=q;          /* so a lesson link can point at one chord */
     box.setAttribute('aria-label', root.name.replace(' / ',' or ')+' '+q+' chord');
     var h=document.createElement('h3'); h.innerHTML=root.name+' <span class="qual">'+q+'</span>'; box.appendChild(h);
     var nm=document.createElement('div'); nm.className='nm'; nm.textContent=(isMinor?MIN:MAJ)[root.pc]; box.appendChild(nm);
@@ -329,6 +334,34 @@
       b.classList.add('on');
     });
   });
+
+  /* ---- ?inst=&root=&quality= : the Rollbook links here when a lesson logged a
+     chord. The instrument comes from the student's own record, so a guitarist's
+     parent lands on the guitar sheet. Unknown values are simply ignored. ---- */
+  (function deepLink(){
+    var q=new URLSearchParams(location.search);
+    var wantInst=(q.get('inst')||'').toLowerCase();
+    if(wantInst==='piano'||wantInst==='guitar'){
+      chart.setAttribute('data-inst',wantInst);
+      document.querySelectorAll('.insttabs button').forEach(function(x){
+        x.classList.toggle('on', x.dataset.inst===wantInst); });
+    }
+    var wantRoot=q.get('root'), wantQ=(q.get('quality')||'').toLowerCase();
+    if(!wantRoot)return;
+    var key=wantRoot.trim().toUpperCase().replace(/\u266F/g,'#').replace(/\u266D/g,'B');
+    var PC={'C':0,'C#':1,'DB':1,'D':2,'D#':3,'EB':3,'E':4,'FB':4,'F':5,'F#':6,'GB':6,
+            'G':7,'G#':8,'AB':8,'A':9,'A#':10,'BB':10,'B':11,'CB':11};
+    var pc=PC[key]; if(pc===undefined)return;
+    if(wantQ!=='minor'&&wantQ!=='major')wantQ='major';
+    var sheet=document.getElementById(chart.getAttribute('data-inst')==='guitar'?'sheetGuitar':'sheetPiano');
+    var cellEl=sheet&&sheet.querySelector('.chord[data-pc="'+pc+'"][data-q="'+wantQ+'"]');
+    if(!cellEl)return;
+    cellEl.classList.add('spot');
+    /* the fretboard SVGs finish laying out after this runs and shift the target,
+       so scroll once for the animation and correct it once things have settled */
+    setTimeout(function(){ cellEl.scrollIntoView({behavior:'smooth',block:'center'}); },150);
+    setTimeout(function(){ cellEl.scrollIntoView({behavior:'auto',block:'center'}); },900);
+  })();
 
   // ---- spotlight (root / third / fifth) ----
   var degBtns=document.querySelectorAll('.degs button');

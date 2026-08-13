@@ -595,7 +595,17 @@ const CHORD_WORDS=[
   [/^dim(inished)?/,'diminished'],[/^aug(mented)?/,'augmented'],
   [/^min(or)?|^m\b/,'minor'],[/^maj(or)?/,'major']
 ];
-function musicalFor(title){
+/* the student's own instrument, mapped onto what each page understands.
+   Order matters: "bass guitar" is a bass, not a guitar. */
+const INSTS=[[/ukulele|\buke\b/,'ukulele'],[/bass/,'bass'],[/banjo/,'banjo'],
+             [/mandolin/,'mandolin'],[/guitar/,'guitar'],[/piano|keyboard|\bkeys\b/,'piano']];
+function instOf(p){
+  const t=String((p&&p.instrument)||'').toLowerCase();
+  for(const[re,k]of INSTS)if(re.test(t))return k;
+  return '';
+}
+
+function musicalFor(title,p){
   const r=readRoot(String(title||'')); if(!r)return null;
   let rest=r.rest.toLowerCase().replace(/\s+/g,' ').trim();
   const isChord=/\bchord\b/.test(rest);
@@ -603,7 +613,14 @@ function musicalFor(title){
   if(isChord){
     let q='major';
     for(const[re,name]of CHORD_WORDS){if(re.test(rest)){q=name;break;}}
-    return {t:r.root+' '+q+' chord', u:SITE+'chord-theory.html?root='+encodeURIComponent(r.root)};
+    const t=r.root+' '+q+' chord', inst=instOf(p);
+    /* a uke player gets the uke shapes; the reference sheet only draws piano and guitar */
+    if(inst==='ukulele')return {t, u:SITE+'ukulele-chords.html'};
+    /* diminished and augmented aren't on the reference sheet - those stay theory */
+    if(q!=='major'&&q!=='minor')
+      return {t, u:SITE+'chord-theory.html?root='+encodeURIComponent(r.root)};
+    return {t, u:SITE+'chords.html?root='+encodeURIComponent(r.root)+'&quality='+q+
+      ((inst==='piano'||inst==='guitar')?'&inst='+inst:'')};
   }
   if(!rest)return null;                       // a bare "C" isn't an assignment
   for(const[re,key,label]of SCALE_WORDS){
@@ -643,22 +660,22 @@ const nrm=s=>String(s||'').toLowerCase().replace(/^the\s+/,'').replace(/[^a-z0-9
 const tuneUrl=t=>SITE+'melody-trainer_1.html?tune='+encodeURIComponent(t);
 
 /* one logged item -> where it lives on the site, or null */
-function lookup(title){
+function lookup(title,p){
   const q=nrm(title); if(!q)return null;
   const r=RES.find(x=>nrm(x.t)===q);
   if(r)return {t:r.t, u:SITE+r.u, pro:!!r.pro};
   const tu=(TUNES||[]).find(x=>nrm(x.t)===q);
   if(tu)return {t:tu.t, u:tuneUrl(tu.t), tune:true};
-  const mu=musicalFor(title);
+  const mu=musicalFor(title,p);
   if(mu)return {t:mu.t, u:mu.u, musical:true};
   return null;
 }
 /* what a parent can actually open: paywalled things are named, never linked */
-const resLink=title=>{const r=lookup(title);return (r&&!r.pro)?r.u:null;};
+const resLink=(title,p)=>{const r=lookup(title,p);return (r&&!r.pro)?r.u:null;};
 
-function chip(title){
+function chip(title,p){
   const t=String(title||'').trim(); if(!t)return '';
-  const r=lookup(t);
+  const r=lookup(t,p);
   if(!r)return '<span class="reschip">'+esc(t)+'</span>';
   const why=r.pro?'On the site \u2014 Pro, so it is not linked to parents'
           :r.tune?'Opens in Melody Trainer'
@@ -667,7 +684,7 @@ function chip(title){
 }
 
 /* suggestions: site pages and tunes together, best match first */
-function suggest(q){
+function suggest(q,forPerson){
   q=String(q||'').trim(); if(q.length<2)return [];
   const k=nrm(q), out=[];
   const score=(title,keys)=>{
@@ -679,7 +696,7 @@ function suggest(q){
   RES.forEach(r=>{const sc=score(r.t,r.k);if(sc)out.push({sc,t:r.t,u:r.u,sub:r.pro?'not linked to parents':'',pro:!!r.pro});});
   (TUNES||[]).forEach(t=>{const sc=score(t.t,'');if(sc)out.push({sc:sc+0.5,t:t.t,u:'melody-trainer_1.html',
     sub:[t.r,t.o].filter(Boolean).join(' \u00b7 '),tune:true});});
-  const mu=musicalFor(q);
+  const mu=musicalFor(q,forPerson);
   if(mu&&!out.some(x=>nrm(x.t)===nrm(mu.t)))
     out.unshift({sc:9,t:mu.t,u:mu.u.replace(SITE,''),sub:'on the site',musical:true});
   return out.sort((a,b)=>b.sc-a.sc||a.t.length-b.t.length).slice(0,8);
@@ -786,8 +803,8 @@ function signOff(){
   return (pr&&pr.username)||'';
 }
 /* one line of the "we worked on" list, with the link when the site has that page */
-function bullet(r){
-  const u=resLink(r);
+function bullet(r,p){
+  const u=resLink(r,p);
   return '• '+r+(u?' \u2014 '+u:'');
 }
 function andList(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
@@ -815,7 +832,7 @@ function buildMessage(p){
   L.push('');
   if(res.length){
     L.push(intro);
-    res.forEach(r=>L.push(bullet(r)));
+    res.forEach(r=>L.push(bullet(r,p)));
     L.push('');
   } else {
     L.push('No new material logged for that stretch.');
@@ -862,7 +879,7 @@ function lessonEmail(p,l){
   L.push('');
   L.push(p.name+(p.kind==='class'?'':(p.instrument?'’s '+p.instrument:''))+' lesson, '+shortDate(l.date)+'.');
   L.push('');
-  if(res.length){L.push('We worked on:');res.forEach(r=>L.push(bullet(r)));L.push('');}
+  if(res.length){L.push('We worked on:');res.forEach(r=>L.push(bullet(r,p)));L.push('');}
   if(state.settings&&state.settings.emailNotes&&l.notes){L.push(l.notes);L.push('');}
   L.push('Any questions, just reply to this.');
   L.push('');
@@ -1059,7 +1076,7 @@ function renderDrawer(){
   const recent=hist.filter(l=>l.date<=dateISO).slice(0,3);
   const glance=recent.length?'<div class="plannote"><b>AT A GLANCE \u2014 LAST '+(recent.length>1?recent.length+' LESSONS':'LESSON')+'</b>'+
     recent.map(l=>'<div class="glance"><span class="gdate">'+shortDate(l.date)+'</span>'+
-      (l.rep?l.rep.split(',').map(r=>chip(r)).join(''):'')+
+      (l.rep?l.rep.split(',').map(r=>chip(r,p)).join(''):'')+
       (l.notes?'<div class="gnote">'+esc(l.notes)+'</div>':'')+'</div>').join('')+'</div>':'';
 
   const att=attFor(p.id,dateISO), tal=attTally(p.id);
@@ -1119,13 +1136,13 @@ function renderDrawer(){
     '<div class="logentry"><div class="ldate">'+shortDate(l.date)+
       (l.emailedAt?'<span class="sent" title="Emailed '+esc((l.emailedTo||[]).join(', '))+'">\u2709 sent</span>':'')+'</div>'+
     '<div class="lactions"><button data-edit="'+l.id+'">edit</button><button data-del="'+l.id+'">\u00d7</button></div>'+
-    (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>chip(r)).join('')+'</div>':'')+
+    (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>chip(r,p)).join('')+'</div>':'')+
     (l.notes?'<div class="lrow"><b>NOTES</b>'+esc(l.notes)+'</div>':'')+
     '</div>').join('')
   :'<p class="muted">No lessons logged yet. The first entry starts the story.</p>')+'</div>'+
   (roll.length?'<div class="section"><div class="sectitle">Rep &amp; resources<span class="mono">'+roll.length+'</span></div>'+
     roll.map(r=>'<div class="resrow"><span class="rwhen">'+esc(shortDate(r.last).replace(/ \d{4}$/,''))+'</span>'+
-      '<span class="rt">'+chip(r.title)+'</span>'+(r.n>1?'<span class="rct">\u00d7'+r.n+'</span>':'')+'</div>').join('')+
+      '<span class="rt">'+chip(r.title,p)+'</span>'+(r.n>1?'<span class="rct">\u00d7'+r.n+'</span>':'')+'</div>').join('')+
     '</div>':'')+
   contactBits(p)+
   updateBits(p)+
@@ -1233,7 +1250,7 @@ function renderDrawer(){
       inp.value=(head?head+' ':'')+r.t.replace(/,/g,'')+', ';
       hide();inp.focus();
     };
-    inp.oninput=()=>{const{term}=frag();hits=suggest(term);cur=-1;hits.length?paint():hide();};
+    inp.oninput=()=>{const{term}=frag();hits=suggest(term,p);cur=-1;hits.length?paint():hide();};
     inp.onblur=()=>setTimeout(hide,120);
     inp.onkeydown=e=>{
       if(!hits.length)return;
