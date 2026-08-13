@@ -121,20 +121,41 @@ main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
 .glance:first-of-type{border-top:none;margin-top:2px}
 .glance .gdate{font-family:var(--mono);font-size:.68rem;font-weight:700;margin-right:8px}
 .glance .gnote{font-size:.88rem;margin-top:3px}
-.sumcard{border:2px solid var(--ink);border-left:8px solid var(--green);background:#fff;padding:11px 13px}
-.sumhead{font-size:.95rem;font-weight:600;margin:0 0 10px}
-.sumlist{margin:0 0 10px}
-.sumlist b{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;
-  color:rgba(23,20,14,.65);margin-bottom:2px}
-.sumlist ul{margin:0;padding-left:17px}
-.sumlist li{font-size:.88rem;margin-top:2px}
-.sumatt{font-size:.85rem;font-style:italic;margin:0 0 10px}
-.sumfoot{font-family:var(--mono);font-size:.66rem;color:rgba(23,20,14,.6);
-  border-top:1px dashed rgba(23,20,14,.3);padding-top:6px}
-.sumfoot.stale{color:var(--amber);font-weight:700}
-.sumerr{font-size:.85rem;color:#B3261E;margin:0 0 8px}
-.sumbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-.sumbar .tiny{font-family:var(--mono);font-size:.64rem;color:rgba(23,20,14,.6)}
+/* standing comments (the long view, not this week) */
+.cmt{border:2px solid var(--ink);border-left:8px solid var(--pink);background:#fff;
+  padding:8px 30px 8px 11px;margin-bottom:7px;position:relative;font-size:.9rem}
+.cmt .cdate{display:block;font-family:var(--mono);font-size:.63rem;color:rgba(23,20,14,.6);margin-bottom:2px}
+.cmt .del{position:absolute;top:6px;right:7px;font-family:var(--mono);font-size:.68rem;
+  border:2px solid var(--ink);background:#fff;padding:0 6px}
+/* rep & resources roll-up */
+.resrow{display:flex;align-items:baseline;gap:9px;border-top:1px dashed rgba(23,20,14,.28);padding:5px 0}
+.resrow:first-of-type{border-top:none}
+.resrow .rwhen{font-family:var(--mono);font-size:.63rem;color:rgba(23,20,14,.6);flex:none;min-width:62px}
+.resrow .rt{flex:1;font-size:.89rem;min-width:0}
+.resrow .rct{font-family:var(--mono);font-size:.61rem;color:rgba(23,20,14,.5);flex:none}
+/* contacts */
+.contact{display:flex;align-items:center;gap:8px;border:2px solid var(--ink);background:#fff;
+  padding:6px 9px;margin-bottom:6px}
+.contact input[type=checkbox]{width:17px;height:17px;flex:none;accent-color:var(--blue)}
+.contact .cinfo{flex:1;min-width:0}
+.contact .cn{font-weight:600;font-size:.88rem}
+.contact .cw{font-family:var(--mono);font-size:.63rem;color:rgba(23,20,14,.7);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.contact .del{font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);background:#fff;padding:0 6px}
+.rolechip{font-family:var(--mono);font-size:.6rem;border:2px solid var(--ink);padding:0 5px;flex:none;text-transform:uppercase}
+.rolechip.parent{background:var(--amber);color:#fff}
+.rolechip.teacher{background:var(--blue);color:#fff}
+.rolechip.student{background:var(--green);color:#fff}
+/* the update composer */
+.seg{display:flex;border:2px solid var(--ink);background:#fff;margin-bottom:9px;flex-wrap:wrap}
+.seg button{flex:1;padding:5px 8px;font-size:.79rem;font-weight:600;border-right:2px solid var(--ink);min-width:76px}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.msgbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:9px}
+.msgnote{font-family:var(--mono);font-size:.63rem;color:rgba(23,20,14,.6);margin-top:8px}
+textarea#msgBody{min-height:190px;font-size:.86rem;line-height:1.5}
+.tickrow{display:flex;align-items:center;gap:7px;font-size:.84rem;margin-bottom:9px}
+.tickrow input{width:17px;height:17px;accent-color:var(--blue)}
 label.f{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.03em;margin:10px 0 3px}
 .field{width:100%;border:2px solid var(--ink);background:#fff;padding:8px 10px}
 textarea.field{resize:vertical;min-height:56px}
@@ -238,6 +259,9 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
     <button class="btn" id="closeManage" style="float:right">Back to week</button>
     <h1>Set up</h1>
     <p class="muted">Add your students and classes, then give each a weekly time.</p>
+    <div class="formrow" style="max-width:440px;margin-top:14px">
+      <input class="field" id="setTeacher" placeholder="Your name — signs off updates to parents">
+    </div>
     <div class="mgrid">
       <div class="mcard">
         <h2 id="pFormTitle">Add a student or class</h2>
@@ -296,7 +320,7 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
 <script>
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const COLOURS=['c-blue','c-pink','c-amber','c-green'];
-let state={people:[],slots:[],lessons:[],exceptions:[],attendance:[],summaries:[],updatedAt:''};
+let state={people:[],slots:[],lessons:[],exceptions:[],attendance:[],settings:{},updatedAt:''};
 let weekStart=mondayOf(new Date());
 let drawerCtx=null;           // {personId, dateISO, slotId}
 let editingLessonId=null;
@@ -365,7 +389,7 @@ async function pullCloud(){
       cloudRowId=row.id;
       const cloud=row.data||{},cloudAt=cloud.updatedAt||'',localAt=state.updatedAt||'';
       if(countOf(cloud)&&(!countOf(state)||cloudAt>=localAt)){
-        state={people:cloud.people||[],slots:cloud.slots||[],lessons:cloud.lessons||[],exceptions:cloud.exceptions||[],attendance:cloud.attendance||[],summaries:cloud.summaries||[],updatedAt:cloudAt};
+        state={people:cloud.people||[],slots:cloud.slots||[],lessons:cloud.lessons||[],exceptions:cloud.exceptions||[],attendance:cloud.attendance||[],settings:cloud.settings||{},updatedAt:cloudAt};
         migrateExceptions();saveLocal();setStatus('saved','synced');
       }
       else if(countOf(state)&&localAt>cloudAt) await pushCloud();  /* this device is ahead */
@@ -429,92 +453,144 @@ function migrateExceptions(){
   if(moved){state.updatedAt=new Date().toISOString();saveLocal();}
 }
 
-/* ---------- progress summary (Claude, via the rollbook-summary edge function) ----------
-   The lesson log is your own shorthand, so it's sent with the person's name taken out
-   and nothing else attached — no email, no timetable, no other student. The API key
-   lives on the server; the browser only ever sends your signed-in session. */
-let summaryBusy=null, summaryErr=null;
-
-function scrubNames(text,p){
-  if(!text)return '';
-  const who=p.kind==='class'?'the class':'the student';
-  const words=[String(p.name||''),...String(p.name||'').split(/\s+/)]
-    .filter(w=>w.length>=3).sort((a,b)=>b.length-a.length);
-  let out=String(text);
-  words.forEach(w=>{
-    const rx=new RegExp('\\b'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\u2019s|\'s)?\\b','gi');
-    out=out.replace(rx,(m,poss)=>poss?who+'\u2019s':who);
-  });
-  return out;
+/* ---------- rep & resources ----------
+   Everything this person has been given, newest first, with the date it last came up
+   and how many lessons it has appeared in — the thing you actually want to read back. */
+function resourceRoll(p,sinceISO){
+  const map=new Map();
+  state.lessons.filter(l=>l.personId===p.id&&(!sinceISO||l.date>=sinceISO))
+    .forEach(l=>(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(r=>{
+      const k=r.toLowerCase(), cur=map.get(k);
+      if(cur){cur.n++;if(l.date>cur.last)cur.last=l.date;}
+      else map.set(k,{title:r,n:1,last:l.date});
+    }));
+  return[...map.values()].sort((a,b)=>b.last.localeCompare(a.last));
 }
-/* changes to the log (or attendance, or rep) invalidate a saved summary */
-function summarySig(p){
-  const hist=state.lessons.filter(l=>l.personId===p.id).sort((a,b)=>a.date.localeCompare(b.date));
-  const t=attTally(p.id);
-  const s=hist.map(l=>l.date+'|'+(l.rep||'')+'|'+(l.notes||'')).join('~')+
-    '~att:'+[t.present,t.absent,t.offthem,t.offme].join(',')+
-    '~rep:'+(p.repertoire||[]).map(r=>r.title+(r.done?'*':'')).join(',');
-  let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;
-  return hist.length+':'+(h>>>0).toString(36);
-}
-const summaryFor=id=>(state.summaries||[]).find(s=>s.personId===id);
 
-async function runSummary(p){
-  summaryBusy=p.id;summaryErr=null;renderDrawer();
-  try{
-    const sb=await MAAuth.client();
-    const hist=state.lessons.filter(l=>l.personId===p.id).sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
-    const payload={
-      kind:p.kind,
-      instrument:p.instrument||'',
-      attendance:attTally(p.id),
-      repertoire:(p.repertoire||[]).map(r=>({title:scrubNames(r.title,p),done:!!r.done})),
-      lessons:hist.map(l=>({date:l.date,rep:scrubNames(l.rep||'',p),notes:scrubNames(l.notes||'',p)}))
-    };
+/* ---------- standing comments (not week-to-week) ---------- */
+function addComment(p,text){
+  p.comments=p.comments||[];
+  p.comments.unshift({id:uid(),text,at:iso(new Date())});
+  markDirty();
+}
+
+function commentBits(p){
+  const cs=p.comments||[];
+  return '<div class="section"><div class="sectitle">Comments<span class="mono">the standing picture</span></div>'+
+    (cs.length?cs.map(c=>'<div class="cmt"><span class="cdate">'+shortDate(c.at)+'</span>'+esc(c.text)+
+      '<button class="del" data-cmtdel="'+c.id+'" aria-label="remove">×</button></div>').join('')
+     :'<p class="muted" style="margin-bottom:8px">The long view — goals, an exam entered, what they respond to. Anything that isn’t about one particular week.</p>')+
+    '<div class="inline" style="margin-top:8px"><input class="field" id="cmtNew" placeholder="Add a comment…">'+
+    '<button class="btn small" id="cmtAdd">Add</button></div></div>';
+}
+
+/* ---------- updates to parents / teachers ----------
+   Nothing is ever sent from here. The message is written for you and handed to your own
+   mail app (or clipboard, or WhatsApp) so you read it and press send yourself. */
+const ROLE_LABEL={parent:'parent',teacher:'teacher',student:'student',other:''};
+let msgRange='4w', msgNotes=false, msgTo={}, msgSaid='';
+
+function msgLessons(p){
+  const upto=drawerCtx?drawerCtx.dateISO:iso(new Date());
+  const hist=state.lessons.filter(l=>l.personId===p.id&&l.date<=upto).sort((a,b)=>a.date.localeCompare(b.date));
+  if(msgRange==='last')return hist.slice(-1);
+  if(msgRange==='4w'){const cut=iso(addDays(new Date(upto+'T12:00:00'),-28));return hist.filter(l=>l.date>=cut);}
+  return hist;
+}
+function andList(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+/* "Ms Byrne" stays "Ms Byrne"; "Máire Ní Bhriain" becomes "Máire" */
+const TITLES=/^(mr|mrs|ms|miss|mx|dr|fr|sr|br|prof|master)\.?$/i;
+function greetName(full){
+  const w=String(full||'').trim().split(/\s+/).filter(Boolean);
+  if(!w.length)return '';
+  return TITLES.test(w[0])?w.slice(0,2).join(' '):w[0];
+}
+function buildMessage(p){
+  const ls=msgLessons(p);
+  const res=[...new Set(ls.flatMap(l=>(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean)))];
+  const firsts=(p.contacts||[]).filter(c=>msgTo[c.id]).map(c=>greetName(c.name)).filter(Boolean);
+  const today=iso(new Date());
+  const intro=msgRange==='last'
+      ? (ls.length&&ls[0].date===today ? 'In today’s lesson we worked on:'
+                                       : 'In the last lesson ('+shortDate(ls[0].date)+') we worked on:')
+    : msgRange==='4w' ? 'Over the last few weeks we’ve worked on:'
+    : 'Since we started we’ve worked on:';
+  const L=[];
+  L.push((firsts.length?'Hi '+andList(firsts):'Hi there')+',');
+  L.push('');
+  L.push('A quick update on '+p.name+(p.kind==='class'?'':(p.instrument?'’s '+p.instrument:''))+' lessons.');
+  L.push('');
+  if(res.length){
+    L.push(intro);
+    res.forEach(r=>L.push('• '+r));
+    L.push('');
+  } else {
+    L.push('No new material logged for that stretch.');
+    L.push('');
+  }
+  if(msgNotes){
+    const ns=ls.filter(l=>l.notes);
+    if(ns.length){
+      L.push('How it went:');
+      ns.forEach(l=>L.push(shortDate(l.date)+' — '+l.notes));
+      L.push('');
+    }
+  }
+  if(p.kind==='class'){
+    const left=(p.repertoire||[]).filter(r=>!r.done).map(r=>r.title);
+    if(left.length){L.push('Still to polish: '+andList(left)+'.');L.push('');}
     if(p.performanceDate){
       const wks=Math.round((new Date(p.performanceDate)-new Date())/(7*864e5));
-      if(wks>=0)payload.performanceWeeks=wks;
+      if(wks>=0){L.push('The performance is on '+shortDate(p.performanceDate)+(wks?' — '+wks+' week'+(wks===1?'':'s')+' to go.':' — this week.'));L.push('');}
     }
-    const{data,error}=await sb.functions.invoke('rollbook-summary',{body:payload});
-    if(error){
-      let m='';
-      try{const b=await error.context.json();m=b&&b.error;}catch(e){}
-      throw new Error(m||'Couldn\u2019t reach the summariser.');
-    }
-    if(!data||!data.summary)throw new Error((data&&data.error)||'No summary came back.');
-    state.summaries=(state.summaries||[]).filter(s=>s.personId!==p.id);
-    state.summaries.push({personId:p.id,sig:summarySig(p),at:data.at||new Date().toISOString(),data:data.summary});
-    markDirty();
-  }catch(e){ summaryErr=e.message||String(e); }
-  summaryBusy=null;renderDrawer();
-}
-
-function summaryBits(p){
-  const n=state.lessons.filter(l=>l.personId===p.id).length;
-  if(!n)return '';
-  const cur=summaryFor(p.id), busy=summaryBusy===p.id, stale=cur&&cur.sig!==summarySig(p);
-  const list=(title,items)=>(items&&items.length)
-    ? '<div class="sumlist"><b>'+title+'</b><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>' : '';
-  let inner;
-  if(cur){
-    const s=cur.data||{};
-    inner='<p class="sumhead">'+esc(s.headline||'')+'</p>'+
-      list('GOING WELL',s.strengths)+list('KEEP AN EYE ON',s.watch)+list('NEXT LESSON',s.next)+
-      (s.attendance_note?'<p class="sumatt">'+esc(s.attendance_note)+'</p>':'')+
-      '<div class="sumfoot'+(stale?' stale':'')+'">'+
-        (stale?'\u26a0 The log has changed since this was written.'
-              :'Read from '+n+' lesson'+(n===1?'':'s')+' \u00b7 '+shortDate(cur.at.slice(0,10)))+'</div>';
-  }else{
-    inner='<p class="muted" style="margin:0">Claude can read back through the log and tell you where '+
-      (p.kind==='class'?'the class is':'they are')+' at.</p>';
   }
-  return '<div class="section"><div class="sectitle">Where '+(p.kind==='class'?'the class is':'they\u2019re')+' at'+
-    '<span class="mono">summary</span></div>'+
-    (summaryErr?'<p class="sumerr">'+esc(summaryErr)+'</p>':'')+
-    '<div class="sumcard">'+inner+'</div>'+
-    '<div class="sumbar"><button class="btn small'+(cur&&!stale?'':' primary')+'" id="sumRun"'+(busy?' disabled':'')+'>'+
-      (busy?'Reading\u2026':(cur?(stale?'Update it':'Write a fresh one'):'Summarise progress'))+'</button>'+
-      '<span class="tiny">notes go to Claude with the name removed</span></div></div>';
+  L.push('Any questions, just reply to this.');
+  L.push('');
+  const me=(state.settings&&state.settings.teacherName||'').trim();
+  if(me)L.push(me);
+  return L.join('\n');
+}
+function msgSubject(p){return p.name+' — lesson update';}
+
+function contactBits(p){
+  const cs=p.contacts||[];
+  return '<div class="section"><div class="sectitle">Contacts<span class="mono">'+cs.length+'</span></div>'+
+    (cs.length?cs.map(c=>
+      '<div class="contact"><input type="checkbox" data-cto="'+c.id+'"'+(msgTo[c.id]?' checked':'')+' aria-label="include in update">'+
+      '<div class="cinfo"><div class="cn">'+esc(c.name||'(no name)')+'</div>'+
+      '<div class="cw">'+esc([c.email,c.phone].filter(Boolean).join('  ·  ')||'no email or phone')+'</div></div>'+
+      (ROLE_LABEL[c.role]?'<span class="rolechip '+c.role+'">'+ROLE_LABEL[c.role]+'</span>':'')+
+      '<button class="del" data-cdel="'+c.id+'" aria-label="remove">×</button></div>').join('')
+     :'<p class="muted" style="margin-bottom:8px">Add a parent, a class teacher, or the student — whoever should get updates.</p>')+
+    '<div class="formrow"><input class="field" id="ctName" placeholder="Name" style="flex:1.2">'+
+    '<select class="field" id="ctRole" style="flex:.8">'+
+      '<option value="parent">Parent</option><option value="teacher">Teacher</option>'+
+      '<option value="student">Student</option><option value="other">Other</option></select></div>'+
+    '<div class="formrow"><input class="field" id="ctEmail" placeholder="Email" type="email" style="flex:1.4">'+
+    '<input class="field" id="ctPhone" placeholder="Phone" type="tel" style="flex:.9">'+
+    '<button class="btn small" id="ctAdd">Add</button></div></div>';
+}
+function updateBits(p){
+  if(!state.lessons.some(l=>l.personId===p.id))return '';
+  const cs=p.contacts||[], picked=cs.filter(c=>msgTo[c.id]);
+  const emails=picked.map(c=>c.email).filter(Boolean);
+  const phone=(picked.find(c=>c.phone)||{}).phone||'';
+  const body=msgSaid||buildMessage(p);
+  const seg=[['last','This lesson'],['4w','Last 4 weeks'],['all','Everything']];
+  return '<div class="section"><div class="sectitle">Send an update<span class="mono">rep &amp; resources</span></div>'+
+    '<div class="seg">'+seg.map(([k,t])=>'<button data-range="'+k+'" class="'+(msgRange===k?'on':'')+'">'+t+'</button>').join('')+'</div>'+
+    '<label class="tickrow"><input type="checkbox" id="msgNotes"'+(msgNotes?' checked':'')+'> include my lesson notes</label>'+
+    '<textarea class="field" id="msgBody">'+esc(body)+'</textarea>'+
+    '<div class="msgbar">'+
+      '<button class="btn small primary" id="msgMail"'+(emails.length?'':' disabled')+'>Open in email…</button>'+
+      '<button class="btn small" id="msgCopy">Copy</button>'+
+      (phone?'<button class="btn small" id="msgWa">WhatsApp</button>':'')+
+      '<button class="btn small" id="msgReset">Rewrite it</button>'+
+    '</div>'+
+    '<div class="msgnote">'+
+      (emails.length?'Opens your mail app addressed to '+esc(emails.join(', '))+'. Nothing sends until you press send there.'
+                    :'Tick a contact above who has an email address, or copy the message and paste it wherever you like.')+
+    '</div></div>';
 }
 
 function render(){
@@ -574,7 +650,9 @@ function el(html){const t=document.createElement('template');t.innerHTML=html.tr
 
 /* ---------- drawer ---------- */
 function openDrawer(personId,dateISO,slotId){
-  drawerCtx={personId,dateISO,slotId};editingLessonId=null;summaryErr=null;
+  drawerCtx={personId,dateISO,slotId};editingLessonId=null;
+  msgSaid='';msgTo={};
+  ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=true;});
   renderDrawer();
   $('#overlay').classList.add('open');$('#drawer').classList.add('open');
 }
@@ -591,7 +669,7 @@ function renderDrawer(){
   const existing=lessonFor(p.id,dateISO);
   const hist=state.lessons.filter(l=>l.personId===p.id).sort((a,b)=>b.date.localeCompare(a.date));
   const editing=editingLessonId?state.lessons.find(l=>l.id===editingLessonId):existing;
-  const resAll=[...new Set(hist.flatMap(l=>(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean)))];
+  const roll=resourceRoll(p);
   const recent=hist.filter(l=>l.date<=dateISO).slice(0,3);
   const glance=recent.length?'<div class="plannote"><b>AT A GLANCE \u2014 LAST '+(recent.length>1?recent.length+' LESSONS':'LESSON')+'</b>'+
     recent.map(l=>'<div class="glance"><span class="gdate">'+shortDate(l.date)+'</span>'+
@@ -637,8 +715,8 @@ function renderDrawer(){
   '<button class="closex" id="dClose" aria-label="Close">\u00d7</button></div>'+
   '<div class="dbody">'+
   (p.notes?'<p class="muted" style="margin-bottom:14px">'+esc(p.notes)+'</p>':'')+
+  commentBits(p)+
   glance+
-  summaryBits(p)+
   classBits+
   attBits+
   '<div class="section"><div class="sectitle">'+(editing?'Edit log \u2014 '+shortDate(editing.date):'Log this lesson')+'</div>'+
@@ -655,12 +733,65 @@ function renderDrawer(){
     (l.notes?'<div class="lrow"><b>NOTES</b>'+esc(l.notes)+'</div>':'')+
     '</div>').join('')
   :'<p class="muted">No lessons logged yet. The first entry starts the story.</p>')+'</div>'+
-  (resAll.length?'<div class="section"><div class="sectitle">All rep &amp; resources given</div>'+resAll.map(r=>'<span class="reschip">'+esc(r)+'</span>').join('')+'</div>':'')+
+  (roll.length?'<div class="section"><div class="sectitle">Rep &amp; resources<span class="mono">'+roll.length+'</span></div>'+
+    roll.map(r=>'<div class="resrow"><span class="rwhen">'+esc(shortDate(r.last).replace(/ \d{4}$/,''))+'</span>'+
+      '<span class="rt">'+esc(r.title)+'</span>'+(r.n>1?'<span class="rct">\u00d7'+r.n+'</span>':'')+'</div>').join('')+
+    '</div>':'')+
+  contactBits(p)+
+  updateBits(p)+
   '</div>';
 
   $('#dClose').onclick=closeDrawer;
   d.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{ setAtt(p.id,dateISO,b.dataset.att); renderDrawer(); });
-  const sr=$('#sumRun');if(sr)sr.onclick=()=>runSummary(p);
+  // comments
+  const ca=$('#cmtAdd');
+  if(ca)ca.onclick=()=>{const v=$('#cmtNew').value.trim();if(!v)return;addComment(p,v);renderDrawer();};
+  const cn=$('#cmtNew');
+  if(cn)cn.onkeydown=e=>{if(e.key==='Enter')$('#cmtAdd').click();};
+  d.querySelectorAll('[data-cmtdel]').forEach(b=>b.onclick=()=>{
+    p.comments=(p.comments||[]).filter(c=>c.id!==b.dataset.cmtdel);markDirty();renderDrawer();});
+  // contacts
+  const cta=$('#ctAdd');
+  if(cta)cta.onclick=()=>{
+    const nm=$('#ctName').value.trim(), em=$('#ctEmail').value.trim(), ph=$('#ctPhone').value.trim();
+    if(!nm&&!em&&!ph)return;
+    p.contacts=p.contacts||[];
+    const c={id:uid(),name:nm,role:$('#ctRole').value,email:em,phone:ph};
+    p.contacts.push(c); msgTo[c.id]=true; msgSaid='';
+    markDirty();renderDrawer();
+  };
+  d.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=()=>{
+    p.contacts=(p.contacts||[]).filter(c=>c.id!==b.dataset.cdel);
+    delete msgTo[b.dataset.cdel]; msgSaid='';
+    markDirty();renderDrawer();});
+  d.querySelectorAll('[data-cto]').forEach(c=>c.onchange=()=>{
+    msgTo[c.dataset.cto]=c.checked;
+    /* keep whatever you've typed; only rewrite the greeting if you haven't touched it */
+    if(msgSaid)msgSaid=$('#msgBody').value;
+    renderDrawer();});
+  // the update composer
+  d.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{msgRange=b.dataset.range;msgSaid='';renderDrawer();});
+  const mn=$('#msgNotes');if(mn)mn.onchange=()=>{msgNotes=mn.checked;msgSaid='';renderDrawer();};
+  const mb=$('#msgBody');if(mb)mb.oninput=()=>{msgSaid=mb.value;};
+  const mr=$('#msgReset');if(mr)mr.onclick=()=>{msgSaid='';renderDrawer();};
+  const mm=$('#msgMail');
+  if(mm)mm.onclick=()=>{
+    const to=(p.contacts||[]).filter(c=>msgTo[c.id]).map(c=>c.email).filter(Boolean).join(',');
+    location.href='mailto:'+to+'?subject='+encodeURIComponent(msgSubject(p))+'&body='+encodeURIComponent($('#msgBody').value);
+  };
+  const mc=$('#msgCopy');
+  if(mc)mc.onclick=()=>{
+    const t=$('#msgBody').value;
+    const done=()=>{mc.textContent='Copied';setTimeout(()=>{mc.textContent='Copy';},1400);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,()=>{});
+    else{$('#msgBody').select();try{document.execCommand('copy');done();}catch(e){}}
+  };
+  const mw=$('#msgWa');
+  if(mw)mw.onclick=()=>{
+    const c=(p.contacts||[]).filter(x=>msgTo[x.id]).find(x=>x.phone);
+    if(!c)return;
+    window.open('https://wa.me/'+String(c.phone).replace(/[^0-9]/g,'')+'?text='+encodeURIComponent($('#msgBody').value),'_blank','noopener');
+  };
   $('#lgSave').onclick=()=>{
     const rep=$('#lgRep').value.trim(),nts=$('#lgNotes').value.trim();
     if(!rep&&!nts)return;
@@ -691,6 +822,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();$('#m
 
 /* ---------- manage ---------- */
 function renderManage(){
+  const tn=$('#setTeacher');
+  tn.value=(state.settings&&state.settings.teacherName)||'';
+  tn.onchange=()=>{state.settings=state.settings||{};state.settings.teacherName=tn.value.trim();markDirty();};
   const pl=$('#peopleList');
   pl.innerHTML=state.people.map(p=>
     '<div class="mrow"><span class="dot '+colourOf(p)+'"></span><div class="grow">'+
@@ -792,7 +926,7 @@ function demoData(){
 /* ---------- boot ---------- */
 window.addEventListener('beforeunload',e=>{if(dirty&&signedIn()){e.preventDefault();e.returnValue='';}});
 
-const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],attendance:[],summaries:[],updatedAt:''});
+const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],attendance:[],settings:{},updatedAt:''});
 applyGate(false);
 $('#gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
 
