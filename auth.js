@@ -295,7 +295,21 @@
     }
     ctl.appendChild(b);
     syncNavTabs();
+    measureCtl();
   }
+  /* The control is fixed to the top-right corner, so a page with its own
+     right-aligned header furniture needs to know how much room to leave.
+     Published as --maa-ctl-w / --maa-ctl-h on :root. */
+  function measureCtl() {
+    if (!ctl) return;
+    try {
+      var r = ctl.getBoundingClientRect(), st = document.documentElement.style;
+      st.setProperty('--maa-ctl-w', Math.ceil(r.width) + 'px');
+      st.setProperty('--maa-ctl-h', Math.ceil(r.height) + 'px');
+    } catch (e) {}
+  }
+  window.addEventListener('resize', measureCtl);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureCtl).catch(function () {});
 
   // ---- modal ----
   var modal, cardBody, view = 'signin';
@@ -392,7 +406,9 @@
           a.href = '/rollbook.html'; a.textContent = 'Rollbook';
           a.setAttribute('data-maa-rollbook', '1');
           if (/\/rollbook\.html$/.test(location.pathname)) { a.className = 'cur'; a.setAttribute('aria-current', 'page'); }
-          nav.appendChild(a);
+          // sit beside the existing tabs — some pages wrap them in an inner flex row
+          var sibling = nav.querySelector('a');
+          (sibling ? sibling.parentNode : nav).appendChild(a);
         }
       } else if (have) { have.parentNode.removeChild(have); }
     }

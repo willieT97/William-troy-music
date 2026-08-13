@@ -30,6 +30,10 @@ input,select,textarea{font-family:inherit;font-size:inherit;color:var(--ink)}
 header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
   padding:16px 22px;border-bottom:3px solid var(--ink);background:var(--paper);
   position:sticky;top:0;z-index:40;}
+/* auth.js pins the account chip to the top-right corner — leave it room so it
+   never lands on top of Set up. --maa-ctl-w is the measured width of that chip. */
+@media(min-width:761px){ header{padding-right:calc(var(--maa-ctl-w, 170px) + 30px)} }
+@media(max-width:760px){ header{padding-top:calc(var(--maa-ctl-h, 38px) + 22px)} }
 .brand{font-family:var(--display);font-weight:800;font-size:1.7rem;letter-spacing:-.02em;
   position:relative;user-select:none;white-space:nowrap}
 .brand .ghost{position:absolute;left:2.5px;top:2px;color:var(--pink);z-index:-1}
