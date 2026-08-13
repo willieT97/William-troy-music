@@ -110,6 +110,10 @@ main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
   border-left:3px solid var(--ink);z-index:70;transform:translateX(102%);transition:transform .18s ease-out;
   overflow-y:auto;box-shadow:-6px 0 0 rgba(23,20,14,.15)}
 #drawer.open{transform:translateX(0)}
+/* auth.js pins the account chip top-right at z-index 9000 — above the drawer and
+   the Set up panel, right on top of their close buttons. Stand it down while
+   either is open; the page underneath isn't reachable anyway. */
+body.panelopen .maa-ctl{display:none}
 .dhead{padding:18px 20px 14px;border-bottom:3px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:5}
 .dhead h2{font-family:var(--display);font-size:1.45rem;line-height:1.1;padding-right:40px}
 .chip{display:inline-block;font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);
@@ -437,6 +441,7 @@ function applyGate(known){
   $('#gateRole').style.display=learner?'':'none';
   const w=$('#gateWait'); if(w) w.style.display=known?'none':'';
   if(!open){ closeDrawer(); $('#manage').classList.remove('open'); }
+  syncPanelChrome();
 }
 
 /* ---------- week grid ---------- */
@@ -679,15 +684,19 @@ function render(){
 function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
 
 /* ---------- drawer ---------- */
+function syncPanelChrome(){
+  document.body.classList.toggle('panelopen',
+    $('#drawer').classList.contains('open') || $('#manage').classList.contains('open'));
+}
 function openDrawer(personId,dateISO,slotId){
   drawerCtx={personId,dateISO,slotId};editingLessonId=null;
   msgSaid='';msgTo={};
   ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=true;});
   renderDrawer();
-  $('#overlay').classList.add('open');$('#drawer').classList.add('open');
+  $('#overlay').classList.add('open');$('#drawer').classList.add('open');syncPanelChrome();
 }
 function closeDrawer(){
-  $('#overlay').classList.remove('open');$('#drawer').classList.remove('open');
+  $('#overlay').classList.remove('open');$('#drawer').classList.remove('open');syncPanelChrome();
   drawerCtx=null;
 }
 function renderDrawer(){
@@ -848,7 +857,7 @@ function renderDrawer(){
   };
 }
 $('#overlay').addEventListener('click',closeDrawer);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();$('#manage').classList.remove('open');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();$('#manage').classList.remove('open');syncPanelChrome();}});
 
 /* ---------- manage ---------- */
 function renderManage(){
@@ -928,8 +937,8 @@ $('#sSave').onclick=()=>{
   markDirty();resetSForm();renderManage();
 };
 $('#sCancel').onclick=()=>{resetSForm();};
-$('#openManage').onclick=()=>{resetPForm();resetSForm();renderManage();$('#manage').classList.add('open');};
-$('#closeManage').onclick=()=>{$('#manage').classList.remove('open');render();};
+$('#openManage').onclick=()=>{resetPForm();resetSForm();renderManage();$('#manage').classList.add('open');syncPanelChrome();};
+$('#closeManage').onclick=()=>{$('#manage').classList.remove('open');syncPanelChrome();render();};
 
 /* ---------- week nav ---------- */
 $('#prevWk').onclick=()=>{weekStart=addDays(weekStart,-7);render();};
