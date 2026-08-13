@@ -114,6 +114,16 @@ main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
    the Set up panel, right on top of their close buttons. Stand it down while
    either is open; the page underneath isn't reachable anyway. */
 body.panelopen .maa-ctl{display:none}
+/* the "about to email the parent" bar — lives on the body so it survives the
+   drawer re-rendering, and sits above it */
+#sendbar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(14px);
+  display:none;align-items:center;gap:12px;max-width:min(560px,94vw);
+  border:3px solid var(--ink);background:#fff;box-shadow:5px 5px 0 var(--ink);
+  padding:11px 14px;z-index:200;opacity:0;transition:opacity .18s,transform .18s}
+#sendbar.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+#sendbar span{font-size:.9rem}
+#sendbar span.bad{color:#B3261E}
+#sendbar .x{font-family:var(--mono);border:2px solid var(--ink);background:#fff;padding:0 8px;font-weight:700}
 .dhead{padding:18px 20px 14px;border-bottom:3px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:5}
 .dhead h2{font-family:var(--display);font-size:1.45rem;line-height:1.1;padding-right:40px}
 .chip{display:inline-block;font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);
@@ -174,6 +184,7 @@ label.f{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.03
 textarea.field{resize:vertical;min-height:56px}
 .logentry{border:2px solid var(--ink);background:#fff;padding:10px 12px;margin-bottom:10px;position:relative}
 .logentry .ldate{font-family:var(--mono);font-size:.7rem;font-weight:700;margin-bottom:4px}
+.logentry .sent{margin-left:8px;font-weight:400;color:var(--green)}
 .logentry .lrow{font-size:.9rem;margin-top:4px}
 .logentry .lrow b{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;display:block;color:rgba(23,20,14,.7)}
 .lactions{position:absolute;top:8px;right:8px;display:flex;gap:6px}
@@ -275,6 +286,7 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
 </main>
 
 <div id="overlay"></div>
+<div id="sendbar"></div>
 <aside id="drawer" aria-label="Details"></aside>
 
 <div id="manage">
@@ -285,6 +297,10 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
     <div class="formrow" style="max-width:440px;margin-top:14px">
       <input class="field" id="setTeacher" placeholder="Your name — signs off updates to parents">
     </div>
+    <label class="tickrow" style="margin-top:10px"><input type="checkbox" id="setAutoEmail">
+      Email contacts what we covered when I save a lesson log</label>
+    <label class="tickrow" id="setNotesRow" style="display:none"><input type="checkbox" id="setEmailNotes">
+      …and include my lesson notes <span class="hint" style="margin:0 0 0 4px">(off by default — your notes are shorthand for you)</span></label>
     <div class="mgrid">
       <div class="mcard">
         <h2 id="pFormTitle">Add a student or class</h2>
@@ -587,16 +603,100 @@ function buildMessage(p){
 }
 function msgSubject(p){return p.name+' — lesson update';}
 
+/* ---------- the automatic after-the-lesson email ----------
+   Saving a log doesn't fire an email instantly — it starts a short countdown
+   with a Cancel, so a typo or a wrong student is recoverable. Sending itself
+   happens server-side (lesson-update-email); the Resend key isn't in here. */
+const SEND_DELAY=8000;
+let pendingSend=null;
+
+const notifyContacts=p=>(p.contacts||[]).filter(c=>c.notify!==false&&c.email);
+
+function lessonEmail(p,l){
+  const res=(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const firsts=notifyContacts(p).map(c=>greetName(c.name)).filter(Boolean);
+  const L=[];
+  L.push((firsts.length?'Hi '+andList(firsts):'Hi there')+',');
+  L.push('');
+  L.push(p.name+(p.kind==='class'?'':(p.instrument?'’s '+p.instrument:''))+' lesson, '+shortDate(l.date)+'.');
+  L.push('');
+  if(res.length){L.push('We worked on:');res.forEach(r=>L.push('• '+r));L.push('');}
+  if(state.settings&&state.settings.emailNotes&&l.notes){L.push(l.notes);L.push('');}
+  L.push('Any questions, just reply to this.');
+  L.push('');
+  const me=((state.settings&&state.settings.teacherName)||'').trim();
+  if(me)L.push(me);
+  return {subject:p.name+' — lesson update, '+shortDate(l.date), text:L.join('\n')};
+}
+async function sendLessonEmail(p,l){
+  const to=notifyContacts(p).map(c=>c.email);
+  if(!to.length)throw new Error('nobody with an email address is set to get updates');
+  const{subject,text}=lessonEmail(p,l);
+  const sb=await MAAuth.client();
+  const{data,error}=await sb.functions.invoke('lesson-update-email',{body:{to,subject,text}});
+  if(error){
+    let m='';try{const b=await error.context.json();m=b&&b.error;}catch(e){}
+    throw new Error(m||'couldn’t reach the mail service');
+  }
+  if(!data||data.error)throw new Error((data&&data.error)||'it didn’t go');
+  l.emailedAt=data.at||new Date().toISOString();
+  l.emailedTo=to;
+  markDirty();
+  return data;
+}
+function barHTML(inner){return inner;}
+function hideBar(){const b=$('#sendbar');if(b)b.classList.remove('show');}
+function cancelPendingSend(){
+  if(!pendingSend)return;
+  clearTimeout(pendingSend.timer);clearInterval(pendingSend.tick);
+  pendingSend=null;
+  const b=$('#sendbar');b.innerHTML='<span>Not sent.</span>';
+  setTimeout(()=>{if(!pendingSend)hideBar();},2200);
+}
+function queueLessonEmail(p,l){
+  cancelPendingSend();
+  const b=$('#sendbar');
+  const who=notifyContacts(p).map(c=>c.name||c.email).join(', ');
+  let left=Math.round(SEND_DELAY/1000);
+  const paint=()=>{
+    b.innerHTML='<span>Emailing '+esc(who)+' in '+left+'s\u2026</span><button class="btn small" id="sbCancel">Cancel</button>';
+    b.classList.add('show');
+    $('#sbCancel').onclick=cancelPendingSend;
+  };
+  paint();
+  const tick=setInterval(()=>{left--;if(left>0)paint();},1000);
+  const timer=setTimeout(async()=>{
+    clearInterval(tick);
+    b.innerHTML='<span>Sending\u2026</span>';
+    try{
+      await sendLessonEmail(p,l);
+      b.innerHTML='<span>\u2709 Sent to '+esc(who)+'</span>';
+      pendingSend=null;
+      if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();
+      setTimeout(()=>{if(!pendingSend)hideBar();},5000);
+    }catch(e){
+      pendingSend=null;
+      b.innerHTML='<span class="bad">Not sent \u2014 '+esc(e.message||'something went wrong')+'</span>'+
+        '<button class="btn small" id="sbRetry">Try again</button><button class="x" id="sbX">\u00d7</button>';
+      $('#sbRetry').onclick=()=>queueLessonEmail(p,l);
+      $('#sbX').onclick=hideBar;      /* stays put until dismissed — a failed send shouldn't slip past */
+    }
+  },SEND_DELAY);
+  pendingSend={timer,tick,lessonId:l.id};
+}
+
 function contactBits(p){
   const cs=p.contacts||[];
   return '<div class="section"><div class="sectitle">Contacts<span class="mono">'+cs.length+'</span></div>'+
     (cs.length?cs.map(c=>
-      '<div class="contact"><input type="checkbox" data-cto="'+c.id+'"'+(msgTo[c.id]?' checked':'')+' aria-label="include in update">'+
+      '<div class="contact"><input type="checkbox" data-cto="'+c.id+'"'+(msgTo[c.id]?' checked':'')+' aria-label="gets updates">'+
       '<div class="cinfo"><div class="cn">'+esc(c.name||'(no name)')+'</div>'+
       '<div class="cw">'+esc([c.email,c.phone].filter(Boolean).join('  ·  ')||'no email or phone')+'</div></div>'+
       (ROLE_LABEL[c.role]?'<span class="rolechip '+c.role+'">'+ROLE_LABEL[c.role]+'</span>':'')+
       '<button class="del" data-cdel="'+c.id+'" aria-label="remove">×</button></div>').join('')
      :'<p class="muted" style="margin-bottom:8px">Add a parent, a class teacher, or the student — whoever should get updates.</p>')+
+    (cs.length?'<p class="hint" style="margin:2px 0 10px">Ticked contacts get the update'+
+      ((state.settings&&state.settings.autoEmail)?' — automatically, each time you save a log.':', when you send one below.')+'</p>':'')+
     '<div class="formrow"><input class="field" id="ctName" placeholder="Name" style="flex:1.2">'+
     '<select class="field" id="ctRole" style="flex:.8">'+
       '<option value="parent">Parent</option><option value="teacher">Teacher</option>'+
@@ -691,7 +791,7 @@ function syncPanelChrome(){
 function openDrawer(personId,dateISO,slotId){
   drawerCtx={personId,dateISO,slotId};editingLessonId=null;
   msgSaid='';msgTo={};
-  ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=true;});
+  ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=c.notify!==false;});
   renderDrawer();
   $('#overlay').classList.add('open');$('#drawer').classList.add('open');syncPanelChrome();
 }
@@ -766,7 +866,8 @@ function renderDrawer(){
   (editingLessonId?'<button class="btn" id="lgCancel">Cancel</button>':'')+'</div></div>'+
   '<div class="section"><div class="sectitle">Story so far<span class="mono">'+hist.length+' lessons</span></div>'+
   (hist.length?hist.map(l=>
-    '<div class="logentry"><div class="ldate">'+shortDate(l.date)+'</div>'+
+    '<div class="logentry"><div class="ldate">'+shortDate(l.date)+
+      (l.emailedAt?'<span class="sent" title="Emailed '+esc((l.emailedTo||[]).join(', '))+'">\u2709 sent</span>':'')+'</div>'+
     '<div class="lactions"><button data-edit="'+l.id+'">edit</button><button data-del="'+l.id+'">\u00d7</button></div>'+
     (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>'<span class="reschip">'+esc(r.trim())+'</span>').join('')+'</div>':'')+
     (l.notes?'<div class="lrow"><b>NOTES</b>'+esc(l.notes)+'</div>':'')+
@@ -795,7 +896,7 @@ function renderDrawer(){
     const nm=$('#ctName').value.trim(), em=$('#ctEmail').value.trim(), ph=$('#ctPhone').value.trim();
     if(!nm&&!em&&!ph)return;
     p.contacts=p.contacts||[];
-    const c={id:uid(),name:nm,role:$('#ctRole').value,email:em,phone:ph};
+    const c={id:uid(),name:nm,role:$('#ctRole').value,email:em,phone:ph,notify:true};
     p.contacts.push(c); msgTo[c.id]=true; msgSaid='';
     markDirty();renderDrawer();
   };
@@ -805,6 +906,8 @@ function renderDrawer(){
     markDirty();renderDrawer();});
   d.querySelectorAll('[data-cto]').forEach(c=>c.onchange=()=>{
     msgTo[c.dataset.cto]=c.checked;
+    const ct=(p.contacts||[]).find(x=>x.id===c.dataset.cto);
+    if(ct){ct.notify=c.checked;markDirty();}
     /* keep whatever you've typed; only rewrite the greeting if you haven't touched it */
     if(msgSaid)msgSaid=$('#msgBody').value;
     renderDrawer();});
@@ -834,9 +937,14 @@ function renderDrawer(){
   $('#lgSave').onclick=()=>{
     const rep=$('#lgRep').value.trim(),nts=$('#lgNotes').value.trim();
     if(!rep&&!nts)return;
-    if(editing){Object.assign(editing,{rep,notes:nts});}
-    else state.lessons.push({id:uid(),personId:p.id,date:dateISO,rep,notes:nts});
+    const isNew=!editing;
+    let saved;
+    if(editing){Object.assign(editing,{rep,notes:nts});saved=editing;}
+    else {saved={id:uid(),personId:p.id,date:dateISO,rep,notes:nts};state.lessons.push(saved);}
     editingLessonId=null;markDirty();renderDrawer();
+    /* only a brand-new log with something to report — editing an old one never re-sends */
+    if(isNew&&rep&&state.settings&&state.settings.autoEmail&&notifyContacts(p).length)
+      queueLessonEmail(p,saved);
   };
   const lgc=$('#lgCancel');if(lgc)lgc.onclick=()=>{editingLessonId=null;renderDrawer();};
   d.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editingLessonId=b.dataset.edit;renderDrawer();});
@@ -864,6 +972,13 @@ function renderManage(){
   const tn=$('#setTeacher');
   tn.value=(state.settings&&state.settings.teacherName)||'';
   tn.onchange=()=>{state.settings=state.settings||{};state.settings.teacherName=tn.value.trim();markDirty();};
+  const ae=$('#setAutoEmail'), en=$('#setEmailNotes');
+  ae.checked=!!(state.settings&&state.settings.autoEmail);
+  en.checked=!!(state.settings&&state.settings.emailNotes);
+  $('#setNotesRow').style.display=ae.checked?'flex':'none';
+  ae.onchange=()=>{state.settings=state.settings||{};state.settings.autoEmail=ae.checked;
+    $('#setNotesRow').style.display=ae.checked?'flex':'none';markDirty();};
+  en.onchange=()=>{state.settings=state.settings||{};state.settings.emailNotes=en.checked;markDirty();};
   const pl=$('#peopleList');
   pl.innerHTML=state.people.map(p=>
     '<div class="mrow"><span class="dot '+colourOf(p)+'"></span><div class="grow">'+
