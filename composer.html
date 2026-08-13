@@ -3,6 +3,7 @@
 <head>
 <script src="/analytics.js" defer></script>
 <script src="/auth.js" defer></script>
+<script src="/leadsheet.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -185,11 +186,6 @@
   </div>
 
   <div class="card">
-    <h2>Chords — drag onto the timeline</h2>
-    <div class="palette" id="palette"></div>
-  </div>
-
-  <div class="card">
     <h2>Strum — click a rhythm for the chords</h2>
     <div class="rhythms" id="rhythms"></div>
     <div class="hintline">Pick a groove and every chord plays in that rhythm. Click one to hear it.</div>
@@ -199,6 +195,11 @@
     <h2>Drums — add a beat</h2>
     <div class="drums" id="drums"></div>
     <div class="hintline">Lay a beat under your song. Click one to hear it.</div>
+  </div>
+
+  <div class="card">
+    <h2>Chords — drag onto the timeline</h2>
+    <div class="palette" id="palette"></div>
   </div>
 
   <div class="card">
@@ -219,6 +220,7 @@
     <div class="hintline"><b>Notes:</b> draw on an empty spot (drag right for longer) · drag to move · drag the right edge to resize · tap to remove. <b>Chords:</b> drag a chip onto the top lane, then move / resize / tap them the same way.</div>
     <div class="studiofoot">
       <button class="btn finish" id="finishBtn">🎉 Finish song</button>
+      <button class="btn" id="sheetBtn" title="A printable chart of your chords">🖨 Lead sheet</button>
       <span class="madecount" id="madeCount"></span>
     </div>
   </div>
@@ -817,6 +819,25 @@
   loadLib(); migrateOldLib(); mountCmpVault(); load(); syncControls(); renderKeys(); renderPalette(); renderRhythms(); renderDrums(); renderMadeCount(); relayout(); updateUndoBtns();
   openSharedFromUrl();
   window.addEventListener('resize', function(){ relayout(); });
+  // ---------- lead sheet: the printable chart of what's on the timeline ----------
+  document.getElementById('sheetBtn').addEventListener('click', function(){
+    if(!state.chords.length){ showToast('Drag some chords onto the timeline first 🎵'); return; }
+    var bars=[]; for(var b=0;b<NBARS;b++) bars.push([]);
+    state.chords.slice().sort(function(a,b){ return a.col-b.col; }).forEach(function(c){
+      var beat=c.col/4, bar=Math.floor(beat/4);           // 16 cols a bar → 4 cols a beat
+      if(bars[bar]) bars[bar].push({ beat:beat-bar*4, name:c.name });
+    });
+    var rootTxt=document.getElementById('root').selectedOptions[0].textContent;
+    var modeTxt=document.getElementById('mode').selectedOptions[0].textContent;
+    LeadSheet.open({
+      title:'My Song',
+      key:rootTxt+' '+modeTxt,
+      tempo:Number(document.getElementById('bpm').textContent)||100,
+      credit:'Made in Song Maker — williamtroymusic.com',
+      sections:[{ label:null, repeat:1, bars:bars }]
+    });
+  });
+
 })();
 </script>
 </body>

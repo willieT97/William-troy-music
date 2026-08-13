@@ -3,6 +3,7 @@
 <head>
 <script src="/analytics.js" defer></script>
 <script src="/auth.js" defer></script>
+<script src="/leadsheet.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Song Lab — Music Arcade</title>
@@ -218,6 +219,7 @@
     <h2>Arrangement <span class="sub">— your song, section by section</span></h2>
     <div class="arrange" id="arrange"></div>
     <div class="hintline">Click a section to edit it. Use ◀ ▶ to reorder, ✎ to rename, − / + to set how many times it repeats.</div>
+    <div style="margin-top:12px"><button class="btn" id="sheetBtn" title="A printable chart of the whole song">🖨 Lead sheet</button></div>
   </div>
 
   <div class="card">
@@ -794,6 +796,29 @@
   load(); renderKeys(); renderAll();
   openSharedFromUrl();
   window.addEventListener('resize', relayout);
+  // ---------- lead sheet: the whole arrangement as a printable chart ----------
+  document.getElementById('sheetBtn').addEventListener('click', function(){
+    if(!state.sections.some(function(s2){ return s2.chords.length; })){
+      showToast('Drop some chords into a section first 🎵'); return; }
+    var secs=state.sections.map(function(sec){
+      var bars=[]; for(var b=0;b<sec.bars;b++) bars.push([]);
+      sec.chords.slice().sort(function(a,b){ return a.col-b.col; }).forEach(function(c){
+        var beat=c.col/4, bar=Math.floor(beat/4);         // 16 cols a bar → 4 cols a beat
+        if(bars[bar]) bars[bar].push({ beat:beat-bar*4, name:c.name });
+      });
+      return { label:sec.name, repeat:sec.repeat||1, bars:bars };
+    });
+    var rootTxt=document.getElementById('root').selectedOptions[0].textContent;
+    var modeTxt=document.getElementById('mode').selectedOptions[0].textContent;
+    LeadSheet.open({
+      title:'My Song',
+      key:rootTxt+' '+modeTxt,
+      tempo:state.tempo||110,
+      credit:'Made in Song Lab — williamtroymusic.com',
+      sections:secs
+    });
+  });
+
 })();
 </script>
 </body>
