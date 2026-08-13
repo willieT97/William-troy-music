@@ -559,30 +559,70 @@ const RES=[
   {t:'Learning to Walk',      u:'learning-to-walk.html',k:'bassline walking bass jazz course', pro:true},
   {t:'Learning to Fly',       u:'learning-to-fly.html', k:'improvise solo course belts', pro:true}
 ];
-/* a chip that opens the page when we have one for it */
+/* ---------- the tune library ----------
+   Read from the same manifest Melody Trainer uses, so it never drifts out of
+   sync: 200-odd tunes, ~128K, fetched once after the gate opens. If it can't be
+   reached the rollbook just carries on with tunes as plain text. */
+let TUNES=null;
+async function loadTunes(){
+  if(TUNES)return TUNES;
+  const out=[];
+  try{
+    const man=await (await fetch('tunes/manifest.json')).json();
+    for(const f of man){
+      let txt; try{ txt=await (await fetch('tunes/'+f)).text(); }catch(e){ continue; }
+      txt.split(/\nX:/).forEach(blk=>{
+        const t=/^T:(.+)$/m.exec(blk); if(!t)return;
+        const r=/^R:(.+)$/m.exec(blk), o=/^O:(.+)$/m.exec(blk);
+        out.push({t:t[1].trim(), r:r?r[1].trim():'', o:o?o[1].trim():''});
+      });
+    }
+  }catch(e){ /* offline, or the library moved — not fatal */ }
+  TUNES=out;
+  if(drawerCtx)renderDrawer();          // chips that were plain text can link now
+  return TUNES;
+}
+
+/* loose match: case, a leading "The", and punctuation all ignored — so the
+   comma-stripped "Twinkle Twinkle Little Star" still finds its tune */
+const nrm=s=>String(s||'').toLowerCase().replace(/^the\s+/,'').replace(/[^a-z0-9]+/g,' ').trim();
+const tuneUrl=t=>SITE+'melody-trainer_1.html?tune='+encodeURIComponent(t);
+
+/* one logged item -> where it lives on the site, or null */
+function lookup(title){
+  const q=nrm(title); if(!q)return null;
+  const r=RES.find(x=>nrm(x.t)===q);
+  if(r)return {t:r.t, u:SITE+r.u, pro:!!r.pro};
+  const tu=(TUNES||[]).find(x=>nrm(x.t)===q);
+  if(tu)return {t:tu.t, u:tuneUrl(tu.t), tune:true};
+  return null;
+}
+/* what a parent can actually open: paywalled things are named, never linked */
+const resLink=title=>{const r=lookup(title);return (r&&!r.pro)?r.u:null;};
+
 function chip(title){
   const t=String(title||'').trim(); if(!t)return '';
-  const r=resFor(t);
+  const r=lookup(t);
   if(!r)return '<span class="reschip">'+esc(t)+'</span>';
-  return '<a class="reschip linked" href="'+SITE+r.u+'" target="_blank" rel="noopener" title="'+
-    esc(r.pro?'On the site \u2014 Pro, so it is not linked to parents':'Opens on the site')+'">'+esc(t)+'</a>';
+  const why=r.pro?'On the site \u2014 Pro, so it is not linked to parents'
+          :r.tune?'Opens in Melody Trainer':'Opens on the site';
+  return '<a class="reschip linked" href="'+r.u+'" target="_blank" rel="noopener" title="'+esc(why)+'">'+esc(t)+'</a>';
 }
-const resFor=title=>{
-  const q=String(title||'').trim().toLowerCase();
-  return q?RES.find(r=>r.t.toLowerCase()===q)||null:null;
-};
-/* what the parent can actually open: paywalled things are named, never linked */
-const resLink=title=>{const r=resFor(title);return (r&&!r.pro)?SITE+r.u:null;};
-function resSearch(q){
-  q=String(q||'').trim().toLowerCase();
-  if(q.length<2)return [];
-  const starts=[],has=[];
-  RES.forEach(r=>{
-    const t=r.t.toLowerCase();
-    if(t.startsWith(q))starts.push(r);
-    else if(t.includes(q)||r.k.includes(q))has.push(r);
-  });
-  return starts.concat(has).slice(0,6);
+
+/* suggestions: site pages and tunes together, best match first */
+function suggest(q){
+  q=String(q||'').trim(); if(q.length<2)return [];
+  const k=nrm(q), out=[];
+  const score=(title,keys)=>{
+    const n=nrm(title);
+    if(n.startsWith(k))return 3;
+    if(n.includes(k))return 2;
+    return (keys&&keys.includes(q.toLowerCase()))?1:0;
+  };
+  RES.forEach(r=>{const sc=score(r.t,r.k);if(sc)out.push({sc,t:r.t,u:r.u,sub:r.pro?'not linked to parents':'',pro:!!r.pro});});
+  (TUNES||[]).forEach(t=>{const sc=score(t.t,'');if(sc)out.push({sc:sc+0.5,t:t.t,u:'melody-trainer_1.html',
+    sub:[t.r,t.o].filter(Boolean).join(' \u00b7 '),tune:true});});
+  return out.sort((a,b)=>b.sc-a.sc||a.t.length-b.t.length).slice(0,8);
 }
 
 /* ---------- rep & resources ----------
@@ -1122,17 +1162,18 @@ function renderDrawer(){
     const hide=()=>{box.classList.remove('show');box.innerHTML='';hits=[];cur=-1;};
     const paint=()=>{
       box.innerHTML=hits.map((r,i)=>'<button type="button" data-i="'+i+'" class="'+(i===cur?'on':'')+'">'+
-        esc(r.t)+(r.pro?' \uD83D\uDD12':'')+'<span class="lk">'+esc(r.u)+(r.pro?' \u00b7 not linked to parents':'')+'</span></button>').join('');
+        esc(r.t)+(r.pro?' \uD83D\uDD12':'')+(r.tune?' \u266a':'')+
+        '<span class="lk">'+esc(r.sub||r.u)+'</span></button>').join('');
       box.classList.add('show');
       box.querySelectorAll('[data-i]').forEach(b=>b.onmousedown=e=>{e.preventDefault();pick(+b.dataset.i);});
     };
     const pick=i=>{
       const r=hits[i];if(!r)return;
       const{head}=frag();
-      inp.value=(head?head+' ':'')+r.t+', ';
+      inp.value=(head?head+' ':'')+r.t.replace(/,/g,'')+', ';
       hide();inp.focus();
     };
-    inp.oninput=()=>{const{term}=frag();hits=resSearch(term);cur=-1;hits.length?paint():hide();};
+    inp.oninput=()=>{const{term}=frag();hits=suggest(term);cur=-1;hits.length?paint():hide();};
     inp.onblur=()=>setTimeout(hide,120);
     inp.onkeydown=e=>{
       if(!hits.length)return;
@@ -1326,7 +1367,8 @@ function onAuth(){
     const saved=loadLocal();
     state=saved?Object.assign(EMPTY(),saved):EMPTY();
     migrateExceptions();
-    render();            // show the device copy straight away, then reconcile
+    render();
+    loadTunes();            // show the device copy straight away, then reconcile
     pullCloud();
   } else {
     clearTimeout(saveTimer); dirty=false; cloudRowId=null;

@@ -1745,7 +1745,22 @@ async function loadLibrary(){
   }catch(e){ /* no manifest (e.g. offline) — the examples still show */ }
   renderTuneList("");
 }
-loadLibrary();
+/* ?tune=<name> — the Rollbook links here when a lesson logged a tune from the library.
+   Matched loosely (case, "The", punctuation) so a name typed by hand still lands. */
+const tuneKey = s => String(s||"").toLowerCase().replace(/^the\s+/,"").replace(/[^a-z0-9]+/g," ").trim();
+function openRequestedTune(){
+  const want = new URLSearchParams(location.search).get("tune");
+  if(!want) return;
+  const w = tuneKey(want);
+  const i = LIBRARY.findIndex(t => tuneKey(t.name) === w);
+  if(i < 0){ setLoadStatus('Couldn\u2019t find \u201c'+want+'\u201d in the library \u2014 search for it below.', "err"); return; }
+  $("tuneSearch").value = LIBRARY[i].name;
+  renderTuneList(LIBRARY[i].name);
+  const row = $("tuneList").querySelector('.tunerow[data-i="'+i+'"]');
+  loadTuneObj(LIBRARY[i], row);
+  if(row) row.scrollIntoView({ block:"nearest" });
+}
+loadLibrary().then(openRequestedTune);
 
 /* boot with Twinkle */
 $("abcIn").value = PRESETS[0].abc;
