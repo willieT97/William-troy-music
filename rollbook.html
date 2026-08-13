@@ -73,6 +73,20 @@ main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
 .slotcard .logged{position:absolute;top:4px;right:5px;font-size:.7rem}
 .slotcard.cancelled{border-style:dashed;box-shadow:none;opacity:.45}
 .slotcard.cancelled .who{text-decoration:line-through}
+.slotcard.att-present{background:rgba(31,157,85,.10)}
+.slotcard.att-absent{background:rgba(255,78,134,.12)}
+.slotcard .att{position:absolute;bottom:3px;right:5px;font-family:var(--mono);font-size:.7rem;font-weight:700}
+.slotcard.att-present .att{color:var(--green)}
+.slotcard.att-absent .att{color:var(--pink)}
+/* attendance picker */
+.attrow{display:flex;gap:6px;flex-wrap:wrap}
+.attrow button{border:2px solid var(--ink);background:#fff;padding:5px 10px;font-size:.82rem;font-weight:600;
+  box-shadow:2px 2px 0 var(--ink)}
+.attrow button:active{transform:translate(2px,2px);box-shadow:none}
+.attrow button.on{background:var(--ink);color:var(--paper)}
+.attrow button.on.good{background:var(--green);border-color:var(--green)}
+.attrow button.on.bad{background:var(--pink);border-color:var(--pink)}
+.atttally{font-family:var(--mono);font-size:.7rem;color:rgba(23,20,14,.7);margin-top:8px}
 .slotcard.c-blue{border-top:6px solid var(--blue)}
 .slotcard.c-pink{border-top:6px solid var(--pink)}
 .slotcard.c-amber{border-top:6px solid var(--amber)}
@@ -268,7 +282,7 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
 <script>
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const COLOURS=['c-blue','c-pink','c-amber','c-green'];
-let state={people:[],slots:[],lessons:[],exceptions:[],updatedAt:''};
+let state={people:[],slots:[],lessons:[],exceptions:[],attendance:[],updatedAt:''};
 let weekStart=mondayOf(new Date());
 let drawerCtx=null;           // {personId, dateISO, slotId}
 let editingLessonId=null;
@@ -337,8 +351,8 @@ async function pullCloud(){
       cloudRowId=row.id;
       const cloud=row.data||{},cloudAt=cloud.updatedAt||'',localAt=state.updatedAt||'';
       if(countOf(cloud)&&(!countOf(state)||cloudAt>=localAt)){
-        state={people:cloud.people||[],slots:cloud.slots||[],lessons:cloud.lessons||[],exceptions:cloud.exceptions||[],updatedAt:cloudAt};
-        saveLocal();setStatus('saved','synced');
+        state={people:cloud.people||[],slots:cloud.slots||[],lessons:cloud.lessons||[],exceptions:cloud.exceptions||[],attendance:cloud.attendance||[],updatedAt:cloudAt};
+        migrateExceptions();saveLocal();setStatus('saved','synced');
       }
       else if(countOf(state)&&localAt>cloudAt) await pushCloud();  /* this device is ahead */
       else setStatus('saved','synced');
@@ -367,6 +381,39 @@ function weekRange(){
 }
 function exceptionFor(slotId,wkISO){return state.exceptions.find(e=>e.slotId===slotId&&e.week===wkISO);}
 function lessonFor(personId,dateISO){return state.lessons.find(l=>l.personId===personId&&l.date===dateISO);}
+
+/* ---------- attendance ---------- */
+const ATT={
+  present:{label:'Came',       mark:'✓', cls:'att-present', short:'came'},
+  absent: {label:'No-show',    mark:'!',      cls:'att-absent',  short:'no-show'},
+  offthem:{label:'They cancelled', mark:'–', cls:'att-off', short:'they cancelled'},
+  offme:  {label:'I cancelled',    mark:'–', cls:'att-off', short:'I cancelled'}
+};
+const attFor=(personId,dateISO)=>state.attendance.find(a=>a.personId===personId&&a.date===dateISO);
+function setAtt(personId,dateISO,status){
+  const cur=attFor(personId,dateISO);
+  if(cur&&cur.status===status){state.attendance=state.attendance.filter(a=>a!==cur);}   // tap again to clear
+  else if(cur){cur.status=status;}
+  else state.attendance.push({id:uid(),personId,date:dateISO,status});
+  markDirty();
+}
+function attTally(personId,uptoISO){
+  const t={present:0,absent:0,offthem:0,offme:0};
+  state.attendance.filter(a=>a.personId===personId&&(!uptoISO||a.date<=uptoISO)).forEach(a=>{if(t[a.status]!=null)t[a.status]++;});
+  return t;
+}
+/* older builds cancelled a week via `exceptions` (slot+week) — fold those into attendance once */
+function migrateExceptions(){
+  if(!state.exceptions.length)return;
+  let moved=0;
+  state.exceptions.forEach(e=>{
+    const s=state.slots.find(x=>x.id===e.slotId); if(!s)return;
+    const dISO=iso(addDays(new Date(e.week+'T12:00:00'),s.day-1));
+    if(!attFor(s.personId,dISO)){state.attendance.push({id:uid(),personId:s.personId,date:dISO,status:'offme'});moved++;}
+  });
+  state.exceptions=[];
+  if(moved){state.updatedAt=new Date().toISOString();saveLocal();}
+}
 
 function render(){
   const g=$('#grid');g.innerHTML='';
@@ -405,13 +452,15 @@ function render(){
     col.style.height=(hours*60)+'px';
     state.slots.filter(s=>s.day===d+1).sort((a,b)=>a.start-b.start).forEach(s=>{
       const p=person(s.personId);if(!p)return;
-      const exc=exceptionFor(s.id,wkISO);
+      const att=attFor(p.id,dISO), a=att?ATT[att.status]:null;
+      const off=att&&(att.status==='offthem'||att.status==='offme');
       const logged=!!lessonFor(p.id,dISO);
       const last=state.lessons.filter(l=>l.personId===p.id&&l.date<=dISO).sort((a,b)=>b.date.localeCompare(a.date))[0];
-      const hover=last?('Last ('+shortDate(last.date)+'): '+(last.notes||last.rep||'')):'';
-      const card=el('<button class="slotcard '+colourOf(p)+(exc?' cancelled':'')+'" title="'+esc(hover)+'" style="top:'+(s.start-rs)+'px;height:'+Math.max(30,s.duration-4)+'px">'+
+      const hover=(a?a.label+(off?'':'')+' \u2014 ':'')+(last?('last ('+shortDate(last.date)+'): '+(last.notes||last.rep||'')):'');
+      const card=el('<button class="slotcard '+colourOf(p)+(off?' cancelled':'')+(a&&!off?' '+a.cls:'')+'" title="'+esc(hover.trim())+'" style="top:'+(s.start-rs)+'px;height:'+Math.max(30,s.duration-4)+'px">'+
         '<span class="who">'+esc(p.name)+'</span>'+
         '<span class="meta">'+fmtTime(s.start)+' \u00b7 '+esc(p.instrument||'')+'</span>'+
+        (a?'<span class="att" title="'+esc(a.label)+'">'+a.mark+'</span>':'')+
         (logged?'<span class="logged" title="Lesson logged">\u270e</span>':'')+'</button>');
       card.addEventListener('click',()=>openDrawer(p.id,dISO,s.id));
       col.appendChild(card);
@@ -447,6 +496,19 @@ function renderDrawer(){
       (l.rep?l.rep.split(',').map(r=>'<span class="reschip">'+esc(r.trim())+'</span>').join(''):'')+
       (l.notes?'<div class="gnote">'+esc(l.notes)+'</div>':'')+'</div>').join('')+'</div>':'';
 
+  const att=attFor(p.id,dateISO), tal=attTally(p.id);
+  const attBits='<div class="section"><div class="sectitle">Attendance<span class="mono">'+esc(niceDate(dateISO))+'</span></div>'+
+    '<div class="attrow">'+Object.keys(ATT).map(k=>{
+      const on=att&&att.status===k;
+      const tone=k==='present'?' good':(k==='absent'?' bad':'');
+      return '<button data-att="'+k+'" class="'+(on?'on'+tone:'')+'">'+ATT[k].label+'</button>';
+    }).join('')+'</div>'+
+    (tal.present+tal.absent+tal.offthem+tal.offme
+      ? '<div class="atttally">'+tal.present+' came · '+tal.absent+' no-show · '+(tal.offthem+tal.offme)+' cancelled'+
+        (tal.offthem+tal.offme?' ('+tal.offthem+' them / '+tal.offme+' me)':'')+'</div>'
+      : '<div class="atttally">Tap a button to mark this lesson. Tap it again to clear.</div>')+
+    '</div>';
+
   let classBits='';
   if(p.kind==='class'){
     let cd='';
@@ -475,7 +537,7 @@ function renderDrawer(){
   (p.notes?'<p class="muted" style="margin-bottom:14px">'+esc(p.notes)+'</p>':'')+
   glance+
   classBits+
-  (slotId?'<div class="section"><button class="btn small" id="excBtn">'+(exc?'Restore this week\u2019s lesson':'Cancel this week\u2019s lesson')+'</button></div>':'')+
+  attBits+
   '<div class="section"><div class="sectitle">'+(editing?'Edit log \u2014 '+shortDate(editing.date):'Log this lesson')+'</div>'+
   '<label class="f" for="lgRep">REP / RESOURCES <span style="text-transform:none">(comma-separated)</span></label>'+
   '<input class="field" id="lgRep" value="'+esc(editing?editing.rep:'')+'" placeholder="e.g. Kesh Jig, D chord sheet">'+
@@ -494,12 +556,7 @@ function renderDrawer(){
   '</div>';
 
   $('#dClose').onclick=closeDrawer;
-  const excBtn=$('#excBtn');
-  if(excBtn)excBtn.onclick=()=>{
-    if(exc)state.exceptions=state.exceptions.filter(e=>e.id!==exc.id);
-    else state.exceptions.push({id:uid(),slotId,week:wkISO,status:'cancelled',note:''});
-    markDirty();renderDrawer();
-  };
+  d.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{ setAtt(p.id,dateISO,b.dataset.att); renderDrawer(); });
   $('#lgSave').onclick=()=>{
     const rep=$('#lgRep').value.trim(),nts=$('#lgNotes').value.trim();
     if(!rep&&!nts)return;
@@ -631,7 +688,7 @@ function demoData(){
 /* ---------- boot ---------- */
 window.addEventListener('beforeunload',e=>{if(dirty&&signedIn()){e.preventDefault();e.returnValue='';}});
 
-const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],updatedAt:''});
+const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],attendance:[],updatedAt:''});
 applyGate(false);
 $('#gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
 
@@ -645,6 +702,7 @@ function onAuth(){
   if(signedIn()){
     const saved=loadLocal();
     state=saved?Object.assign(EMPTY(),saved):EMPTY();
+    migrateExceptions();
     render();            // show the device copy straight away, then reconcile
     pullCloud();
   } else {
