@@ -620,7 +620,7 @@ function musicalFor(title,p){
     if(q!=='major'&&q!=='minor')
       return {t, u:SITE+'chord-theory.html?root='+encodeURIComponent(r.root)};
     return {t, u:SITE+'chords.html?root='+encodeURIComponent(r.root)+'&quality='+q+
-      ((inst==='piano'||inst==='guitar')?'&inst='+inst:'')};
+      ((inst==='piano'||inst==='guitar'||inst==='banjo')?'&inst='+inst:'')};
   }
   if(!rest)return null;                       // a bare "C" isn't an assignment
   for(const[re,key,label]of SCALE_WORDS){

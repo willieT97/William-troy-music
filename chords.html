@@ -66,8 +66,17 @@
 
   /* sheets */
   .sheet{ display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
-  #chart[data-inst="piano"] #sheetGuitar{ display:none; }
-  #chart[data-inst="guitar"] #sheetPiano{ display:none; }
+  #chart #sheetPiano,#chart #sheetGuitar,#chart #sheetBanjo{ display:none; }
+  #chart[data-inst="piano"] #sheetPiano{ display:grid; }
+  #chart[data-inst="guitar"] #sheetGuitar{ display:grid; }
+  #chart[data-inst="banjo"] #sheetBanjo{ display:grid; }
+  /* dots are plain until you ask for a label */
+  #chart[data-lab="none"] .lab{ display:none; }
+  #chart[data-lab="deg"]  .lab.note{ display:none; }
+  #chart[data-lab="note"] .lab.deg{ display:none; }
+  #banjoNote{ display:none; font-family:'Space Mono',monospace; font-size:.72rem; color:#6b7488;
+    margin:-6px 0 14px; }
+  #banjoNote.on{ display:block; }
   .colhead{ font-family:var(--disp); font-weight:700; font-size:1.05rem; text-align:center;
     padding:7px; border-radius:10px; }
   .colhead.maj{ color:var(--maj); background:var(--maj-tint); }
@@ -130,18 +139,27 @@
 
   <header class="top">
     <span class="kicker">Reference sheet</span>
-    <h1>Chords 🎹🎸</h1>
-    <p class="lede">Every major &amp; minor chord, starting on F and C, then travelling around the circle of fifths.</p>
+    <h1>Chords 🎹🎸🪕</h1>
+    <p class="lede">Every major &amp; minor chord for piano, guitar and banjo — starting on F and C, then travelling around the circle of fifths.</p>
   </header>
 
   <div class="insttabs noprint">
     <div class="seg" role="group" aria-label="Instrument">
       <button data-inst="piano" class="on">🎹 Piano</button>
       <button data-inst="guitar">🎸 Guitar</button>
+      <button data-inst="banjo">🪕 Banjo</button>
     </div>
   </div>
 
+  <p id="banjoNote">Standard G tuning (gDGBD) — the four melody strings. The 5th string is the open g drone.</p>
+
   <div class="toolbar noprint">
+    <span class="tlabel">Labels</span>
+    <div class="degs" role="group" aria-label="What to write on the dots">
+      <button data-lab="none" class="on">None</button>
+      <button data-lab="deg">1 3 5</button>
+      <button data-lab="note">Note names</button>
+    </div>
     <span class="tlabel">Spotlight</span>
     <div class="degs" role="group" aria-label="Highlight chord tone">
       <button data-deg="1">Root</button>
@@ -149,14 +167,15 @@
       <button data-deg="5">Fifth</button>
     </div>
     <button class="printbtn" onclick="window.print()">🖨 Print</button>
-    <span class="legend">Numbers are chord tones — <b>1</b> root · <b>3</b> third · <b>5</b> fifth. Tap a chord to hear it.</span>
+    <span class="legend">Dots are the chord tones — turn on <b>1 3 5</b> or <b>note names</b> to label them. Tap a chord to hear it.</span>
   </div>
 
   <div class="rule"></div>
 
-  <div id="chart" data-inst="piano">
+  <div id="chart" data-inst="piano" data-lab="none">
     <div class="sheet" id="sheetPiano"></div>
     <div class="sheet" id="sheetGuitar"></div>
+    <div class="sheet" id="sheetBanjo"></div>
   </div>
 
   <p class="foot noprint"><a href="resources.html">← Back to Resources</a></p>
@@ -169,6 +188,8 @@
   function el(t){ return document.createElementNS(NS,t); }
   var WHITE_ORDER=[0,2,4,5,7,9,11];
   function isBlack(pc){ return pc===1||pc===3||pc===6||pc===8||pc===10; }
+  var DEG_IX={'1':0,'3':1,'5':2};
+  function noteFor(deg, names){ return (deg&&names)?names[DEG_IX[deg]]:''; }
   function degreeOf(pc, rootPc, thirdInt){
     var d=(pc-rootPc+12)%12;
     if(d===0) return '1'; if(d===thirdInt) return '3'; if(d===7) return '5'; return null;
@@ -200,6 +221,17 @@
     8:{f:[4,6,6,4,4,4],b:4}, 3:{f:[-1,6,8,8,7,6],b:6}, 10:{f:[-1,1,3,3,2,1],b:1}
   };
 
+  // 5-string banjo, standard G tuning gDGBD -- the four melody strings D3 G3 B3 D4.
+  // Open shapes where they exist; otherwise the movable C / Em / Am shapes, picked
+  // for whichever sits lowest on the neck. Every shape checked against its triad.
+  var B_OPEN_PC=[2,7,11,2], B_OPEN_MIDI=[50,55,59,62];
+  var BMAJ={0:{f:[2,0,1,2],b:1},1:{f:[3,1,2,3],b:1},2:{f:[0,2,3,4],b:1},3:{f:[5,3,4,5],b:3},
+    4:{f:[2,1,0,2],b:1},5:{f:[3,2,1,3],b:1},6:{f:[8,6,7,8],b:6},7:{f:[0,0,0,0],b:1},
+    8:{f:[1,1,1,1],b:1},9:{f:[2,2,2,2],b:1},10:{f:[3,3,3,3],b:1},11:{f:[4,4,4,4],b:1}};
+  var BMIN={0:{f:[5,5,4,5],b:4},1:{f:[6,6,5,6],b:5},2:{f:[0,2,3,3],b:1},3:{f:[8,8,7,8],b:7},
+    4:{f:[2,0,0,2],b:1},5:{f:[3,1,1,3],b:1},6:{f:[4,2,2,4],b:1},7:{f:[5,3,3,5],b:3},
+    8:{f:[6,4,4,6],b:4},9:{f:[2,2,1,2],b:1},10:{f:[3,3,2,3],b:1},11:{f:[4,4,3,4],b:1}};
+
   // ---- audio ----
   var actx=null;
   function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
@@ -212,22 +244,32 @@
     o.start(t); o.stop(t+dur+0.05);
   }
   function playPiano(rootPc, thirdInt){ try{ [0,thirdInt,7].forEach(function(iv,k){ tone(60+rootPc+iv, k*0.045, 1.4); }); }catch(e){} }
-  function playGuitar(frets){ try{ var k=0; for(var i=0;i<6;i++){ if(frets[i]>=0){ tone(G_OPEN_MIDI[i]+frets[i], k*0.05, 1.6); k++; } } }catch(e){} }
+  function playFrets(frets, openMidi){ try{ var k=0; for(var i=0;i<frets.length;i++){ if(frets[i]>=0){ tone(openMidi[i]+frets[i], k*0.05, 1.6); k++; } } }catch(e){} }
+  function playGuitar(frets){ playFrets(frets, G_OPEN_MIDI); }
+  function playBanjo(frets){ playFrets(frets, B_OPEN_MIDI); }
 
   // ---- markers ----
-  function mark(parent,cx,cy,r,label,fill,stroke,txt,deg){
+  function mark(parent,cx,cy,r,label,fill,stroke,txt,deg,note){
     var g=el('g'); g.setAttribute('class','mark'); if(deg) g.setAttribute('data-deg',deg);
     var c=el('circle'); c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r); c.setAttribute('fill',fill);
     if(stroke){ c.setAttribute('stroke',stroke); c.setAttribute('stroke-width',2); }
     g.appendChild(c);
-    var t=el('text'); t.setAttribute('x',cx); t.setAttribute('y',cy+3.4); t.setAttribute('text-anchor','middle');
-    t.setAttribute('font-family',"'Nunito',sans-serif"); t.setAttribute('font-weight','800');
-    t.setAttribute('font-size', r>=8?'10.5':'9.5'); t.setAttribute('fill',txt); t.textContent=label||'';
-    g.appendChild(t); parent.appendChild(g);
+    /* both labels are drawn; the toolbar decides which is visible, so switching
+       is instant and doesn't rebuild 48 diagrams */
+    function lab(cls,text,size){
+      var t=el('text'); t.setAttribute('class','lab '+cls);
+      t.setAttribute('x',cx); t.setAttribute('y',cy+3.4); t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-family',"'Nunito',sans-serif"); t.setAttribute('font-weight','800');
+      t.setAttribute('font-size',size); t.setAttribute('fill',txt); t.textContent=text||'';
+      g.appendChild(t);
+    }
+    lab('deg', label||'', r>=8?'10.5':'9.5');
+    lab('note', note||'', r>=8?'9':'8');
+    parent.appendChild(g);
   }
 
   // ---- piano keyboard ----
-  function keyboard(rootPc, thirdInt, accent, tint){
+  function keyboard(rootPc, thirdInt, accent, tint, names){
     var wW=22,wH=94,bW=13,bH=59,n=7;
     var base=isBlack(rootPc)?(rootPc+11)%12:rootPc, start=WHITE_ORDER.indexOf(base), seq=[];
     for(var i=0;i<n;i++) seq.push(WHITE_ORDER[(start+i)%7]);
@@ -239,7 +281,7 @@
       r.setAttribute('rx',3); r.setAttribute('stroke','#c7cfdb'); r.setAttribute('stroke-width',1.4);
       if(d){ r.setAttribute('fill',tint); r.setAttribute('class','keytint'); r.setAttribute('data-deg',d); } else r.setAttribute('fill','#fff');
       svg.appendChild(r);
-      if(d) mark(svg, x+wW/2, wH-15, 8, d, accent, null, '#fff', d);
+      if(d) mark(svg, x+wW/2, wH-15, 8, d, accent, null, '#fff', d, noteFor(d,names));
     }
     for(var i=0;i<n-1;i++){
       var a=seq[i], b=seq[i+1];
@@ -249,25 +291,27 @@
         rr.setAttribute('rx',2);
         if(d){ rr.setAttribute('fill',accent); rr.setAttribute('class','keyblk'); rr.setAttribute('data-deg',d); } else rr.setAttribute('fill','#2A3242');
         svg.appendChild(rr);
-        if(d) mark(svg, bx+bW/2, bH-11, 7.5, d, '#fff', null, accent, d);
+        if(d) mark(svg, bx+bW/2, bH-11, 7.5, d, '#fff', null, accent, d, noteFor(d,names));
       }
     }
     return svg;
   }
 
   // ---- guitar diagram ----
-  function guitar(frets, base, rootPc, thirdInt, accent){
-    var padL=26, padT=26, sGap=15, fretGap=22, nFrets=4;
-    var boardW=5*sGap, boardH=nFrets*fretGap, W=padL+boardW+12, H=padT+boardH+14, nutY=padT;
-    var xs=[]; for(var i=0;i<6;i++) xs.push(padL+i*sGap);
+  function guitar(frets, base, rootPc, thirdInt, accent, names, openPc){
+    openPc=openPc||G_OPEN_PC;
+    var nStr=openPc.length, last=nStr-1;
+    var padL=26, padT=26, sGap=(nStr===4?19:15), fretGap=22, nFrets=4;
+    var boardW=last*sGap, boardH=nFrets*fretGap, W=padL+boardW+12, H=padT+boardH+14, nutY=padT;
+    var xs=[]; for(var i=0;i<nStr;i++) xs.push(padL+i*sGap);
     var svg=el('svg'); svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('class','fret');
     for(var k=0;k<=nFrets;k++){
       var y=nutY+k*fretGap, l=el('line');
-      l.setAttribute('x1',xs[0]); l.setAttribute('x2',xs[5]); l.setAttribute('y1',y); l.setAttribute('y2',y);
+      l.setAttribute('x1',xs[0]); l.setAttribute('x2',xs[last]); l.setAttribute('y1',y); l.setAttribute('y2',y);
       l.setAttribute('stroke','#b3bccb'); l.setAttribute('stroke-width',(k===0&&base===1)?4.5:1.6); l.setAttribute('stroke-linecap','round');
       svg.appendChild(l);
     }
-    for(var i=0;i<6;i++){
+    for(var i=0;i<nStr;i++){
       var l=el('line'); l.setAttribute('x1',xs[i]); l.setAttribute('x2',xs[i]);
       l.setAttribute('y1',nutY); l.setAttribute('y2',nutY+boardH); l.setAttribute('stroke','#b3bccb'); l.setAttribute('stroke-width',1.4);
       svg.appendChild(l);
@@ -277,16 +321,16 @@
       t.setAttribute('font-family',"'Space Mono',monospace"); t.setAttribute('font-size','10'); t.setAttribute('fill','#6b7488');
       t.textContent=base+'fr'; svg.appendChild(t);
     }
-    for(var i=0;i<6;i++){
+    for(var i=0;i<nStr;i++){
       var f=frets[i], x=xs[i];
       if(f===-1){
         var t=el('text'); t.setAttribute('x',x); t.setAttribute('y',nutY-6); t.setAttribute('text-anchor','middle');
         t.setAttribute('font-family',"'Space Mono',monospace"); t.setAttribute('font-size','11'); t.setAttribute('fill','#9aa3b2');
         t.textContent='×'; svg.appendChild(t); continue;
       }
-      var pc=(G_OPEN_PC[i]+f)%12, deg=degreeOf(pc, rootPc, thirdInt);
-      if(f===0){ mark(svg, x, nutY-9, 7, deg, '#fff', accent, accent, deg); }
-      else { mark(svg, x, nutY+(f-base+0.5)*fretGap, 8, deg, accent, null, '#fff', deg); }
+      var pc=(openPc[i]+f)%12, deg=degreeOf(pc, rootPc, thirdInt), nn=noteFor(deg,names);
+      if(f===0){ mark(svg, x, nutY-9, 7, deg, '#fff', accent, accent, deg, nn); }
+      else { mark(svg, x, nutY+(f-base+0.5)*fretGap, 8, deg, accent, null, '#fff', deg, nn); }
     }
     return svg;
   }
@@ -301,14 +345,20 @@
     box.dataset.pc=root.pc; box.dataset.q=q;          /* so a lesson link can point at one chord */
     box.setAttribute('aria-label', root.name.replace(' / ',' or ')+' '+q+' chord');
     var h=document.createElement('h3'); h.innerHTML=root.name+' <span class="qual">'+q+'</span>'; box.appendChild(h);
-    var nm=document.createElement('div'); nm.className='nm'; nm.textContent=(isMinor?MIN:MAJ)[root.pc]; box.appendChild(nm);
+    var spelled=(isMinor?MIN:MAJ)[root.pc];
+    var nm=document.createElement('div'); nm.className='nm'; nm.textContent=spelled; box.appendChild(nm);
+    var names=spelled.split(' \u00b7 ');       /* [root, third, fifth], spelled as this chord spells them */
     var hit;
     if(kind==='piano'){
-      box.appendChild(keyboard(root.pc, thirdInt, accent, tint));
+      box.appendChild(keyboard(root.pc, thirdInt, accent, tint, names));
       hit=function(){ playPiano(root.pc, thirdInt); };
+    } else if(kind==='banjo'){
+      var bj=(isMinor?BMIN:BMAJ)[root.pc];
+      box.appendChild(guitar(bj.f, bj.b, root.pc, thirdInt, accent, names, B_OPEN_PC));
+      hit=function(){ playBanjo(bj.f); };
     } else {
       var g=(isMinor?GMIN:GMAJ)[root.pc];
-      box.appendChild(guitar(g.f, g.b, root.pc, thirdInt, accent));
+      box.appendChild(guitar(g.f, g.b, root.pc, thirdInt, accent, names, G_OPEN_PC));
       hit=function(){ playGuitar(g.f); };
     }
     box.addEventListener('click', hit);
@@ -324,12 +374,14 @@
   }
   build('sheetPiano','piano');
   build('sheetGuitar','guitar');
+  build('sheetBanjo','banjo');
 
   // ---- instrument tabs ----
   var chart=document.getElementById('chart');
   document.querySelectorAll('.insttabs button').forEach(function(b){
     b.addEventListener('click', function(){
       chart.setAttribute('data-inst', b.dataset.inst);
+      document.getElementById('banjoNote').classList.toggle('on', b.dataset.inst==='banjo');
       document.querySelectorAll('.insttabs button').forEach(function(x){ x.classList.remove('on'); });
       b.classList.add('on');
     });
@@ -341,10 +393,11 @@
   (function deepLink(){
     var q=new URLSearchParams(location.search);
     var wantInst=(q.get('inst')||'').toLowerCase();
-    if(wantInst==='piano'||wantInst==='guitar'){
+    if(wantInst==='piano'||wantInst==='guitar'||wantInst==='banjo'){
       chart.setAttribute('data-inst',wantInst);
       document.querySelectorAll('.insttabs button').forEach(function(x){
         x.classList.toggle('on', x.dataset.inst===wantInst); });
+      document.getElementById('banjoNote').classList.toggle('on', wantInst==='banjo');
     }
     var wantRoot=q.get('root'), wantQ=(q.get('quality')||'').toLowerCase();
     if(!wantRoot)return;
@@ -353,7 +406,8 @@
             'G':7,'G#':8,'AB':8,'A':9,'A#':10,'BB':10,'B':11,'CB':11};
     var pc=PC[key]; if(pc===undefined)return;
     if(wantQ!=='minor'&&wantQ!=='major')wantQ='major';
-    var sheet=document.getElementById(chart.getAttribute('data-inst')==='guitar'?'sheetGuitar':'sheetPiano');
+    var live=chart.getAttribute('data-inst');
+    var sheet=document.getElementById(live==='guitar'?'sheetGuitar':live==='banjo'?'sheetBanjo':'sheetPiano');
     var cellEl=sheet&&sheet.querySelector('.chord[data-pc="'+pc+'"][data-q="'+wantQ+'"]');
     if(!cellEl)return;
     cellEl.classList.add('spot');
@@ -363,8 +417,17 @@
     setTimeout(function(){ cellEl.scrollIntoView({behavior:'auto',block:'center'}); },900);
   })();
 
+  // ---- what's written on the dots: nothing, 1 3 5, or note names ----
+  document.querySelectorAll('.degs button[data-lab]').forEach(function(b){
+    b.addEventListener('click', function(){
+      chart.setAttribute('data-lab', b.dataset.lab);
+      document.querySelectorAll('.degs button[data-lab]').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+    });
+  });
+
   // ---- spotlight (root / third / fifth) ----
-  var degBtns=document.querySelectorAll('.degs button');
+  var degBtns=document.querySelectorAll('.degs button[data-deg]');
   degBtns.forEach(function(b){
     b.addEventListener('click', function(){
       var on=b.classList.contains('on');
