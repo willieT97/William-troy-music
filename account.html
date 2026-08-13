@@ -65,6 +65,15 @@
   .statchip b{ font-family:var(--disp); font-size:.95rem; }
   .statchip .dev{ color:var(--muted); font-size:.68rem; }
   .accnote{ color:var(--muted); font-size:.72rem; font-weight:700; margin-top:9px; }
+  #teacherlink .lk{ display:flex; align-items:center; gap:10px; border:2px solid var(--ink);
+    background:#fff; padding:9px 12px; margin-bottom:8px; }
+  #teacherlink .lk b{ flex:1; }
+  #teacherlink .codebox{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+  #teacherlink input{ font-family:'Space Mono',monospace; letter-spacing:.18em; text-transform:uppercase;
+    border:2px solid var(--ink); padding:8px 10px; width:11ch; font-size:1rem; }
+  #teacherlink .shares{ margin:10px 0 0; padding-left:18px; font-size:.9rem; }
+  #teacherlink .shares li{ margin:2px 0; }
+  #teacherlink .no{ opacity:.7; }
 </style>
 </head>
 <body>
@@ -101,6 +110,11 @@
     </div>
 
     <div class="card">
+      <h2>Your teacher <span class="sub">— optional, and only if you want to</span></h2>
+      <div id="teacherlink"></div>
+    </div>
+
+    <div class="card">
       <h2>Profile</h2>
       <div class="emailrow" id="emailRow"></div>
       <div class="fld"><label for="uname">Username</label><input type="text" id="uname" maxlength="24" placeholder="set a username"></div>
@@ -132,6 +146,70 @@
                  {id:'course:oldman', label:'Old Man and the C'} ];
   function el(t,c,x){ var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; }
   function isLab(d){ return !!(d && d.sections); }
+
+  /* ---- linking to a teacher: the student's side, and entirely their choice ----
+     Nothing is shared by holding a code. It only takes effect when the student
+     types it in here, and one click ends it again. */
+  function renderTeacherLink(){
+    var host=document.getElementById('teacherlink'); if(!host) return;
+    var A=window.MAAuth;
+    if(!(A&&A.user&&A.user())){ host.innerHTML='<div class="empty">Sign in to link with your teacher.</div>'; return; }
+    host.innerHTML='<div class="empty">Loading…</div>';
+    A.links.teachers().then(function(rows){
+      host.innerHTML='';
+      (rows||[]).forEach(function(r){
+        var d=el('div','lk');
+        d.appendChild(el('b',null,'Linked with '+r.teacher));
+        var when=el('span','sub', r.since?('since '+new Date(r.since).toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'})):'');
+        d.appendChild(when);
+        var x=el('button','btn out','Unlink'); x.type='button';
+        x.addEventListener('click',function(){
+          if(!confirm('Unlink from '+r.teacher+'? They stop seeing your course progress straight away.')) return;
+          x.disabled=true;
+          A.links.end(r.link_id).then(renderTeacherLink).catch(function(){ x.disabled=false; });
+        });
+        d.appendChild(x); host.appendChild(d);
+      });
+
+      var box=el('div','codebox');
+      var inp=document.createElement('input'); inp.id='tlCode'; inp.maxLength=8; inp.placeholder='CODE';
+      inp.setAttribute('aria-label','Invite code from your teacher');
+      var go=el('button','btn go','Link'); go.type='button';
+      box.appendChild(inp); box.appendChild(go); host.appendChild(box);
+      var msg=el('div','msg'); host.appendChild(msg);
+
+      var p=el('p','accnote', rows&&rows.length
+        ? 'Got a code from another teacher? Enter it above.'
+        : 'If your teacher gives you a code, enter it here. Nothing is shared until you do.');
+      host.appendChild(p);
+      var ul=document.createElement('ul'); ul.className='shares';
+      [['Yes','which Dojo lessons and belts you\u2019ve finished'],
+       ['Yes','your arcade high scores \u2014 those are on the public leaderboard anyway'],
+       ['No','your songs, jam tracks and licks \u2014 they stay private'],
+       ['No','your email address']].forEach(function(r){
+        var li=document.createElement('li'); if(r[0]==='No') li.className='no';
+        li.appendChild(el('b',null,r[0]+': ')); li.appendChild(document.createTextNode(r[1])); ul.appendChild(li);
+      });
+      host.appendChild(ul);
+
+      go.addEventListener('click',function(){
+        var code=(inp.value||'').trim().toUpperCase();
+        if(code.length<6){ msg.className='msg err'; msg.textContent='Check the code and try again.'; return; }
+        go.disabled=true; msg.className='msg'; msg.textContent='Linking\u2026';
+        A.links.claim(code).then(function(r){
+          go.disabled=false;
+          if(!r||!r.ok){ msg.className='msg err'; msg.textContent=(r&&r.error)||'That code didn\u2019t work.'; return; }
+          msg.className='msg ok'; msg.textContent='Linked with '+r.teacher+'.';
+          setTimeout(renderTeacherLink,900);
+        }).catch(function(e){ go.disabled=false; msg.className='msg err';
+          msg.textContent=/function|schema|does not exist/i.test(e&&e.message||'')
+            ? 'Teacher links aren\u2019t set up on the site yet.' : (e&&e.message)||'That didn\u2019t work.'; });
+      });
+      inp.addEventListener('keydown',function(e){ if(e.key==='Enter') go.click(); });
+    }).catch(function(){
+      host.innerHTML='<div class="empty">Couldn\u2019t load your teacher links just now.</div>';
+    });
+  }
 
   // ---- accomplishments: belts + trophies derived from Dojo progress; counts from creations ----
   var DOJO=[
@@ -226,7 +304,7 @@
     document.getElementById('gate').hidden=true; document.getElementById('hub').hidden=false;
     var er=document.getElementById('emailRow'); er.innerHTML=''; er.appendChild(document.createTextNode('Signed in as ')); var b=el('b',null,user.email); er.appendChild(b);
     document.getElementById('uname').value = (profile && profile.username) || '';
-    renderPlan(); renderAccomp(); renderCreations(); renderPublished(user, profile);
+    renderPlan(); renderAccomp(); renderTeacherLink(); renderCreations(); renderPublished(user, profile);
   }
 
   function renderPlan(){

@@ -106,6 +106,43 @@
     remove: function (id) { return ensureSb().then(needUser).then(function () {
       return sb.from('creations').delete().eq('id', id).eq('user_id', user.id).then(function (r) { if (r.error) throw r.error; return true; }); }); }
   };
+  /* ---- linking a rollbook student to their player account (entirely optional) ----
+     The teacher can only ever mint an invite code. Nothing is shared until the
+     student signs in and enters it themselves, and either side can end it.
+     A linked teacher can read that student's course progress and nothing else —
+     their songs, charts and licks stay private (enforced by RLS, not by us). */
+  window.MAAuth.links = {
+    // teacher: make (or replace) the invite code for one person in their rollbook
+    invite: function (personId) { return ensureSb().then(needUser).then(function () {
+      return sb.rpc('create_student_link', { p_person_id: String(personId) })
+        .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
+    // teacher: every link and pending invite they hold
+    list: function () { return ensureSb().then(needUser).then(function () {
+      return sb.from('student_links').select('id,person_id,code,student_id,claimed_at,expires_at')
+        .eq('teacher_id', user.id)
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
+    // student: redeem a code
+    claim: function (code) { return ensureSb().then(needUser).then(function () {
+      return sb.rpc('claim_student_link', { p_code: String(code || '') })
+        .then(function (r) { if (r.error) throw r.error; return r.data || { ok: false }; }); }); },
+    // student: who they're linked to
+    teachers: function () { return ensureSb().then(needUser).then(function () {
+      return sb.rpc('my_teachers').then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
+    // either side, any time
+    end: function (id) { return ensureSb().then(needUser).then(function () {
+      return sb.from('student_links').delete().eq('id', id)
+        .then(function (r) { if (r.error) throw r.error; return true; }); }); },
+    // teacher: a linked student's course progress (RLS returns nothing unless linked)
+    progressOf: function (studentId) { return ensureSb().then(needUser).then(function () {
+      return sb.from('creations').select('title,data,updated_at')
+        .eq('user_id', studentId).eq('kind', 'progress')
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
+    // the username a student's arcade scores post under
+    usernameOf: function (studentId) { return ensureSb().then(function () {
+      return sb.from('profiles').select('username').eq('id', studentId).maybeSingle()
+        .then(function (r) { return (r && r.data && r.data.username) || ''; }); }); }
+  };
+
   // ---- keyed progress (one creations row per course, kind 'progress', title = course id) ----
   window.MAAuth.progress = (function () {
     var ids = {};   // course id -> creations row id (remembered for the session so pushes update, not duplicate)

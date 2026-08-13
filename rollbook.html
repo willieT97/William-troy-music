@@ -156,6 +156,17 @@ body.panelopen .maa-ctl{display:none}
 .suggest .lk{font-family:var(--mono);font-size:.62rem;opacity:.65;display:block}
 .reschip a,a.reschip{text-decoration:none;color:inherit}
 .reschip.linked::after{content:' \2197';font-size:.7em;opacity:.6}
+.lnk{border:2px solid var(--ink);background:#fff;padding:10px 12px}
+.lnk .code{font-family:var(--mono);font-size:1.45rem;font-weight:700;letter-spacing:.22em;
+  display:block;margin:6px 0 2px;user-select:all}
+.lnk .who{font-weight:700}
+.lnk ul,.shares{margin:8px 0 0;padding-left:18px;font-size:.84rem}
+.lnk li,.shares li{margin:1px 0}
+.lnk li.no,.shares li.no{opacity:.65}
+.beltline{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:5px 0 2px}
+.beltpip{font-family:var(--mono);font-size:.62rem;border:2px solid var(--ink);padding:0 6px;background:#fff}
+.beltpip.off{opacity:.32}
+.beltpip i{display:inline-block;width:7px;height:7px;border:1px solid var(--ink);margin-right:4px;vertical-align:middle}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
 .stat{border:2px solid var(--ink);background:#fff;padding:8px 9px;min-width:0}
 .stat b{display:block;font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1.05}
@@ -944,6 +955,92 @@ function queueLessonEmail(p,l){
   pendingSend={timer,tick,lessonId:l.id};
 }
 
+/* ---------- their Music Arcade account (optional, both ways) ----------
+   Plenty of students won't have an account or won't want to link one, so this
+   never nags: it's one line until you choose to invite, and the rollbook is
+   unchanged without it. The teacher can only mint a code — the student has to
+   enter it themselves before anything is shared. */
+const DOJO=[
+  {id:'learning-to-walk',name:'Learning to Walk',belts:[['White','1.2'],['Yellow','2.5'],['Orange','3.3'],['Green','4.5'],['Blue','5.5'],['Black','6.5']]},
+  {id:'gradus',name:'The Counterpoint Dojo',belts:[['White','0.7'],['Grey','M.6'],['Yellow','1.6'],['Orange','2.3'],['Green','3.1']]},
+  {id:'learning-to-fly',name:'Learning to Fly',belts:[['White','1.6'],['Yellow','2.6'],['Green','3.9'],['Blue','4.9'],['Black','5.13']]}
+];
+const BELT_COL={White:'#FFFDF7',Grey:'#9AA0A6',Yellow:'#FFD34D',Orange:'#F5893B',
+  Green:'#1F9D55',Blue:'#2438C8',Brown:'#7A4A1E',Black:'#17140E'};
+let linkRows=null, linkBusy=false, linkErr='', peek={};   /* peek: personId -> their progress */
+
+function loadLinks(){
+  if(!(window.MAAuth&&MAAuth.links))return Promise.resolve([]);
+  return MAAuth.links.list().then(rows=>{linkRows=rows||[];return linkRows;})
+    .catch(()=>{linkRows=[];return linkRows;});
+}
+const linkFor=id=>(linkRows||[]).find(l=>l.person_id===id)||null;
+
+function loadPeek(p,l){
+  if(!l||!l.student_id||peek[p.id])return;
+  peek[p.id]={loading:true};
+  Promise.all([MAAuth.links.progressOf(l.student_id),MAAuth.links.usernameOf(l.student_id)])
+    .then(([rows,uname])=>{peek[p.id]={rows:rows||[],uname:uname||''};})
+    .catch(()=>{peek[p.id]={error:true};})
+    .then(()=>{if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();});
+}
+
+function linkBits(p){
+  const l=linkFor(p.id);
+  const head='<div class="sectitle">Music Arcade account<span class="mono">optional</span></div>';
+  if(linkRows===null)return '<div class="section">'+head+'<p class="muted">Checking…</p></div>';
+
+  /* linked: show what they have actually been doing */
+  if(l&&l.student_id){
+    loadPeek(p,l);
+    const d=peek[p.id]||{};
+    let body='';
+    if(d.loading||!Object.keys(d).length)body='<p class="muted">Loading their progress…</p>';
+    else if(d.error)body='<p class="muted">Couldn’t read their progress just now.</p>';
+    else{
+      const by={}; (d.rows||[]).forEach(r=>{by[r.title]=r;});
+      const last=(d.rows||[]).map(r=>r.updated_at).sort().pop();
+      const started=DOJO.filter(c=>by[c.id]);
+      body=(d.uname?'<div class="who">'+esc(d.uname)+'</div>':'')+
+        (started.length?started.map(c=>{
+          const done=((by[c.id].data||{}).done)||{};
+          return '<div class="beltline"><span class="mono" style="font-size:.66rem">'+esc(c.name)+'</span>'+
+            c.belts.map(([b,lv])=>'<span class="beltpip'+(done[lv]?'':' off')+'"><i style="background:'+
+              BELT_COL[b]+'"></i>'+b+'</span>').join('')+'</div>';
+        }).join(''):'<p class="muted" style="margin:6px 0 0">No Dojo course started yet.</p>')+
+        (last?'<div class="sumfoot" style="margin-top:8px">Last moved forward '+esc(shortDate(last.slice(0,10)))+'</div>':'');
+    }
+    return '<div class="section">'+head+'<div class="lnk">'+body+
+      '<div class="inline" style="margin-top:10px"><button class="btn small" data-unlink="'+l.id+'">Unlink</button></div>'+
+      '</div></div>';
+  }
+
+  /* an invite is out, waiting to be used */
+  if(l&&l.code){
+    const exp=new Date(l.expires_at);
+    return '<div class="section">'+head+'<div class="lnk">'+
+      '<p class="muted" style="margin:0">Give '+esc(p.name)+' this code. They enter it on their own account page — '+
+      'nothing is shared until they do.</p>'+
+      '<code class="code">'+esc(l.code)+'</code>'+
+      '<div class="sumfoot">Expires '+esc(shortDate(iso(exp)))+'</div>'+
+      '<div class="inline" style="margin-top:10px"><button class="btn small" data-copycode="'+esc(l.code)+'">Copy</button>'+
+      '<button class="btn small" data-unlink="'+l.id+'">Cancel invite</button></div>'+
+      '</div></div>';
+  }
+
+  /* not linked — the quiet default */
+  return '<div class="section">'+head+
+    (linkErr?'<p class="sumerr">'+esc(linkErr)+'</p>':'')+
+    '<p class="muted" style="margin:0 0 8px">If '+esc(p.name)+' has a Music Arcade account and wants to, they can link it '+
+    'and you’ll see how the courses are going between lessons. Plenty won’t — nothing here needs it.</p>'+
+    '<button class="btn small" id="lnkInvite"'+(linkBusy?' disabled':'')+'>'+(linkBusy?'…':'Create an invite code')+'</button>'+
+    '<ul class="shares" style="margin:10px 0 0;padding-left:18px;font-size:.84rem">'+
+      '<li>You’d see: their Dojo belts and arcade scores</li>'+
+      '<li class="no">You wouldn’t see: their songs, jam tracks, licks or email</li>'+
+      '<li class="no">Either of you can unlink at any time</li>'+
+    '</ul></div>';
+}
+
 function contactBits(p){
   const cs=p.contacts||[];
   return '<div class="section"><div class="sectitle">Contacts<span class="mono">'+cs.length+'</span></div>'+
@@ -1145,11 +1242,36 @@ function renderDrawer(){
       '<span class="rt">'+chip(r.title,p)+'</span>'+(r.n>1?'<span class="rct">\u00d7'+r.n+'</span>':'')+'</div>').join('')+
     '</div>':'')+
   contactBits(p)+
+  linkBits(p)+
   updateBits(p)+
   '</div>';
 
   $('#dClose').onclick=closeDrawer;
   d.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{ setAtt(p.id,dateISO,b.dataset.att); renderDrawer(); });
+  // their Music Arcade account
+  const li=$('#lnkInvite');
+  if(li)li.onclick=()=>{
+    linkBusy=true;linkErr='';renderDrawer();
+    MAAuth.links.invite(p.id)
+      .then(()=>loadLinks()).then(()=>{linkBusy=false;renderDrawer();})
+      .catch(e=>{linkBusy=false;
+        linkErr=/function|schema|does not exist/i.test(e&&e.message||'')
+          ? 'Account linking isn’t set up on the database yet — run supabase-student-links.sql.'
+          : (e&&e.message)||'Couldn’t make a code just now.';
+        renderDrawer();});
+  };
+  d.querySelectorAll('[data-copycode]').forEach(b=>b.onclick=()=>{
+    const t=b.dataset.copycode;
+    if(navigator.clipboard&&navigator.clipboard.writeText)
+      navigator.clipboard.writeText(t).then(()=>{b.textContent='Copied';setTimeout(()=>{b.textContent='Copy';},1400);},()=>{});
+  });
+  d.querySelectorAll('[data-unlink]').forEach(b=>b.onclick=()=>{
+    if(!confirm('End this link? You stop seeing their progress, and they keep everything.'))return;
+    b.disabled=true;
+    MAAuth.links.end(b.dataset.unlink).then(()=>{delete peek[p.id];return loadLinks();})
+      .then(renderDrawer).catch(()=>{b.disabled=false;});
+  });
+
   // comments
   const ca=$('#cmtAdd');
   if(ca)ca.onclick=()=>{const v=$('#cmtNew').value.trim();if(!v)return;addComment(p,v);renderDrawer();};
@@ -1445,11 +1567,13 @@ function onAuth(){
     state=saved?Object.assign(EMPTY(),saved):EMPTY();
     migrateExceptions();
     render();
-    loadTunes();            // show the device copy straight away, then reconcile
+    loadTunes();
+    loadLinks().then(()=>{if(drawerCtx)renderDrawer();});            // show the device copy straight away, then reconcile
     pullCloud();
   } else {
     clearTimeout(saveTimer); dirty=false; cloudRowId=null;
     state=EMPTY();       // nothing stays on screen once you're out
+    linkRows=null;peek={};
     render();
   }
 }
