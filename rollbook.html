@@ -539,7 +539,7 @@ function commentBits(p){
    Nothing is ever sent from here. The message is written for you and handed to your own
    mail app (or clipboard, or WhatsApp) so you read it and press send yourself. */
 const ROLE_LABEL={parent:'parent',teacher:'teacher',student:'student',other:''};
-let msgRange='4w', msgNotes=false, msgTo={}, msgSaid='';
+let msgRange='4w', msgNotes=false, msgTo={}, msgSaid='', msgSubj='';
 
 function msgLessons(p){
   const upto=drawerCtx?drawerCtx.dateISO:iso(new Date());
@@ -547,6 +547,13 @@ function msgLessons(p){
   if(msgRange==='last')return hist.slice(-1);
   if(msgRange==='4w'){const cut=iso(addDays(new Date(upto+'T12:00:00'),-28));return hist.filter(l=>l.date>=cut);}
   return hist;
+}
+/* Set up → Your name, else whatever the account is called */
+function signOff(){
+  const set=((state.settings&&state.settings.teacherName)||'').trim();
+  if(set)return set;
+  const pr=(window.MAAuth&&MAAuth.profile&&MAAuth.profile())||null;
+  return (pr&&pr.username)||'';
 }
 function andList(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 /* "Ms Byrne" stays "Ms Byrne"; "Máire Ní Bhriain" becomes "Máire" */
@@ -597,7 +604,7 @@ function buildMessage(p){
   }
   L.push('Any questions, just reply to this.');
   L.push('');
-  const me=(state.settings&&state.settings.teacherName||'').trim();
+  const me=signOff();
   if(me)L.push(me);
   return L.join('\n');
 }
@@ -624,7 +631,7 @@ function lessonEmail(p,l){
   if(state.settings&&state.settings.emailNotes&&l.notes){L.push(l.notes);L.push('');}
   L.push('Any questions, just reply to this.');
   L.push('');
-  const me=((state.settings&&state.settings.teacherName)||'').trim();
+  const me=signOff();
   if(me)L.push(me);
   return {subject:p.name+' — lesson update, '+shortDate(l.date), text:L.join('\n')};
 }
@@ -711,19 +718,24 @@ function updateBits(p){
   const emails=picked.map(c=>c.email).filter(Boolean);
   const phone=(picked.find(c=>c.phone)||{}).phone||'';
   const body=msgSaid||buildMessage(p);
+  const subj=msgSubj||msgSubject(p);
   const seg=[['last','This lesson'],['4w','Last 4 weeks'],['all','Everything']];
   return '<div class="section"><div class="sectitle">Send an update<span class="mono">rep &amp; resources</span></div>'+
     '<div class="seg">'+seg.map(([k,t])=>'<button data-range="'+k+'" class="'+(msgRange===k?'on':'')+'">'+t+'</button>').join('')+'</div>'+
     '<label class="tickrow"><input type="checkbox" id="msgNotes"'+(msgNotes?' checked':'')+'> include my lesson notes</label>'+
+    '<label class="f" for="msgSubj">SUBJECT</label>'+
+    '<input class="field" id="msgSubj" value="'+esc(subj)+'">'+
+    '<label class="f" for="msgBody">MESSAGE</label>'+
     '<textarea class="field" id="msgBody">'+esc(body)+'</textarea>'+
     '<div class="msgbar">'+
-      '<button class="btn small primary" id="msgMail"'+(emails.length?'':' disabled')+'>Open in email…</button>'+
+      '<button class="btn small primary" id="msgSend"'+(emails.length?'':' disabled')+'>Send now</button>'+
       '<button class="btn small" id="msgCopy">Copy</button>'+
       (phone?'<button class="btn small" id="msgWa">WhatsApp</button>':'')+
       '<button class="btn small" id="msgReset">Rewrite it</button>'+
     '</div>'+
-    '<div class="msgnote">'+
-      (emails.length?'Opens your mail app addressed to '+esc(emails.join(', '))+'. Nothing sends until you press send there.'
+    '<div class="msgnote" id="msgStatus">'+
+      (emails.length?'Goes straight to '+esc(emails.join(', '))+' from your own address. '+
+        '<a href="#" id="msgMail">or open it in your mail app</a>'
                     :'Tick a contact above who has an email address, or copy the message and paste it wherever you like.')+
     '</div></div>';
 }
@@ -790,7 +802,7 @@ function syncPanelChrome(){
 }
 function openDrawer(personId,dateISO,slotId){
   drawerCtx={personId,dateISO,slotId};editingLessonId=null;
-  msgSaid='';msgTo={};
+  msgSaid='';msgSubj='';msgTo={};
   ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=c.notify!==false;});
   renderDrawer();
   $('#overlay').classList.add('open');$('#drawer').classList.add('open');syncPanelChrome();
@@ -912,14 +924,43 @@ function renderDrawer(){
     if(msgSaid)msgSaid=$('#msgBody').value;
     renderDrawer();});
   // the update composer
-  d.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{msgRange=b.dataset.range;msgSaid='';renderDrawer();});
-  const mn=$('#msgNotes');if(mn)mn.onchange=()=>{msgNotes=mn.checked;msgSaid='';renderDrawer();};
+  d.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{msgRange=b.dataset.range;msgSaid='';msgSubj='';renderDrawer();});
+  const mn=$('#msgNotes');if(mn)mn.onchange=()=>{msgNotes=mn.checked;msgSaid='';msgSubj='';renderDrawer();};
   const mb=$('#msgBody');if(mb)mb.oninput=()=>{msgSaid=mb.value;};
-  const mr=$('#msgReset');if(mr)mr.onclick=()=>{msgSaid='';renderDrawer();};
+  const mr=$('#msgReset');if(mr)mr.onclick=()=>{msgSaid='';msgSubj='';renderDrawer();};
+  const ms=$('#msgSubj');if(ms)ms.oninput=()=>{msgSubj=ms.value;};
   const mm=$('#msgMail');
-  if(mm)mm.onclick=()=>{
+  if(mm)mm.onclick=e=>{
+    e.preventDefault();
     const to=(p.contacts||[]).filter(c=>msgTo[c.id]).map(c=>c.email).filter(Boolean).join(',');
-    location.href='mailto:'+to+'?subject='+encodeURIComponent(msgSubject(p))+'&body='+encodeURIComponent($('#msgBody').value);
+    location.href='mailto:'+to+'?subject='+encodeURIComponent($('#msgSubj').value)+'&body='+encodeURIComponent($('#msgBody').value);
+  };
+  const msend=$('#msgSend');
+  if(msend)msend.onclick=async()=>{
+    const to=(p.contacts||[]).filter(c=>msgTo[c.id]).map(c=>c.email).filter(Boolean);
+    if(!to.length)return;
+    const st=$('#msgStatus'), text=$('#msgBody').value, subject=$('#msgSubj').value.trim()||msgSubject(p);
+    msend.disabled=true;msend.textContent='Sending\u2026';
+    st.innerHTML='';
+    try{
+      const sb=await MAAuth.client();
+      const{data,error}=await sb.functions.invoke('lesson-update-email',{body:{to,subject,text}});
+      if(error){let m='';try{const b=await error.context.json();m=b&&b.error;}catch(x){}throw new Error(m||'couldn\u2019t reach the mail service');}
+      if(!data||data.error)throw new Error((data&&data.error)||'it didn\u2019t go');
+      msend.textContent='\u2709 Sent';
+      st.innerHTML='<b>Sent to '+esc(to.join(', '))+'.</b> Replies come to you.';
+      /* stamp the lesson this covers, so Story so far shows it went */
+      if(msgRange==='last'){
+        const l=msgLessons(p)[0];
+        if(l){l.emailedAt=new Date().toISOString();l.emailedTo=to;markDirty();}
+      }
+      /* let the confirmation sit for a beat, then redraw so Story so far shows
+         the ✉ — the typed subject/body survive in msgSubj/msgSaid */
+      setTimeout(()=>{if(drawerCtx&&drawerCtx.personId===p.id&&$('#msgSend')===msend)renderDrawer();},2500);
+    }catch(e){
+      msend.disabled=false;msend.textContent='Send now';
+      st.innerHTML='<b style="color:#B3261E">Not sent \u2014 '+esc(e.message||'something went wrong')+'</b>';
+    }
   };
   const mc=$('#msgCopy');
   if(mc)mc.onclick=()=>{
