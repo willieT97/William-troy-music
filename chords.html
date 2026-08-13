@@ -140,18 +140,18 @@
   <header class="top">
     <span class="kicker">Reference sheet</span>
     <h1>Chords 🎹🎸🪕</h1>
-    <p class="lede">Every major &amp; minor chord for piano, guitar and banjo — starting on F and C, then travelling around the circle of fifths.</p>
+    <p class="lede">Every major &amp; minor chord for piano, guitar and Irish tenor banjo — starting on F and C, then travelling around the circle of fifths.</p>
   </header>
 
   <div class="insttabs noprint">
     <div class="seg" role="group" aria-label="Instrument">
       <button data-inst="piano" class="on">🎹 Piano</button>
       <button data-inst="guitar">🎸 Guitar</button>
-      <button data-inst="banjo">🪕 Banjo</button>
+      <button data-inst="banjo">🪕 Tenor banjo</button>
     </div>
   </div>
 
-  <p id="banjoNote">Standard G tuning (gDGBD) — the four melody strings. The 5th string is the open g drone.</p>
+  <p id="banjoNote">Irish tenor banjo — GDAE, tuned in fifths like a fiddle or mandolin, an octave below the fiddle. Every shape sits in the first four frets.</p>
 
   <div class="toolbar noprint">
     <span class="tlabel">Labels</span>
@@ -221,16 +221,17 @@
     8:{f:[4,6,6,4,4,4],b:4}, 3:{f:[-1,6,8,8,7,6],b:6}, 10:{f:[-1,1,3,3,2,1],b:1}
   };
 
-  // 5-string banjo, standard G tuning gDGBD -- the four melody strings D3 G3 B3 D4.
-  // Open shapes where they exist; otherwise the movable C / Em / Am shapes, picked
-  // for whichever sits lowest on the neck. Every shape checked against its triad.
-  var B_OPEN_PC=[2,7,11,2], B_OPEN_MIDI=[50,55,59,62];
-  var BMAJ={0:{f:[2,0,1,2],b:1},1:{f:[3,1,2,3],b:1},2:{f:[0,2,3,4],b:1},3:{f:[5,3,4,5],b:3},
-    4:{f:[2,1,0,2],b:1},5:{f:[3,2,1,3],b:1},6:{f:[8,6,7,8],b:6},7:{f:[0,0,0,0],b:1},
-    8:{f:[1,1,1,1],b:1},9:{f:[2,2,2,2],b:1},10:{f:[3,3,3,3],b:1},11:{f:[4,4,4,4],b:1}};
-  var BMIN={0:{f:[5,5,4,5],b:4},1:{f:[6,6,5,6],b:5},2:{f:[0,2,3,3],b:1},3:{f:[8,8,7,8],b:7},
-    4:{f:[2,0,0,2],b:1},5:{f:[3,1,1,3],b:1},6:{f:[4,2,2,4],b:1},7:{f:[5,3,3,5],b:3},
-    8:{f:[6,4,4,6],b:4},9:{f:[2,2,1,2],b:1},10:{f:[3,3,2,3],b:1},11:{f:[4,4,3,4],b:1}};
+  // Irish tenor banjo: 4 strings, GDAE in fifths like a fiddle or mandolin, an
+  // octave below the fiddle. Fifths tuning means guitar-style barres don't make
+  // triads, so these are the standard first-position shapes -- every one solved
+  // against its triad and kept inside the first four frets.
+  var B_OPEN_PC=[7,2,9,4], B_OPEN_MIDI=[43,50,57,64];   // G2 D3 A3 E4
+  var BMAJ={0:{f:[0,2,3,0],b:1},1:{f:[1,3,4,1],b:1},2:{f:[2,0,0,2],b:1},3:{f:[0,1,1,3],b:1},
+    4:{f:[1,2,2,0],b:1},5:{f:[2,3,3,1],b:1},6:{f:[3,4,4,2],b:1},7:{f:[0,0,2,3],b:1},
+    8:{f:[1,1,3,4],b:1},9:{f:[2,2,4,0],b:1},10:{f:[3,0,1,1],b:1},11:{f:[4,1,2,2],b:1}};
+  var BMIN={0:{f:[0,1,3,3],b:1},1:{f:[1,2,4,0],b:1},2:{f:[2,0,0,1],b:1},3:{f:[3,1,1,2],b:1},
+    4:{f:[0,2,2,0],b:1},5:{f:[1,3,3,1],b:1},6:{f:[2,4,4,2],b:1},7:{f:[0,0,1,3],b:1},
+    8:{f:[1,1,2,4],b:1},9:{f:[2,2,3,0],b:1},10:{f:[3,3,4,1],b:1},11:{f:[4,0,2,2],b:1}};
 
   // ---- audio ----
   var actx=null;
