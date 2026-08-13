@@ -145,6 +145,15 @@ body.panelopen .maa-ctl{display:none}
 .glance .gdate{font-family:var(--mono);font-size:.68rem;font-weight:700;margin-right:8px}
 .glance .gnote{font-size:.88rem;margin-top:3px}
 /* standing comments (the long view, not this week) */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.stat{border:2px solid var(--ink);background:#fff;padding:8px 9px;min-width:0}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1.05}
+.stat span{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.03em;
+  color:rgba(23,20,14,.65);margin-top:2px;text-transform:uppercase}
+.stat i{display:block;font-style:normal;font-size:.68rem;color:rgba(23,20,14,.7);margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat.good b{color:var(--green)} .stat.warn b{color:var(--amber)} .stat.bad b{color:var(--pink)}
+.stat.empty b{color:rgba(23,20,14,.3)}
 .cmt{border:2px solid var(--ink);border-left:8px solid var(--pink);background:#fff;
   padding:8px 30px 8px 11px;margin-bottom:7px;position:relative;font-size:.9rem}
 .cmt .cdate{display:block;font-family:var(--mono);font-size:.63rem;color:rgba(23,20,14,.6);margin-bottom:2px}
@@ -316,6 +325,10 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
         </div>
         <div class="formrow">
           <input class="field" id="pNotes" placeholder="Notes (context, goals, anything)">
+        </div>
+        <div class="formrow" id="pAgeRow">
+          <label class="f" style="flex-basis:100%;margin:0 0 -4px">AGE <span style="text-transform:none">(optional — how you pitch the lesson)</span></label>
+          <input class="field" id="pAge" type="number" min="2" max="120" placeholder="e.g. 9">
         </div>
         <div class="formrow" id="pPerfRow" style="display:none">
           <label class="f" style="flex-basis:100%;margin:0 0 -4px">PERFORMANCE DATE</label>
@@ -523,6 +536,55 @@ function addComment(p,text){
   p.comments=p.comments||[];
   p.comments.unshift({id:uid(),text,at:iso(new Date())});
   markDirty();
+}
+
+/* ---------- how it's going, at a glance ----------
+   Attendance rate counts lessons that were actually on: came / (came + no-show +
+   they cancelled). Lessons I cancelled aren't the student's record, so they're
+   left out of the denominator rather than counting against anyone. */
+/* an age written down 18 months ago probably isn't their age now */
+function ageStale(p){
+  if(!p.age||!p.ageAt)return false;
+  return (new Date()-new Date(p.ageAt+'T12:00:00'))>(400*864e5);
+}
+function metricsFor(p){
+  const t=attTally(p.id);
+  const marked=t.present+t.absent+t.offthem;
+  const logs=state.lessons.filter(l=>l.personId===p.id).map(l=>l.date).sort();
+  const dates=[...logs,...state.attendance.filter(a=>a.personId===p.id).map(a=>a.date)].sort();
+  return {
+    t, marked,
+    rate: marked?Math.round(t.present/marked*100):null,
+    logged: logs.length,
+    first: dates[0]||null,
+    last: logs.length?logs[logs.length-1]:null
+  };
+}
+function spanLabel(fromISO){
+  const wks=Math.floor((new Date()-new Date(fromISO+'T12:00:00'))/(7*864e5));
+  if(wks<1)return 'new';
+  if(wks<9)return wks+' wk'+(wks===1?'':'s');
+  const mo=Math.round(wks/4.345);
+  return mo<12?mo+' mo':(Math.floor(mo/12)+'y '+(mo%12?(mo%12)+'mo':'')).trim();
+}
+function statsBits(p){
+  const m=metricsFor(p);
+  if(!m.marked&&!m.logged)return '';       // nothing to report yet
+  const tone=m.rate==null?'empty':(m.marked<3?'':(m.rate>=90?'good':m.rate>=75?'warn':'bad'));
+  const att=m.rate==null
+    ? '<div class="stat empty"><b>—</b><span>attendance</span><i>not marked yet</i></div>'
+    : (()=>{const detail=m.t.present+' came'+(m.t.absent?' · '+m.t.absent+' no-show':'')+
+        (m.t.offthem?' · '+m.t.offthem+' they cancelled':'');
+      return '<div class="stat '+tone+'" title="'+esc(detail)+'"><b>'+m.rate+'%</b>'+
+        '<span>attendance</span><i>'+esc(detail)+'</i></div>';})();
+  return '<div class="stats">'+att+
+    '<div class="stat"><b>'+m.logged+'</b><span>lessons logged</span>'+
+      (m.last?'<i>last '+esc(shortDate(m.last).replace(/ \d{4}$/,''))+'</i>':'<i>none yet</i>')+'</div>'+
+    '<div class="stat"><b>'+(m.first?spanLabel(m.first):'—')+'</b><span>with you</span>'+
+      (m.first?'<i>since '+esc(shortDate(m.first).replace(/ \d{4}$/,''))+'</i>':'')+'</div>'+
+    '</div>'+
+    (m.t.offme?'<p class="hint" style="margin:-10px 0 16px">'+m.t.offme+' lesson'+(m.t.offme===1?'':'s')+
+      ' you cancelled — not counted against their attendance.</p>':'');
 }
 
 function commentBits(p){
@@ -834,10 +896,7 @@ function renderDrawer(){
       const tone=k==='present'?' good':(k==='absent'?' bad':'');
       return '<button data-att="'+k+'" class="'+(on?'on'+tone:'')+'">'+ATT[k].label+'</button>';
     }).join('')+'</div>'+
-    (tal.present+tal.absent+tal.offthem+tal.offme
-      ? '<div class="atttally">'+tal.present+' came · '+tal.absent+' no-show · '+(tal.offthem+tal.offme)+' cancelled'+
-        (tal.offthem+tal.offme?' ('+tal.offthem+' them / '+tal.offme+' me)':'')+'</div>'
-      : '<div class="atttally">Tap a button to mark this lesson. Tap it again to clear.</div>')+
+    '<div class="atttally">Tap a button to mark this lesson. Tap it again to clear.</div>'+
     '</div>';
 
   let classBits='';
@@ -862,10 +921,13 @@ function renderDrawer(){
   '<div class="dhead"><h2>'+esc(p.name)+'</h2>'+
   '<span class="chip kind-'+p.kind+'">'+(p.kind==='class'?'CLASS':'STUDENT')+'</span>'+
   (p.instrument?'<span class="chip">'+esc(p.instrument)+'</span>':'')+
+  (p.age?'<span class="chip" title="'+(ageStale(p)?'Noted '+esc(shortDate(p.ageAt))+' — may be out of date':'')+'">Age '+
+    p.age+(ageStale(p)?' ?':'')+'</span>':'')+
   '<span class="chip">'+esc(niceDate(dateISO))+'</span>'+
   '<button class="closex" id="dClose" aria-label="Close">\u00d7</button></div>'+
   '<div class="dbody">'+
   (p.notes?'<p class="muted" style="margin-bottom:14px">'+esc(p.notes)+'</p>':'')+
+  statsBits(p)+
   commentBits(p)+
   glance+
   classBits+
@@ -1032,7 +1094,9 @@ function renderManage(){
     $('#pFormTitle').textContent='Edit '+p.name;
     $('#pName').value=p.name;$('#pKind').value=p.kind;$('#pInstr').value=p.instrument||'';
     $('#pNotes').value=p.notes||'';$('#pPerf').value=p.performanceDate||'';
+    $('#pAge').value=p.age||'';
     $('#pPerfRow').style.display=p.kind==='class'?'flex':'none';
+    $('#pAgeRow').style.display=p.kind==='class'?'none':'flex';
     $('#pSave').textContent='Save changes';$('#pCancel').style.display='';
   });
   pl.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{
@@ -1067,19 +1131,30 @@ function renderManage(){
 }
 function resetPForm(){
   editingPersonId=null;$('#pFormTitle').textContent='Add a student or class';
-  $('#pName').value='';$('#pInstr').value='';$('#pNotes').value='';$('#pPerf').value='';
-  $('#pKind').value='student';$('#pPerfRow').style.display='none';
+  $('#pName').value='';$('#pInstr').value='';$('#pNotes').value='';$('#pPerf').value='';$('#pAge').value='';
+  $('#pKind').value='student';$('#pPerfRow').style.display='none';$('#pAgeRow').style.display='flex';
   $('#pSave').textContent='Add';$('#pCancel').style.display='none';
 }
 function resetSForm(){
   editingSlotId=null;$('#sFormTitle').textContent='Add a weekly time';
   $('#sSave').textContent='Add time';$('#sCancel').style.display='none';
 }
-$('#pKind').addEventListener('change',e=>{$('#pPerfRow').style.display=e.target.value==='class'?'flex':'none';});
+$('#pKind').addEventListener('change',e=>{
+  const cls=e.target.value==='class';
+  $('#pPerfRow').style.display=cls?'flex':'none';
+  $('#pAgeRow').style.display=cls?'none':'flex';
+});
 $('#pSave').onclick=()=>{
   const name=$('#pName').value.trim();if(!name)return;
-  const data={name,kind:$('#pKind').value,instrument:$('#pInstr').value.trim(),
-    notes:$('#pNotes').value.trim(),performanceDate:$('#pPerf').value||''};
+  const kind=$('#pKind').value;
+  const ageRaw=parseInt($('#pAge').value,10);
+  const age=(kind!=='class'&&ageRaw>=2&&ageRaw<=120)?ageRaw:null;
+  const was=editingPersonId?person(editingPersonId):null;
+  const data={name,kind,instrument:$('#pInstr').value.trim(),
+    notes:$('#pNotes').value.trim(),performanceDate:$('#pPerf').value||'',
+    age,
+    /* keep the original stamp if the number didn't change, so it ages honestly */
+    ageAt:(age==null?null:((was&&was.age===age&&was.ageAt)?was.ageAt:iso(new Date())))};
   if(editingPersonId){Object.assign(person(editingPersonId),data);}
   else state.people.push({id:uid(),repertoire:[],colour:COLOURS[state.people.length%COLOURS.length],...data});
   markDirty();resetPForm();renderManage();
