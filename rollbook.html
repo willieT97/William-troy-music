@@ -121,6 +121,20 @@ main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
 .glance:first-of-type{border-top:none;margin-top:2px}
 .glance .gdate{font-family:var(--mono);font-size:.68rem;font-weight:700;margin-right:8px}
 .glance .gnote{font-size:.88rem;margin-top:3px}
+.sumcard{border:2px solid var(--ink);border-left:8px solid var(--green);background:#fff;padding:11px 13px}
+.sumhead{font-size:.95rem;font-weight:600;margin:0 0 10px}
+.sumlist{margin:0 0 10px}
+.sumlist b{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;
+  color:rgba(23,20,14,.65);margin-bottom:2px}
+.sumlist ul{margin:0;padding-left:17px}
+.sumlist li{font-size:.88rem;margin-top:2px}
+.sumatt{font-size:.85rem;font-style:italic;margin:0 0 10px}
+.sumfoot{font-family:var(--mono);font-size:.66rem;color:rgba(23,20,14,.6);
+  border-top:1px dashed rgba(23,20,14,.3);padding-top:6px}
+.sumfoot.stale{color:var(--amber);font-weight:700}
+.sumerr{font-size:.85rem;color:#B3261E;margin:0 0 8px}
+.sumbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.sumbar .tiny{font-family:var(--mono);font-size:.64rem;color:rgba(23,20,14,.6)}
 label.f{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.03em;margin:10px 0 3px}
 .field{width:100%;border:2px solid var(--ink);background:#fff;padding:8px 10px}
 textarea.field{resize:vertical;min-height:56px}
@@ -282,7 +296,7 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
 <script>
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const COLOURS=['c-blue','c-pink','c-amber','c-green'];
-let state={people:[],slots:[],lessons:[],exceptions:[],attendance:[],updatedAt:''};
+let state={people:[],slots:[],lessons:[],exceptions:[],attendance:[],summaries:[],updatedAt:''};
 let weekStart=mondayOf(new Date());
 let drawerCtx=null;           // {personId, dateISO, slotId}
 let editingLessonId=null;
@@ -351,7 +365,7 @@ async function pullCloud(){
       cloudRowId=row.id;
       const cloud=row.data||{},cloudAt=cloud.updatedAt||'',localAt=state.updatedAt||'';
       if(countOf(cloud)&&(!countOf(state)||cloudAt>=localAt)){
-        state={people:cloud.people||[],slots:cloud.slots||[],lessons:cloud.lessons||[],exceptions:cloud.exceptions||[],attendance:cloud.attendance||[],updatedAt:cloudAt};
+        state={people:cloud.people||[],slots:cloud.slots||[],lessons:cloud.lessons||[],exceptions:cloud.exceptions||[],attendance:cloud.attendance||[],summaries:cloud.summaries||[],updatedAt:cloudAt};
         migrateExceptions();saveLocal();setStatus('saved','synced');
       }
       else if(countOf(state)&&localAt>cloudAt) await pushCloud();  /* this device is ahead */
@@ -415,6 +429,94 @@ function migrateExceptions(){
   if(moved){state.updatedAt=new Date().toISOString();saveLocal();}
 }
 
+/* ---------- progress summary (Claude, via the rollbook-summary edge function) ----------
+   The lesson log is your own shorthand, so it's sent with the person's name taken out
+   and nothing else attached — no email, no timetable, no other student. The API key
+   lives on the server; the browser only ever sends your signed-in session. */
+let summaryBusy=null, summaryErr=null;
+
+function scrubNames(text,p){
+  if(!text)return '';
+  const who=p.kind==='class'?'the class':'the student';
+  const words=[String(p.name||''),...String(p.name||'').split(/\s+/)]
+    .filter(w=>w.length>=3).sort((a,b)=>b.length-a.length);
+  let out=String(text);
+  words.forEach(w=>{
+    const rx=new RegExp('\\b'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\u2019s|\'s)?\\b','gi');
+    out=out.replace(rx,(m,poss)=>poss?who+'\u2019s':who);
+  });
+  return out;
+}
+/* changes to the log (or attendance, or rep) invalidate a saved summary */
+function summarySig(p){
+  const hist=state.lessons.filter(l=>l.personId===p.id).sort((a,b)=>a.date.localeCompare(b.date));
+  const t=attTally(p.id);
+  const s=hist.map(l=>l.date+'|'+(l.rep||'')+'|'+(l.notes||'')).join('~')+
+    '~att:'+[t.present,t.absent,t.offthem,t.offme].join(',')+
+    '~rep:'+(p.repertoire||[]).map(r=>r.title+(r.done?'*':'')).join(',');
+  let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;
+  return hist.length+':'+(h>>>0).toString(36);
+}
+const summaryFor=id=>(state.summaries||[]).find(s=>s.personId===id);
+
+async function runSummary(p){
+  summaryBusy=p.id;summaryErr=null;renderDrawer();
+  try{
+    const sb=await MAAuth.client();
+    const hist=state.lessons.filter(l=>l.personId===p.id).sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+    const payload={
+      kind:p.kind,
+      instrument:p.instrument||'',
+      attendance:attTally(p.id),
+      repertoire:(p.repertoire||[]).map(r=>({title:scrubNames(r.title,p),done:!!r.done})),
+      lessons:hist.map(l=>({date:l.date,rep:scrubNames(l.rep||'',p),notes:scrubNames(l.notes||'',p)}))
+    };
+    if(p.performanceDate){
+      const wks=Math.round((new Date(p.performanceDate)-new Date())/(7*864e5));
+      if(wks>=0)payload.performanceWeeks=wks;
+    }
+    const{data,error}=await sb.functions.invoke('rollbook-summary',{body:payload});
+    if(error){
+      let m='';
+      try{const b=await error.context.json();m=b&&b.error;}catch(e){}
+      throw new Error(m||'Couldn\u2019t reach the summariser.');
+    }
+    if(!data||!data.summary)throw new Error((data&&data.error)||'No summary came back.');
+    state.summaries=(state.summaries||[]).filter(s=>s.personId!==p.id);
+    state.summaries.push({personId:p.id,sig:summarySig(p),at:data.at||new Date().toISOString(),data:data.summary});
+    markDirty();
+  }catch(e){ summaryErr=e.message||String(e); }
+  summaryBusy=null;renderDrawer();
+}
+
+function summaryBits(p){
+  const n=state.lessons.filter(l=>l.personId===p.id).length;
+  if(!n)return '';
+  const cur=summaryFor(p.id), busy=summaryBusy===p.id, stale=cur&&cur.sig!==summarySig(p);
+  const list=(title,items)=>(items&&items.length)
+    ? '<div class="sumlist"><b>'+title+'</b><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>' : '';
+  let inner;
+  if(cur){
+    const s=cur.data||{};
+    inner='<p class="sumhead">'+esc(s.headline||'')+'</p>'+
+      list('GOING WELL',s.strengths)+list('KEEP AN EYE ON',s.watch)+list('NEXT LESSON',s.next)+
+      (s.attendance_note?'<p class="sumatt">'+esc(s.attendance_note)+'</p>':'')+
+      '<div class="sumfoot'+(stale?' stale':'')+'">'+
+        (stale?'\u26a0 The log has changed since this was written.'
+              :'Read from '+n+' lesson'+(n===1?'':'s')+' \u00b7 '+shortDate(cur.at.slice(0,10)))+'</div>';
+  }else{
+    inner='<p class="muted" style="margin:0">Claude can read back through the log and tell you where '+
+      (p.kind==='class'?'the class is':'they are')+' at.</p>';
+  }
+  return '<div class="section"><div class="sectitle">Where '+(p.kind==='class'?'the class is':'they\u2019re')+' at'+
+    '<span class="mono">summary</span></div>'+
+    (summaryErr?'<p class="sumerr">'+esc(summaryErr)+'</p>':'')+
+    '<div class="sumcard">'+inner+'</div>'+
+    '<div class="sumbar"><button class="btn small'+(cur&&!stale?'':' primary')+'" id="sumRun"'+(busy?' disabled':'')+'>'+
+      (busy?'Reading\u2026':(cur?(stale?'Update it':'Write a fresh one'):'Summarise progress'))+'</button>'+
+      '<span class="tiny">notes go to Claude with the name removed</span></div></div>';
+}
+
 function render(){
   const g=$('#grid');g.innerHTML='';
   const wkISO=iso(weekStart), todayISO=iso(new Date());
@@ -472,7 +574,7 @@ function el(html){const t=document.createElement('template');t.innerHTML=html.tr
 
 /* ---------- drawer ---------- */
 function openDrawer(personId,dateISO,slotId){
-  drawerCtx={personId,dateISO,slotId};editingLessonId=null;
+  drawerCtx={personId,dateISO,slotId};editingLessonId=null;summaryErr=null;
   renderDrawer();
   $('#overlay').classList.add('open');$('#drawer').classList.add('open');
 }
@@ -536,6 +638,7 @@ function renderDrawer(){
   '<div class="dbody">'+
   (p.notes?'<p class="muted" style="margin-bottom:14px">'+esc(p.notes)+'</p>':'')+
   glance+
+  summaryBits(p)+
   classBits+
   attBits+
   '<div class="section"><div class="sectitle">'+(editing?'Edit log \u2014 '+shortDate(editing.date):'Log this lesson')+'</div>'+
@@ -557,6 +660,7 @@ function renderDrawer(){
 
   $('#dClose').onclick=closeDrawer;
   d.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{ setAtt(p.id,dateISO,b.dataset.att); renderDrawer(); });
+  const sr=$('#sumRun');if(sr)sr.onclick=()=>runSummary(p);
   $('#lgSave').onclick=()=>{
     const rep=$('#lgRep').value.trim(),nts=$('#lgNotes').value.trim();
     if(!rep&&!nts)return;
@@ -688,7 +792,7 @@ function demoData(){
 /* ---------- boot ---------- */
 window.addEventListener('beforeunload',e=>{if(dirty&&signedIn()){e.preventDefault();e.returnValue='';}});
 
-const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],attendance:[],updatedAt:''});
+const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],attendance:[],summaries:[],updatedAt:''});
 applyGate(false);
 $('#gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
 
