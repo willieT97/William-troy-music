@@ -45,7 +45,19 @@ const json = (body: unknown, status: number, origin: string | null) =>
 const EMAIL_RE = /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/;
 
 function esc(s: string) {
-  return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+}
+// resource links arrive as bare URLs in the plain text; make them clickable in the HTML part
+const URL_RE = /https?:\/\/[^\s<>"']+/g;
+function escLink(s: string) {
+  let out = '', last = 0;
+  for (const m of s.matchAll(URL_RE)) {
+    const i = m.index ?? 0, raw = m[0];
+    out += esc(s.slice(last, i));
+    out += '<a href="' + esc(raw) + '" style="color:#2438C8">' + esc(raw) + '</a>';
+    last = i + raw.length;
+  }
+  return out + esc(s.slice(last));
 }
 // plain text in, simple readable HTML out -- bullets stay bullets
 function toHtml(text: string) {
@@ -55,11 +67,11 @@ function toHtml(text: string) {
     const line = raw.trimEnd();
     if (/^[\u2022\-*]\s+/.test(line)) {
       if (!inList) { out.push('<ul style="margin:0 0 14px;padding-left:20px">'); inList = true; }
-      out.push('<li style="margin:2px 0">' + esc(line.replace(/^[\u2022\-*]\s+/, '')) + '</li>');
+      out.push('<li style="margin:2px 0">' + escLink(line.replace(/^[\u2022\-*]\s+/, '')) + '</li>');
       continue;
     }
     if (inList) { out.push('</ul>'); inList = false; }
-    out.push(line ? '<p style="margin:0 0 12px">' + esc(line) + '</p>' : '');
+    out.push(line ? '<p style="margin:0 0 12px">' + escLink(line) + '</p>' : '');
   }
   if (inList) out.push('</ul>');
   return '<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;' +

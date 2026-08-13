@@ -145,6 +145,17 @@ body.panelopen .maa-ctl{display:none}
 .glance .gdate{font-family:var(--mono);font-size:.68rem;font-weight:700;margin-right:8px}
 .glance .gnote{font-size:.88rem;margin-top:3px}
 /* standing comments (the long view, not this week) */
+.repwrap{position:relative}
+.suggest{position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;
+  border:2px solid var(--ink);border-top:none;box-shadow:4px 4px 0 var(--ink);display:none;max-height:230px;overflow-y:auto}
+.suggest.show{display:block}
+.suggest button{display:block;width:100%;text-align:left;padding:7px 10px;font-size:.88rem;
+  border-bottom:1px dashed rgba(23,20,14,.25)}
+.suggest button:last-child{border-bottom:none}
+.suggest button.on,.suggest button:hover{background:var(--ink);color:var(--paper)}
+.suggest .lk{font-family:var(--mono);font-size:.62rem;opacity:.65;display:block}
+.reschip a,a.reschip{text-decoration:none;color:inherit}
+.reschip.linked::after{content:' \2197';font-size:.7em;opacity:.6}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
 .stat{border:2px solid var(--ink);background:#fff;padding:8px 9px;min-width:0}
 .stat b{display:block;font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1.05}
@@ -517,6 +528,63 @@ function migrateExceptions(){
   if(moved){state.updatedAt=new Date().toISOString();saveLocal();}
 }
 
+/* ---------- the site's own resources ----------
+   Typed into rep/resources, these become real links in the note home. Anything
+   not in here stays plain text, so "photocopy of p.14" still works exactly as
+   before. `pro` marks things behind the paywall: fine to log, never linked to a
+   parent — homework shouldn't land anyone on a sales page. */
+const SITE='https://williamtroymusic.com/';
+const RES=[
+  {t:'Naming the Notes',      u:'note-names.html',      k:'notes treble stave reading beginner egbdf'},
+  {t:'Find the Note',         u:'find-the-note.html',   k:'note fretboard piano guitar where instrument'},
+  {t:'Scale Theory',          u:'scale-theory.html',    k:'scale major minor mode whole half step'},
+  {t:'Chord Theory',          u:'chord-theory.html',    k:'chord major minor diminished augmented triad'},
+  {t:'Chords',                u:'chords.html',          k:'chord chart reference sheet piano guitar'},
+  {t:'Ukulele Chords',        u:'ukulele-chords.html',  k:'ukulele uke chord shapes'},
+  {t:'The Circle of Fifths',  u:'circle-of-fifths.html',k:'key signature fifths sharps flats relative'},
+  {t:'Blues Theory',          u:'blues-theory.html',    k:'blues 12 bar blue note'},
+  {t:'Rhythm Zoo',            u:'rhythm-zoo.html',      k:'rhythm note values crotchet quaver beginner kids'},
+  {t:'Tuner',                 u:'tuner.html',           k:'tune tuning pitch'},
+  {t:'Melody Trainer',        u:'melody-trainer_1.html',k:'tune melody sight reading session jig reel'},
+  {t:'Song Trainer',          u:'song-trainer.html',    k:'song play along chords'},
+  {t:'Phrasebook',            u:'phrasebook.html',      k:'lick phrase riff'},
+  {t:'Jam Track',             u:'jam-track.html',       k:'backing track jam play along'},
+  {t:'Song Maker',            u:'composer.html',        k:'compose write song chords'},
+  {t:'Song Lab',              u:'songlab.html',         k:'compose arrange song sections'},
+  {t:'Chorale Ear Trainer',   u:'chorale-ears.html',    k:'ear training harmony bach chorale'},
+  {t:'Chord Trainer',         u:'chord-trainer.html',   k:'chord ear training'},
+  {t:'Music Arcade',          u:'arcade-index.html',    k:'game games arcade play practice'},
+  {t:'All the resources',     u:'resources.html',       k:'everything resources index list'},
+  {t:'The Listening Lab',     u:'listening-lab.html',   k:'solo improvise mic listen', pro:true},
+  {t:'Learning to Walk',      u:'learning-to-walk.html',k:'bassline walking bass jazz course', pro:true},
+  {t:'Learning to Fly',       u:'learning-to-fly.html', k:'improvise solo course belts', pro:true}
+];
+/* a chip that opens the page when we have one for it */
+function chip(title){
+  const t=String(title||'').trim(); if(!t)return '';
+  const r=resFor(t);
+  if(!r)return '<span class="reschip">'+esc(t)+'</span>';
+  return '<a class="reschip linked" href="'+SITE+r.u+'" target="_blank" rel="noopener" title="'+
+    esc(r.pro?'On the site \u2014 Pro, so it is not linked to parents':'Opens on the site')+'">'+esc(t)+'</a>';
+}
+const resFor=title=>{
+  const q=String(title||'').trim().toLowerCase();
+  return q?RES.find(r=>r.t.toLowerCase()===q)||null:null;
+};
+/* what the parent can actually open: paywalled things are named, never linked */
+const resLink=title=>{const r=resFor(title);return (r&&!r.pro)?SITE+r.u:null;};
+function resSearch(q){
+  q=String(q||'').trim().toLowerCase();
+  if(q.length<2)return [];
+  const starts=[],has=[];
+  RES.forEach(r=>{
+    const t=r.t.toLowerCase();
+    if(t.startsWith(q))starts.push(r);
+    else if(t.includes(q)||r.k.includes(q))has.push(r);
+  });
+  return starts.concat(has).slice(0,6);
+}
+
 /* ---------- rep & resources ----------
    Everything this person has been given, newest first, with the date it last came up
    and how many lessons it has appeared in — the thing you actually want to read back. */
@@ -617,6 +685,11 @@ function signOff(){
   const pr=(window.MAAuth&&MAAuth.profile&&MAAuth.profile())||null;
   return (pr&&pr.username)||'';
 }
+/* one line of the "we worked on" list, with the link when the site has that page */
+function bullet(r){
+  const u=resLink(r);
+  return '• '+r+(u?' \u2014 '+u:'');
+}
 function andList(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 /* "Ms Byrne" stays "Ms Byrne"; "Máire Ní Bhriain" becomes "Máire" */
 const TITLES=/^(mr|mrs|ms|miss|mx|dr|fr|sr|br|prof|master)\.?$/i;
@@ -642,7 +715,7 @@ function buildMessage(p){
   L.push('');
   if(res.length){
     L.push(intro);
-    res.forEach(r=>L.push('• '+r));
+    res.forEach(r=>L.push(bullet(r)));
     L.push('');
   } else {
     L.push('No new material logged for that stretch.');
@@ -689,7 +762,7 @@ function lessonEmail(p,l){
   L.push('');
   L.push(p.name+(p.kind==='class'?'':(p.instrument?'’s '+p.instrument:''))+' lesson, '+shortDate(l.date)+'.');
   L.push('');
-  if(res.length){L.push('We worked on:');res.forEach(r=>L.push('• '+r));L.push('');}
+  if(res.length){L.push('We worked on:');res.forEach(r=>L.push(bullet(r)));L.push('');}
   if(state.settings&&state.settings.emailNotes&&l.notes){L.push(l.notes);L.push('');}
   L.push('Any questions, just reply to this.');
   L.push('');
@@ -886,7 +959,7 @@ function renderDrawer(){
   const recent=hist.filter(l=>l.date<=dateISO).slice(0,3);
   const glance=recent.length?'<div class="plannote"><b>AT A GLANCE \u2014 LAST '+(recent.length>1?recent.length+' LESSONS':'LESSON')+'</b>'+
     recent.map(l=>'<div class="glance"><span class="gdate">'+shortDate(l.date)+'</span>'+
-      (l.rep?l.rep.split(',').map(r=>'<span class="reschip">'+esc(r.trim())+'</span>').join(''):'')+
+      (l.rep?l.rep.split(',').map(r=>chip(r)).join(''):'')+
       (l.notes?'<div class="gnote">'+esc(l.notes)+'</div>':'')+'</div>').join('')+'</div>':'';
 
   const att=attFor(p.id,dateISO), tal=attTally(p.id);
@@ -934,7 +1007,10 @@ function renderDrawer(){
   attBits+
   '<div class="section"><div class="sectitle">'+(editing?'Edit log \u2014 '+shortDate(editing.date):'Log this lesson')+'</div>'+
   '<label class="f" for="lgRep">REP / RESOURCES <span style="text-transform:none">(comma-separated)</span></label>'+
-  '<input class="field" id="lgRep" value="'+esc(editing?editing.rep:'')+'" placeholder="e.g. Kesh Jig, D chord sheet">'+
+  '<div class="repwrap"><input class="field" id="lgRep" autocomplete="off" value="'+esc(editing?editing.rep:'')+
+    '" placeholder="e.g. Kesh Jig, Scale Theory">'+
+  '<div class="suggest" id="repSuggest"></div></div>'+
+  '<p class="hint" style="margin-top:4px">Start typing to pull in a page from the site — those become links in the note home.</p>'+
   '<label class="f" for="lgNotes">NOTES</label><textarea class="field" id="lgNotes" placeholder="What happened, how it went, what\u2019s next\u2026">'+esc(editing?editing.notes:'')+'</textarea>'+
   '<div class="inline" style="margin-top:12px"><button class="btn primary" id="lgSave">'+(editing?'Save changes':'Save log')+'</button>'+
   (editingLessonId?'<button class="btn" id="lgCancel">Cancel</button>':'')+'</div></div>'+
@@ -943,13 +1019,13 @@ function renderDrawer(){
     '<div class="logentry"><div class="ldate">'+shortDate(l.date)+
       (l.emailedAt?'<span class="sent" title="Emailed '+esc((l.emailedTo||[]).join(', '))+'">\u2709 sent</span>':'')+'</div>'+
     '<div class="lactions"><button data-edit="'+l.id+'">edit</button><button data-del="'+l.id+'">\u00d7</button></div>'+
-    (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>'<span class="reschip">'+esc(r.trim())+'</span>').join('')+'</div>':'')+
+    (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>chip(r)).join('')+'</div>':'')+
     (l.notes?'<div class="lrow"><b>NOTES</b>'+esc(l.notes)+'</div>':'')+
     '</div>').join('')
   :'<p class="muted">No lessons logged yet. The first entry starts the story.</p>')+'</div>'+
   (roll.length?'<div class="section"><div class="sectitle">Rep &amp; resources<span class="mono">'+roll.length+'</span></div>'+
     roll.map(r=>'<div class="resrow"><span class="rwhen">'+esc(shortDate(r.last).replace(/ \d{4}$/,''))+'</span>'+
-      '<span class="rt">'+esc(r.title)+'</span>'+(r.n>1?'<span class="rct">\u00d7'+r.n+'</span>':'')+'</div>').join('')+
+      '<span class="rt">'+chip(r.title)+'</span>'+(r.n>1?'<span class="rct">\u00d7'+r.n+'</span>':'')+'</div>').join('')+
     '</div>':'')+
   contactBits(p)+
   updateBits(p)+
@@ -1037,6 +1113,36 @@ function renderDrawer(){
     if(!c)return;
     window.open('https://wa.me/'+String(c.phone).replace(/[^0-9]/g,'')+'?text='+encodeURIComponent($('#msgBody').value),'_blank','noopener');
   };
+  /* suggest against the bit after the last comma, so it works mid-list */
+  (()=>{
+    const inp=$('#lgRep'), box=$('#repSuggest');
+    if(!inp)return;
+    let hits=[], cur=-1;
+    const frag=()=>{const v=inp.value, i=v.lastIndexOf(',');return {head:i<0?'':v.slice(0,i+1), term:(i<0?v:v.slice(i+1)).trim()};};
+    const hide=()=>{box.classList.remove('show');box.innerHTML='';hits=[];cur=-1;};
+    const paint=()=>{
+      box.innerHTML=hits.map((r,i)=>'<button type="button" data-i="'+i+'" class="'+(i===cur?'on':'')+'">'+
+        esc(r.t)+(r.pro?' \uD83D\uDD12':'')+'<span class="lk">'+esc(r.u)+(r.pro?' \u00b7 not linked to parents':'')+'</span></button>').join('');
+      box.classList.add('show');
+      box.querySelectorAll('[data-i]').forEach(b=>b.onmousedown=e=>{e.preventDefault();pick(+b.dataset.i);});
+    };
+    const pick=i=>{
+      const r=hits[i];if(!r)return;
+      const{head}=frag();
+      inp.value=(head?head+' ':'')+r.t+', ';
+      hide();inp.focus();
+    };
+    inp.oninput=()=>{const{term}=frag();hits=resSearch(term);cur=-1;hits.length?paint():hide();};
+    inp.onblur=()=>setTimeout(hide,120);
+    inp.onkeydown=e=>{
+      if(!hits.length)return;
+      if(e.key==='ArrowDown'){e.preventDefault();cur=(cur+1)%hits.length;paint();}
+      else if(e.key==='ArrowUp'){e.preventDefault();cur=(cur-1+hits.length)%hits.length;paint();}
+      else if(e.key==='Enter'&&cur>=0){e.preventDefault();pick(cur);}
+      else if(e.key==='Escape'){hide();}
+    };
+  })();
+
   $('#lgSave').onclick=()=>{
     const rep=$('#lgRep').value.trim(),nts=$('#lgNotes').value.trim();
     if(!rep&&!nts)return;
