@@ -34,6 +34,9 @@ header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
   position:relative;user-select:none;white-space:nowrap}
 .brand .ghost{position:absolute;left:2.5px;top:2px;color:var(--pink);z-index:-1}
 .brand .ghost2{position:absolute;left:-2px;top:-1.5px;color:var(--blue);z-index:-2;opacity:.85}
+.homelink{border:2px solid var(--ink);background:#fff;font-family:var(--mono);font-weight:700;
+  text-decoration:none;color:var(--ink);padding:3px 10px;box-shadow:2px 2px 0 var(--ink);line-height:1.5}
+body.gated header .homelink{display:none}
 .weeknav{display:flex;align-items:center;gap:8px}
 .btn{border:2px solid var(--ink);background:#fff;padding:7px 14px;font-weight:600;
   box-shadow:3px 3px 0 var(--ink);transition:transform .08s, box-shadow .08s}
@@ -221,6 +224,7 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
 <body>
 
 <header>
+  <a class="homelink" href="index.html" title="Back to Music Arcade">←</a>
   <div class="brand">Rollbook<span class="ghost" aria-hidden="true">Rollbook</span><span class="ghost2" aria-hidden="true">Rollbook</span></div>
   <div class="weeknav">
     <button class="btn small" id="prevWk" aria-label="Previous week">‹</button>
@@ -244,6 +248,15 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
     <div class="grow"><button class="btn primary" id="gateSignin">Sign in</button>
     <a class="backlink" href="index.html">← Music Arcade</a></div>
     <p class="fine" id="gateWait">Checking your account…</p>
+  </div>
+  <div class="gatecard" id="gateRole" style="display:none">
+    <div class="lock" aria-hidden="true">🎓</div>
+    <h1>The rollbook is for teachers</h1>
+    <p>Your account is set to <b>learning</b>. Switch it to <b>teaching</b> and you get your own rollbook — a weekly timetable, lesson notes and updates to parents — plus a Rollbook tab across the site.</p>
+    <p class="fine">Nothing about your saved songs, scores or courses changes. You can switch back any time in Your account.</p>
+    <div class="grow"><button class="btn primary" id="gateTeach">Turn on teacher mode</button>
+    <a class="backlink" href="index.html">← Music Arcade</a></div>
+    <p class="fine" id="gateRoleMsg"></p>
   </div>
 </div>
 
@@ -401,10 +414,15 @@ async function pullCloud(){
   render();
 }
 /* ---------- the gate: no book without a login ---------- */
+const isTeacher=()=>!!(window.MAAuth&&MAAuth.isTeacher&&MAAuth.isTeacher());
 function applyGate(known){
-  const open=signedIn();
+  const inn=signedIn(), open=inn&&isTeacher();
   document.body.classList.toggle('gated',!open);
   $('#gate').classList.toggle('show',!open);
+  /* signed out → sign-in card; signed in as a learner → the switch-role card */
+  const learner=known&&inn&&!isTeacher();
+  $('#gate').firstElementChild.style.display=learner?'none':'';
+  $('#gateRole').style.display=learner?'':'none';
   const w=$('#gateWait'); if(w) w.style.display=known?'none':'';
   if(!open){ closeDrawer(); $('#manage').classList.remove('open'); }
 }
@@ -929,6 +947,15 @@ window.addEventListener('beforeunload',e=>{if(dirty&&signedIn()){e.preventDefaul
 const EMPTY=()=>({people:[],slots:[],lessons:[],exceptions:[],attendance:[],settings:{},updatedAt:''});
 applyGate(false);
 $('#gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
+$('#gateTeach').onclick=()=>{
+  const m=$('#gateRoleMsg'), b=$('#gateTeach');
+  b.disabled=true;m.textContent='Switching…';
+  MAAuth.setRole('teacher').then(()=>{m.textContent='';b.disabled=false;onAuth();})
+    .catch(e=>{b.disabled=false;
+      m.textContent=/role|column|schema/i.test(e&&e.message||'')
+        ? 'Roles aren’t set up on the database yet — run supabase-roles.sql in Supabase.'
+        : (e&&e.message)||'Couldn’t switch just now.';});
+};
 
 /* MAAuth.onChange fires on load and on every sign in/out */
 (function waitAuth(){
@@ -937,7 +964,7 @@ $('#gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin'
 })();
 function onAuth(){
   applyGate(true);
-  if(signedIn()){
+  if(signedIn()&&isTeacher()){
     const saved=loadLocal();
     state=saved?Object.assign(EMPTY(),saved):EMPTY();
     migrateExceptions();

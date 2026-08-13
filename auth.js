@@ -49,10 +49,16 @@
   function emitEnt() { entListeners.forEach(function (cb) { try { cb(entitlements); } catch (e) {} }); }
   function fetchProfile() {
     if (!user) { profile = null; return Promise.resolve(null); }
-    return sb.from('profiles').select('username').eq('id', user.id).maybeSingle()
-      .then(function (r) { profile = (r && r.data) || null; return profile; })
+    return sb.from('profiles').select('username,role').eq('id', user.id).maybeSingle()
+      .then(function (r) {
+        // supabase-roles.sql not run yet → no `role` column. Don't lose the username over it.
+        if (r && r.error) return sb.from('profiles').select('username').eq('id', user.id).maybeSingle()
+          .then(function (r2) { profile = (r2 && r2.data) || null; return profile; });
+        profile = (r && r.data) || null; return profile;
+      })
       .catch(function () { profile = null; return null; });
   }
+  function roleOf() { return (profile && profile.role) === 'teacher' ? 'teacher' : 'player'; }
   function displayName() {
     if (profile && profile.username) return profile.username;
     if (user && user.email) return user.email.split('@')[0];
@@ -69,6 +75,10 @@
     close: closeModal,
     signOut: function () { return ensureSb().then(function () { return sb.auth.signOut(); }); },
     client: function () { return ensureSb().then(function () { return sb; }); },
+    // player | teacher — teachers get the Rollbook tab in the site nav
+    role: function () { return roleOf(); },
+    isTeacher: function () { return roleOf() === 'teacher'; },
+    setRole: function (r) { return ensureSb().then(needUser).then(function () { return saveRole(r); }); },
     // entitlements — read-only in the browser; the webhook is the source of truth
     entitlements: function () { return entitlements.slice(); },
     isPro: function () { return entitlements.some(function (e) { return e.product === 'pro' && activeEnt(e); }); },
@@ -116,7 +126,7 @@
 
   window.MAAuth.usernameFree = function (name) { return usernameFree(name); };
   window.MAAuth.setUsername = function (name) { return ensureSb().then(needUser).then(function () {
-    return saveUsername(name || null).then(function (r) { if (r && r.error) throw r.error; profile = { username: name || null }; renderControl(); emit(); return profile; }); }); };
+    return saveUsername(name || null).then(function (r) { if (r && r.error) throw r.error; profile = { username: name || null, role: roleOf() }; renderControl(); emit(); return profile; }); }); };
 
   // ---- reusable Save/open panel: cloud when signed in, this-device localStorage when signed out ----
   // MAAuth.mountVault(container, { kind, noun, getState, applyState })
@@ -190,13 +200,25 @@
   }
 
   // ---- auth actions ----
-  function doSignUp(email, pw, username) { return ensureSb().then(function () { return sb.auth.signUp({ email: email, password: pw, options: { data: { username: username } } }); }); }
+  function doSignUp(email, pw, username, role) { return ensureSb().then(function () { return sb.auth.signUp({ email: email, password: pw, options: { data: { username: username, role: (role === 'teacher' ? 'teacher' : 'player') } } }); }); }
   function doSignIn(email, pw) { return ensureSb().then(function () { return sb.auth.signInWithPassword({ email: email, password: pw }); }); }
   function doGoogle() { return ensureSb().then(function () { return sb.auth.signInWithOAuth({ provider: 'google' }); }); } // returns to Supabase Site URL (no redirect allowlist needed)
   function doReset(email) { return ensureSb().then(function () { return sb.auth.resetPasswordForEmail(email); }); } // reset email → Site URL
   function doUpdatePassword(pw) { return ensureSb().then(function () { return sb.auth.updateUser({ password: pw }); }); }
   function usernameFree(name) { return ensureSb().then(function () { return sb.rpc('username_available', { p_name: name }).then(function (r) { return r.error ? true : !!r.data; }); }); }
   function saveUsername(name) { return ensureSb().then(function () { return sb.from('profiles').update({ username: name }).eq('id', user.id); }); }
+  function saveRole(r) {
+    var want = (r === 'teacher') ? 'teacher' : 'player';
+    // via ensureSb so a not-yet-ready client rejects instead of throwing mid-callback
+    return ensureSb().then(needUser).then(function () {
+      return sb.from('profiles').update({ role: want }).eq('id', user.id);
+    }).then(function (res) {
+      if (res && res.error) throw res.error;
+      profile = profile || {}; profile.role = want;
+      renderControl(); syncNavTabs(); emit();
+      return want;
+    });
+  }
 
   // ---- styles ----
   function injectStyles() {
@@ -220,6 +242,13 @@
       '.maa-tabs{display:flex;gap:8px;margin:12px 0 14px;}' +
       '.maa-tab{flex:1;cursor:pointer;border:2.5px solid #17140E;border-radius:11px;background:#fff;color:#17140E;font-weight:800;font-size:.85rem;padding:8px;box-shadow:2px 2px 0 #17140E;}' +
       '.maa-tab.on{background:#17140E;color:#FFFDF7;}' +
+      '.maa-roles{display:flex;gap:8px;margin:2px 0 14px;}' +
+      '.maa-role{flex:1;cursor:pointer;text-align:left;border:2.5px solid #17140E;border-radius:11px;background:#fff;color:#17140E;padding:9px 11px;box-shadow:2px 2px 0 #17140E;}' +
+      '.maa-role b{display:block;font-weight:800;font-size:.86rem;}' +
+      '.maa-role span{display:block;font-size:.7rem;opacity:.7;line-height:1.3;margin-top:2px;}' +
+      '.maa-role.on{background:#17140E;color:#FFFDF7;}' +
+      '.maa-role.on span{opacity:.75;}' +
+      '.maa-lbl{font-weight:800;font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;opacity:.65;margin:2px 0 6px;}' +
       '.maa-f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}' +
       '.maa-f label{font-weight:800;font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;color:#8a7f6a;}' +
       '.maa-f input{font:inherit;font-weight:600;padding:10px 11px;border:2.5px solid #17140E;border-radius:10px;background:#fff;box-shadow:2px 2px 0 #17140E;}' +
@@ -265,6 +294,7 @@
       b.addEventListener('click', function () { openModal('signin'); });
     }
     ctl.appendChild(b);
+    syncNavTabs();
   }
 
   // ---- modal ----
@@ -327,6 +357,48 @@
   }
   function setMsg(node, text, kind) { node.className = 'maa-msg' + (kind ? ' ' + kind : ''); node.textContent = text || ''; }
 
+  /* Two choices at sign-up. Teachers get the Rollbook — a private weekly timetable
+     and lesson log — added to the site nav. Everyone can switch later in Your account. */
+  var ROLE_COPY = {
+    player:  { t: 'I\u2019m learning',  s: 'Games, courses and practice tools' },
+    teacher: { t: 'I teach',        s: 'Adds the Rollbook: timetable & lesson notes' }
+  };
+  function rolePicker(current, onPick) {
+    var wrap = el('div', 'maa-roles'), btns = {};
+    ['player', 'teacher'].forEach(function (k) {
+      var b = el('button', 'maa-role' + (current === k ? ' on' : '')); b.type = 'button';
+      b.appendChild(el('b', null, ROLE_COPY[k].t));
+      b.appendChild(el('span', null, ROLE_COPY[k].s));
+      b.addEventListener('click', function () {
+        current = k;
+        Object.keys(btns).forEach(function (x) { btns[x].className = 'maa-role' + (x === k ? ' on' : ''); });
+        if (onPick) onPick(k);
+      });
+      btns[k] = b; wrap.appendChild(b);
+    });
+    function paint(k) { current = k; Object.keys(btns).forEach(function (x) { btns[x].className = 'maa-role' + (x === k ? ' on' : ''); }); }
+    return { wrap: wrap, get: function () { return current; }, set: paint };
+  }
+
+  /* Teachers get a Rollbook tab wherever the site's section nav appears.
+     Injected rather than hard-coded into 20-odd pages, so it can't drift. */
+  function syncNavTabs() {
+    var navs = document.querySelectorAll('nav.tabs');
+    for (var i = 0; i < navs.length; i++) {
+      var nav = navs[i], have = nav.querySelector('a[data-maa-rollbook]');
+      if (window.MAAuth.isTeacher()) {
+        if (!have) {
+          var a = document.createElement('a');
+          a.href = '/rollbook.html'; a.textContent = 'Rollbook';
+          a.setAttribute('data-maa-rollbook', '1');
+          if (/\/rollbook\.html$/.test(location.pathname)) { a.className = 'cur'; a.setAttribute('aria-current', 'page'); }
+          nav.appendChild(a);
+        }
+      } else if (have) { have.parentNode.removeChild(have); }
+    }
+  }
+  window.MAAuth.syncNav = syncNavTabs;
+
   function renderModal() {
     cardBody.innerHTML = '';
     if (view === 'account') return renderAccount();
@@ -350,7 +422,12 @@
 
     var form = document.createElement('form'); form.autocomplete = 'on';
     var uname;
-    if (view === 'signup') { uname = field('Username', 'text', 'username', 'e.g. jazzcat'); form.appendChild(uname.wrap); }
+    var roles;
+    if (view === 'signup') {
+      form.appendChild(el('div', 'maa-lbl', 'Which are you?'));
+      roles = rolePicker('player'); form.appendChild(roles.wrap);
+      uname = field('Username', 'text', 'username', 'e.g. jazzcat'); form.appendChild(uname.wrap);
+    }
     var email = field('Email', 'email', 'email', 'you@example.com'); form.appendChild(email.wrap);
     var pw = field('Password', 'password', 'pw', view === 'signup' ? 'at least 6 characters' : ''); form.appendChild(pw.wrap);
     var msg = el('div', 'maa-msg'); form.appendChild(msg);
@@ -379,7 +456,7 @@
         setMsg(msg, 'Creating your account…');
         (un ? usernameFree(un) : Promise.resolve(true)).then(function (free) {
           if (!free) { go.disabled = false; return setMsg(msg, 'That username is taken — try another.', 'err'); }
-          doSignUp(em, p, un).then(function (r) {
+          doSignUp(em, p, un, roles.get()).then(function (r) {
             go.disabled = false;
             if (r.error) return setMsg(msg, prettyErr(r.error), 'err');
             if (r.data && r.data.session) { closeModal(); } // signed in immediately (email confirmation off)
@@ -415,7 +492,21 @@
     var un = field('Username', 'text', 'username2', 'set a username');
     un.input.value = (profile && profile.username) || '';
     cardBody.appendChild(un.wrap);
-    var msg = el('div', 'maa-msg'); cardBody.appendChild(msg);
+    cardBody.appendChild(el('div', 'maa-lbl', 'Which are you?'));
+    var msg = el('div', 'maa-msg');
+    var roles = rolePicker(roleOf(), function (k) {
+      setMsg(msg, 'Saving…');
+      saveRole(k).then(function () {
+        setMsg(msg, k === 'teacher' ? 'Teacher mode on — the Rollbook tab is in the nav now.' : 'Switched to learner.', 'ok');
+      }).catch(function (er) {
+        roles.set(roleOf());   // put the highlight back, but keep the reason on screen
+        setMsg(msg, /column|schema|does not exist/i.test(prettyErr(er))
+          ? 'Roles aren’t set up on the database yet — run supabase-roles.sql in Supabase.'
+          : prettyErr(er), 'err');
+      });
+    });
+    cardBody.appendChild(roles.wrap);
+    cardBody.appendChild(msg);
     var save = el('button', 'maa-go', 'Save username'); save.type = 'button'; cardBody.appendChild(save);
     if (window.MAAuth.isPro && window.MAAuth.isPro()) {
       var mng = el('a', 'maa-alt', 'Manage subscription →'); mng.href = 'https://app.lemonsqueezy.com/my-orders'; mng.target = '_blank'; mng.rel = 'noopener';
@@ -432,7 +523,7 @@
       save.disabled = true; setMsg(msg, 'Saving…');
       (name ? usernameFree(name) : Promise.resolve(true)).then(function (free) {
         if (name && !free && name.toLowerCase() !== ((profile && profile.username) || '').toLowerCase()) { save.disabled = false; return setMsg(msg, 'That username is taken.', 'err'); }
-        saveUsername(name || null).then(function (r) { save.disabled = false; if (r.error) return setMsg(msg, prettyErr(r.error), 'err'); profile = { username: name || null }; setMsg(msg, 'Saved!', 'ok'); renderControl(); emit(); })
+        saveUsername(name || null).then(function (r) { save.disabled = false; if (r.error) return setMsg(msg, prettyErr(r.error), 'err'); profile = { username: name || null, role: roleOf() }; setMsg(msg, 'Saved!', 'ok'); renderControl(); emit(); })
           .catch(function (er) { save.disabled = false; setMsg(msg, prettyErr(er), 'err'); });
       });
     });
