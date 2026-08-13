@@ -72,11 +72,13 @@ main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
   background-image:repeating-linear-gradient(to bottom, transparent, transparent calc(var(--hour) - 1px), rgba(23,20,14,.16) calc(var(--hour) - 1px), rgba(23,20,14,.16) var(--hour));}
 .daycol.today{background-color:rgba(224,146,42,.07)}
 .slotcard{position:absolute;left:5px;right:5px;border:2px solid var(--ink);background:#fff;
-  padding:5px 7px;text-align:left;overflow:hidden;box-shadow:3px 3px 0 var(--ink);
+  padding:4px 7px;text-align:left;overflow:hidden;box-shadow:3px 3px 0 var(--ink);
   transition:transform .08s;display:block;width:calc(100% - 10px)}
 .slotcard:hover{transform:translate(-1px,-1px)}
-.slotcard .who{font-weight:700;font-size:.86rem;line-height:1.2;display:block}
-.slotcard .meta{font-family:var(--mono);font-size:.66rem;display:block;margin-top:2px;color:rgba(23,20,14,.75)}
+.slotcard .who{font-weight:700;font-size:.84rem;line-height:1.15;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:13px}
+.slotcard .meta{font-family:var(--mono);font-size:.63rem;line-height:1.25;display:block;margin-top:1px;
+  color:rgba(23,20,14,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:13px}
 .slotcard .logged{position:absolute;top:4px;right:5px;font-size:.7rem}
 .slotcard.cancelled{border-style:dashed;box-shadow:none;opacity:.45}
 .slotcard.cancelled .who{text-decoration:line-through}
@@ -346,6 +348,12 @@ let dirty=false, saveTimer=null;
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
+/* Vertical scale of the week grid. The row height has to clear a 30-minute
+   card's two lines of text (name + time · instrument) — that's the shortest
+   lesson on offer and the most common one, so it sets the floor. */
+const PPM=1.6;                      // pixels per minute → 96px an hour
+const SLOT_MIN=30*PPM-4;            // a 30-min card, the smallest we ever draw
+document.documentElement.style.setProperty('--hour',(60*PPM)+'px');
 const uid=()=> 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function mondayOf(d){const x=new Date(d);x.setHours(0,0,0,0);const wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
@@ -640,16 +648,16 @@ function render(){
     g.appendChild(h);
   }
   // gutter
-  const gut=el('<div class="gutter"></div>');gut.style.height=(hours*60)+'px';
+  const gut=el('<div class="gutter"></div>');gut.style.height=(hours*60*PPM)+'px';
   for(let h=rs;h<=re;h+=60){
-    gut.appendChild(el('<span class="hlabel" style="top:'+((h-rs))+'px">'+fmtTime(h)+'</span>'));
+    gut.appendChild(el('<span class="hlabel" style="top:'+((h-rs)*PPM)+'px">'+fmtTime(h)+'</span>'));
   }
   g.appendChild(gut);
   // day columns
   for(let d=0;d<7;d++){
     const dt=addDays(weekStart,d), dISO=iso(dt);
     const col=el('<div class="daycol'+(dISO===todayISO?' today':'')+'"></div>');
-    col.style.height=(hours*60)+'px';
+    col.style.height=(hours*60*PPM)+'px';
     state.slots.filter(s=>s.day===d+1).sort((a,b)=>a.start-b.start).forEach(s=>{
       const p=person(s.personId);if(!p)return;
       const att=attFor(p.id,dISO), a=att?ATT[att.status]:null;
@@ -657,7 +665,7 @@ function render(){
       const logged=!!lessonFor(p.id,dISO);
       const last=state.lessons.filter(l=>l.personId===p.id&&l.date<=dISO).sort((a,b)=>b.date.localeCompare(a.date))[0];
       const hover=(a?a.label+(off?'':'')+' \u2014 ':'')+(last?('last ('+shortDate(last.date)+'): '+(last.notes||last.rep||'')):'');
-      const card=el('<button class="slotcard '+colourOf(p)+(off?' cancelled':'')+(a&&!off?' '+a.cls:'')+'" title="'+esc(hover.trim())+'" style="top:'+(s.start-rs)+'px;height:'+Math.max(30,s.duration-4)+'px">'+
+      const card=el('<button class="slotcard '+colourOf(p)+(off?' cancelled':'')+(a&&!off?' '+a.cls:'')+'" title="'+esc(hover.trim())+'" style="top:'+((s.start-rs)*PPM)+'px;height:'+Math.max(SLOT_MIN,s.duration*PPM-4)+'px">'+
         '<span class="who">'+esc(p.name)+'</span>'+
         '<span class="meta">'+fmtTime(s.start)+' \u00b7 '+esc(p.instrument||'')+'</span>'+
         (a?'<span class="att" title="'+esc(a.label)+'">'+a.mark+'</span>':'')+
