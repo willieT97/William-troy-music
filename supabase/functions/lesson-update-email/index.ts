@@ -1,5 +1,5 @@
 // ============================================================
-//  Music Arcade — Rollbook lesson update email
+//  Music Arcade -- Rollbook lesson update email
 //  Supabase Edge Function (Deno). Sends the "here's what we covered
 //  today" note to a student's contacts, via Resend.
 //
@@ -8,10 +8,10 @@
 //  who it's from and who it replies to.
 //
 //  Deploy:  supabase functions deploy lesson-update-email
-//           (JWT verification ON — only a signed-in teacher may send)
+//           (JWT verification ON -- only a signed-in teacher may send)
 //  Secret:  supabase secrets set RESEND_API_KEY=re_...
 //  Optional: supabase secrets set ROLLBOOK_FROM="William Troy <lessons@williamtroymusic.com>"
-//            (defaults to lessons@williamtroymusic.com — any address on a
+//            (defaults to lessons@williamtroymusic.com -- any address on a
 //             domain you've verified in Resend works)
 // ============================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -40,22 +40,22 @@ function cors(origin: string | null) {
   };
 }
 const json = (body: unknown, status: number, origin: string | null) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
+  new Response(JSON.stringify(body), { status, headers: { ...cors(origin), 'Content-Type': 'application/json; charset=utf-8' } });
 
 const EMAIL_RE = /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/;
 
 function esc(s: string) {
   return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
 }
-// plain text in, simple readable HTML out — bullets stay bullets
+// plain text in, simple readable HTML out -- bullets stay bullets
 function toHtml(text: string) {
   const out: string[] = [];
   let inList = false;
   for (const raw of text.split('\n')) {
     const line = raw.trimEnd();
-    if (/^[•\-*]\s+/.test(line)) {
+    if (/^[\u2022\-*]\s+/.test(line)) {
       if (!inList) { out.push('<ul style="margin:0 0 14px;padding-left:20px">'); inList = true; }
-      out.push('<li style="margin:2px 0">' + esc(line.replace(/^[•\-*]\s+/, '')) + '</li>');
+      out.push('<li style="margin:2px 0">' + esc(line.replace(/^[\u2022\-*]\s+/, '')) + '</li>');
       continue;
     }
     if (inList) { out.push('</ul>'); inList = false; }
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('Origin');
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors(origin) });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin);
-  if (!RESEND_API_KEY) return json({ error: 'Email isn’t configured yet — set RESEND_API_KEY.' }, 503, origin);
+  if (!RESEND_API_KEY) return json({ error: 'Email is not configured yet - set RESEND_API_KEY.' }, 503, origin);
 
   // ---- must be a signed-in user, not just anyone holding the anon key ----
   const auth = req.headers.get('Authorization') ?? '';
