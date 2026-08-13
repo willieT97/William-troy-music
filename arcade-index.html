@@ -135,6 +135,14 @@
     text-transform:uppercase; color:var(--paper); background:var(--accent, var(--blue));
     border:2px solid var(--ink); padding:.35rem .5rem; border-radius:3px; margin-bottom:1rem;
   }
+  /* worn only by the tools that listen through the microphone, so the browser's
+     permission pop-up never comes as a surprise */
+  .game .mic{
+    align-self:flex-start; font-family:var(--pixel); font-size:.5rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink); background:var(--paper);
+    border:2px dashed var(--ink); padding:.35rem .5rem; border-radius:3px;
+    margin:-.55rem 0 1rem;
+  }
   .game h3{
     font-family:var(--display); font-weight:800; letter-spacing:-0.01em; line-height:1.05;
     font-size:1.5rem; margin:0 0 .6rem;
@@ -234,8 +242,9 @@
           </div>
           <div class="game-body">
             <span class="tag">Tool</span>
+            <span class="mic">🎤 listens to your playing</span>
             <h3>Tuner</h3>
-            <p>A chromatic tuner for any instrument — play a note and the needle shows how sharp or flat you are, with the nearest pitch named. Handy before any of the games below.</p>
+            <p>A chromatic tuner for any instrument — play a note and the needle shows how sharp or flat you are, with the nearest pitch named. Your browser will ask to use the microphone — that&rsquo;s it listening. Handy before any of the games below.</p>
             <span class="play">Open</span>
           </div>
         </a>
@@ -283,7 +292,7 @@
           <div class="game-body">
             <span class="tag">In tune?</span>
             <h3>In Tune?</h3>
-            <p>The four strings play one by one. Your call: is the whole uke in tune, or is something off? Strum them together to hear the beating.</p>
+            <p>The four strings play one by one. Your call: is the whole uke in tune, or is something off? Strum them together and hear the wobble two almost-tuned strings make.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -392,7 +401,7 @@
           <div class="game-body">
             <span class="tag">Progressions</span>
             <h3>Uke Progress</h3>
-            <p>A run of ukulele chords plays, voiced as their real beginner shapes — the last card is blank, so name the chord you hear. Starts with C, G, Am and F and adds one more each level up to the sevenths and Gm.</p>
+            <p>A run of ukulele chords plays, played with the same shapes you're learning — the last card is blank, so name the chord you hear. Starts with C, G, Am and F and adds one more each level up to the sevenths and Gm.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -424,7 +433,7 @@
           <div class="game-body">
             <span class="tag">What note?</span>
             <h3>What Note?</h3>
-            <p>A marker lands on an open string or the first three frets — name the note on the piano. Naturals to start, full chromatic when you're ready.</p>
+            <p>A marker lands on an open string or the first three frets — work out which note that is, then tap its name on the little piano keyboard. Naturals to start, full chromatic when you're ready.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -590,7 +599,7 @@
           <div class="game-body">
             <span class="tag">Progressions</span>
             <h3>Guitar Progress</h3>
-            <p>A run of guitar chords plays, voiced as their real shapes — the last card is blank, so name the chord you hear. Ramps from the simple open chords through 7ths and maj7s up to movable barre shapes.</p>
+            <p>A run of guitar chords plays, played with their real shapes — the last card is blank, so name the chord you hear. Ramps from the simple open chords through 7ths and maj7s up to movable barre shapes.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -626,7 +635,7 @@
           <div class="game-body">
             <span class="tag">What note?</span>
             <h3>What Note?</h3>
-            <p>A marker lands on an open string or the first three frets — name the note on the piano. Naturals to start, full chromatic when you're ready.</p>
+            <p>A marker lands on an open string or the first three frets — work out which note that is, then tap its name on the little piano keyboard. Naturals to start, full chromatic when you're ready.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -744,7 +753,7 @@
           <div class="game-body">
             <span class="tag">Arcade</span>
             <h3>Chord Catapult</h3>
-            <p>Fling a note in an arc onto the keyboard and strike the keys that spell the chord — C, E, G. Fifteen levels climb from triads through inversions, 7ths, 9ths and diminished chords, with trees, clouds and crosswind in the way.</p>
+            <p>Fling a note in an arc onto the keyboard and strike the keys that spell the chord — C, E, G. Fifteen levels climb from triads through inversions, 7ths, 9ths and diminished chords, with trees, clouds and crosswind in the way. By the time you beat the wind, spelling chords is automatic.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -783,7 +792,7 @@
           <div class="game-body">
             <span class="tag">Falling</span>
             <h3>Chord Cascade</h3>
-            <p>A chord's key-shape drops from the sky — scroll the piano roll so it lands on the keys that actually spell it. Since every chord's black-and-white pattern is unique, it only clicks in one place. Ramps through minors, inversions, 7ths and 9ths.</p>
+            <p>A chord's key-shape drops from the sky — scroll the piano roll so it lands on the keys that actually spell it. Since every chord's black-and-white pattern is unique, it only clicks in one place. Ramps through minors, inversions, 7ths and 9ths — chord spellings stick before you notice you've learned them.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -941,7 +950,7 @@
           <div class="game-body">
             <span class="tag">Circle of fifths</span>
             <h3>Pitch Invaders — Circle of Fifths</h3>
-            <p>Only the seven notes of the current key drop as aliens, with the in-key keys lit up. Clear a boss wave and the wheel spins to a new key — a tonic–fifth–tonic cue re-anchors your ear each time.</p>
+            <p>Only the seven notes of the key fall as aliens, and those piano keys glow to guide you. Clear a boss wave and the wheel spins to a new key — a quick home-note cue re-anchors your ear before the aliens return.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -1040,7 +1049,7 @@
           <div class="game-body">
             <span class="tag">Rhythm</span>
             <h3>Rhythm Runner</h3>
-            <p>Read the bar of rhythm, then the road opens into holes shaped like the notes. Hold to stay airborne for long notes, land on the rests — don't fall in or hit the ceiling. Beamed quavers, dotted notes and syncopation as the tempo climbs.</p>
+            <p>Read the bar of rhythm, then the road opens into holes shaped like the notes. Hold to stay airborne for long notes, land on the rests — don't fall in or hit the ceiling. Beamed quavers, dotted notes and syncopation as the tempo climbs — keep running and you're reading rhythm at sight, no counting on fingers.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -1212,7 +1221,7 @@
           <div class="game-body">
             <span class="tag">Ear · scale</span>
             <h3>Scale Climb</h3>
-            <p>Play the scale up the steps a degree at a time and stay ahead of the barrels rolling down. Ear-and-theory training with a climb-the-ladder twist.</p>
+            <p>Tap the scale's next note on the piano keyboard to climb a step — and stay ahead of the barrels rolling down. Which note comes next in the scale, under pressure.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -1235,7 +1244,7 @@
           <div class="game-body">
             <span class="tag">Reading · aim</span>
             <h3>Apple Shot</h3>
-            <p>Read the apple's note on the stave, hold to draw the bow, and release on the right pitch to knock it clean off — William Tell for note reading.</p>
+            <p>Read the apple's note on the stave, hold to draw the bow, and let go just as your aim crosses that note — William Tell for note reading.</p>
             <span class="play">Play</span>
           </div>
         </a>
