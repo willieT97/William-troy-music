@@ -559,6 +559,60 @@ const RES=[
   {t:'Learning to Walk',      u:'learning-to-walk.html',k:'bassline walking bass jazz course', pro:true},
   {t:'Learning to Fly',       u:'learning-to-fly.html', k:'improvise solo course belts', pro:true}
 ];
+/* ---------- scales and chords typed by name ----------
+   "C major scale", "F# minor pentatonic", "Bb dorian", "A minor chord" — parsed
+   rather than listed, so all 12 roots x 14 scales x 4 chord qualities are
+   reachable without a 300-entry table. The canonical title we insert is what
+   lookup() parses back, so the chip and the email agree. */
+/* The tricky part is a lone "b": flat in "Bb dorian", but the start of a word in
+   "C blues". Letter-spelled accidentals need a word boundary after them; symbol
+   ones must not be followed by a letter. */
+const ROOT_RE=/^([a-g])\s*(?:(sharp|flat)\b|([#b\u266f\u266d])(?![a-z]))?/;
+function readRoot(str){
+  const t=String(str||'').trim();
+  const m=ROOT_RE.exec(t.toLowerCase());
+  if(!m)return null;
+  let acc='';
+  if(m[2])acc=(m[2]==='sharp')?'#':'b';
+  else if(m[3])acc=(m[3]==='#'||m[3]==='\u266f')?'#':'b';
+  return {root:m[1].toUpperCase()+acc, rest:t.slice(m[0].length).trim()};
+}
+/* loose phrasing in, one canonical scale key out */
+const SCALE_WORDS=[
+  [/^major\s*pentatonic|^pentatonic\s*major/,'majpent','major pentatonic'],
+  [/^minor\s*pentatonic|^pentatonic\s*minor/,'minpent','minor pentatonic'],
+  [/^harmonic(\s*minor)?/,'harmonic','harmonic minor'],
+  [/^melodic(\s*minor)?/,'melodic','melodic minor'],
+  [/^natural\s*minor|^minor/,'minor','minor scale'],
+  [/^major/,'major','major scale'],
+  [/^blues/,'blues','blues scale'],
+  [/^ionian/,'ionian','ionian'],[/^dorian/,'dorian','dorian'],[/^phrygian/,'phrygian','phrygian'],
+  [/^lydian/,'lydian','lydian'],[/^mixolydian/,'mixolydian','mixolydian'],
+  [/^aeolian/,'aeolian','aeolian'],[/^locrian/,'locrian','locrian'],
+  [/^pentatonic/,'majpent','major pentatonic']
+];
+const CHORD_WORDS=[
+  [/^dim(inished)?/,'diminished'],[/^aug(mented)?/,'augmented'],
+  [/^min(or)?|^m\b/,'minor'],[/^maj(or)?/,'major']
+];
+function musicalFor(title){
+  const r=readRoot(String(title||'')); if(!r)return null;
+  let rest=r.rest.toLowerCase().replace(/\s+/g,' ').trim();
+  const isChord=/\bchord\b/.test(rest);
+  rest=rest.replace(/\b(scale|chord)\b/g,'').trim();
+  if(isChord){
+    let q='major';
+    for(const[re,name]of CHORD_WORDS){if(re.test(rest)){q=name;break;}}
+    return {t:r.root+' '+q+' chord', u:SITE+'chord-theory.html?root='+encodeURIComponent(r.root)};
+  }
+  if(!rest)return null;                       // a bare "C" isn't an assignment
+  for(const[re,key,label]of SCALE_WORDS){
+    if(re.test(rest))return {t:r.root+' '+label,
+      u:SITE+'scale-theory.html?root='+encodeURIComponent(r.root)+'&scale='+key};
+  }
+  return null;
+}
+
 /* ---------- the tune library ----------
    Read from the same manifest Melody Trainer uses, so it never drifts out of
    sync: 200-odd tunes, ~128K, fetched once after the gate opens. If it can't be
@@ -595,6 +649,8 @@ function lookup(title){
   if(r)return {t:r.t, u:SITE+r.u, pro:!!r.pro};
   const tu=(TUNES||[]).find(x=>nrm(x.t)===q);
   if(tu)return {t:tu.t, u:tuneUrl(tu.t), tune:true};
+  const mu=musicalFor(title);
+  if(mu)return {t:mu.t, u:mu.u, musical:true};
   return null;
 }
 /* what a parent can actually open: paywalled things are named, never linked */
@@ -605,7 +661,8 @@ function chip(title){
   const r=lookup(t);
   if(!r)return '<span class="reschip">'+esc(t)+'</span>';
   const why=r.pro?'On the site \u2014 Pro, so it is not linked to parents'
-          :r.tune?'Opens in Melody Trainer':'Opens on the site';
+          :r.tune?'Opens in Melody Trainer'
+          :r.musical?'Opens on the site, set to this one':'Opens on the site';
   return '<a class="reschip linked" href="'+r.u+'" target="_blank" rel="noopener" title="'+esc(why)+'">'+esc(t)+'</a>';
 }
 
@@ -622,6 +679,9 @@ function suggest(q){
   RES.forEach(r=>{const sc=score(r.t,r.k);if(sc)out.push({sc,t:r.t,u:r.u,sub:r.pro?'not linked to parents':'',pro:!!r.pro});});
   (TUNES||[]).forEach(t=>{const sc=score(t.t,'');if(sc)out.push({sc:sc+0.5,t:t.t,u:'melody-trainer_1.html',
     sub:[t.r,t.o].filter(Boolean).join(' \u00b7 '),tune:true});});
+  const mu=musicalFor(q);
+  if(mu&&!out.some(x=>nrm(x.t)===nrm(mu.t)))
+    out.unshift({sc:9,t:mu.t,u:mu.u.replace(SITE,''),sub:'on the site',musical:true});
   return out.sort((a,b)=>b.sc-a.sc||a.t.length-b.t.length).slice(0,8);
 }
 

@@ -557,6 +557,37 @@
     dir.scale=a.dataset.scale; renderDirectory(); });
 
   renderRoots(); renderModesTable(); renderCheat(); renderAll(); renderDirectory();
+
+  /* ---- ?root=&scale= : the Rollbook links here when a lesson logged a scale.
+     Roots accept either spelling (Db or C#); scale names accept the loose forms
+     a teacher types. Anything unrecognised is ignored and the page opens normally. */
+  (function deepLink(){
+    var q = new URLSearchParams(location.search);
+    var wantRoot = q.get('root'), wantScale = (q.get('scale')||'').toLowerCase().replace(/[^a-z]/g,'');
+    if(wantRoot){
+      var key = wantRoot.trim().toUpperCase().replace(/\u266F/g,'#').replace(/\u266D/g,'B').replace(/^([A-G])B$/,'$1b');
+      var ALIAS = {'C':0,'C#':1,'DB':1,'Db':1,'D':2,'D#':3,'EB':3,'Eb':3,'E':4,'FB':4,'F':5,'F#':6,'GB':6,'Gb':6,
+                   'G':7,'G#':8,'AB':8,'Ab':8,'A':9,'A#':10,'BB':10,'Bb':10,'B':11,'CB':11};
+      var i = ALIAS[key];
+      if(i===undefined) i = ALIAS[key.charAt(0)+key.slice(1).toLowerCase()];
+      if(i!==undefined){ state.rootIdx=i; renderRoots(); renderAll(); }
+    }
+    if(!wantScale) return;
+    var SECTION = {major:'s-major', minor:'s-minor', naturalminor:'s-minor',
+      harmonic:'s-minorvariants', harmonicminor:'s-minorvariants',
+      melodic:'s-minorvariants', melodicminor:'s-minorvariants',
+      majpent:'s-pentatonic', majorpentatonic:'s-pentatonic',
+      minpent:'s-pentatonic', minorpentatonic:'s-pentatonic', pentatonic:'s-pentatonic',
+      blues:'s-blues'};
+    var MODES = {ionian:1,dorian:1,phrygian:1,lydian:1,mixolydian:1,aeolian:1,locrian:1};
+    var target;
+    if(MODES[wantScale]){ state.modeKey=wantScale; renderMode(); target='s-modes'; }
+    else target = SECTION[wantScale];
+    if(target){
+      var el=document.getElementById(target);
+      if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'start'}); }, 120);
+    }
+  })();
 })();
 </script>
 </body>

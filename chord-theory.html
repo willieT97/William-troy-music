@@ -370,6 +370,19 @@
     ac(); playTriad(ROOTS[+b.dataset.root], QUALS[+b.dataset.qi]); });
 
   renderRoots(); renderInsts(); renderPiano(); renderSingle(); renderNeck(); renderCheat();
+
+  /* ---- ?root= : the Rollbook links here when a lesson logged a chord.
+     Both spellings accepted (Db or C#); an unknown root just opens on C. */
+  (function deepLink(){
+    var wantRoot = new URLSearchParams(location.search).get('root');
+    if(!wantRoot) return;
+    var key = wantRoot.trim().toUpperCase().replace(/\u266F/g,'#').replace(/\u266D/g,'B');
+    var ALIAS = {'C':0,'C#':1,'DB':1,'D':2,'D#':3,'EB':3,'E':4,'FB':4,'F':5,'F#':6,'GB':6,
+                 'G':7,'G#':8,'AB':8,'A':9,'A#':10,'BB':10,'B':11,'CB':11};
+    var i = ALIAS[key];
+    if(i===undefined) return;
+    state.rootIdx=i; renderRoots(); renderPiano(); renderSingle(); renderNeck(); renderCheat();
+  })();
 })();
 </script>
 </body>
