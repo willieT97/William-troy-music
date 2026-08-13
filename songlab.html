@@ -806,14 +806,19 @@
         var beat=c.col/4, bar=Math.floor(beat/4);         // 16 cols a bar → 4 cols a beat
         if(bars[bar]) bars[bar].push({ beat:beat-bar*4, name:c.name });
       });
-      return { label:sec.name, repeat:sec.repeat||1, bars:bars };
+      return { label:sec.name, repeat:sec.repeat||1, bars:bars,
+        melody:sec.notes.map(function(n){ return { midi:TRACKS.mel.base+n.row, col:n.col, len:n.len }; }) };
     });
     var rootTxt=document.getElementById('root').selectedOptions[0].textContent;
     var modeTxt=document.getElementById('mode').selectedOptions[0].textContent;
+    // spell chromatics per the key: relative-major signature on the sharp side → sharps
+    var MODE_OFF={ion:0,dor:2,phr:4,lyd:5,mix:7,aeo:9,loc:11};
+    var sigPc=((state.root-(MODE_OFF[state.mode]||0))%12+12)%12;
     LeadSheet.open({
       title:'My Song',
       key:rootTxt+' '+modeTxt,
       tempo:state.tempo||110,
+      sharp:[0,7,2,9,4,11,6].indexOf(sigPc)>=0,
       credit:'Made in Song Lab — williamtroymusic.com',
       sections:secs
     });

@@ -829,12 +829,16 @@
     });
     var rootTxt=document.getElementById('root').selectedOptions[0].textContent;
     var modeTxt=document.getElementById('mode').selectedOptions[0].textContent;
+    // spell chromatics per the key: relative-major signature on the sharp side → sharps
+    var sigPc=((state.root-(state.mode==='min'?9:0))%12+12)%12;
     LeadSheet.open({
       title:'My Song',
       key:rootTxt+' '+modeTxt,
       tempo:Number(document.getElementById('bpm').textContent)||100,
+      sharp:[0,7,2,9,4,11,6].indexOf(sigPc)>=0,
       credit:'Made in Song Maker — williamtroymusic.com',
-      sections:[{ label:null, repeat:1, bars:bars }]
+      sections:[{ label:null, repeat:1, bars:bars,
+        melody:state.notes.map(function(n){ return { midi:NLOW+n.row, col:n.col, len:n.len }; }) }]
     });
   });
 
