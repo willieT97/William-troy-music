@@ -227,6 +227,56 @@
   }
   .gs-foot a{ color:var(--blue); font-weight:700; }
 
+  /* ---------- first-visit welcome ---------- */
+  #wc{ position:fixed; inset:0; z-index:99950; display:flex; align-items:center; justify-content:center;
+    padding:1.2rem; background:rgba(10,9,6,.72); }
+  #wc[hidden]{ display:none; }
+  .wc-card{ background:var(--paper); color:var(--ink); border:3px solid var(--ink); border-radius:6px;
+    box-shadow:10px 10px 0 var(--blue); max-width:520px; width:100%; max-height:min(86vh, 640px);
+    overflow:auto; padding:1.6rem 1.6rem 1.4rem; position:relative; }
+  @media(prefers-reduced-motion:no-preference){
+    .wc-card{ animation:wcpop .22s ease-out; }
+    @keyframes wcpop{ from{ transform:translateY(10px); opacity:0; } to{ transform:none; opacity:1; } }
+  }
+  .wc-dots{ display:flex; gap:.5rem; margin-bottom:1rem; }
+  .wc-dots i{ width:11px; height:11px; border-radius:50%; border:2px solid var(--ink); }
+  .wc-dots i:nth-child(1){ background:var(--pink); }
+  .wc-dots i:nth-child(2){ background:var(--blue); }
+  .wc-dots i:nth-child(3){ background:var(--gold); }
+  .wc-x{ position:absolute; top:.9rem; right:.9rem; width:34px; height:34px; cursor:pointer;
+    background:var(--paper); color:var(--ink); border:2.5px solid var(--ink); border-radius:6px;
+    font:700 1rem/1 var(--mono); box-shadow:2px 2px 0 var(--ink); }
+  .wc-x:active{ transform:translate(2px,2px); box-shadow:none; }
+  .wc-card h2{ font-family:var(--pixel); font-weight:400; font-size:1.05rem; line-height:1.5;
+    margin:0 0 .8rem; padding-right:2.2rem; }
+  .wc-card p{ margin:0 0 1.2rem; font-size:.98rem; line-height:1.55;
+    color:color-mix(in srgb, var(--ink) 85%, transparent); }
+  .wc-btns{ display:flex; flex-direction:column; gap:.7rem; }
+  .wc-go{ display:block; text-align:center; text-decoration:none; cursor:pointer; width:100%;
+    font-family:var(--pixel); font-size:.66rem; letter-spacing:.03em; line-height:1.5;
+    background:var(--pink); color:#fff; border:3px solid var(--ink); border-radius:5px;
+    padding:.95rem 1rem; box-shadow:4px 4px 0 var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease; }
+  .wc-go:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
+  .wc-go:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+  .wc-play{ display:block; text-align:center; cursor:pointer; width:100%;
+    font-family:var(--mono); font-weight:700; font-size:.85rem; letter-spacing:.03em;
+    background:transparent; color:var(--ink); border:2.5px solid var(--ink); border-radius:5px;
+    padding:.8rem 1rem; }
+  .wc-play:hover{ background:var(--ink); color:var(--paper); }
+  .wc-who{ display:flex; gap:.5rem 1.4rem; flex-wrap:wrap; margin-top:1.2rem; padding-top:1rem;
+    border-top:2px solid rgba(23,20,14,.14); }
+  .wc-who button{ background:none; border:none; padding:0; cursor:pointer;
+    font-family:var(--mono); font-size:.8rem; color:color-mix(in srgb, var(--ink) 70%, transparent);
+    text-decoration:underline; }
+  .wc-who button:hover, .wc-who button[aria-expanded="true"]{ color:var(--ink); }
+  .wc-pane{ margin-top:1rem; border:2px solid var(--ink); border-radius:5px; background:#fffdf6;
+    padding:1rem 1.1rem; font-size:.92rem; line-height:1.55; }
+  .wc-pane[hidden]{ display:none; }
+  .wc-pane p{ margin:0 0 .8rem; font-size:.92rem; }
+  .wc-pane p:last-child{ margin-bottom:0; }
+  .wc-pane a{ color:var(--blue); font-weight:700; }
+
   .levelkey{ display:flex; align-items:center; flex-wrap:wrap; gap:.5rem 1.3rem; padding:1rem 0 .2rem; }
   .levelkey .lk-title{ font-family:var(--mono); font-size:.66rem; letter-spacing:.18em; text-transform:uppercase; color:var(--paper); opacity:.55; }
   .levelkey .lk{ display:inline-flex; align-items:center; gap:.45rem; font-family:var(--mono); font-size:.72rem; letter-spacing:.04em; color:color-mix(in srgb, var(--paper) 85%, transparent); }
@@ -1500,6 +1550,86 @@
       }
     }).catch(function(){});
   });
+})();
+</script>
+
+<!-- ═══════════ FIRST-VISIT WELCOME ═══════════
+     Shown once, to someone the site has never met: no seen-flag, no saved
+     quiz answers, no account session, not inside an iframe. Every way out
+     marks it seen — it must never nag. Preview any time with ?welcome=1 -->
+<div id="wc" role="dialog" aria-modal="true" aria-labelledby="wcTitle" hidden>
+  <div class="wc-card">
+    <button class="wc-x" id="wcX" type="button" aria-label="Close">✕</button>
+    <div class="wc-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <h2 id="wcTitle">New here? Welcome.</h2>
+    <p>The Music Arcade is a pile of free browser games and practice tools that teach real music — ears, reading, rhythm, songwriting — built by a music teacher in Ireland. No downloads, no sign-up needed.</p>
+    <div class="wc-btns">
+      <a class="wc-go" href="start.html" id="wcGo">Three questions, and we'll pick your first three things ▸</a>
+      <button class="wc-play" id="wcPlay" type="button">Just let me play</button>
+    </div>
+    <div class="wc-who">
+      <button type="button" id="wcParentBtn" aria-expanded="false" aria-controls="wcParent">I'm a parent</button>
+      <button type="button" id="wcTeachBtn" aria-expanded="false" aria-controls="wcTeach">I teach music</button>
+    </div>
+    <div class="wc-pane" id="wcParent" hidden>
+      <p>Everything here runs free in the browser — no ads and nothing to install. A few tools listen through the microphone to hear your child play; they're marked with a 🎤 badge, and the browser always asks permission first.</p>
+      <p>An account is optional — it saves songs and course progress. The three Dojo courses are free to start, with the later modules part of a small Pro subscription. If your child's teacher uses this site, their lesson emails may link straight to pages here to practise between lessons.</p>
+    </div>
+    <div class="wc-pane" id="wcTeach" hidden>
+      <p>There's a private <b>Rollbook</b> for teachers: a weekly timetable with lesson notes, and one-click parent emails that link to the exact pages you used in the lesson.</p>
+      <p><a href="account.html">Create a free account</a> and choose <b>“I teach”</b> — the Rollbook tab appears in the site menu.</p>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  if (window.top !== window.self) return;
+  var KEY = 'ma.welcome.v1';
+  var force = /[?&]welcome=1/.test(location.search);
+  function seen() {
+    try {
+      if (localStorage.getItem(KEY)) return true;
+      if (localStorage.getItem('ma.start.v1')) return true;        // did the quiz — knows the place
+      for (var i = 0; i < localStorage.length; i++)
+        if (localStorage.key(i).indexOf('sb-') === 0) return true; // has an account session
+    } catch (e) {}
+    return false;
+  }
+  if (!force && seen()) return;
+
+  var wc = document.getElementById('wc');
+  var opener = null;
+  function mark() { try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {} }
+  function close() {
+    mark(); wc.hidden = true;
+    if (opener && opener.focus) opener.focus();
+    document.removeEventListener('keydown', onKey);
+  }
+  function onKey(e) { if (e.key === 'Escape') close(); }
+
+  document.getElementById('wcX').addEventListener('click', close);
+  document.getElementById('wcPlay').addEventListener('click', close);
+  document.getElementById('wcGo').addEventListener('click', mark);   // navigating away still counts as seen
+  wc.addEventListener('click', function (e) { if (e.target === wc) close(); });
+  document.addEventListener('keydown', onKey);
+
+  [['wcParentBtn', 'wcParent'], ['wcTeachBtn', 'wcTeach']].forEach(function (pair) {
+    var btn = document.getElementById(pair[0]), pane = document.getElementById(pair[1]);
+    btn.addEventListener('click', function () {
+      var show = pane.hidden;
+      ['wcParent', 'wcTeach'].forEach(function (id) { document.getElementById(id).hidden = true; });
+      ['wcParentBtn', 'wcTeachBtn'].forEach(function (id) { document.getElementById(id).setAttribute('aria-expanded', 'false'); });
+      if (show) { pane.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
+    });
+  });
+
+  // let the page paint first, then say hello
+  setTimeout(function () {
+    opener = document.activeElement;
+    wc.hidden = false;
+    document.getElementById('wcGo').focus();
+  }, 350);
 })();
 </script>
 
