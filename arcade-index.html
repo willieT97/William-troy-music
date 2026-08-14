@@ -171,6 +171,62 @@
   .game .play::after{ content:"▶"; font-size:.7rem; transition:transform .14s ease; }
   .game:hover .play::after{ transform:translateX(3px); }
 
+  /* ---------- "I want to…" goal strip ---------- */
+  .goalstrip{ padding:.4rem 0 .2rem; }
+  .goalstrip .gs-head{ display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .goalstrip .gs-head h2{
+    font-family:var(--pixel); font-weight:400; font-size:clamp(.8rem,2.1vw,1.05rem);
+    margin:0; color:var(--paper);
+  }
+  .goalstrip .gs-note{
+    font-family:var(--mono); font-size:.78rem;
+    color:color-mix(in srgb, var(--paper) 58%, transparent);
+  }
+  .goalstrip .gs-note a{ color:var(--gold); }
+  .gs-chips{ display:flex; flex-wrap:wrap; gap:.6rem; }
+  .gs-chip{
+    display:inline-flex; align-items:center; gap:.5rem; cursor:pointer;
+    font-family:var(--body); font-weight:700; font-size:.95rem; line-height:1.2;
+    background:transparent; color:var(--paper);
+    border:2.5px solid color-mix(in srgb, var(--paper) 42%, transparent);
+    border-radius:999px; padding:.55rem 1.05rem;
+    transition:background .14s ease, color .14s ease, border-color .14s ease;
+  }
+  .gs-chip:hover{ border-color:var(--paper); }
+  .gs-chip[aria-expanded="true"]{ background:var(--paper); color:var(--ink); border-color:var(--paper); }
+  .gs-chip:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+  .gs-chip .gs-em{ font-size:1.05rem; }
+
+  .gs-panel{
+    margin-top:1.1rem; background:var(--paper); color:var(--ink);
+    border:3px solid var(--ink); border-radius:5px;
+    box-shadow:6px 6px 0 var(--gold); padding:1.2rem 1.3rem 1.3rem;
+  }
+  .gs-grid{ display:grid; gap:.7rem; grid-template-columns:1fr; }
+  @media(min-width:640px){ .gs-grid{ grid-template-columns:1fr 1fr; } }
+  @media(min-width:980px){ .gs-grid{ grid-template-columns:1fr 1fr 1fr; } }
+  .gs-item{
+    display:flex; flex-direction:column; text-decoration:none; color:var(--ink);
+    border:2px solid var(--ink); border-radius:4px; padding:.7rem .85rem;
+    background:#fffdf6; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .gs-item:hover{ transform:translate(-2px,-2px); box-shadow:3px 3px 0 var(--blue); }
+  .gs-item:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+  .gs-item b{ font-family:var(--display); font-weight:800; font-size:1.02rem; line-height:1.2; }
+  .gs-item small{ font-size:.84rem; line-height:1.4; margin-top:.2rem;
+    color:color-mix(in srgb, var(--ink) 66%, transparent); }
+  .gs-item .gs-tags{ margin-top:.45rem; display:flex; flex-wrap:wrap; gap:.35rem; }
+  .gs-item .gs-tag{
+    font-family:var(--mono); font-size:.62rem; letter-spacing:.04em; text-transform:uppercase;
+    border:1.5px solid color-mix(in srgb, var(--ink) 35%, transparent); border-radius:3px;
+    padding:.15rem .35rem; color:color-mix(in srgb, var(--ink) 60%, transparent);
+  }
+  .gs-foot{
+    margin-top:1rem; padding-top:.85rem; border-top:2px solid rgba(23,20,14,.14);
+    font-family:var(--mono); font-size:.8rem; color:color-mix(in srgb, var(--ink) 68%, transparent);
+  }
+  .gs-foot a{ color:var(--blue); font-weight:700; }
+
   .levelkey{ display:flex; align-items:center; flex-wrap:wrap; gap:.5rem 1.3rem; padding:1rem 0 .2rem; }
   .levelkey .lk-title{ font-family:var(--mono); font-size:.66rem; letter-spacing:.18em; text-transform:uppercase; color:var(--paper); opacity:.55; }
   .levelkey .lk{ display:inline-flex; align-items:center; gap:.45rem; font-family:var(--mono); font-size:.72rem; letter-spacing:.04em; color:color-mix(in srgb, var(--paper) 85%, transparent); }
@@ -217,6 +273,20 @@
     <a class="hero-back" href="index.html">← Back to williamtroymusic</a>
   </div>
 </header>
+
+<!-- ═══════════ "I WANT TO…" — the same tools, cut by goal instead of by
+     instrument. Everything below this strip is sorted by what you play;
+     nobody arrives thinking "I need the Theory section", they arrive
+     thinking "I want to read music". Picks come from tools.js, so this
+     reaches the Training and Dojo pages too, not just the games here. -->
+<section class="wrap goalstrip" id="goalStrip" aria-labelledby="gsHead">
+  <div class="gs-head">
+    <h2 id="gsHead">I want to…</h2>
+    <span class="gs-note" id="gsNote"></span>
+  </div>
+  <div class="gs-chips" id="gsChips"></div>
+  <div class="gs-panel" id="gsPanel" hidden></div>
+</section>
 
 <div class="wrap levelkey">
   <span class="lk-title">Difficulty</span>
@@ -1430,6 +1500,113 @@
       }
     }).catch(function(){});
   });
+})();
+</script>
+
+<!-- ═══════════ "I want to…" goal strip ═══════════ -->
+<script src="/tools.js"></script>
+<script>
+(function () {
+  'use strict';
+  var M = window.MATools, strip = document.getElementById('goalStrip');
+  if (!M || !strip) { if (strip) strip.hidden = true; return; }
+
+  var chipBox = document.getElementById('gsChips'),
+      panel   = document.getElementById('gsPanel'),
+      note    = document.getElementById('gsNote'),
+      open    = null;
+
+  /* If they've already answered the three questions, use them: the picks
+     become instrument-aware and instrument-only games come back into play. */
+  var me = M.remember();
+
+  note.innerHTML = me
+    ? 'Picked for ' + esc(M.INST_WORD[me.inst].toLowerCase()) + ' · <a href="start.html">change</a>'
+    : '<a href="start.html">or answer three questions</a> for a plan made for you';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  M.GOALS.forEach(function (g) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'gs-chip';
+    b.setAttribute('aria-expanded', 'false');
+    b.setAttribute('aria-controls', 'gsPanel');
+    b.innerHTML = '<span class="gs-em" aria-hidden="true">' + g.em + '</span><span></span>';
+    b.lastChild.textContent = g.verb;
+    b.addEventListener('click', function () { toggle(g, b); });
+    chipBox.appendChild(b);
+  });
+
+  function toggle(g, btn) {
+    var already = (open === g.k);
+    [].forEach.call(chipBox.children, function (c) { c.setAttribute('aria-expanded', 'false'); });
+    if (already) { open = null; panel.hidden = true; return; }
+    open = g.k;
+    btn.setAttribute('aria-expanded', 'true');
+    draw(g);
+    panel.hidden = false;
+  }
+
+  function draw(g) {
+    /* Take a spread across the depths rather than the plain top six. The
+       games rank highest, but they are already sitting in the grid further
+       down this page — the strip earns its keep by surfacing the practice
+       tools and courses that live on the other tabs. */
+    var all = M.forGoal(g.k, me), caps = { 1:2, 2:3, 3:1 }, got = { 1:0, 2:0, 3:0 }, picks = [];
+    all.forEach(function (x) {
+      if (picks.length < 6 && got[x.dep] < caps[x.dep]) { got[x.dep]++; picks.push(x); }
+    });
+    all.forEach(function (x) {                      // short on one depth? fill from the rest
+      if (picks.length < 6 && picks.indexOf(x) < 0) picks.push(x);
+    });
+    picks.sort(function (p, q) { return p.dep - q.dep; });
+    var grid = document.createElement('div');
+    grid.className = 'gs-grid';
+
+    picks.forEach(function (x) {
+      var a = document.createElement('a');
+      a.className = 'gs-item';
+      a.href = M.href(x, me || { inst:'none' });
+      var tags = [];
+      if (x.dep === 1) tags.push('Game');
+      if (x.dep === 3) tags.push('Full course');
+      if (x.mic) tags.push('🎤 Listens');
+      if (x.note) tags.push(x.note);
+      a.innerHTML = '<b></b><small></small>' +
+        (tags.length ? '<span class="gs-tags">' + tags.map(function (t) {
+          return '<span class="gs-tag">' + esc(t) + '</span>'; }).join('') + '</span>' : '');
+      a.querySelector('b').textContent = x.t;
+      a.querySelector('small').textContent = x.d;
+      grid.appendChild(a);
+    });
+
+    panel.textContent = '';
+    panel.appendChild(grid);
+
+    var foot = document.createElement('p');
+    foot.className = 'gs-foot';
+    foot.innerHTML = me
+      ? 'Your three answers shaped this. <a href="start.html#' + esc(me.inst) + '/' + esc(g.k) + '/' + esc(String(me.lvl)) + '">See the full plan →</a>'
+      : 'These suit any instrument. <a href="start.html">Tell us what you play</a> and we can be more use.';
+    panel.appendChild(foot);
+  }
+
+  /* deep link: arcade-index.html#want=read opens that goal straight away.
+     Also on hashchange, because following such a link from somewhere else on
+     this same page never reloads the document and so never re-runs this. */
+  function fromHash() {
+    var want = /(?:^|#|&)want=([a-z]+)/.exec(location.hash || '');
+    if (!want) return;
+    M.GOALS.forEach(function (g, i) {
+      if (g.k === want[1] && open !== g.k) toggle(g, chipBox.children[i]);
+    });
+  }
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
 })();
 </script>
 
