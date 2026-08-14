@@ -313,6 +313,17 @@
   }
   .arcade-btn:hover{ background:var(--arc-blue); color:var(--arc-paper); transform:translate(-2px,-2px); box-shadow:7px 7px 0 var(--arc-pink); }
   .arcade-btn:focus-visible{ outline:3px solid var(--arc-pink); outline-offset:3px; }
+  /* the quieter door, for a visitor who doesn't yet know what's in there */
+  .arcade-cta{ display:flex; flex-wrap:wrap; align-items:center; gap:.9rem; }
+  .arcade-btn2{
+    display:inline-flex; align-items:center; text-decoration:none;
+    font-family:var(--arc-pixel); font-weight:400; letter-spacing:.02em; text-transform:uppercase; font-size:.62rem;
+    color:var(--arc-paper); background:transparent; border:2.5px solid var(--arc-paper);
+    padding:.85rem 1.2rem; border-radius:6px; margin-top:.6rem;
+    transition:background .15s ease, color .15s ease;
+  }
+  .arcade-btn2:hover{ background:var(--arc-paper); color:var(--arc-ink); }
+  .arcade-btn2:focus-visible{ outline:3px solid var(--arc-pink); outline-offset:3px; }
 
   /* contact */
   .contact h2{ font-size:clamp(2.4rem,6vw,4.2rem); max-width:14ch; }
@@ -796,7 +807,10 @@
           <h2>Learning music, but it plays like a game.</h2>
           <p class="lead-p">Music Arcade is a growing collection of browser games and exercises I built to make ear training, music theory and instrument skills feel like play instead of practice — pitch judging, fretboard recognition, counterpoint puzzles and more, all wrapped in their own small worlds.</p>
           <p>I originally built these tools to use alongside my own lessons and workshops — a way for students to keep sharpening their ear and their sense of the fretboard between sessions. They worked so well that I'm now sharing them more widely, in the browser.</p>
-          <a class="arcade-btn" href="arcade-index.html">▶ Play Music Arcade</a>
+          <div class="arcade-cta">
+            <a class="arcade-btn" href="arcade-index.html">▶ Play Music Arcade</a>
+            <a class="arcade-btn2" href="start.html">Not sure where to start?</a>
+          </div>
         </div>
       </div>
     </div>

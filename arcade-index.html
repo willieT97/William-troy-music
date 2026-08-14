@@ -77,6 +77,22 @@
   }
   .hero-back:hover{ opacity:1; }
 
+  /* the front door for anyone who arrives not knowing what this place is */
+  .hero-cta{
+    display:flex; width:fit-content; flex-direction:column; gap:.15rem; margin-top:1.8rem;
+    text-decoration:none; background:var(--paper); color:var(--ink);
+    border:3px solid var(--ink); border-radius:5px; padding:.85rem 1.3rem;
+    box-shadow:5px 5px 0 var(--pink);
+    transition:transform .14s ease, box-shadow .14s ease;
+  }
+  .hero-cta:hover{ transform:translate(-3px,-3px); box-shadow:8px 8px 0 var(--pink); }
+  .hero-cta:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--pink); }
+  .hero-cta:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+  .hero-cta span{ font-family:var(--pixel); font-size:.66rem; letter-spacing:.04em; }
+  .hero-cta em{ font-style:normal; font-family:var(--mono); font-size:.78rem;
+    color:color-mix(in srgb, var(--ink) 62%, transparent); }
+  .hero-cta::after{ content:""; }
+
   .tabs{ padding-top:1.4rem; }
   .tabs-inner{ display:flex; gap:.5rem; flex-wrap:wrap;
     border-bottom:2px solid rgba(255,255,255,0.14); }
@@ -193,6 +209,11 @@
     </div>
     <h1>Music Arcade</h1>
     <p class="hero-sub">Little browser games for training your musical ear. Pick an instrument and press play.</p>
+    <!-- for anyone who lands here and doesn't know where to begin -->
+    <a class="hero-cta" href="start.html">
+      <span>Not sure where to start?</span>
+      <em>Three questions and we'll pick three things for you</em>
+    </a>
     <a class="hero-back" href="index.html">← Back to williamtroymusic</a>
   </div>
 </header>

@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- ════════════════════════════════════════════════════════════════
+     MUSIC ARCADE — "Where do I start?"
+     Three taps (instrument · goal · how long you've played) and out
+     comes a short plan: three named stops, easiest first.
+
+     Everything the plan can point at lives in the CATALOGUE below.
+     Add a tool there and it joins the plan automatically — nothing
+     else in this file needs touching. Fields:
+        t   title            h   href
+        d   one line, written for a ten-year-old
+        g   goals it serves  lv  levels it suits (1 new · 2 a while · 3 comfortable)
+        i   instruments it ONLY makes sense on (omit = any instrument)
+        fav instruments it's especially good for (a nudge, not a filter)
+        dep 1 a game you can play right now · 2 a proper tool · 3 a whole course
+        mic true if it listens through the microphone
+        note a short caveat shown on the card (e.g. Pro courses)
+        mk  builds the href from the answers, for pages that take ?inst=
+     The answers are kept in localStorage so other pages can use them later.
+     ════════════════════════════════════════════════════════════════ -->
+
+<title>Where do I start? — Music Arcade</title>
+<meta name="description" content="Three quick questions and we'll point you at the right games and practice tools for what you play and what you want to get better at. Free, by William Troy." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#F4EEE2;
+    --ink:#17140E;
+    --blue:#2438C8;
+    --pink:#FF4E86;
+    --gold:#FFC53D;
+    --green:#1E9E6A;
+
+    --display:'Syne', system-ui, sans-serif;
+    --body:'Hanken Grotesk', system-ui, sans-serif;
+    --mono:'Space Mono', ui-monospace, monospace;
+    --pixel:'Press Start 2P', var(--mono), monospace;
+
+    --maxw:1000px;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--ink); color:var(--paper);
+    font-family:var(--body); font-size:clamp(1rem,0.95rem + 0.25vw,1.12rem);
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+    background-image:repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px);
+  }
+  a{ color:inherit; }
+  .wrap{ width:min(100% - 2.4rem, var(--maxw)); margin-inline:auto; }
+
+  /* ---------- tabs, same bar as everywhere else ---------- */
+  .tabs{ padding-top:1.4rem; }
+  .tabs-inner{ display:flex; gap:.5rem; flex-wrap:wrap;
+    border-bottom:2px solid rgba(255,255,255,0.14); }
+  .tabs a{
+    font-family:var(--pixel); font-size:.56rem; letter-spacing:.06em; text-transform:uppercase;
+    text-decoration:none; color:var(--paper); opacity:.55; padding:.7rem .85rem;
+    border:2px solid var(--paper); border-bottom:none; border-radius:5px 5px 0 0;
+    transform:translateY(2px); transition:opacity .15s ease, background .15s ease;
+  }
+  .tabs a:hover{ opacity:1; }
+  .tabs a.cur{ opacity:1; background:var(--paper); color:var(--ink); }
+
+  /* ---------- header ---------- */
+  header{ padding:clamp(2.2rem,6vw,3.6rem) 0 clamp(1.2rem,3vw,2rem); }
+  .topline{
+    display:flex; align-items:center; gap:.6rem; margin-bottom:1.6rem;
+    font-family:var(--pixel); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase;
+  }
+  .topline .dot{ width:11px; height:11px; border-radius:50%; }
+  .topline .dot:nth-child(1){ background:var(--pink); }
+  .topline .dot:nth-child(2){ background:var(--blue); }
+  .topline .dot:nth-child(3){ background:var(--gold); }
+  .topline span{ margin-left:.5rem; opacity:.6; }
+
+  h1{
+    font-family:var(--pixel); font-weight:400; line-height:1.35;
+    font-size:clamp(1.15rem,4vw,2.1rem); margin:0 0 1.2rem; color:var(--paper);
+    text-shadow:4px 4px 0 var(--blue);
+  }
+  .hero-sub{
+    max-width:54ch; font-size:clamp(1.02rem,1rem + 0.3vw,1.18rem);
+    color:color-mix(in srgb, var(--paper) 85%, transparent); margin:0;
+  }
+
+  /* ---------- the question card ---------- */
+  .qcard{
+    background:var(--paper); color:var(--ink);
+    border:3px solid var(--ink); border-radius:5px;
+    box-shadow:8px 8px 0 var(--pink);
+    padding:clamp(1.3rem,4vw,2.2rem);
+    margin-bottom:2.4rem;
+  }
+  .steps{ display:flex; gap:.45rem; align-items:center; margin-bottom:1.4rem; }
+  .steps i{
+    width:34px; height:8px; border:2px solid var(--ink); border-radius:2px;
+    background:transparent; display:block; transition:background .2s ease;
+  }
+  .steps i.on{ background:var(--ink); }
+  .steps em{
+    font-family:var(--mono); font-style:normal; font-size:.7rem; letter-spacing:.12em;
+    text-transform:uppercase; opacity:.55; margin-left:.5rem;
+  }
+  .qtitle{
+    font-family:var(--display); font-weight:800; letter-spacing:-0.015em;
+    font-size:clamp(1.5rem,4.5vw,2.1rem); line-height:1.08; margin:0 0 .35rem;
+  }
+  .qsub{ margin:0 0 1.5rem; font-size:.95rem; color:color-mix(in srgb, var(--ink) 65%, transparent); }
+
+  .chips{ display:grid; gap:.8rem; grid-template-columns:1fr; }
+  @media(min-width:600px){ .chips{ grid-template-columns:1fr 1fr; } }
+  .chip{
+    display:flex; gap:.85rem; align-items:flex-start; text-align:left; width:100%;
+    font-family:var(--body); font-size:1rem; cursor:pointer;
+    background:#fffdf6; color:var(--ink);
+    border:3px solid var(--ink); border-radius:4px;
+    padding:.9rem 1rem;
+    box-shadow:4px 4px 0 var(--accent, var(--blue));
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .chip:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--accent, var(--blue)); }
+  .chip:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--accent, var(--blue)); }
+  .chip:focus-visible{ outline:3px solid var(--accent, var(--blue)); outline-offset:3px; }
+  .chip .em{ font-size:1.5rem; line-height:1.1; flex:none; }
+  .chip .ic{ width:38px; height:38px; display:block; margin-top:-2px; }
+  .chip b{ display:block; font-family:var(--display); font-weight:800; font-size:1.06rem; line-height:1.2; }
+  .chip small{ display:block; font-size:.85rem; line-height:1.35; color:color-mix(in srgb, var(--ink) 62%, transparent); margin-top:.15rem; }
+  .chips .chip:nth-child(4n+1){ --accent:var(--blue); }
+  .chips .chip:nth-child(4n+2){ --accent:var(--pink); }
+  .chips .chip:nth-child(4n+3){ --accent:var(--gold); }
+  .chips .chip:nth-child(4n+4){ --accent:var(--green); }
+
+  .qfoot{
+    display:flex; justify-content:space-between; align-items:center; gap:1rem;
+    flex-wrap:wrap; margin-top:1.6rem;
+    border-top:2px solid rgba(23,20,14,.14); padding-top:1rem;
+  }
+  .lnk{
+    background:none; border:none; padding:0; cursor:pointer;
+    font-family:var(--mono); font-size:.8rem; letter-spacing:.02em;
+    color:color-mix(in srgb, var(--ink) 70%, transparent); text-decoration:underline;
+  }
+  .lnk:hover{ color:var(--ink); }
+  .lnk[hidden]{ display:none; }
+
+  /* ---------- the plan ---------- */
+  .eyebrow{
+    font-family:var(--pixel); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--gold); margin:0 0 .9rem;
+  }
+  .plantitle{
+    font-family:var(--display); font-weight:800; letter-spacing:-0.015em;
+    font-size:clamp(1.5rem,4.5vw,2.2rem); line-height:1.1; margin:0 0 .5rem; color:var(--paper);
+  }
+  .plansub{ margin:0 0 2rem; color:color-mix(in srgb, var(--paper) 70%, transparent); font-size:1rem; max-width:56ch; }
+
+  .stops{ list-style:none; margin:0 0 2.6rem; padding:0; display:grid; gap:1.4rem; }
+  @media(min-width:840px){ .stops{ grid-template-columns:repeat(3,1fr); } }
+  .stop a{
+    display:flex; flex-direction:column; height:100%; text-decoration:none;
+    background:var(--paper); color:var(--ink);
+    border:3px solid var(--ink); border-radius:4px;
+    box-shadow:6px 6px 0 var(--accent, var(--blue));
+    padding:1.3rem 1.3rem 1.2rem;
+    transition:transform .14s ease, box-shadow .14s ease;
+  }
+  .stop a:hover{ transform:translate(-3px,-3px); box-shadow:9px 9px 0 var(--accent, var(--blue)); }
+  .stop a:focus-visible{ outline:3px solid var(--accent, var(--blue)); outline-offset:3px; }
+  .stop:nth-child(1) a{ --accent:var(--green); }
+  .stop:nth-child(2) a{ --accent:var(--blue); }
+  .stop:nth-child(3) a{ --accent:var(--gold); }
+  .stop .lab{
+    align-self:flex-start; font-family:var(--pixel); font-size:.5rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--paper); background:var(--accent, var(--blue));
+    border:2px solid var(--ink); border-radius:3px; padding:.4rem .55rem; margin-bottom:.9rem;
+  }
+  .stop .mic{
+    align-self:flex-start; font-family:var(--pixel); font-size:.5rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink); background:var(--paper);
+    border:2px dashed var(--ink); border-radius:3px; padding:.35rem .5rem; margin:-.55rem 0 .9rem;
+  }
+  .stop h3{
+    font-family:var(--display); font-weight:800; letter-spacing:-0.01em; line-height:1.05;
+    font-size:1.45rem; margin:0 0 .55rem;
+  }
+  .stop p{ margin:0 0 1rem; font-size:.94rem; line-height:1.5; color:color-mix(in srgb, var(--ink) 82%, transparent); }
+  .stop .note{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.02em; text-transform:uppercase;
+    color:color-mix(in srgb, var(--ink) 55%, transparent); margin:-.5rem 0 1rem;
+  }
+  .stop .go{
+    margin-top:auto; font-family:var(--mono); font-weight:700; font-size:.8rem;
+    letter-spacing:.04em; text-transform:uppercase; display:inline-flex; align-items:center; gap:.45rem;
+  }
+  .stop .go::after{ content:"▶"; font-size:.68rem; transition:transform .14s ease; }
+  .stop a:hover .go::after{ transform:translateX(3px); }
+
+  /* ---------- extra rows under the plan ---------- */
+  .row{ margin-bottom:2.4rem; }
+  .row h2{
+    font-family:var(--pixel); font-weight:400; font-size:clamp(.72rem,1.9vw,.9rem);
+    margin:0 0 .5rem; color:var(--paper);
+  }
+  .row .rsub{ margin:0 0 1rem; font-size:.9rem; color:color-mix(in srgb, var(--paper) 62%, transparent); }
+  .row .rule{ height:3px; background:var(--paper); opacity:.16; margin-bottom:1.2rem; border-radius:2px; }
+  .pills{ display:flex; flex-wrap:wrap; gap:.6rem; }
+  .pill{
+    display:inline-flex; align-items:center; gap:.45rem;
+    font-family:var(--body); font-weight:600; font-size:.92rem; cursor:pointer;
+    text-decoration:none; background:transparent; color:var(--paper);
+    border:2px solid color-mix(in srgb, var(--paper) 45%, transparent); border-radius:999px;
+    padding:.5rem .95rem; transition:background .14s ease, color .14s ease, border-color .14s ease;
+  }
+  .pill:hover{ background:var(--paper); color:var(--ink); border-color:var(--paper); }
+  .pill .ic{ width:20px; height:20px; flex:none; }
+  .pill:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+
+  .redo{
+    display:flex; flex-wrap:wrap; gap:.8rem 1.4rem; align-items:center;
+    border-top:1px solid rgba(255,255,255,.12); padding-top:1.6rem; margin-top:.6rem;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:.5rem; cursor:pointer; text-decoration:none;
+    font-family:var(--mono); font-weight:700; font-size:.82rem; letter-spacing:.04em; text-transform:uppercase;
+    background:var(--paper); color:var(--ink);
+    border:3px solid var(--ink); border-radius:4px; padding:.65rem 1.1rem;
+    box-shadow:4px 4px 0 var(--gold);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--gold); }
+  .btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--gold); }
+  .btn.ghost{ background:transparent; color:var(--paper); border-color:var(--paper); box-shadow:4px 4px 0 rgba(255,255,255,.18); }
+  .btn.ghost:hover{ box-shadow:6px 6px 0 rgba(255,255,255,.18); }
+
+  footer{ padding:clamp(2.5rem,6vw,4rem) 0; margin-top:1rem;
+    border-top:1px solid rgba(255,255,255,0.12); }
+  .foot{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:.6rem;
+    font-family:var(--mono); font-size:.8rem; letter-spacing:.02em;
+    color:color-mix(in srgb, var(--paper) 60%, transparent); }
+  .foot a{ color:var(--gold); text-decoration:none; }
+  .foot a:hover{ text-decoration:underline; }
+
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap tabs-inner">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html">Create</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="topline">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span id="topNote">New here?</span>
+    </div>
+    <h1 id="pageH1">Where do I start?</h1>
+    <p class="hero-sub" id="pageSub">There's a lot on this site. Answer three quick questions and we'll pick out the three things worth trying first — everything here is free to play.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- ══════════ the questions ══════════ -->
+    <section class="qcard" id="quiz" aria-labelledby="qtitle">
+      <div class="steps" aria-hidden="true">
+        <i id="s1"></i><i id="s2"></i><i id="s3"></i><em id="stepTxt">Question 1 of 3</em>
+      </div>
+      <h2 class="qtitle" id="qtitle">&nbsp;</h2>
+      <p class="qsub" id="qsub">&nbsp;</p>
+      <div class="chips" id="chips" role="group" aria-labelledby="qtitle"></div>
+      <div class="qfoot">
+        <button type="button" class="lnk" id="backBtn" hidden>← Back a question</button>
+        <a class="lnk" href="arcade-index.html" style="margin-left:auto">Skip this — just show me everything</a>
+      </div>
+    </section>
+
+    <!-- ══════════ the plan ══════════ -->
+    <section id="plan" hidden>
+      <p class="eyebrow" id="planEyebrow">Your plan</p>
+      <h2 class="plantitle" id="planTitle">&nbsp;</h2>
+      <p class="plansub" id="planSub">&nbsp;</p>
+
+      <ol class="stops" id="stops"></ol>
+
+      <div class="row" id="moreRow">
+        <h2>More of the same, if you like the look of it</h2>
+        <p class="rsub">Everything else here that suits what you picked.</p>
+        <div class="rule"></div>
+        <div class="pills" id="morePills"></div>
+      </div>
+
+      <div class="row" id="cornerRow">
+        <h2 id="cornerHead">Handy to keep open</h2>
+        <p class="rsub" id="cornerSub">Reference pages for your instrument — chord shapes, where the notes live, and a tuner.</p>
+        <div class="rule"></div>
+        <div class="pills" id="cornerPills"></div>
+      </div>
+
+      <div class="row">
+        <h2>Something else on your mind?</h2>
+        <p class="rsub">Swap the goal and the plan changes straight away.</p>
+        <div class="rule"></div>
+        <div class="pills" id="goalPills"></div>
+      </div>
+
+      <div class="redo">
+        <a class="btn" href="arcade-index.html">See everything in the arcade</a>
+        <button type="button" class="btn ghost" id="againBtn">Answer again</button>
+        <button type="button" class="lnk" id="copyBtn" style="color:color-mix(in srgb,var(--paper) 70%, transparent)">Copy a link to this plan</button>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>Music Arcade — free, no sign-up needed</span>
+    <span>Built by <a href="index.html">William Troy</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ══════════════════ the questions ══════════════════ */
+  /* Little drawn instruments. There is no ukulele emoji, and 🎸 would have to
+     stand in for uke, guitar AND bass — three chips wearing the same picture.
+     One waisted body, redrawn at different sizes with a longer or shorter
+     neck, tells them apart the way the real instruments do. */
+  var BODY = 'M16 10C12 10 9.5 12.6 9.5 15.8c0 2 2 3 2 4.6 0 1.8-3.5 2.6-3.5 5.6 0 2.8 3.8 4.4 8 4.4'
+           + 's8-1.6 8-4.4c0-3-3.5-3.8-3.5-5.6 0-1.6 2-2.6 2-4.6C22.5 12.6 20 10 16 10z';
+  function ico(inner) {
+    return '<svg class="ic" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" '
+         + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
+  }
+  /* one body, drawn big or small, with a long or a stubby neck — the same
+     thing that tells a uke from a guitar from a bass across a room */
+  function stringed(scale, neckTop, head) {
+    var top = (22 - 12 * scale).toFixed(1);
+    return '<g transform="translate(16 22) scale(' + scale + ') translate(-16 -22)">'
+         + '<path d="' + BODY + '"/><circle cx="16" cy="19.4" r="2"/></g>'
+         + '<path d="M16 ' + top + 'V' + neckTop + '" stroke-width="2.6"/>' + head;
+  }
+  var ICON = {
+    /* squat: roomy body, barely any neck */
+    uke:   ico(stringed(0.88, 9.6, '<rect x="13.6" y="5.6" width="4.8" height="4" rx="1"/>')),
+    /* the big one: full body and a long neck */
+    gtr:   ico(stringed(1.0, 4.2, '<rect x="13.2" y="1" width="5.6" height="4" rx="1"/>')),
+    /* lanky: little body way down the bottom, neck the whole height */
+    bass:  ico(stringed(0.62, 2.6, '<rect x="13.8" y="0.4" width="4.4" height="2.8" rx=".8"/>')),
+    /* violin family: f-holes and a scroll where the headstock would be */
+    gdae:  ico('<g transform="translate(16 22) scale(.84) translate(-16 -22)"><path d="' + BODY + '"/>'
+             + '<path d="M12.8 17c-1 1.6-1 4 0 5.6M19.2 17c1 1.6 1 4 0 5.6"/></g>'
+             + '<path d="M16 11.9V6.6" stroke-width="2.6"/>'
+             + '<path d="M16.1 6.6c-.3-2.1 2.7-2.6 2.9-.5.2 1.7-2.2 2.2-3.1.8"/>'),
+    /* keyboard: five whites, with the blacks grouped two-then-one like the real thing */
+    pno:   ico('<rect x="3" y="9.5" width="26" height="14.5" rx="1.6"/>'
+             + '<path d="M8.2 17.5V24M13.4 17.5V24M18.6 9.5V24M23.8 17.5V24" stroke-width="1.6"/>'
+             + '<g fill="currentColor" stroke="none">'
+             + '<rect x="6.8" y="9.5" width="2.8" height="8"/><rect x="12" y="9.5" width="2.8" height="8"/>'
+             + '<rect x="22.4" y="9.5" width="2.8" height="8"/></g>'),
+    /* a microphone for the singers */
+    voice: ico('<rect x="12" y="3" width="8" height="14" rx="4"/>'
+             + '<path d="M7.5 15a8.5 8.5 0 0 0 17 0M16 23.5V29M11.5 29h9"/>'),
+    /* just looking around */
+    none:  ico('<path d="M16 3.5l2.7 7.3 7.3 2.7-7.3 2.7L16 23.5l-2.7-7.3L6 13.5l7.3-2.7z"/>'
+             + '<path d="M25.5 22.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"/>')
+  };
+
+  var INSTS = [
+    { k:'uke',   t:'Ukulele',                   s:'Four strings, G C E A' },
+    { k:'gtr',   t:'Guitar',                    s:'Six strings, acoustic or electric' },
+    { k:'pno',   t:'Piano or keyboard',         s:'Black keys and white keys' },
+    { k:'gdae',  t:'Fiddle, banjo or mandolin', s:'The GDAE family — trad instruments' },
+    { k:'bass',  t:'Bass',                      s:'Four fat strings, holding it down' },
+    { k:'voice', t:'Singing',                   s:'Your voice is the instrument' },
+    { k:'none',  t:'Nothing yet',               s:"I'm just having a look around" }
+  ];
+  INSTS.forEach(function (o) { o.svg = ICON[o.k]; });
+
+  var GOALS = [
+    { k:'ears',   em:'👂', t:'My ears',            s:'Hear a note or a chord and know what it is' },
+    { k:'read',   em:'🎼', t:'Reading music',      s:'Look at the dots on the page and know what to play' },
+    { k:'rhythm', em:'🥁', t:'Rhythm and timing',  s:'Counting it, feeling it, staying in time' },
+    { k:'chords', em:'🎹', t:'Chords and keys',    s:'Why songs sound the way they do' },
+    { k:'tunes',  em:'🎵', t:'Learning tunes',     s:'Real songs I can play for someone' },
+    { k:'write',  em:'✍️', t:'Making my own music', s:'Writing tunes, or making them up as I go' }
+  ];
+
+  var LEVELS = [
+    { k:1, em:'🌱', t:'Just started',   s:'Weeks in — or not started yet' },
+    { k:2, em:'🌿', t:'A while now',    s:'I know a few tunes and chords' },
+    { k:3, em:'🌳', t:'A good while',   s:"I'm comfortable — give me the deep end" }
+  ];
+
+  var GOAL_WORD = { ears:'training your ears', read:'reading music', rhythm:'rhythm and timing',
+                    chords:'chords and keys', tunes:'learning tunes', write:'making your own music' };
+  var INST_WORD = { uke:'Ukulele', gtr:'Guitar', pno:'Piano', gdae:'Fiddle, banjo & mandolin',
+                    bass:'Bass', voice:'Singing', none:'Just looking' };
+  var LEVEL_WORD = { 1:'just started', 2:'a while in', 3:'well on the way' };
+
+  /* which instrument name each reference page wants in its ?inst= */
+  var CHORD_INST = { gtr:'guitar', pno:'piano', gdae:'banjo', bass:'piano', voice:'piano', none:'piano' };
+  var FIND_INST  = { uke:'ukulele', gtr:'guitar', pno:'piano', gdae:'banjo', bass:'bass', voice:'piano', none:'piano' };
+
+  /* ══════════════════ the catalogue ══════════════════ */
+  var T = [
+
+    /* ---- depth 1 · a game you can play right now ---- */
+    { t:'In Tune?', h:'Ukulele/in-tune.html', dep:1, g:['ears'], lv:[1,2], i:['uke'],
+      d:'The four strings play one by one. Your call: is the uke in tune, or is something off?' },
+    { t:'Out of Tune?', h:'Ukulele/out-of-tune.html', dep:1, g:['ears'], lv:[1,2], i:['uke'],
+      d:'One string has gone sour. Find it by ear — the same trick you use tuning up for real.' },
+    { t:'Chord Quiz', h:'Ukulele/chord-quiz.html', dep:1, g:['chords'], lv:[1,2], i:['uke'],
+      d:'A chord name pops up. Build the shape from memory, then check your work.' },
+    { t:'Uke Progress', h:'Ukulele/chord-progress-uke.html', dep:1, g:['ears','chords'], lv:[2,3], i:['uke'],
+      d:'A run of chords plays and the last card stays blank — name the chord you heard.' },
+    { t:'What Note?', h:'Ukulele/what-note-ukulele-3frets.html', dep:1, g:['read'], lv:[1,2], i:['uke'],
+      d:'A marker lands on the fretboard. Work out which note that is and tap it on the keyboard.' },
+
+    { t:'In Tune?', h:'Guitar/in-tune-guitar.html', dep:1, g:['ears'], lv:[1,2], i:['gtr'],
+      d:'Six strings, played in turn. Is the guitar in tune, or is one of them off?' },
+    { t:'Out of Tune?', h:'Guitar/out-of-tune-guitar.html', dep:1, g:['ears'], lv:[1,2], i:['gtr'],
+      d:'One of the six is out. Find it by ear — the ear-test you use tuning up for real.' },
+    { t:'Chord Quiz', h:'Guitar/chord-quiz-guitar.html', dep:1, g:['chords'], lv:[1,2], i:['gtr'],
+      d:'A chord name pops up. Build the shape by tapping frets, then check it.' },
+    { t:'Guitar Progress', h:'Guitar/chord-progress-guitar.html', dep:1, g:['ears','chords'], lv:[2,3], i:['gtr'],
+      d:'Chords play with their real shapes and the last one is blank — name what you heard.' },
+    { t:'What Note?', h:'Guitar/what-note-guitar.html', dep:1, g:['read'], lv:[1,2], i:['gtr'],
+      d:'A marker lands on the neck. Work out the note and tap it on the little keyboard.' },
+    { t:'Triad Drop', h:'Guitar/triad-drop.html', dep:1, g:['chords'], lv:[3], i:['gtr'],
+      d:'Slide a three-note grip up the neck to the one fret where it spells the chord you were given.' },
+
+    { t:'Chord Catapult', h:'Piano/chord-catapult.html', dep:1, g:['chords'], lv:[1,2], i:['pno'],
+      d:'Fling a note in an arc onto the keyboard and strike the keys that spell the chord.' },
+    { t:'Chord Cascade', h:'Piano/chord-cascade.html', dep:1, g:['chords'], lv:[2,3], i:['pno'],
+      d:"A chord's shape drops from the sky — slide the keyboard so it lands where it actually fits." },
+
+    { t:'Pitch Invaders', h:'Ear%20Training/pitch-invaders_2.html', dep:1, g:['ears'], lv:[1,2],
+      d:'Aliens fall down the lane of their note — tap the note you hear to shoot them down.' },
+    { t:'Pitch Invaders — Chromatic', h:'Ear%20Training/pitch-invaders-chromatic.html', dep:1, g:['ears'], lv:[3],
+      d:'All twelve notes, sharps and flats included, one new one at a time so your ear can settle.' },
+    { t:'Pitch Invaders — Circle of Fifths', h:'Ear%20Training/pitch-invaders-fifths.html', dep:1, g:['ears','chords'], lv:[2,3],
+      d:'Only the notes of the key fall, and the wheel spins to a new key every time you beat a boss.' },
+    { t:'Chord Progress', h:'Ear%20Training/chord-progress.html', dep:1, g:['ears','chords'], lv:[2,3],
+      d:'A chord progression plays with the last card blank. Name the chord you heard.' },
+    { t:'Scale Climb', h:'Theory/scale-climb.html', dep:1, g:['ears','chords'], lv:[2],
+      d:"Tap the scale's next note to climb a step — and stay ahead of the barrels rolling down." },
+
+    { t:'Rhythm Zoo', h:'rhythm-zoo.html', dep:1, g:['rhythm'], lv:[1],
+      d:'Every note is an animal. The gentlest way in to how long each one lasts.' },
+    { t:'Bar Packer', h:'Theory/bar-packer.html', dep:1, g:['rhythm'], lv:[1,2],
+      d:'Pack a bar with note blocks so it fills exactly — no gaps, no spilling over.' },
+    { t:'The Missing Piece', h:'Theory/missing-piece.html', dep:1, g:['rhythm'], lv:[1,2],
+      d:'A bar drawn as a jigsaw with one piece gone. Pick the note that fills the hole exactly.' },
+    { t:'Fix the Plank', h:'Theory/fix-the-plank.html', dep:1, g:['rhythm'], lv:[2,3],
+      d:'One plank in the bar is cracked. Rebuild its length out of smaller notes.' },
+    { t:'Rhythm Runner', h:'Theory/rhythm-runner.html', dep:1, g:['rhythm'], lv:[2,3],
+      d:'Read the bar of rhythm, then run it — hold for the long notes, land on the rests.' },
+
+    { t:'Apple Shot', h:'Theory/apple-shot.html', dep:1, g:['read'], lv:[1],
+      d:"Read the apple's note, draw the bow and loose it as your aim crosses that note." },
+    { t:'Hidden Words', h:'Theory/hidden-words.html', dep:1, g:['read'], lv:[1],
+      d:'Each note on the stave stands for a letter. Read them in turn and spell the hidden word.' },
+    { t:'Note Reading', h:'Theory/note-reading.html', dep:1, g:['read'], lv:[1,2],
+      d:'A note appears on the stave — name it before the clock runs down.' },
+    { t:'Note Elevator', h:'Theory/note-elevator.html', dep:1, g:['read'], lv:[2],
+      d:'Read the note, press its floor, send the lift there. Faster and faster as you go.' },
+
+    /* ---- depth 2 · a proper tool ---- */
+    { t:'Tuner', h:'tuner.html', dep:2, g:['ears'], lv:[1], mic:true,
+      d:'Play a note and the needle shows how sharp or flat you are. Worth doing before anything else.' },
+    { t:'Pitch Practice', h:'Ear%20Training/pitch-practice.html', w:10, dep:2, g:['ears'], lv:[2,3],
+      d:'Pure ear training, no game. Hear a short run of notes off a home note and name what you heard.' },
+    { t:'Chorale Ear Trainer', h:'chorale-ears.html', w:-8, dep:2, g:['ears','chords'], lv:[3],
+      d:'Hear a few bars of real Bach and name the chords. What ears have been sharpened on for 300 years.' },
+
+    { t:'Note Names', h:'note-names.html', w:20, dep:2, g:['read'], lv:[1],
+      d:'Every Good Boy Deserves Football. The names of the notes on the stave, from scratch.' },
+    { t:'Find the Note', h:'find-the-note.html', dep:2, g:['read','chords'], lv:[1,2],
+      d:'Where every note lives on your own instrument — pick a note and it lights up everywhere it hides.',
+      mk:function(a){ return 'find-the-note.html?inst=' + (FIND_INST[a.inst] || 'piano'); } },
+    { t:'Melody Trainer', h:'melody-trainer_1.html', w:15, dep:2, g:['tunes','read'], lv:[1,2,3], mic:true,
+      fav:['gdae','voice'],
+      d:'Read a tune on the stave and play or sing it back. The cursor only moves when you land the right note — and 200+ trad tunes come loaded.' },
+    { t:'Song Trainer', h:'song-trainer.html', dep:2, g:['tunes','chords'], lv:[1,2], fav:['uke','gtr'],
+      d:'Learn a song by its chords and strumming, play along in time, then dig into the theory behind it.' },
+    { t:'Jam Track', h:'jam-track.html', w:10, dep:2, g:['tunes','rhythm','write'], lv:[2,3],
+      d:'Write out a chord chart, pick a style and a tempo, and a band plays it back on a loop for you to play over.' },
+
+    { t:'Chords', h:'chords.html', w:8, dep:2, g:['chords'], lv:[1,2],
+      d:'Every major and minor chord, drawn out for your instrument. Made to be printed and stuck on the wall.',
+      mk:function(a){ return 'chords.html?inst=' + (CHORD_INST[a.inst] || 'piano'); } },
+    { t:'Ukulele Chords', h:'ukulele-chords.html', dep:2, g:['chords'], lv:[1], i:['uke'],
+      d:'Ten first chords, drawn big and clear. Enough for hundreds of songs.' },
+    { t:'Scale Theory', h:'scale-theory.html', w:-10, dep:2, g:['chords'], lv:[2,3],
+      d:'Every scale, why it is built the way it is, and what it sounds like on your instrument.' },
+    { t:'Chord Theory', h:'chord-theory.html', w:-4, dep:2, g:['chords'], lv:[2,3],
+      d:'Major, minor, diminished, augmented — how chords are stacked, and why each one has its mood.' },
+    { t:'Circle of Fifths', h:'circle-of-fifths.html', w:-6, dep:2, g:['chords'], lv:[2,3],
+      d:'The map of all the keys, and which chords live in each one.' },
+    { t:'Blues Theory', h:'blues-theory.html', w:-15, dep:2, g:['chords','write'], lv:[3],
+      d:'The blue notes — where they come from and why they sound the way they do.' },
+
+    { t:'Song Maker', h:'composer.html', w:12, dep:2, g:['write'], lv:[1,2],
+      d:"Drop chords into the bars and draw a melody. Notes in your key light up, so it's hard to hit a wrong one." },
+    { t:'Song Lab', h:'songlab.html', w:10, dep:2, g:['write'], lv:[2,3],
+      d:'The grown-up studio: verses, choruses and bridges, any chord you like, and a drum beat you tap out yourself.' },
+    { t:'Phrasebook', h:'phrasebook.html', dep:2, g:['write'], lv:[3],
+      d:'Collect the licks you love in notation, then drill them through all twelve keys and every mode.' },
+    { t:'The Listening Lab', h:'listening-lab.html', w:8, dep:2, g:['write'], lv:[3], mic:true,
+      d:'Solo over jazz and blues charts and the lab listens — your solo comes back written out and marked.' },
+    { t:'The Charts', h:'gallery.html', w:-10, dep:2, g:['write'], lv:[1,2,3],
+      d:'Listen to songs other people have built here, and vote your favourites up the charts.' },
+
+    /* ---- depth 3 · a whole course ---- */
+    { t:'Old Man and the C', h:'Theory/old-man-and-the-c.html', dep:3, g:['read'], lv:[1,2],
+      d:'A seafaring note-reading tale. Read each note to reel it in and sail from the shallows out to deeper water.' },
+    { t:'Learning to Fly', h:'learning-to-fly.html', dep:3, g:['write','ears'], lv:[2,3], mic:true,
+      note:'First belt is free',
+      d:'A whole course in making it up as you go — from tunes you already know, out to soloing over a groove on your own instrument.' },
+    /* filed under making your own music, not under chords: it is the only
+       course tagged for harmony, and it was turning up as the horizon for
+       every chords plan — a ukulele beginner does not need walking bass */
+    { t:'Learning to Walk', h:'learning-to-walk.html', dep:3, g:['write'], lv:[2,3], fav:['bass'],
+      note:'First module is free',
+      d:'Sit in with an old jazz cat and learn to walk a bassline from the ground up — barn dance to blues to a late-night club.' },
+    { t:'The Counterpoint Dojo', h:'Theory/gradus-shell.html', dep:3, g:['write'], lv:[3],
+      note:'First module is free',
+      d:'Write a line above an old melody and have a stern master correct it note by note. The way it was taught 300 years ago.' }
+  ];
+
+  /* ══════════════════ picking the plan ══════════════════
+     Goal matters most, then whether it suits your instrument, then
+     whether it is pitched at your level. One stop from each depth, so
+     the plan reads as a journey: something to play now, a real tool,
+     and something to grow into. */
+  function score(x, a) {
+    if (x.i && x.i.indexOf(a.inst) < 0) return -1;          // instrument-only, and not yours
+    var s = 0;
+    s += (x.g.indexOf(a.goal) >= 0) ? 100 : -40;
+    s += x.i ? 60 : 10;                                      // built for your instrument beats one-size-fits-all
+    if (x.fav && x.fav.indexOf(a.inst) >= 0) s += 35;
+    if (x.lv.indexOf(a.lvl) >= 0) s += 40;
+    else {
+      var gap = 9; x.lv.forEach(function (v) { gap = Math.min(gap, Math.abs(v - a.lvl)); });
+      s -= 25 * gap;
+    }
+    s += (x.w || 0);   // the nudge that settles ties: doing beats reading about it
+    return s;
+  }
+
+  function plan(a) {
+    /* Only ever offer things that actually serve the goal they picked. If a
+       depth has nothing to offer, the plan is simply shorter there and tops
+       up from the rest — better than padding it with a near-miss. */
+    var ranked = T.map(function (x) { return { x:x, s:score(x, a) }; })
+                  .filter(function (o) { return o.s > 0 && o.x.g.indexOf(a.goal) >= 0; })
+                  .sort(function (p, q) { return q.s - p.s; });
+    var out = [], used = {};
+    [1, 2, 3].forEach(function (d) {
+      for (var i = 0; i < ranked.length; i++) {
+        var o = ranked[i];
+        if (o.x.dep === d && !used[o.x.t]) { used[o.x.t] = 1; out.push(o.x); return; }
+      }
+    });
+    // nothing at some depth (rare) — top up from whatever is left, keeping the order
+    for (var i = 0; i < ranked.length && out.length < 3; i++) {
+      if (!used[ranked[i].x.t]) { used[ranked[i].x.t] = 1; out.push(ranked[i].x); }
+    }
+    out.sort(function (p, q) { return p.dep - q.dep; });
+
+    // everything else that fits, so a good tool isn't buried just because
+    // something else edged it out of the three
+    var more = [];
+    for (var j = 0; j < ranked.length && more.length < 5; j++) {
+      if (!used[ranked[j].x.t]) { used[ranked[j].x.t] = 1; more.push(ranked[j].x); }
+    }
+    return { stops:out, more:more };
+  }
+
+  var LABELS = ['Start here', 'Then this', 'When you’re ready'];
+
+  /* the reference pages worth keeping open, for this instrument */
+  function corner(a) {
+    var out = [], own = (a.inst !== 'none' && a.inst !== 'voice'), ic = ICON[a.inst] || '';
+    if (a.inst === 'uke') out.push({ t:'Ukulele chords', h:'ukulele-chords.html', ic:ic });
+    else if (own) out.push({ t:'Chord shapes', h:'chords.html?inst=' + (CHORD_INST[a.inst] || 'piano'), ic:ic });
+    if (own) out.push({ t:'Where the notes live', h:'find-the-note.html?inst=' + FIND_INST[a.inst], ic:ic });
+    out.push({ t:'Tuner', h:'tuner.html' });
+    out.push({ t:'Circle of fifths', h:'circle-of-fifths.html' });
+    return out;
+  }
+
+  /* ══════════════════ state ══════════════════ */
+  var KEY = 'ma.start.v1';
+  var a = { inst:null, goal:null, lvl:null };
+  var step = 0;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ inst:a.inst, goal:a.goal, lvl:a.lvl, at:Date.now() })); }
+    catch (e) {}
+  }
+  function load() {
+    try {
+      var v = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (v && v.inst && v.goal && v.lvl) return v;
+    } catch (e) {}
+    return null;
+  }
+
+  /* ══════════════════ the questions ══════════════════ */
+  var QS = [
+    { title:'What do you play?', sub:'Pick the one you spend most of your time on.', opts:INSTS,  set:function (k) { a.inst = k; } },
+    { title:'What would you like to get better at?', sub:'Just the one for now — you can change it after.', opts:GOALS, set:function (k) { a.goal = k; } },
+    { title:'How long have you been at it?', sub:'No wrong answer. It only decides where we start you.', opts:LEVELS, set:function (k) { a.lvl = k; } }
+  ];
+
+  function drawStep() {
+    var q = QS[step];
+    $('qtitle').textContent = q.title;
+    $('qsub').textContent = q.sub;
+    $('stepTxt').textContent = 'Question ' + (step + 1) + ' of 3';
+    [1, 2, 3].forEach(function (n) { $('s' + n).classList.toggle('on', n <= step + 1); });
+    $('backBtn').hidden = (step === 0);
+
+    var box = $('chips');
+    box.textContent = '';
+    q.opts.forEach(function (o) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip';
+      b.innerHTML = '<span class="em" aria-hidden="true">' + (o.svg || o.em) + '</span>' +
+                    '<span><b></b><small></small></span>';
+      b.querySelector('b').textContent = o.t;
+      b.querySelector('small').textContent = o.s;
+      b.addEventListener('click', function () {
+        q.set(o.k);
+        if (step < 2) { step++; drawStep(); $('qtitle').focus(); }
+        else { save(); showPlan(); }
+      });
+      box.appendChild(b);
+    });
+  }
+
+  /* ══════════════════ the plan ══════════════════ */
+  function showPlan(quiet) {
+    var got = plan(a), stops = got.stops;
+
+    $('quiz').hidden = true;
+    $('plan').hidden = false;
+    $('topNote').textContent = 'Music Arcade';
+    $('pageH1').textContent = 'Here’s where to start';
+    $('pageSub').textContent = 'Three things, easiest first. Nothing here needs an account — just click and play.';
+
+    $('planTitle').textContent = INST_WORD[a.inst] + ' · ' + GOAL_WORD[a.goal];
+    $('planSub').textContent = 'Picked for someone ' + LEVEL_WORD[a.lvl] + '. Work down the list — the first one you can play right now, the last one is where it gets serious.';
+
+    var ol = $('stops');
+    ol.textContent = '';
+    stops.forEach(function (x, n) {
+      var li = document.createElement('li');
+      li.className = 'stop';
+      var link = document.createElement('a');
+      link.href = x.mk ? x.mk(a) : x.h;
+      link.innerHTML =
+        '<span class="lab"></span>' +
+        (x.mic ? '<span class="mic">🎤 listens to your playing</span>' : '') +
+        '<h3></h3><p></p>' +
+        (x.note ? '<p class="note"></p>' : '') +
+        '<span class="go">Open</span>';
+      link.querySelector('.lab').textContent = LABELS[n] || 'Also worth a look';
+      link.querySelector('h3').textContent = x.t;
+      link.querySelector('p').textContent = x.d;
+      if (x.note) link.querySelector('.note').textContent = x.note;
+      li.appendChild(link);
+      ol.appendChild(li);
+    });
+
+    var mp = $('morePills');
+    mp.textContent = '';
+    got.more.forEach(function (x) {
+      var el = document.createElement('a');
+      el.className = 'pill'; el.href = x.mk ? x.mk(a) : x.h;
+      el.textContent = x.t + (x.mic ? ' 🎤' : '');
+      el.title = x.d;
+      mp.appendChild(el);
+    });
+    $('moreRow').hidden = (got.more.length === 0);
+
+    var cp = $('cornerPills');
+    cp.textContent = '';
+    corner(a).forEach(function (c) {
+      var el = document.createElement('a');
+      el.className = 'pill'; el.href = c.h;
+      el.innerHTML = (c.ic || '') + '<span></span>';
+      el.querySelector('span').textContent = c.t;
+      cp.appendChild(el);
+    });
+    var solo = (a.inst === 'none' || a.inst === 'voice');
+    $('cornerSub').textContent = solo
+      ? 'Reference pages worth keeping open in another tab.'
+      : 'Reference pages for your instrument — chord shapes, where the notes live, and a tuner.';
+
+    var gp = $('goalPills');
+    gp.textContent = '';
+    GOALS.forEach(function (g) {
+      if (g.k === a.goal) return;
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'pill';
+      b.innerHTML = '<span aria-hidden="true"></span><span></span>';
+      b.children[0].textContent = g.em;
+      b.children[1].textContent = g.t;
+      b.addEventListener('click', function () {
+        a.goal = g.k; save(); setHash(); showPlan(true);
+        $('planTitle').scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+      gp.appendChild(b);
+    });
+
+    if (!quiet) { setHash(); window.scrollTo(0, 0); }
+  }
+
+  /* a plan is a link you can send someone — #uke/tunes/2 */
+  function setHash() {
+    try { history.replaceState(null, '', '#' + a.inst + '/' + a.goal + '/' + a.lvl); } catch (e) {}
+  }
+  function fromHash() {
+    var m = /^#([a-z]+)\/([a-z]+)\/([123])$/.exec(location.hash || '');
+    if (!m) return false;
+    if (!INST_WORD[m[1]] || !GOAL_WORD[m[2]]) return false;
+    a.inst = m[1]; a.goal = m[2]; a.lvl = +m[3];
+    return true;
+  }
+
+  /* ══════════════════ wiring ══════════════════ */
+  $('backBtn').addEventListener('click', function () {
+    if (step > 0) { step--; drawStep(); }
+  });
+  $('againBtn').addEventListener('click', function () {
+    a = { inst:null, goal:null, lvl:null }; step = 0;
+    try { localStorage.removeItem(KEY); } catch (e) {}   // they want to redo it, so forget the old one
+    $('plan').hidden = true; $('quiz').hidden = false;
+    $('topNote').textContent = 'New here?';
+    $('pageH1').textContent = 'Where do I start?';
+    $('pageSub').textContent = "There's a lot on this site. Answer three quick questions and we'll pick out the three things worth trying first — everything here is free to play.";
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    drawStep(); window.scrollTo(0, 0);
+  });
+  $('copyBtn').addEventListener('click', function () {
+    var say = function (msg) {
+      $('copyBtn').textContent = msg;
+      setTimeout(function () { $('copyBtn').textContent = 'Copy a link to this plan'; }, 2600);
+    };
+    var nope = function () { say('Copy it from the address bar'); };   // never claim it worked when it didn't
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(location.href).then(function () { say('Link copied ✓'); }, nope);
+    } else nope();
+  });
+
+  $('qtitle').setAttribute('tabindex', '-1');
+
+  /* a shared link wins; then a plan you made before; otherwise question 1 */
+  if (fromHash()) {
+    save(); showPlan(true);
+  } else {
+    var saved = load();
+    if (saved) {
+      a.inst = saved.inst; a.goal = saved.goal; a.lvl = saved.lvl;
+      showPlan(true);
+      $('planEyebrow').textContent = 'Welcome back · your plan';
+    } else {
+      drawStep();
+    }
+  }
+})();
+</script>
+</body>
+</html>
