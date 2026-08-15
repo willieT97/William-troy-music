@@ -171,6 +171,8 @@
   .game .play::after{ content:"▶"; font-size:.7rem; transition:transform .14s ease; }
   .game:hover .play::after{ transform:translateX(3px); }
 
+  .searchrow{ padding:.2rem 0 1.6rem; max-width:640px; }
+
   /* ---------- "I want to…" goal strip ---------- */
   .goalstrip{ padding:.4rem 0 .2rem; }
   .goalstrip .gs-head{ display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
@@ -329,6 +331,9 @@
      nobody arrives thinking "I need the Theory section", they arrive
      thinking "I want to read music". Picks come from tools.js, so this
      reaches the Training and Dojo pages too, not just the games here. -->
+<!-- one search box over everything: tools, the tune library, scales & chords -->
+<div class="wrap searchrow" id="searchRow"></div>
+
 <section class="wrap goalstrip" id="goalStrip" aria-labelledby="gsHead">
   <div class="gs-head">
     <h2 id="gsHead">I want to…</h2>
@@ -1633,8 +1638,15 @@
 })();
 </script>
 
-<!-- ═══════════ "I want to…" goal strip ═══════════ -->
+<!-- ═══════════ search + "I want to…" goal strip ═══════════ -->
 <script src="/tools.js"></script>
+<script src="/search.js"></script>
+<script>
+(function () {
+  var row = document.getElementById('searchRow');
+  if (row && window.MASearch) MASearch.mount(row);
+})();
+</script>
 <script>
 (function () {
   'use strict';
