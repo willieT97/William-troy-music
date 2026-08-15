@@ -169,6 +169,20 @@
   // MAAuth.mountVault(container, { kind, noun, getState, applyState })
   window.MAAuth.mountVault = function (container, opts) {
     var kind = opts.kind, noun = opts.noun || 'creation', LK = 'mavault.' + kind, busy = false;
+    // ?open=<id> — the arcade's "welcome back" card links a saved piece
+    // straight into its studio; fires once, whenever the row first appears
+    var wantOpen = null;
+    try { wantOpen = new URLSearchParams(location.search).get('open'); } catch (e) {}
+    function tryDeepOpen(items) {
+      if (!wantOpen) return;
+      for (var i = 0; i < items.length; i++) {
+        if (String(items[i].id) === wantOpen) {
+          var it = items[i]; wantOpen = null;
+          try { opts.applyState(it.data); maToast('Opened “' + (it.title || noun) + '”'); } catch (e) {}
+          return;
+        }
+      }
+    }
     function uid() { return 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
     function local() { try { return JSON.parse(localStorage.getItem(LK)) || []; } catch (e) { return []; } }
     function setLocal(a) { try { localStorage.setItem(LK, JSON.stringify(a)); } catch (e) {} }
@@ -197,6 +211,7 @@
       });
 
       function drawItems(items) {
+        tryDeepOpen(items);
         listEl.innerHTML = '';
         if (!items.length) { listEl.appendChild(el('div', 'mav-empty', 'No saved ' + noun + 's yet.')); return; }
         items.forEach(function (it) {

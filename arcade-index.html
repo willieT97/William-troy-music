@@ -173,6 +173,39 @@
 
   .searchrow{ padding:.2rem 0 1.6rem; max-width:640px; }
 
+  /* ---------- welcome back (signed in) ---------- */
+  .wb{ padding:.2rem 0 1.8rem; }
+  .wb .wb-head{ display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .wb .wb-head h2{ font-family:var(--pixel); font-weight:400; font-size:clamp(.8rem,2.1vw,1.05rem); margin:0; color:var(--gold); }
+  .wb .wb-note{ font-family:var(--mono); font-size:.78rem; color:color-mix(in srgb, var(--paper) 58%, transparent); }
+  .wb-grid{ display:grid; gap:1.1rem; grid-template-columns:1fr; }
+  @media(min-width:760px){ .wb-grid{ grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); } }
+  .wb-card{ background:var(--paper); color:var(--ink); border:3px solid var(--ink); border-radius:5px;
+    box-shadow:6px 6px 0 var(--accent,var(--green)); padding:1.1rem 1.2rem 1.15rem;
+    display:flex; flex-direction:column; }
+  .wb-card .k{ align-self:flex-start; font-family:var(--pixel); font-size:.5rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--paper); background:var(--accent,var(--green));
+    border:2px solid var(--ink); border-radius:3px; padding:.35rem .5rem; margin-bottom:.8rem; }
+  .wb-card h3{ font-family:var(--display); font-weight:800; font-size:1.3rem; line-height:1.1; margin:0 0 .35rem; }
+  .wb-card .sub{ font-size:.86rem; color:color-mix(in srgb, var(--ink) 65%, transparent); margin:0 0 .8rem; }
+  .wb-bar{ height:12px; border:2px solid var(--ink); border-radius:99px; background:#fffdf6; overflow:hidden; margin-bottom:.9rem; }
+  .wb-bar i{ display:block; height:100%; background:var(--accent,var(--green)); border-radius:99px; }
+  .wb-card .go{ margin-top:auto; align-self:flex-start; text-decoration:none; cursor:pointer;
+    font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--ink); border:2.5px solid var(--ink); border-radius:5px; padding:.55rem .95rem;
+    background:#fffdf6; box-shadow:3px 3px 0 var(--ink); }
+  .wb-card .go:hover{ background:var(--accent,var(--green)); color:var(--paper); }
+  .wb-card .go:active{ transform:translate(2px,2px); box-shadow:none; }
+  .wb-card .more{ margin:.7rem 0 0; font-size:.8rem; }
+  .wb-card .more a{ color:var(--blue); font-weight:700; }
+  .wb-list{ list-style:none; margin:0 0 .9rem; padding:0; display:flex; flex-direction:column; gap:.45rem; }
+  .wb-list a{ display:flex; justify-content:space-between; gap:.8rem; align-items:baseline; text-decoration:none;
+    color:var(--ink); border:2px solid color-mix(in srgb, var(--ink) 25%, transparent); border-radius:5px;
+    padding:.5rem .7rem; font-weight:700; }
+  .wb-list a:hover{ border-color:var(--ink); background:#fffdf6; }
+  .wb-list a small{ font-family:var(--mono); font-weight:400; font-size:.68rem;
+    color:color-mix(in srgb, var(--ink) 55%, transparent); white-space:nowrap; }
+
   /* ---------- "I want to…" goal strip ---------- */
   .goalstrip{ padding:.4rem 0 .2rem; }
   .goalstrip .gs-head{ display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
@@ -331,6 +364,18 @@
      nobody arrives thinking "I need the Theory section", they arrive
      thinking "I want to read music". Picks come from tools.js, so this
      reaches the Training and Dojo pages too, not just the games here. -->
+<!-- ═══════════ WELCOME BACK — the signed-in front page ═══════════
+     Appears only when the account actually has something to come back to:
+     a course mid-flight, saved songs, or the Rollbook. Filled by the script
+     near the end of the page; invisible to guests and to brand-new accounts. -->
+<section class="wrap wb" id="wbBand" aria-labelledby="wbHead" hidden>
+  <div class="wb-head">
+    <h2 id="wbHead">Welcome back</h2>
+    <span class="wb-note" id="wbNote"></span>
+  </div>
+  <div class="wb-grid" id="wbGrid"></div>
+</section>
+
 <!-- one search box over everything: tools, the tune library, scales & chords -->
 <div class="wrap searchrow" id="searchRow"></div>
 
@@ -1635,6 +1680,119 @@
     wc.hidden = false;
     document.getElementById('wcGo').focus();
   }, 350);
+})();
+</script>
+
+<!-- ═══════════ welcome back — the signed-in front page ═══════════ -->
+<script>
+(function () {
+  'use strict';
+  var band = document.getElementById('wbBand');
+  if (!band) return;
+
+  var COURSES = [
+    { id:'learning-to-walk', t:'Learning to Walk', h:'learning-to-walk.html', total:25, k:'Dojo · walking bass', lk:'ltw.progress.v1' },
+    { id:'learning-to-fly',  t:'Learning to Fly',  h:'learning-to-fly.html',  total:43, k:'Dojo · improvisation', lk:'ltf.progress.v1' },
+    { id:'gradus',           t:'The Counterpoint Dojo', h:'Theory/gradus-shell.html', total:23, k:'Dojo · counterpoint', lk:'gradus.progress.v1' }
+  ];
+  var STUDIOS = { songmaker:{ t:'Song Maker', h:'composer.html' },
+                  songlab:  { t:'Song Lab',   h:'songlab.html' },
+                  jamtrack: { t:'Jam Track',  h:'jam-track.html' } };
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function el(tag, cls, html) { var n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+  function doneCount(p) { return p && p.done ? Object.keys(p.done).length : 0; }
+  function localProg(lk) { try { return JSON.parse(localStorage.getItem(lk) || 'null'); } catch (e) { return null; } }
+
+  function build(user) {
+    if (!user) { band.hidden = true; return; }
+    var A = window.MAAuth;
+
+    Promise.all([
+      A.creations.list('progress').catch(function () { return []; }),
+      A.creations.list('songmaker').catch(function () { return []; }),
+      A.creations.list('songlab').catch(function () { return []; }),
+      A.creations.list('jamtrack').catch(function () { return []; })
+    ]).then(function (r) {
+      var progRows = r[0], songs = [];
+      ['songmaker', 'songlab', 'jamtrack'].forEach(function (kind, i) {
+        r[i + 1].forEach(function (row) { songs.push({ kind: kind, row: row }); });
+      });
+      songs.sort(function (a, b) { return String(b.row.updated_at).localeCompare(String(a.row.updated_at)); });
+
+      // one status per course: the cloud row, topped up with anything this
+      // device knows that the cloud hasn't heard yet
+      var courses = COURSES.map(function (c) {
+        var cloud = null;
+        progRows.forEach(function (row) { if (row.title === c.id) cloud = row; });
+        var local = localProg(c.lk);
+        var done = Math.max(doneCount(cloud && cloud.data), doneCount(local));
+        return { c: c, done: Math.min(done, c.total), at: cloud ? String(cloud.updated_at) : '' };
+      }).filter(function (x) { return x.done > 0; })
+        .sort(function (a, b) { return b.at.localeCompare(a.at); });
+
+      var grid = document.getElementById('wbGrid');
+      grid.textContent = '';
+
+      if (courses.length) {
+        var top = courses[0], pct = Math.round(100 * top.done / top.c.total);
+        var card = el('div', 'wb-card'); card.style.setProperty('--accent', 'var(--green)');
+        card.innerHTML =
+          '<span class="k">Continue</span>' +
+          '<h3>' + esc(top.c.t) + '</h3>' +
+          '<p class="sub">' + esc(top.c.k) + ' — ' + top.done + ' of ' + top.c.total + ' lessons done</p>' +
+          '<div class="wb-bar" role="img" aria-label="' + pct + '% done"><i style="width:' + pct + '%"></i></div>' +
+          '<a class="go" href="' + esc(top.c.h) + '">Pick up where you left off</a>' +
+          (courses.length > 1
+            ? '<p class="more">Also going: ' + courses.slice(1).map(function (x) {
+                return '<a href="' + esc(x.c.h) + '">' + esc(x.c.t) + '</a>'; }).join(' · ') + '</p>'
+            : '');
+        grid.appendChild(card);
+      }
+
+      if (songs.length) {
+        var card2 = el('div', 'wb-card'); card2.style.setProperty('--accent', 'var(--blue)');
+        card2.innerHTML =
+          '<span class="k">Your songs</span>' +
+          '<ul class="wb-list">' + songs.slice(0, 3).map(function (s) {
+            var st = STUDIOS[s.kind];
+            return '<li><a href="' + esc(st.h) + '?open=' + encodeURIComponent(s.row.id) + '">' +
+                   '<span>' + esc(s.row.title || 'Untitled') + '</span><small>' + esc(st.t) + '</small></a></li>';
+          }).join('') + '</ul>' +
+          '<a class="go" href="create.html">Make something new</a>';
+        grid.appendChild(card2);
+      }
+
+      if (A.isTeacher && A.isTeacher()) {
+        var card3 = el('div', 'wb-card'); card3.style.setProperty('--accent', 'var(--gold)');
+        card3.innerHTML =
+          '<span class="k">Teaching</span>' +
+          '<h3>The Rollbook</h3>' +
+          '<p class="sub">Your timetable, lesson notes and parent emails.</p>' +
+          '<a class="go" href="rollbook.html">Open the Rollbook</a>';
+        grid.appendChild(card3);
+      }
+
+      // a brand-new account has nothing to come back to — say nothing
+      if (!grid.children.length) { band.hidden = true; return; }
+
+      var prof = (A.profile && A.profile()) || {};
+      document.getElementById('wbHead').textContent =
+        prof.username ? 'Welcome back, ' + prof.username : 'Welcome back';
+      document.getElementById('wbNote').textContent =
+        courses.length ? 'Everything saves to your account — any device.' : '';
+      // the newcomer invitation is redundant for someone mid-course
+      var cta = document.querySelector('.hero-cta'); if (cta) cta.style.display = 'none';
+      band.hidden = false;
+    }).catch(function () { band.hidden = true; });
+  }
+
+  function arm() {
+    if (window.MAAuth && window.MAAuth.onChange) window.MAAuth.onChange(build);
+    else setTimeout(arm, 120);
+  }
+  arm();
 })();
 </script>
 
