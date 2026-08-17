@@ -226,6 +226,9 @@ var CATALOGUE = [
   /* ---- depth 3 · a whole course ---- */
   { t:'Old Man and the C', h:'Theory/old-man-and-the-c.html', dep:3, g:['read'], lv:[1,2],
     d:'A seafaring note-reading tale. Read each note to reel it in and sail from the shallows out to deeper water.' },
+  { t:'The Fretboard Atlas', h:'Guitar/fretboard-atlas.html', dep:3, g:['read'], lv:[1,2], i:['gtr'],
+    note:'Expedition I is free',
+    d:'Set out across the guitar neck with an old mapmaker and chart where every note lives, string by string.' },
   { t:'Learning to Fly', h:'learning-to-fly.html', dep:3, g:['write','ears'], lv:[2,3], mic:true,
     note:'First belt is free',
     d:'A whole course in making it up as you go — from tunes you already know, out to soloing over a groove on your own instrument.' },

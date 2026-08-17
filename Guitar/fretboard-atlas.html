@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Fretboard Atlas — Terra Incognita</title>
@@ -37,7 +38,7 @@
   .title{ position:relative; display:inline-block; font-family:var(--disp); font-weight:800;
     font-size:clamp(1.5rem,5.5vw,2.4rem); letter-spacing:-.01em; line-height:1; }
   .title::after{ content:attr(data-text); position:absolute; left:2.5px; top:2.5px; color:var(--pink);
-    mix-blend-mode:multiply; z-index:-1; }
+    mix-blend-mode:multiply; z-index:-1; white-space:nowrap; }
   .tagline{ font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; text-transform:uppercase;
     color:var(--muted); margin-top:9px; }
 
@@ -60,6 +61,16 @@
   .atlas a.cur{ border-left-color:var(--pink); font-weight:600; background:rgba(255,78,134,.07); }
   .atlas a.soon{ color:var(--muted); cursor:default; }
   .atlas a.soon:hover{ background:none; }
+  .atlas a.locked{ color:var(--muted); opacity:.55; cursor:default; }
+  .atlas a.locked:hover{ background:none; }
+  .atlas a.pro{ cursor:pointer; }
+  .atlas a.pro::after{ content:'PRO'; font-family:var(--mono); font-size:.5rem; font-weight:700;
+    letter-spacing:.1em; color:#8a5a00; background:#FFE9A8; border:1px solid #8a5a00; border-radius:3px;
+    padding:1px 5px; margin-left:7px; }
+  .synced{ font-family:var(--mono); font-size:.56rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--green); margin:0 0 12px; padding-bottom:10px; border-bottom:1.5px dashed rgba(23,20,14,.2); }
+  .synced.off{ color:var(--muted); }
+  .synced.off a{ display:inline; padding:0; border:none; color:var(--blue); text-decoration:underline; cursor:pointer; }
   .atlas .tag{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase;
     border:1.5px solid var(--muted); color:var(--muted); padding:1px 5px; margin-left:6px; }
   .atlas .flag{ color:var(--blue); font-weight:700; margin-left:6px; }
@@ -350,9 +361,49 @@ const LESSONS = [];
 COURSE.forEach(mod => { if(mod.lessons) mod.lessons.forEach(les => LESSONS.push(Object.assign({ module: mod.title, rank: mod.rank }, les))); });
 
 let idx = 0;
-const bests = {};                 /* lesson idx -> best streak (persists across visits, in-memory) */
-const chartedOf = i => (bests[i] || 0) >= (LESSONS[i].ex.goal || Infinity);
-function devChart(i){ bests[i] = 99; renderNav(); buildAtlas(); }   /* console helper for demos */
+
+/* ===== progress: save + sequential unlock + account sync + paywall ===== */
+const PKEY = 'atlas.progress.v1', COURSE_ID = 'fretboard-atlas', PRODUCT = 'course:fretboard-atlas';
+const FREE_LESSONS = (COURSE[0] && COURSE[0].lessons) ? COURSE[0].lessons.length : 0;
+let progress = (function(){
+  try{ const p = JSON.parse(localStorage.getItem(PKEY)); if(p && p.best) return p; }catch(e){}
+  return { best:{}, last:0 };
+})();
+function saveLocal(){ try{ localStorage.setItem(PKEY, JSON.stringify(progress)); }catch(e){} }
+function saveProgress(){ saveLocal(); cloudPush(); }
+function bestOf(i){ return (i>=0 && i<LESSONS.length && progress.best[LESSONS[i].num]) || 0; }
+function setBest(i, streak){
+  const k = LESSONS[i].num;
+  if(streak > (progress.best[k] || 0)){ progress.best[k] = streak; saveLocal(); }
+}
+function chartedOf(i){ return bestOf(i) >= (LESSONS[i].ex.goal || Infinity); }
+function maxOpen(){ let m = 0; while(m < LESSONS.length - 1 && chartedOf(m)) m++; return m; }
+function devChart(i){ progress.best[LESSONS[i].num] = 99; saveLocal(); renderNav(); buildAtlas(); }   /* console helper for demos */
+function entitled(){ return !!(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAccess(PRODUCT)); }
+function paywalled(i){ return i >= FREE_LESSONS && !entitled(); }
+function openCoursePaywall(){
+  if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'This expedition is Pro',
+    body:'Expedition I is free. Go Pro to chart the whole neck — and unlock every Dojo course.', product:PRODUCT });
+  else location.href = '/upgrade.html?highlight=' + encodeURIComponent(PRODUCT);
+}
+function signedIn(){ return !!(window.MAAuth && MAAuth.user && MAAuth.user()); }
+let cloudReady = false;
+function cloudPush(){ if(signedIn() && cloudReady) MAAuth.progress.push(COURSE_ID, progress).catch(function(){}); }
+function cloudPull(){
+  if(!signedIn()){ cloudReady = false; return; }
+  MAAuth.progress.pull(COURSE_ID).then(function(remote){
+    if(remote && remote.best){
+      const wasEmpty = !Object.keys(progress.best).length;
+      const merged = Object.assign({}, remote.best);
+      Object.keys(progress.best).forEach(k => { merged[k] = Math.max(merged[k] || 0, progress.best[k]); });
+      progress = { best: merged, last: Math.max(progress.last || 0, remote.last || 0) };
+      saveLocal();
+      if(wasEmpty) go(Math.min(remote.last || 0, maxOpen()));
+      else { idx = Math.min(idx, maxOpen()); renderNav(); buildAtlas(); }
+    }
+    cloudReady = true; MAAuth.progress.push(COURSE_ID, progress).catch(function(){});
+  }).catch(function(){ cloudReady = true; });
+}
 
 /* ===================== THE CARTOGRAPHER (portrait) ===================== */
 const EXPLORER_SVG = `
@@ -536,17 +587,17 @@ function exHead(L){
     <span class="goalchip${done?' done':''}" id="goalchip">${done ? '⚑ region charted' : '⚑ charting goal: ' + L.ex.goal + ' in a row'}</span>`;
 }
 function streakLine(){
-  const L = LESSONS[idx], best = bests[idx] || 0;
+  const L = LESSONS[idx], best = bestOf(idx);
   return `<div class="streak">streak <b>${exStreak}</b> · goal <b>${L.ex.goal}</b> · best <b>${best}</b></div>`;
 }
 function bump(ok){
   const L = LESSONS[idx];
   const was = chartedOf(idx);
-  if(ok){ exStreak += 1; bests[idx] = Math.max(bests[idx] || 0, exStreak); }
+  if(ok){ exStreak += 1; setBest(idx, exStreak); }
   else exStreak = 0;
   const now = chartedOf(idx);
   if(now && !was){
-    chartedFanfare(); renderNav(); buildAtlas();
+    chartedFanfare(); saveProgress(); renderNav(); buildAtlas();
     const gc = el('goalchip');
     if(gc){ gc.textContent = '⚑ region charted'; gc.classList.add('done'); }
   }
@@ -795,6 +846,9 @@ function renderNav(){
   if(idx < LESSONS.length - 1){
     if(!chartedOf(idx)){
       slot.innerHTML = `<span class="lab2">⚑ streak of ${L.ex.goal} charts this region →</span>`;
+    } else if(paywalled(idx + 1)){
+      slot.innerHTML = `<button class="btn ink" id="goPro" style="margin-top:0">🔒 Chart the north — Go Pro</button>`;
+      el('goPro').addEventListener('click', openCoursePaywall);
     } else {
       slot.innerHTML = `<button class="btn ink" id="next" style="margin-top:0">Press on →</button>`;
       el('next').addEventListener('click', () => go(idx + 1));
@@ -805,7 +859,13 @@ function renderNav(){
       : 'The last bridges of the survey. Chart them, mapmaker.'}</span>`;
   }
 }
-function go(i){ idx = Math.max(0, Math.min(LESSONS.length - 1, i)); renderLesson(); }
+function go(i){
+  i = Math.max(0, Math.min(LESSONS.length - 1, i));
+  if(i > maxOpen()) return;
+  if(paywalled(i)){ openCoursePaywall(); return; }
+  idx = i; progress.last = idx; saveProgress();
+  renderLesson();
+}
 
 /* ===================== THE ATLAS (map + contents) ===================== */
 function drawMap(){
@@ -902,14 +962,23 @@ function drawMap(){
   return m;
 }
 function buildAtlas(){
-  let h = `<div class="mapbox">${drawMap()}</div>
+  const mo = maxOpen();
+  let h = signedIn()
+    ? `<div class="synced">✓ The atlas is inked into your account</div>`
+    : `<div class="synced off">Charted on this device — <a id="syncSignin">sign in</a> to carry the atlas across devices</div>`;
+  h += `<div class="mapbox">${drawMap()}</div>
     <div class="maplegend">— tap a region to travel · ⚑ charted · ┈ uncharted —</div>`;
   COURSE.forEach(mod => {
     h += `<h4>${mod.title} · ${mod.rank}</h4>`;
     if(mod.lessons){
       mod.lessons.forEach(les => {
         const li = LESSONS.findIndex(x => x.num === les.num);
-        h += `<a href="#" class="${li === idx ? 'cur' : ''}" data-go="${li}">${les.num} · ${les.title}${chartedOf(li) ? '<span class="flag">⚑</span>' : ''}</a>`;
+        const pay = paywalled(li), locked = !pay && li > mo;
+        const cls = [li === idx ? 'cur' : '', pay ? 'pro' : '', locked ? 'locked' : ''].filter(Boolean).join(' ');
+        const flag = chartedOf(li) ? '<span class="flag">⚑</span>' : '';
+        if(pay)         h += `<a href="#" class="${cls}" data-pay="1">${les.num} · ${les.title}${flag}</a>`;
+        else if(locked) h += `<a class="${cls}">🔒 ${les.num} · ${les.title}</a>`;
+        else            h += `<a href="#" class="${cls}" data-go="${li}">${les.num} · ${les.title}${flag}</a>`;
       });
     } else if(mod.soon){
       h += `<a class="soon">${mod.blurb} <span class="tag">uncharted</span></a>`;
@@ -918,13 +987,29 @@ function buildAtlas(){
   const atlas = el('atlas'); atlas.innerHTML = h;
   atlas.querySelectorAll('[data-go]').forEach(a =>
     a.addEventListener('click', e => { e.preventDefault(); go(+a.getAttribute('data-go')); el('atlas').classList.add('hidden'); }));
+  atlas.querySelectorAll('[data-pay]').forEach(a =>
+    a.addEventListener('click', e => { e.preventDefault(); el('atlas').classList.add('hidden'); openCoursePaywall(); }));
+  const si = el('syncSignin');
+  if(si) si.addEventListener('click', e => { e.preventDefault(); if(window.MAAuth && MAAuth.open) MAAuth.open('signin'); });
 }
 
 /* ===================== INIT ===================== */
 el('speech').addEventListener('click', advance);
 el('atlasBtn').addEventListener('click', () => el('atlas').classList.toggle('hidden'));
 el('prev').addEventListener('click', () => go(idx - 1));
+idx = Math.min(progress.last || 0, maxOpen());
 renderLesson();
+(function waitAuth(){
+  if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(u => { if(u) cloudPull(); else cloudReady = false; buildAtlas(); });
+  else setTimeout(waitAuth, 120);
+})();
+(function waitEnt(){
+  if(window.MAAuth && MAAuth.onEntitlements) MAAuth.onEntitlements(() => { idx = Math.min(idx, maxOpen()); renderNav(); buildAtlas(); });
+  else setTimeout(waitEnt, 120);
+})();
 </script>
+<!-- more like this, at the foot of the page -->
+<script src="/tools.js"></script>
+<script src="/related.js"></script>
 </body>
 </html>
