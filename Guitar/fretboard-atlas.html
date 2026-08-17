@@ -138,6 +138,8 @@
   .padrow{ margin-top:8px; }
   .btn.pass2{ line-height:1.05; padding:6px 10px; }
   .btn.pass2 span{ display:block; font-size:.68em; font-weight:500; color:var(--muted); }
+  .tbar{ height:12px; max-width:340px; margin:6px auto 10px; border:2px solid var(--ink); background:var(--parch); }
+  .tfill{ height:100%; width:100%; background:var(--amber); }
   .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
 
   .fb{ min-height:1.4em; font-family:var(--disp); font-weight:700; font-size:1rem; text-align:center;
@@ -423,8 +425,53 @@ const COURSE = [
       }
     ]
   },
-  { title:'Expedition IV — Beyond the Divide', rank:'Navigator', soon:true,
-    blurb:'Past crossing 12 the land repeats — learn to walk it at speed.' }
+  {
+    title:'Expedition IV — Beyond the Divide', rank:'Navigator',
+    lessons:[
+      {
+        num:'4.1', title:'The Land Past the Divide',
+        teach:[
+          P(`East of the Divide, surveyor — the country you have never walked. Cross the double landmark with me and count the crossings: one, two, three…`),
+          P(`Do you see it? The <b>13th</b> crossing carries the very note of the <b>1st</b>, an octave higher. The 14th, the 2nd. Crossing for crossing, <b>the whole land repeats</b>.`),
+          ...QA(`Must I chart it all again?`,
+                `You charted it the day you finished the first survey. Past the Divide you need no new map — only the wit to <b>subtract twelve</b> and read the one you already own.`),
+          P(`Even the landmarks keep pace out there: single marks at <b>15</b> and <b>17</b>, echoing 3 and 5. I will mark far crossings; you will name them by their western twins.`)
+        ],
+        ex:{ type:'farName', exttl:'Read the far country', desc:'A crossing past the Divide is marked. Subtract twelve, and name it.', goal:6 }
+      },
+      {
+        num:'4.2', title:'Twins Across the Divide',
+        teach:[
+          P(`Now the harder walk: I name a note, and you plant your flag <b>east</b> of the Divide — without pacing out the far country crossing by crossing.`),
+          P(`Do not count from 13. Find the note on the map you know, then carry it <b>twelve crossings east</b>. G at the 3rd? Then G waits at the 15th — on the landmark.`),
+          ...QA(`The same trick as the octave bridges, then?`,
+                `The very same, walked along one river instead of across two. Every bridge you built in the first survey has a twin over the Divide.`)
+        ],
+        ex:{ type:'farFind', exttl:'Cross the Divide', desc:'A note is named. Plant your flag on its far crossing — east of the Divide.', goal:6 }
+      },
+      {
+        num:'4.3', title:`The Navigator's Pace`,
+        teach:[
+          P(`A mapmaker may stand and think. A <b>navigator</b> is asked while the river is moving — and answers before the current takes the boat.`),
+          P(`From here, we work by burning light. When I mark a crossing, its name must leave you before the flame is out. Slow and right is still wrong, out on the water.`),
+          ...QA(`And if the light burns out?`,
+                `Then the streak is lost, nothing more. Speed is not hurry — it is knowing a thing so well there is nothing left to work out. You have the knowing; we are only shortening the road to it.`)
+        ],
+        ex:{ type:'speedName', strs:[0,1,2,3,4,5], maxF:12, secs:7, exttl:'Against the light', desc:'Name the marked crossing before the light burns down — seven seconds of flame.', goal:8 }
+      },
+      {
+        num:'4.4', title:`The Navigator's Run`,
+        teach:[
+          P(`The last run. The whole country now — both sides of the Divide — and the shorter candle.`),
+          P(`Ten crossings, named at speed, wherever I set you down. This is how the neck feels when you truly own it: not remembered but <b>known</b>, the way you know your own street in the dark.`),
+          ...QA(`And when I have run it?`,
+                `Then there is nothing left of me to give you. The atlas closes, the rank is yours — and the country is yours to play.`),
+          P(`Run, Navigator.`)
+        ],
+        ex:{ type:'speedName', strs:[0,1,2,3,4,5], maxF:17, secs:5, exttl:'The run', desc:'Anywhere in the country, five seconds of flame. Ten in a row closes the atlas.', goal:10 }
+      }
+    ]
+  }
 ];
 
 const LESSONS = [];
@@ -532,25 +579,29 @@ const STR_W = [3.2, 2.9, 2.6, 2.3, 2.0, 1.7];
 
 /* Draws the neck. opts:
    hideLabels, hideNums, highlightStr, revealStr,
-   dots:[{s,f,label,wrong}], ring:f (pink ring on a marker), bridge:{s1,f1,s2,f2},
+   maxF (default 12 — beyond it the Divide is drawn as a border),
+   dots:[{s,f,label,wrong,hollow}], ring:f (pink ring on a marker), bridge:{s1,f1,s2,f2},
    cellsOn: string index -> clickable cells (class .cell, data-f) */
 function svgNeck(o){
   o = o || {};
-  let out = `<svg viewBox="0 0 ${NECK_W} 188" role="img" aria-label="Guitar neck diagram">`;
+  const maxF = o.maxF || MAXF;
+  let out = `<svg viewBox="0 0 ${NUT + maxF*FW + 14} 188" role="img" aria-label="Guitar neck diagram">`;
   /* board */
-  out += `<rect x="${NUT}" y="${TOPY-12}" width="${MAXF*FW}" height="${5*GAP+24}" fill="#F0E6D2" stroke="#17140E" stroke-width="2.5"/>`;
+  out += `<rect x="${NUT}" y="${TOPY-12}" width="${maxF*FW}" height="${5*GAP+24}" fill="#F0E6D2" stroke="#17140E" stroke-width="2.5"/>`;
   out += `<rect x="${NUT-5}" y="${TOPY-12}" width="6" height="${5*GAP+24}" fill="#17140E"/>`;   /* nut */
-  for(let f=1; f<=MAXF; f++)
-    out += `<line x1="${NUT+f*FW}" y1="${TOPY-12}" x2="${NUT+f*FW}" y2="${TOPY+5*GAP+12}" stroke="#B9AE97" stroke-width="2"/>`;
-  /* landmark dots */
+  for(let f=1; f<=maxF; f++)
+    out += `<line x1="${NUT+f*FW}" y1="${TOPY-12}" x2="${NUT+f*FW}" y2="${TOPY+5*GAP+12}"
+             stroke="${f===12 && maxF>12 ? '#17140E' : '#B9AE97'}" stroke-width="${f===12 && maxF>12 ? 3 : 2}"/>`;
+  /* landmark dots — past the Divide the single marks keep pace at 15 and 17 */
   const yMid = (strY(2)+strY(3))/2;
-  [3,5,7,9].forEach(f => out += `<circle cx="${NUT+(f-0.5)*FW}" cy="${yMid}" r="5" fill="#B9AE97"/>`);
+  const marks = [3,5,7,9].concat(maxF>14?[15]:[], maxF>16?[17]:[]);
+  marks.forEach(f => out += `<circle cx="${NUT+(f-0.5)*FW}" cy="${yMid}" r="5" fill="#B9AE97"/>`);
   out += `<circle cx="${NUT+11.5*FW}" cy="${yMid-24}" r="5" fill="#B9AE97"/>`;
   out += `<circle cx="${NUT+11.5*FW}" cy="${yMid+24}" r="5" fill="#B9AE97"/>`;
   /* strings */
   for(let s=0; s<6; s++){
     const hi = o.highlightStr === s;
-    out += `<line class="gstr${hi?' active':''}" x1="${NUT-14}" y1="${strY(s)}" x2="${NUT+MAXF*FW}" y2="${strY(s)}"
+    out += `<line class="gstr${hi?' active':''}" x1="${NUT-14}" y1="${strY(s)}" x2="${NUT+maxF*FW}" y2="${strY(s)}"
              stroke="${hi?'#2438C8':'#17140E'}" stroke-width="${hi?4:STR_W[s]}"/>`;
   }
   /* string labels */
@@ -565,7 +616,7 @@ function svgNeck(o){
   }
   /* fret numbers */
   if(!o.hideNums){
-    for(let f=1; f<=MAXF; f++)
+    for(let f=1; f<=maxF; f++)
       out += `<text x="${NUT+(f-0.5)*FW}" y="182" font-family="'Space Mono',monospace" font-size="10"
                fill="#6F6757" text-anchor="middle">${f}</text>`;
   }
@@ -605,7 +656,7 @@ function svgNeck(o){
   if(o.cellsOn !== undefined){
     const s = o.cellsOn, y = strY(s) - 12;
     out += `<rect class="cell" data-f="0" x="${NUT-36}" y="${y}" width="30" height="24"/>`;
-    for(let f=1; f<=MAXF; f++)
+    for(let f=1; f<=maxF; f++)
       out += `<rect class="cell" data-f="${f}" x="${NUT+(f-1)*FW}" y="${y}" width="${FW}" height="24"/>`;
   }
   out += `</svg>`;
@@ -1045,12 +1096,147 @@ function answerChromFind(L, f){
                        : `Not there — ${nm} lives at the ${where}.`, ok);
 }
 
+/* ---- 4.1 read the far country ---- */
+function mountFarName(L){ exPrev = ''; newFarName(L, false); }
+function newFarName(L, autoplay){
+  let s, f, key;
+  do{ s = rand(6); f = 13 + rand(5); key = s + ':' + f; } while(key === exPrev);
+  exPrev = key; exCur = { s, f }; exAnswered = false;
+  drawFarName(L);
+  if(autoplay) pluck(freqAt(s, f), 0, 1.2);
+}
+function drawFarName(L, fbHtml, ok){
+  const c = exCur, nm = nameAt(c.s, c.f, 'sharp');
+  const dots = [{ s:c.s, f:c.f, label: exAnswered ? nm : '' }];
+  let bridge;
+  if(exAnswered){ dots.push({ s:c.s, f:c.f-12, hollow:true, label:nm }); bridge = { s1:c.s, f1:c.f-12, s2:c.s, f2:c.f }; }
+  el('exbox').innerHTML = `
+    <div class="row"><button class="btn big" id="hearBtn">▶ Hear it first</button></div>
+    <div class="qline">Name the marked crossing on the ${STRINGS[c.s].long} — past the Divide.</div>
+    <div class="neckbox">${svgNeck({ maxF:17, dots, bridge })}</div>
+    ${chromPad(exAnswered)}
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Further east →</button></div>' : ''}
+    ${streakLine()}`;
+  el('hearBtn').addEventListener('click', () => pluck(freqAt(c.s, c.f), 0, 1.2));
+  document.querySelectorAll('.kbtn').forEach(b => b.addEventListener('click', () => answerFarName(L, +b.dataset.pc)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newFarName(L, true));
+}
+function answerFarName(L, pc){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, ans = pcAt(c.s, c.f), ok = pc === ans;
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.f-12), 0, 0.9);
+  pluck(freqAt(c.s, c.f), 0.45, 1.2);
+  drawFarName(L, ok ? `${fullName(ans)} — the ${ord(c.f)} is the ${ord(c.f-12)}, walked again an octave east.` + chartedNote(newly)
+                    : `That is ${fullName(ans)} — cross back over the Divide: the ${ord(c.f)} is the ${ord(c.f-12)}, an octave up. (You said ${fullName(pc)}.)`, ok);
+}
+
+/* ---- 4.2 find it east of the Divide ---- */
+function mountFarFind(L){ exPrev = ''; newFarFind(L); }
+function newFarFind(L){
+  let s, f, key;
+  do{ s = rand(6); f = 13 + rand(5); key = s + ':' + f; } while(key === exPrev);
+  exPrev = key; exCur = { s, f, pc: pcAt(s, f), side: Math.random() < 0.5 ? 'sharp' : 'flat' };
+  exAnswered = false;
+  drawFarFind(L);
+}
+function drawFarFind(L, fbHtml, ok){
+  const c = exCur, nm = chromName(c.pc, c.side);
+  const dots = [];
+  let bridge;
+  if(exAnswered){
+    dots.push({ s:c.s, f:c.f, label:nm });
+    dots.push({ s:c.s, f:c.f-12, hollow:true, label:nm });
+    bridge = { s1:c.s, f1:c.f-12, s2:c.s, f2:c.f };
+    if(c.picked !== undefined && c.picked !== c.f && c.picked !== c.f-12)
+      dots.push({ s:c.s, f:c.picked, label:'✕', wrong:true });
+  }
+  el('exbox').innerHTML = `
+    <div class="qline">Find <b style="color:var(--blue)">${nm}</b> past the Divide on the ${STRINGS[c.s].long} — tap the far crossing.</div>
+    <div class="neckbox" id="neckbox">${svgNeck({ maxF:17, dots, bridge, cellsOn: exAnswered ? undefined : c.s })}</div>
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next crossing →</button></div>' : ''}
+    ${streakLine()}`;
+  document.querySelectorAll('#neckbox .cell').forEach(r => r.addEventListener('click', () => answerFarFind(L, +r.dataset.f)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newFarFind(L));
+}
+function answerFarFind(L, f){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, nm = chromName(c.pc, c.side), ok = f === c.f;
+  c.picked = f;
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.f-12), 0, 0.9);
+  pluck(freqAt(c.s, c.f), 0.45, 1.2);
+  drawFarFind(L, ok ? `The far flag holds — ${nm} at the ${ord(c.f)}, twelve east of its twin.` + chartedNote(newly)
+                    : (f === c.f - 12
+                        ? `That is its twin, west of the Divide — I asked for the far country. ${nm} waits at the ${ord(c.f)}.`
+                        : `Not there — carry ${nm} twelve crossings east of the ${ord(c.f-12)}: the ${ord(c.f)}.`), ok);
+}
+
+/* ---- 4.3 / 4.4 against the light (ex cfg: strs[], maxF, secs) ---- */
+let speedTimer = null, speedT0 = 0;
+function stopSpeed(){ clearInterval(speedTimer); speedTimer = null; }
+function startSpeed(secs, onOut){
+  stopSpeed(); speedT0 = Date.now();
+  speedTimer = setInterval(() => {
+    const left = 1 - (Date.now() - speedT0) / (secs * 1000);
+    const bar = el('tfill');
+    if(bar) bar.style.width = Math.max(0, left * 100) + '%';
+    if(left <= 0){ stopSpeed(); onOut(); }
+  }, 100);
+}
+function mountSpeed(L){ exPrev = ''; newSpeed(L); }
+function newSpeed(L){
+  const strs = L.ex.strs, top = L.ex.maxF || 12;
+  let s, f, key;
+  do{ s = strs[rand(strs.length)]; f = rand(top + 1); key = s + ':' + f; } while(key === exPrev);
+  exPrev = key; exCur = { s, f }; exAnswered = false;
+  drawSpeed(L);
+  startSpeed(L.ex.secs, () => timeoutSpeed(L));
+}
+function drawSpeed(L, fbHtml, ok){
+  const c = exCur;
+  el('exbox').innerHTML = `
+    <div class="qline">Name the crossing on the ${STRINGS[c.s].long} — before the light is out.</div>
+    <div class="tbar"><div class="tfill" id="tfill" ${exAnswered?'style="width:0%"':''}></div></div>
+    <div class="neckbox">${svgNeck({ maxF: L.ex.maxF || 12, dots:[{ s:c.s, f:c.f, label: exAnswered ? nameAt(c.s, c.f, 'sharp') : '' }] })}</div>
+    ${chromPad(exAnswered)}
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Strike the light →</button></div>' : ''}
+    ${streakLine()}`;
+  document.querySelectorAll('.kbtn').forEach(b => b.addEventListener('click', () => answerSpeed(L, +b.dataset.pc)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newSpeed(L));
+}
+function answerSpeed(L, pc){
+  if(exAnswered) return;
+  exAnswered = true;
+  stopSpeed();
+  const c = exCur, ans = pcAt(c.s, c.f), ok = pc === ans;
+  const took = ((Date.now() - speedT0) / 1000).toFixed(1);
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.f), 0, 1.2);
+  drawSpeed(L, ok ? `${fullName(ans)} — named in ${took}s, with light to spare.` + chartedNote(newly)
+                  : `That crossing is ${fullName(ans)}, the ${ord(c.f)}. (You said ${fullName(pc)}.)`, ok);
+}
+function timeoutSpeed(L){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, ans = pcAt(c.s, c.f);
+  bump(false);
+  pluck(freqAt(c.s, c.f), 0, 1.2);
+  drawSpeed(L, `The light is out — it was ${fullName(ans)}, the ${ord(c.f)}. A navigator answers while the river moves.`, false);
+}
+
 /* ===================== RENDER ===================== */
 function renderExercise(L){
   return `<div class="ex">${exHead(L)}<div id="exbox"></div></div>`;
 }
 function wireExercise(L){
   exStreak = 0;
+  stopSpeed();                       /* never let a burning light follow you to another lesson */
   if(L.ex.type === 'riverName') mountRiverName();
   else if(L.ex.type === 'landmark') mountLandmark();
   else if(L.ex.type === 'chartString') mountChartString(L);
@@ -1058,6 +1244,9 @@ function wireExercise(L){
   else if(L.ex.type === 'passFind') mountPassFind();
   else if(L.ex.type === 'passName') mountPassName();
   else if(L.ex.type === 'chartChrom') mountChartChrom(L);
+  else if(L.ex.type === 'farName') mountFarName(L);
+  else if(L.ex.type === 'farFind') mountFarFind(L);
+  else if(L.ex.type === 'speedName') mountSpeed(L);
 }
 function renderLesson(){
   const L = LESSONS[idx];
@@ -1091,8 +1280,8 @@ function renderNav(){
     }
   } else {
     slot.innerHTML = `<span class="endnote">${chartedOf(idx)
-      ? 'The whole country, named — town and pass, source to Divide. The rank of Pathfinder is yours. Beyond the Divide the land only repeats; that survey is still being drawn.'
-      : 'The last trial of the inland survey. Chart it, Pathfinder.'}</span>`;
+      ? 'The run is made. Every crossing of every river, named at a walking pace and at speed — the atlas closes complete, and the country is yours, Navigator.'
+      : 'The last run of the expedition. Walk it, Navigator.'}</span>`;
   }
 }
 function go(i){
@@ -1113,10 +1302,12 @@ function drawMap(){
   m += `<rect x="2" y="2" width="636" height="258" fill="#EFE4CB" stroke="#17140E" stroke-width="2.5"/>`;
   m += `<rect x="8" y="8" width="624" height="246" fill="none" stroke="#17140E" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>`;
   /* cartouche */
-  const survey = ch(12) ? 'FULL SURVEY' : ch(7) ? 'SECOND SURVEY' : 'FIRST SURVEY';
+  const done16 = LESSONS.length > 16 && ch(16);
+  const cartouche = done16 ? `THE NAVIGATOR'S ATLAS`
+    : 'THE FRETBOARD · ' + (ch(12) ? 'FULL SURVEY' : ch(7) ? 'SECOND SURVEY' : 'FIRST SURVEY');
   m += `<g><rect x="20" y="16" width="220" height="30" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/>
         <text x="130" y="35" font-family="'Space Mono',monospace" font-size="10" letter-spacing="2"
-          text-anchor="middle" fill="#17140E">THE FRETBOARD · ${survey}</text></g>`;
+          text-anchor="middle" fill="#17140E">${cartouche}</text></g>`;
   /* neck */
   m += `<rect x="${N}" y="${T-12}" width="${12*W}" height="${5*G+24}" fill="#F0E6D2" stroke="#17140E" stroke-width="2"/>`;
   m += `<rect x="${N-5}" y="${T-12}" width="5" height="${5*G+24}" fill="#17140E"/>`;
