@@ -135,6 +135,9 @@
   .btn.big{ font-family:var(--mono); font-weight:700; }
   .btn.ink{ background:var(--ink); color:var(--paper); margin-top:10px; }
   .btn.jc{ font-family:var(--mono); font-weight:700; min-width:52px; }
+  .padrow{ margin-top:8px; }
+  .btn.pass2{ line-height:1.05; padding:6px 10px; }
+  .btn.pass2 span{ display:block; font-size:.68em; font-weight:500; color:var(--muted); }
   .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
 
   .fb{ min-height:1.4em; font-family:var(--disp); font-weight:700; font-size:1rem; text-align:center;
@@ -218,8 +221,18 @@ const STRINGS = [
   { l:'E', long:'high E', pc:4,  f:329.63, desc:'the thinnest river — high E' }
 ];
 const PC_LETTER = { 0:'C', 2:'D', 4:'E', 5:'F', 7:'G', 9:'A', 11:'B' };
-function letterAt(s, f){ return PC_LETTER[(STRINGS[s].pc + f) % 12] || null; }
+const PC_SHARP  = { 1:'C♯', 3:'D♯', 6:'F♯', 8:'G♯', 10:'A♯' };
+const PC_FLAT   = { 1:'D♭', 3:'E♭', 6:'G♭', 8:'A♭', 10:'B♭' };
+const PC_NAT    = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
+function pcAt(s, f){ return (STRINGS[s].pc + f) % 12; }
+function letterAt(s, f){ return PC_LETTER[pcAt(s, f)] || null; }
+function isPass(s, f){ return !PC_LETTER[pcAt(s, f)]; }
+/* a crossing's name, read from the signpost you approach by: sharp climbing, flat descending */
+function chromName(pc, side){ return PC_LETTER[pc] || (side === 'flat' ? PC_FLAT[pc] : PC_SHARP[pc]); }
+function nameAt(s, f, side){ return chromName(pcAt(s, f), side); }
 function naturalFretsFor(s, maxF){ const out=[]; for(let f=0; f<=maxF; f++){ if(letterAt(s,f)) out.push(f); } return out; }
+function passFretsFor(s){ const out=[]; for(let f=1; f<=12; f++){ if(isPass(s,f)) out.push(f); } return out; }
+function fretsWithPc(s, pc){ const out=[]; for(let f=0; f<=12; f++){ if(pcAt(s,f) === pc) out.push(f); } return out; }
 function freqAt(s, f){ return STRINGS[s].f * Math.pow(2, f/12); }
 function ord(f){
   if(f === 0) return 'open';
@@ -351,8 +364,65 @@ const COURSE = [
       }
     ]
   },
-  { title:'Expedition III — The Inland Passes', rank:'Pathfinder', soon:true,
-    blurb:'Sharps and flats: the half-step passes between every charted town.' },
+  {
+    title:'Expedition III — The Inland Passes', rank:'Pathfinder',
+    lessons:[
+      {
+        num:'3.1', title:'Where the Passes Are',
+        teach:[
+          P(`The towns are charted, surveyor — yet the country is not full. Count the crossings of any river: twelve to the Divide. Count its towns: seven. <b>Five crossings belong to no town at all.</b>`),
+          P(`The old surveyors did not leave them blank. Wherever a step between towns is two crossings wide, they drew mountains on the middle crossing — a <b>pass</b>: high ground between two towns, one crossing wide.`),
+          ...QA(`A pass between every pair of towns, then?`,
+                `All but two pairs — and you know them already. The narrow passes of the first survey: <b>E to F</b> and <b>B to C</b>. Those towns were built wall against wall; there is no ground between them.`),
+          P(`So every river hides the same five passes: between <b>F–G</b>, <b>G–A</b>, <b>A–B</b>, <b>C–D</b> and <b>D–E</b>. To the field. I will give you a river with its towns marked; you will sweep it and flag every pass.`)
+        ],
+        ex:{ type:'passFind', exttl:'Sweep the river', desc:'The towns are marked. Flag all five crossings that hide a pass — and disturb none of the towns.', goal:5 }
+      },
+      {
+        num:'3.2', title:'The Two Signposts',
+        teach:[
+          P(`A pass needs a name — but who names it? The travellers do. And travellers come at a pass from two directions.`),
+          P(`The climber, rising out of C, calls the pass above that town <b>C♯ — C-sharp</b>: C, but higher. The descender, coming down out of D, calls the very same crossing <b>D♭ — D-flat</b>: D, but lower.`),
+          ...QA(`Two names for one place?`,
+                `Two signposts on one pass, each facing the road it serves. Neither is wrong, and the atlas keeps both. A mapmaker reads whichever suits the way he is walking.`),
+          P(`Ten names, then, for five passes: <b>C♯/D♭ · D♯/E♭ · F♯/G♭ · G♯/A♭ · A♯/B♭</b>. I will mark a pass and tell you which way you are walking. Read me the right signpost.`)
+        ],
+        ex:{ type:'passName', exttl:'Read the signpost', desc:'A pass is marked. Climbing, give its sharp name; descending, its flat.', goal:6 }
+      },
+      {
+        num:'3.3', title:'Passes of the South',
+        teach:[
+          P(`Now we chart in full. The southern rivers first — the <b>low E</b> and the <b>A</b> — with nothing left hidden.`),
+          P(`From the source of the low E: E, then <b>F, F♯, G, G♯, A, A♯, B, C, C♯, D, D♯</b> — and E at the Divide. The alphabet still walks its old road; the passes simply fill its strides.`),
+          ...QA(`And if you send me for a flat?`,
+                `The same crossing answers to both signposts. Sent for G♭, you may plant your flag on F♯'s pass and no one is wrong — one place, two names, one flag.`),
+          P(`Both duties, as ever: name what I mark, find what I name. The full south, town and pass alike.`)
+        ],
+        ex:{ type:'chartChrom', strs:[0,1], exttl:'Chart the full south', desc:'Low E and A, all twelve crossings in play: name what is marked, find what is named.', goal:7 }
+      },
+      {
+        num:'3.4', title:'Passes of the North',
+        teach:[
+          P(`The north holds the same five passes — but you remember the crooked river. The <b>B</b> bends the road to every one of them.`),
+          P(`Mind it as you work: on the B river the first pass does not come until the <b>2nd</b> crossing, between C and D — one step from where the southern rivers taught you to look.`),
+          ...QA(`Four rivers in one survey?`,
+                `Four rivers you have already walked as towns. Only the passes are new ground — and they are the same five neighbours, met in new places. Walk them.`)
+        ],
+        ex:{ type:'chartChrom', strs:[2,3,4,5], exttl:'Chart the full north', desc:'D, G, B and high E, every crossing: name what is marked, find what is named.', goal:7 }
+      },
+      {
+        num:'3.5', title:'The Full Survey',
+        teach:[
+          P(`Look at the atlas, surveyor. Six rivers. Twelve crossings. Every town and every pass, named. There is no blank paper left on this map.`),
+          P(`One trial remains, and it is the whole of the mapmaker's art: I set you down <b>anywhere</b> in this country — any river, any crossing — and you tell me where you stand.`),
+          ...QA(`And if I lose my way?`,
+                `Then the trial begins again, and nothing is lost but pride. A Pathfinder is not one who never strays — only one who always knows the way back.`),
+          P(`Ten in a row. Name your ground.`)
+        ],
+        ex:{ type:'chartChrom', strs:[0,1,2,3,4,5], nameOnly:true, exttl:`The Pathfinder's trial`, desc:'Anywhere on the neck: name the crossing, town or pass. Ten in a row earns the rank.', goal:10 }
+      }
+    ]
+  },
   { title:'Expedition IV — Beyond the Divide', rank:'Navigator', soon:true,
     blurb:'Past crossing 12 the land repeats — learn to walk it at speed.' }
 ];
@@ -514,13 +584,22 @@ function svgNeck(o){
     out += `<path d="M ${x1},${y1} Q ${(x1+x2)/2},${Math.min(y1,y2)-34} ${x2},${y2}"
              fill="none" stroke="#2438C8" stroke-width="2.5" stroke-dasharray="6 4"/>`;
   }
-  /* note dots */
+  /* note dots — hollow dashed ones are passes (uncharted ground) */
   (o.dots || []).forEach(d => {
-    const col = d.wrong ? '#FF4E86' : '#2438C8';
-    out += `<circle cx="${fretX(d.f)}" cy="${strY(d.s)}" r="11" fill="${col}" stroke="#17140E" stroke-width="2.5"/>`;
-    if(d.label)
-      out += `<text x="${fretX(d.f)}" y="${strY(d.s)+4.5}" font-family="'Space Mono',monospace" font-size="12"
-               font-weight="700" fill="#fff" text-anchor="middle">${d.label}</text>`;
+    const fs = d.label && d.label.length > 1 ? 10 : 12;
+    if(d.hollow){
+      out += `<circle cx="${fretX(d.f)}" cy="${strY(d.s)}" r="11" fill="#FBF7EE"
+               stroke="${d.wrong ? '#FF4E86' : '#2438C8'}" stroke-width="2.5" stroke-dasharray="4 3"/>`;
+      if(d.label)
+        out += `<text x="${fretX(d.f)}" y="${strY(d.s)+4.5}" font-family="'Space Mono',monospace" font-size="${fs}"
+                 font-weight="700" fill="#2438C8" text-anchor="middle">${d.label}</text>`;
+    } else {
+      const col = d.wrong ? '#FF4E86' : '#2438C8';
+      out += `<circle cx="${fretX(d.f)}" cy="${strY(d.s)}" r="11" fill="${col}" stroke="#17140E" stroke-width="2.5"/>`;
+      if(d.label)
+        out += `<text x="${fretX(d.f)}" y="${strY(d.s)+4.5}" font-family="'Space Mono',monospace" font-size="${fs}"
+                 font-weight="700" fill="#fff" text-anchor="middle">${d.label}</text>`;
+    }
   });
   /* clickable cells along one string */
   if(o.cellsOn !== undefined){
@@ -812,6 +891,160 @@ function answerOctave(L, f){
                    : `The octave waits at the ${ord(c.target)} crossing — two rivers north, ${NUMWORD[L.ex.shift]} east.`, ok);
 }
 
+/* ---- 3.1 sweep the passes ---- */
+function mountPassFind(){ exPrev = -1; newPassFind(); }
+function newPassFind(){
+  let s; do{ s = rand(6); } while(s === exPrev);
+  exPrev = s; exCur = { s, found:[] }; exAnswered = false;
+  drawPassFind();
+}
+function drawPassFind(fbHtml, ok){
+  const c = exCur, dots = [];
+  for(let f=0; f<=12; f++) if(letterAt(c.s,f)) dots.push({ s:c.s, f, label:letterAt(c.s,f), wrong: c.wrongF === f });
+  c.found.forEach(f => dots.push({ s:c.s, f, hollow:true }));
+  if(c.reveal) passFretsFor(c.s).filter(f => !c.found.includes(f)).forEach(f => dots.push({ s:c.s, f, hollow:true }));
+  el('exbox').innerHTML = `
+    <div class="qline">Sweep the ${STRINGS[c.s].long} — flag its five passes.</div>
+    <div class="neckbox" id="neckbox">${svgNeck({ dots, cellsOn: exAnswered ? undefined : c.s })}</div>
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml || (c.found.length + ' of 5 passes flagged')}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next river →</button></div>' : ''}
+    ${streakLine()}`;
+  document.querySelectorAll('#neckbox .cell').forEach(r => r.addEventListener('click', () => tapPassFind(+r.dataset.f)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', newPassFind);
+}
+function tapPassFind(f){
+  if(exAnswered) return;
+  const c = exCur;
+  if(isPass(c.s, f)){
+    if(c.found.includes(f)) return;
+    c.found.push(f); pluck(freqAt(c.s, f), 0, 0.9);
+    if(c.found.length === 5){
+      exAnswered = true; const newly = bump(true);
+      drawPassFind(`Swept clean — the five passes of the ${STRINGS[c.s].long}.` + chartedNote(newly), true);
+    } else drawPassFind();
+  } else {
+    exAnswered = true; bump(false);
+    c.reveal = true; c.wrongF = f;
+    pluck(freqAt(c.s, f), 0, 0.9);
+    drawPassFind(`That is the town of ${letterAt(c.s, f)} — the passes lie <i>between</i> the towns.`, false);
+  }
+}
+
+/* ---- 3.2 read the signpost ---- */
+function mountPassName(){ exPrev = ''; exMode = 'flat'; newPassName(false); }
+function newPassName(autoplay){
+  exMode = exMode === 'sharp' ? 'flat' : 'sharp';           /* alternate directions */
+  let s, f;
+  do{ s = rand(6); const ps = passFretsFor(s); f = ps[rand(ps.length)]; } while(s + ':' + f === exPrev);
+  exPrev = s + ':' + f; exCur = { s, f, side: exMode }; exAnswered = false;
+  drawPassName();
+  if(autoplay) pluck(freqAt(s, f), 0, 1.2);
+}
+function drawPassName(fbHtml, ok){
+  const c = exCur, dots = [];
+  for(let f=0; f<=12; f++) if(letterAt(c.s,f)) dots.push({ s:c.s, f, label:letterAt(c.s,f) });
+  dots.push({ s:c.s, f:c.f, hollow:true, label: exAnswered ? nameAt(c.s, c.f, c.side) : '?' });
+  const names = [1,3,6,8,10].map(pc => (c.side === 'sharp' ? PC_SHARP : PC_FLAT)[pc]);
+  el('exbox').innerHTML = `
+    <div class="row"><button class="btn big" id="hearBtn">▶ Hear the pass</button></div>
+    <div class="neckbox">${svgNeck({ dots })}</div>
+    <div class="qline">${c.side === 'sharp'
+      ? 'You are climbing out of the town below — name this pass from beneath.'
+      : 'You are coming down from the town above — name this pass from above.'}</div>
+    <div class="row">${names.map(n => `<button class="btn jc sbtn" data-n="${n}" ${exAnswered?'disabled':''}>${n}</button>`).join('')}</div>
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next pass →</button></div>' : ''}
+    ${streakLine()}`;
+  el('hearBtn').addEventListener('click', () => pluck(freqAt(c.s, c.f), 0, 1.2));
+  document.querySelectorAll('.sbtn').forEach(b => b.addEventListener('click', () => answerPassName(b.dataset.n)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newPassName(true));
+}
+function answerPassName(n){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, pc = pcAt(c.s, c.f), ok = n === nameAt(c.s, c.f, c.side);
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.f), 0, 1.2);
+  drawPassName(ok ? `Yes — ${PC_SHARP[pc]} to the climber, ${PC_FLAT[pc]} to the descender. One pass, at the ${ord(c.f)} crossing.` + chartedNote(newly)
+                  : `This signpost reads ${nameAt(c.s, c.f, c.side)} — ${PC_SHARP[pc]} from below, ${PC_FLAT[pc]} from above.`, ok);
+}
+
+/* ---- 3.3 / 3.4 / 3.5 chart the chromatic country (ex cfg: strs[], nameOnly) ---- */
+function chromPad(disabled){
+  const nat = Object.keys(PC_NAT).map(l =>
+    `<button class="btn jc kbtn" data-pc="${PC_NAT[l]}" ${disabled?'disabled':''}>${l}</button>`).join('');
+  const pas = [1,3,6,8,10].map(pc =>
+    `<button class="btn jc kbtn pass2" data-pc="${pc}" ${disabled?'disabled':''}>${PC_SHARP[pc]}<span>${PC_FLAT[pc]}</span></button>`).join('');
+  return `<div class="row">${nat}</div><div class="row padrow">${pas}</div>`;
+}
+function mountChartChrom(L){ exMode = 'find'; exPrev = ''; newChartChrom(L, false); }
+function newChartChrom(L, autoplay){
+  const strs = L.ex.strs, s = strs[rand(strs.length)];
+  exMode = L.ex.nameOnly ? 'name' : (exMode === 'name' ? 'find' : 'name');
+  let cur;
+  if(exMode === 'name'){
+    let f, key;
+    do{ f = rand(13); key = 'n' + s + ':' + f; } while(key === exPrev);
+    cur = { mode:'name', s, f, key };
+  } else {
+    let pc, key;
+    do{ pc = rand(12); key = 'f' + s + ':' + pc; } while(key === exPrev);
+    cur = { mode:'find', s, pc, side: Math.random() < 0.5 ? 'sharp' : 'flat', correct: fretsWithPc(s, pc), key };
+  }
+  exPrev = cur.key; exCur = cur; exAnswered = false;
+  drawChartChrom(L);
+  if(autoplay && cur.mode === 'name') pluck(freqAt(s, cur.f), 0, 1.2);
+}
+function drawChartChrom(L, fbHtml, ok){
+  const c = exCur;
+  let neck, q, controls = '';
+  if(c.mode === 'name'){
+    neck = svgNeck({ dots:[{ s:c.s, f:c.f, label: exAnswered ? nameAt(c.s, c.f, 'sharp') : '' }] });
+    q = `Name the marked crossing on the ${STRINGS[c.s].long}.`;
+    controls = chromPad(exAnswered);
+  } else {
+    const nm = chromName(c.pc, c.side);
+    const alt = PC_LETTER[c.pc] ? '' : ` <i>(the far signpost reads ${chromName(c.pc, c.side === 'sharp' ? 'flat' : 'sharp')})</i>`;
+    neck = svgNeck({ dots: exAnswered ? c.reveal : [], cellsOn: exAnswered ? undefined : c.s });
+    q = `Find <b style="color:var(--blue)">${nm}</b>${alt} on the ${STRINGS[c.s].long} — tap the crossing.`;
+  }
+  el('exbox').innerHTML = `
+    ${c.mode === 'name' ? '<div class="row"><button class="btn big" id="hearBtn">▶ Hear it first</button></div>' : ''}
+    <div class="qline">${q}</div>
+    <div class="neckbox" id="neckbox">${neck}</div>
+    ${controls}
+    <div class="fb ${ok===true?'ok':ok===false?'no':''}">${fbHtml||''}</div>
+    ${exAnswered ? '<div class="row"><button class="btn ink" id="nextRound">Next →</button></div>' : ''}
+    ${streakLine()}`;
+  const hb = el('hearBtn'); if(hb) hb.addEventListener('click', () => pluck(freqAt(c.s, c.f), 0, 1.2));
+  document.querySelectorAll('.kbtn').forEach(b => b.addEventListener('click', () => answerChromName(L, +b.dataset.pc)));
+  document.querySelectorAll('#neckbox .cell').forEach(r => r.addEventListener('click', () => answerChromFind(L, +r.dataset.f)));
+  const nx = el('nextRound'); if(nx) nx.addEventListener('click', () => newChartChrom(L, true));
+}
+function fullName(pc){ return PC_LETTER[pc] || (PC_SHARP[pc] + '/' + PC_FLAT[pc]); }
+function answerChromName(L, pc){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, ans = pcAt(c.s, c.f), ok = pc === ans;
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.f), 0, 1.2);
+  const nm = PC_LETTER[ans] || `${PC_SHARP[ans]} — or ${PC_FLAT[ans]} coming down —`;
+  drawChartChrom(L, ok ? `${nm} the ${ord(c.f)} crossing of the ${STRINGS[c.s].long}.` + chartedNote(newly)
+                       : `That crossing is ${fullName(ans)} — the ${ord(c.f)}. (You said ${fullName(pc)}.)`, ok);
+}
+function answerChromFind(L, f){
+  if(exAnswered) return;
+  exAnswered = true;
+  const c = exCur, ok = c.correct.includes(f), nm = chromName(c.pc, c.side);
+  c.reveal = c.correct.map(cf => ({ s:c.s, f:cf, label:nm }));
+  if(!ok) c.reveal.push({ s:c.s, f, label: fullName(pcAt(c.s, f)).split('/')[0], wrong:true });
+  const newly = bump(ok);
+  pluck(freqAt(c.s, c.correct[0]), 0, 1.2);
+  const where = c.correct.map(ord).join(' and ');
+  drawChartChrom(L, ok ? `Flag planted — ${nm} at the ${where} crossing${c.correct.length>1?'s':''}.` + chartedNote(newly)
+                       : `Not there — ${nm} lives at the ${where}.`, ok);
+}
+
 /* ===================== RENDER ===================== */
 function renderExercise(L){
   return `<div class="ex">${exHead(L)}<div id="exbox"></div></div>`;
@@ -822,6 +1055,9 @@ function wireExercise(L){
   else if(L.ex.type === 'landmark') mountLandmark();
   else if(L.ex.type === 'chartString') mountChartString(L);
   else if(L.ex.type === 'octaveBridge') mountOctave(L);
+  else if(L.ex.type === 'passFind') mountPassFind();
+  else if(L.ex.type === 'passName') mountPassName();
+  else if(L.ex.type === 'chartChrom') mountChartChrom(L);
 }
 function renderLesson(){
   const L = LESSONS[idx];
@@ -855,8 +1091,8 @@ function renderNav(){
     }
   } else {
     slot.innerHTML = `<span class="endnote">${chartedOf(idx)
-      ? 'The northern rivers are charted — the open country is yours. The inland passes await.'
-      : 'The last bridges of the survey. Chart them, mapmaker.'}</span>`;
+      ? 'The whole country, named — town and pass, source to Divide. The rank of Pathfinder is yours. Beyond the Divide the land only repeats; that survey is still being drawn.'
+      : 'The last trial of the inland survey. Chart it, Pathfinder.'}</span>`;
   }
 }
 function go(i){
@@ -877,9 +1113,10 @@ function drawMap(){
   m += `<rect x="2" y="2" width="636" height="258" fill="#EFE4CB" stroke="#17140E" stroke-width="2.5"/>`;
   m += `<rect x="8" y="8" width="624" height="246" fill="none" stroke="#17140E" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>`;
   /* cartouche */
+  const survey = ch(12) ? 'FULL SURVEY' : ch(7) ? 'SECOND SURVEY' : 'FIRST SURVEY';
   m += `<g><rect x="20" y="16" width="220" height="30" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/>
         <text x="130" y="35" font-family="'Space Mono',monospace" font-size="10" letter-spacing="2"
-          text-anchor="middle" fill="#17140E">THE FRETBOARD · FIRST SURVEY</text></g>`;
+          text-anchor="middle" fill="#17140E">THE FRETBOARD · ${survey}</text></g>`;
   /* neck */
   m += `<rect x="${N}" y="${T-12}" width="${12*W}" height="${5*G+24}" fill="#F0E6D2" stroke="#17140E" stroke-width="2"/>`;
   m += `<rect x="${N-5}" y="${T-12}" width="5" height="${5*G+24}" fill="#17140E"/>`;
@@ -951,6 +1188,20 @@ function drawMap(){
       <path d="M ${fx(5)},${y(1)} Q ${(fx(5)+fx(7))/2},${y(3)-30} ${fx(7)},${y(3)}" fill="none" stroke="${stroke}" stroke-width="2" stroke-dasharray="5 4"/>
       <text x="${fx(9)}" y="${(y(1)+y(2))/2+4}" font-family="'Space Mono',monospace" font-size="8" letter-spacing="1" fill="${stroke}">${ch(4)?'⚑ ':''}BRIDGES</text>
       <rect x="${fx(9)-8}" y="${(y(1)+y(2))/2-10}" width="100" height="24" fill="transparent"><title>Expedition 1.5 — Octave Bridges</title></rect>
+    </g>`;
+  }
+  /* the inland passes (3.1+): a mountain range in the bottom-left margin */
+  if(LESSONS.length > 8){
+    const i = 8, state = ch(i) ? 'done' : (i === idx ? 'cur' : 'todo');
+    const stroke = state==='done' ? '#2438C8' : state==='cur' ? '#FF4E86' : '#6F6757';
+    const fill = ch(i) ? 'rgba(36,56,200,.10)' : 'transparent';
+    let mts = '';
+    [0,1,2].forEach(k => { const x = 28 + k*22; mts += `M ${x},246 l 8,-11 l 8,11 `; });
+    m += `<g style="cursor:pointer" data-go="8">
+      <rect x="16" y="214" width="84" height="38" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-dasharray="${ch(i)?'none':'5 4'}"/>
+      <text x="58" y="228" font-family="'Space Mono',monospace" font-size="8" letter-spacing="1" fill="${stroke}" text-anchor="middle">${ch(i)?'⚑ ':''}PASSES</text>
+      <path d="${mts}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="16" y="214" width="84" height="38" fill="transparent"><title>Expedition 3.1 — Where the Passes Are</title></rect>
     </g>`;
   }
   /* compass */
