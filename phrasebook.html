@@ -532,7 +532,7 @@ function renderScore(ph, opts){
 function drawEditor(){
   const stageW = ($('stage').clientWidth || 600) - 18;
   const contentW = NOTE_X0 + notes.length*NOTE_DX + RIGHT_PAD;
-  const W = Math.max(contentW, stageW, 460);
+  const W = Math.max(contentW, stageW);
   const svg = $('staff');
   svg.setAttribute('viewBox', `0 0 ${W} 168`);
   svg.setAttribute('width', W); svg.setAttribute('height', 168);

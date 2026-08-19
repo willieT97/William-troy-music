@@ -125,7 +125,9 @@
      flow, and put the strip in there. */
   function hostFor() {
     var n = document.body;
-    for (var depth = 0; depth < 3; depth++) {
+    /* one level only: stepping deeper than the body's main column starts
+       landing the strip inside a game's own internals */
+    for (var depth = 0; depth < 1; depth++) {
       var d = getComputedStyle(n).display;
       if (!/^(inline-)?(flex|grid)$/.test(d)) return n;
       var best = null, bw = -1;
@@ -133,7 +135,9 @@
         if (c.tagName === 'SCRIPT' || c.tagName === 'STYLE' || c.id === 'ma-rel') return;
         var cs2 = getComputedStyle(c);
         if (cs2.display === 'none' || cs2.position === 'fixed' || cs2.position === 'absolute') return;
-        var w = c.getBoundingClientRect().width;
+        /* largest area, not just widest — a wide-but-shallow banner (a title
+           strip) must not beat the actual content column */
+        var r = c.getBoundingClientRect(), w = r.width * Math.max(1, r.height);
         if (w > bw) { bw = w; best = c; }
       });
       if (!best) return n;

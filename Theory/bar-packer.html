@@ -157,7 +157,9 @@
    to work out which notes add up to a full bar.
    ==================================================================== */
 
-  const BEAT_PX=112;                        // px per quarter-note beat
+  // px per quarter-note beat — shrinks on narrow screens so a 4/4 bar
+  // (4 beats + the case's chrome) still fits the viewport
+  const BEAT_PX=Math.min(112, Math.max(64, Math.floor((window.innerWidth-72)/4)));
   const LAB={4:'4',3:'3',2:'2',1.5:'1½',1:'1',0.75:'¾',0.5:'½',0.25:'¼'};
   const EPS=1e-6;
 

@@ -52,7 +52,12 @@
       '.hsboard li.hsyou{color:var(--pink,#FF4E86);}.hsboard li.hsyou .hssc{color:var(--pink,#FF4E86);}' +
       '.hsboard .hsempty{color:var(--muted,#6F6757);opacity:.7;padding:3px 0;}' +
       '.hsboard.hsfixed{margin:14px auto 0;}' +
-      '@media(min-width:1121px){.hsboard.hsfixed{position:fixed;top:50%;right:16px;transform:translateY(-50%);width:186px;max-width:186px;margin:0;background:var(--paper,#F4EEE2);border:2.5px solid var(--ink,#17140E);box-shadow:6px 6px 0 var(--ink,#17140E);padding:12px 14px 14px;z-index:50;}}';
+      '@media(min-width:1121px){.hsboard.hsfixed{position:fixed;top:50%;right:16px;transform:translateY(-50%);width:186px;max-width:186px;margin:0;background:var(--paper,#F4EEE2);border:2.5px solid var(--ink,#17140E);box-shadow:6px 6px 0 var(--ink,#17140E);padding:12px 14px 14px;z-index:50;}}' +
+      /* below the fixed-panel breakpoint the board flows in as a sibling of
+         the game stage; many game pages centre with a row-flex body, which
+         would seat the board BESIDE the stage and widen the page — let the
+         body wrap so the board drops underneath instead */
+      '@media(max-width:1120px){body:has(.hsboard.hsfixed){flex-wrap:wrap;align-content:flex-start;}.hsboard.hsfixed{flex-basis:100%;}}';
     const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
   }
 

@@ -37,10 +37,11 @@
   .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
   .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
 
-  header{ text-align:center; margin-bottom:14px; }
+  header{ text-align:center; margin-bottom:14px; overflow-x:clip; }
+  @media(max-width:430px){ header .title{ font-size:5.6vw; } }
   .title{
     position:relative; display:inline-block; font-family:var(--display);
-    font-weight:800; font-size:clamp(1.8rem,6.4vw,3rem); letter-spacing:-.02em;
+    font-weight:800; font-size:clamp(1.3rem,6.4vw,3rem); letter-spacing:-.02em;
     line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
   }
   .title::after{ content:attr(data-text); position:absolute; left:3px; top:3px; color:var(--pink); mix-blend-mode:multiply; z-index:-1; }

@@ -46,7 +46,7 @@
   .cshint{ font-size:.74rem; font-weight:700; color:var(--muted); margin-top:8px; line-height:1.5; }
   .cshint b{ color:var(--ink); }
   .chartwrap{ background:#fff; border:2px solid #e4dcc9; border-radius:10px; padding:12px 10px; overflow-x:auto; }
-  .slashsvg{ display:block; min-width:340px; }
+  .slashsvg{ display:block; }
   .slash{ stroke:var(--ink); } .schord{ fill:var(--ink); font-family:var(--disp); font-weight:800; } .srom{ fill:var(--muted); font-family:var(--mono); }
   .sbg{ fill:transparent; } .sbar.on .sbg{ fill:rgba(36,56,200,.12); } .sbar.on .slash{ stroke:var(--blue); } .sbar.on .schord, .sbar.on .srom{ fill:var(--blue); }
   .lab{ text-align:center; border:2px solid #e4dcc9; border-radius:10px; background:#fff; padding:14px; margin-bottom:12px; }
@@ -189,16 +189,19 @@
   function chordPcs(bar){ var k=keyObj(); return QUAL[bar[1]].map(function(iv){ return (k.pc+bar[0]+iv)%12; }); }
 
   /* ===== slash chart ===== */
+  function chartPerLine(){ return (el('chart').clientWidth||420) < 400 ? 2 : 4; }
+  var lastPerLine=null;
   function drawChart(){
     var f=FORMS[P.form], chords=f.bars, gap=7, staffH=4*gap, clefW=30, bw=96, topPad=26, rowH=62;
-    var rows=Math.ceil(chords.length/4), totalW=clefW+4*bw, totalH=topPad+rows*rowH+8, s='';
+    var perLine=lastPerLine=chartPerLine();
+    var rows=Math.ceil(chords.length/perLine), totalW=clefW+perLine*bw, totalH=topPad+rows*rowH+8, s='';
     function barline(x,y,w){ return '<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+staffH)+'" stroke="#17140E" stroke-width="'+w+'"/>'; }
     for(var row=0; row<rows; row++){ var sy=topPad+row*rowH;
       for(var ln=0; ln<5; ln++){ var ly=sy+ln*gap; s+='<line x1="2" y1="'+ly+'" x2="'+(totalW-2)+'" y2="'+ly+'" stroke="#17140E" stroke-width="1.1"/>'; }
       s+='<text x="1" y="'+(sy+staffH+3)+'" font-family="Georgia,serif" font-size="31" fill="#17140E">𝄞</text>';
       if(row===0){ s+='<text x="'+(clefW-13)+'" y="'+(sy+2*gap)+'" font-family="Georgia,serif" font-weight="700" font-size="13" fill="#17140E">4</text><text x="'+(clefW-13)+'" y="'+(sy+4*gap)+'" font-family="Georgia,serif" font-weight="700" font-size="13" fill="#17140E">4</text>'; }
       s+=barline(clefW, sy, 1.4);
-      for(var i=0;i<4;i++){ var idx=row*4+i; if(idx>=chords.length) break; var bx=clefW+i*bw, midY=sy+2*gap, inner='';
+      for(var i=0;i<perLine;i++){ var idx=row*perLine+i; if(idx>=chords.length) break; var bx=clefW+i*bw, midY=sy+2*gap, inner='';
         inner+='<rect class="sbg" x="'+(bx+1.5)+'" y="'+(sy-22)+'" width="'+(bw-3)+'" height="'+(staffH+27)+'" rx="5"/>';
         inner+='<text class="srom" x="'+(bx+6)+'" y="'+(sy-17)+'" font-size="9">'+f.rom[idx]+'</text>';
         inner+='<text class="schord" x="'+(bx+6)+'" y="'+(sy-5)+'" font-size="14">'+chordName(chords[idx])+'</text>';
@@ -208,6 +211,11 @@
     }
     el('chart').innerHTML='<svg class="slashsvg" viewBox="0 0 '+totalW+' '+totalH+'" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
   }
+  var chartResizeT;
+  window.addEventListener('resize', function(){
+    clearTimeout(chartResizeT);
+    chartResizeT=setTimeout(function(){ if(chartPerLine()!==lastPerLine) drawChart(); }, 200);
+  });
 
   /* ===== audio: groove ===== */
   var actx=null, master=null, timers=[];

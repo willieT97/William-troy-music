@@ -23,6 +23,8 @@
 
   .title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,6vw,40px);color:var(--foam);
     text-align:center;letter-spacing:1px;line-height:1.05}
+  /* clear the fixed account chip auth.js pins top-right */
+  @media(max-width:760px){ .title{ padding-top:calc(var(--maa-ctl-h, 32px) + 6px); } }
   .title .note{display:inline-block;background:var(--buoy);color:#fff;border:3px solid var(--ink);
     border-radius:50%;width:.95em;height:.95em;line-height:.9em;text-align:center;transform:translateY(.08em)}
   .eyebrow{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:3px;text-transform:uppercase;

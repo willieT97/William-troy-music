@@ -107,6 +107,14 @@
     background:var(--coral); transition:right .28s ease;
   }
   nav a:hover::after, nav a:focus-visible::after{ right:0; }
+  /* leave room for the fixed account chip auth.js pins to the top-right corner */
+  @media(min-width:741px){ .bar{ padding-right:calc(var(--maa-ctl-w, 90px) + 14px); } }
+  @media(max-width:740px){
+    .bar{ flex-direction:column; align-items:flex-start; gap:.45rem; padding:.7rem 0 .6rem; }
+    .brand-mark{ width:18px; height:39px; }
+    nav ul{ flex-wrap:wrap; gap:.2rem 1.1rem; }
+    nav a{ font-size:.88rem; padding:.3rem 0; display:inline-block; }
+  }
 
   /* ───────────────────────── hero ───────────────────────── */
   .hero{ position:relative; overflow:hidden; isolation:isolate; }

@@ -320,6 +320,17 @@
       '.maa-hint{font-size:.72rem;color:#8a7f6a;font-weight:600;margin-top:2px;}' +
       '.maa-pw-badge{display:inline-block;font-weight:800;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#8a5a00;background:#FFE9A8;border:2px solid #17140E;border-radius:999px;padding:3px 10px;margin:0 0 12px;}' +
       '.maa-golink{display:block;text-align:center;text-decoration:none;box-sizing:border-box;}' +
+      /* on narrow screens the shared section-tabs nav becomes one sideways-
+         scrollable row instead of wrapping into a stack; the trailing padding
+         keeps the last tab clear of the fixed account chip when scrolled to
+         the end */
+      '@media (max-width:760px){' +
+        'nav.tabs{display:flex;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;' +
+          'padding:4px calc(var(--maa-ctl-w,84px) + 8px) 6px 4px;}' +
+        'nav.tabs::-webkit-scrollbar{display:none;}' +
+        'nav.tabs a{flex:none;white-space:nowrap;}' +
+        'nav.tabs .tabs-inner{display:flex;flex-wrap:nowrap;flex:none;width:auto;max-width:none;}' +
+      '}' +
       '@media (prefers-reduced-motion:reduce){.maa-btn,.maa-go,.maa-tab{transition:none;}}';
     var st = document.createElement('style'); st.id = 'maa-styles'; st.textContent = css; document.head.appendChild(st);
   }
@@ -463,6 +474,19 @@
           (sibling ? sibling.parentNode : nav).appendChild(a);
         }
       } else if (have) { have.parentNode.removeChild(have); }
+    }
+    // on narrow screens the tabs are one sideways-scrollable row; make sure
+    // the current page's tab starts in view instead of off the right edge
+    for (var j = 0; j < navs.length; j++) {
+      var scroller = navs[j];
+      if (scroller.scrollWidth > scroller.clientWidth) {
+        var cur = scroller.querySelector('a.cur, a[aria-current="page"]');
+        if (cur) {
+          var cr = cur.getBoundingClientRect(), sr = scroller.getBoundingClientRect();
+          var target = scroller.scrollLeft + (cr.left - sr.left) - Math.max(0, (scroller.clientWidth - cr.width) / 2);
+          scroller.scrollLeft = Math.max(0, target);
+        }
+      }
     }
   }
   window.MAAuth.syncNav = syncNavTabs;

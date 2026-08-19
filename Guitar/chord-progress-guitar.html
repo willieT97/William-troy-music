@@ -29,6 +29,9 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
   }
   .stage{ position:relative; z-index:1; width:min(620px,100%); }
+  /* below the hi-scores fixed-panel breakpoint the board flows in as a body
+     sibling of the stage; stack instead of sitting beside it */
+  @media(max-width:1120px){ body{ flex-direction:column; justify-content:flex-start; } }
 
   .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
   .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
@@ -40,7 +43,7 @@
   header{ text-align:center; margin-bottom:18px; }
   .title{
     position:relative; display:inline-block; font-family:var(--display);
-    font-weight:800; font-size:clamp(1.55rem,5.5vw,2.35rem); letter-spacing:-.02em;
+    font-weight:800; font-size:clamp(1.15rem,5.5vw,2.35rem); letter-spacing:-.02em;
     line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
   }
   .title::after{

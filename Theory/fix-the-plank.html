@@ -141,7 +141,9 @@
    half note becomes two crotchets, a crotchet becomes two quavers…
    ==================================================================== */
 
-  const BEAT_PX=104;
+  // shrinks on narrow screens so a 4-beat beam plus the time-signature badge
+  // beside it fits without sideways scroll
+  const BEAT_PX=Math.min(104, Math.max(56, Math.floor((window.innerWidth-110)/4)));
   const LAB={4:'4',3:'3',2:'2',1.5:'1½',1:'1',0.75:'¾',0.5:'½',0.25:'¼'};
   const NAME={4:'whole note',3:'dotted minim',2:'half note',1.5:'dotted crotchet',1:'crotchet',0.75:'dotted quaver',0.5:'quaver',0.25:'semiquaver'};
   const EPS=1e-6;
