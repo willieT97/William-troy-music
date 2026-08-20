@@ -179,6 +179,10 @@
   @media (prefers-reduced-motion:reduce){
     *{animation:none !important;transition:none !important;}
   }
+
+  /* game input: a long press or drag must never start text selection,
+     the iOS callout, or the grey tap flash */
+  body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
 </style>
 </head>
 <body>

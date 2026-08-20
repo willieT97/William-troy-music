@@ -22,6 +22,10 @@
     font-family:var(--body); color:var(--ink); background:var(--paper);
     min-height:100vh; display:flex; align-items:center; justify-content:center;
     padding:clamp(14px,3vw,40px); line-height:1.5; -webkit-font-smoothing:antialiased;
+    /* hold-to-fly control: a long press must never start text selection,
+       the iOS callout, or the grey tap flash anywhere on the page */
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
   }
   body::before{
     content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
@@ -268,6 +272,11 @@
   svg.addEventListener('pointerdown', e=>{ press(); e.preventDefault(); });
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
+  // pointerdown's preventDefault doesn't stop the native long-press gestures
+  // (text-selection magnifier, context menu) on every mobile browser — block
+  // them at the source so holding the tap only flies the runner
+  svg.addEventListener('touchstart', e=>{ e.preventDefault(); }, { passive:false });
+  svg.addEventListener('contextmenu', e=>{ e.preventDefault(); });
   let spaceDown=false;
   window.addEventListener('keydown', e=>{ if(e.key===' '){ e.preventDefault(); if(!spaceDown){ spaceDown=true; press(); } } });
   window.addEventListener('keyup', e=>{ if(e.key===' '){ spaceDown=false; release(); } });
