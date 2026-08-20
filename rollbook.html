@@ -127,6 +127,7 @@ body.panelopen .maa-ctl{display:none}
 /* WhatsApp/SMS can't be sent by a web page — these open the app pre-filled and
    William presses send, so a "done" button just records that he tapped it */
 #sendbar .tap.done,.msgbar .tap.done{background:var(--green);color:#fff;border-color:var(--ink)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
 .dhead{padding:18px 20px 14px;border-bottom:3px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:5}
 .dhead h2{font-family:var(--display);font-size:1.45rem;line-height:1.1;padding-right:40px}
 .chip{display:inline-block;font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);
@@ -331,6 +332,10 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
     <p class="muted">Add your students and classes, then give each a weekly time.</p>
     <div class="formrow" style="max-width:440px;margin-top:14px">
       <input class="field" id="setTeacher" placeholder="Your name — signs off updates to parents">
+    </div>
+    <div class="formrow" style="max-width:440px;margin-top:8px">
+      <input class="field" id="setCC" placeholder="353" style="max-width:90px" inputmode="numeric">
+      <span class="hint" style="align-self:center">country code for parents&rsquo; phones — WhatsApp links need it (353 = Ireland)</span>
     </div>
     <label class="tickrow" style="margin-top:10px"><input type="checkbox" id="setAutoEmail">
       Send contacts what we covered when I save a lesson log
@@ -890,10 +895,17 @@ let pendingSend=null;
 const chanOf=c=>c.channel||(c.email?'email':'wa');
 const notifyContacts=p=>(p.contacts||[]).filter(c=>c.notify!==false&&c.email&&chanOf(c)==='email');
 const tapContacts=p=>(p.contacts||[]).filter(c=>c.notify!==false&&c.phone&&chanOf(c)!=='email');
-const waLink=(c,text)=>'https://wa.me/'+String(c.phone).replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(text);
-/* iOS wants & before body, Android wants ? — Macs go through Messages either way */
-const smsLink=(c,text)=>'sms:'+String(c.phone).replace(/[^0-9+]/g,'')+
-  (/iPhone|iPad|Mac/.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(text);
+/* wa.me only takes full international digits — "087 123 4567" must become
+   353871234567 or WhatsApp refuses the link. +44… and 0044… pass through;
+   a bare local 0… gets the teacher's country code (Set up, default Ireland). */
+const intlPhone=raw=>{
+  let s=String(raw||'').replace(/[^0-9+]/g,'');
+  const cc=((state.settings&&state.settings.cc)||'353').replace(/[^0-9]/g,'').replace(/^00/,'');
+  if(s.startsWith('+'))s=s.slice(1);
+  else if(s.startsWith('00'))s=s.slice(2);
+  else if(s.startsWith('0'))s=cc+s.slice(1);
+  return s.replace(/[^0-9]/g,'');
+};
 
 function lessonEmail(p,l,who){
   const res=(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean);
@@ -922,13 +934,25 @@ async function sendLessonEmail(p,l){
     throw new Error(m||'couldn’t reach the mail service');
   }
   if(!data||data.error)throw new Error((data&&data.error)||'it didn’t go');
-  l.emailedAt=data.at||new Date().toISOString();
-  l.emailedTo=to;
+  /* stamp the lesson as it lives in state NOW — `l` can be a stale copy if the
+     account re-synced (token refresh, tab refocus) while the bar sat open */
+  const cur=state.lessons.find(x=>x.id===l.id)||l;
+  cur.emailedAt=data.at||new Date().toISOString();
+  cur.emailedTo=to;
+  delete cur.emailError;
   markDirty();
   return data;
 }
-function barHTML(inner){return inner;}
-function hideBar(){const b=$('#sendbar');if(b)b.classList.remove('show');}
+
+/* ---------- the send bar ----------
+   barGen guards every deferred repaint or hide: anything that paints the bar
+   bumps it, so a stale auto-hide timer or a send that settles late can't
+   clobber (or vanish) whatever the bar is showing now. sendbarLessonId lets
+   the delete handler kill a bar whose lesson is gone. */
+let barGen=0, sendbarLessonId=null;
+function showBar(html){barGen++;const b=$('#sendbar');b.innerHTML=html;b.classList.add('show');return b;}
+function hideBar(){barGen++;sendbarLessonId=null;const b=$('#sendbar');if(b)b.classList.remove('show');}
+function autoHide(ms){const g=barGen;setTimeout(()=>{if(barGen===g)hideBar();},ms);}
 
 /* WhatsApp/SMS handoff: a page can't send these itself, so each phone contact
    gets a button that opens the app with the message pre-filled — one tap each,
@@ -943,85 +967,104 @@ function tapBtnsHTML(p,l){
       '>'+(done?'✓ ':'')+esc(lbl)+'</button>';
   }).join('');
 }
+/* opens the app with the message pre-filled; returns true when the text was
+   too long to ride a URL and went to the clipboard instead */
+function openHandoff(c,text){
+  const enc=encodeURIComponent(text);
+  const tooLong=enc.length>6000;   /* the OS drops or cuts custom-scheme URLs around here */
+  if((tooLong||chanOf(c)==='sms')&&navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).catch(()=>{});   /* macOS Messages can drop the body param — the clipboard is the net */
+  if(chanOf(c)==='sms')
+    location.href='sms:'+String(c.phone).replace(/[^0-9+]/g,'')+
+      (tooLong?'':(/iPhone|iPad|Mac/.test(navigator.userAgent)?'&':'?')+'body='+enc);
+  else window.open('https://wa.me/'+intlPhone(c.phone)+(tooLong?'':'?text='+enc),'_blank','noopener');
+  return tooLong;
+}
 function tapSend(p,l,c){
-  const text=lessonEmail(p,l,[c]).text;
-  if(chanOf(c)==='sms'){
-    /* macOS Messages sometimes drops the body param — the clipboard is the net */
-    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).catch(()=>{});
-    location.href=smsLink(c,text);
-  } else window.open(waLink(c,text),'_blank','noopener');
+  const tooLong=openHandoff(c,lessonEmail(p,l,[c]).text);
   l.texted=l.texted||[];
   if(!l.texted.some(t=>t.id===c.id))
     l.texted.push({id:c.id,name:c.name||c.phone,via:chanOf(c),at:new Date().toISOString()});
   markDirty();
+  return tooLong;
 }
-function wireTaps(p,l){
+function wireTaps(personId,lessonId){
   $('#sendbar').querySelectorAll('[data-tap]').forEach(btn=>btn.onclick=()=>{
-    const c=(p.contacts||[]).find(x=>x.id===btn.dataset.tap);if(!c)return;
-    tapSend(p,l,c);
+    /* re-resolve — `state` may have been replaced since the bar was painted */
+    const p=person(personId), l=state.lessons.find(x=>x.id===lessonId);
+    const c=p&&(p.contacts||[]).find(x=>x.id===btn.dataset.tap);
+    if(!p||!l||!c){hideBar();return;}
+    const tooLong=tapSend(p,l,c);
     btn.classList.add('done');
-    if(btn.textContent[0]!=='✓')btn.textContent='✓ '+btn.textContent;
-    if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();
+    btn.textContent=tooLong?'✓ copied — paste it':'✓ '+btn.textContent.replace(/^✓ /,'');
+    /* no renderDrawer here — it would wipe half-typed notes; the 💬 shows on the next redraw */
   });
 }
 
 function cancelPendingSend(){
   if(!pendingSend)return;
-  const{p,l}=pendingSend;
-  clearTimeout(pendingSend.timer);clearInterval(pendingSend.tick);
+  const{timer,tick,personId,lessonId}=pendingSend;
+  clearTimeout(timer);clearInterval(tick);
   pendingSend=null;
-  const b=$('#sendbar');
-  if(p&&tapContacts(p).length){
-    b.innerHTML='<span>Email cancelled.</span>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>';
-    wireTaps(p,l);$('#sbX').onclick=hideBar;
+  const p=person(personId), l=state.lessons.find(x=>x.id===lessonId);
+  if(p&&l&&tapContacts(p).length){
+    sendbarLessonId=lessonId;
+    showBar('<span>Email cancelled.</span>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>');
+    wireTaps(personId,lessonId);$('#sbX').onclick=hideBar;
   } else {
-    b.innerHTML='<span>Not sent.</span>';
-    setTimeout(()=>{if(!pendingSend)hideBar();},2200);
+    showBar('<span>Not sent.</span>');
+    autoHide(2200);
   }
 }
 function queueLessonUpdate(p,l){
   cancelPendingSend();
-  const b=$('#sendbar');
+  const pid=p.id, lid=l.id;
   const emails=notifyContacts(p), taps=tapContacts(p);
+  sendbarLessonId=lid;
+  const closeX='<button class="x" id="sbX">×</button>';
   if(!emails.length){
     if(!taps.length)return;
-    b.innerHTML='<span>Pass it on:</span>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>';
-    b.classList.add('show');
-    wireTaps(p,l);$('#sbX').onclick=hideBar;
+    showBar('<span>Pass it on:</span>'+tapBtnsHTML(p,l)+closeX);
+    wireTaps(pid,lid);$('#sbX').onclick=hideBar;
     return;
   }
   const who=emails.map(c=>c.name||c.email).join(', ');
   let left=Math.round(SEND_DELAY/1000);
-  const paint=()=>{
-    b.innerHTML='<span>Emailing '+esc(who)+' in '+left+'s…</span><button class="btn small" id="sbCancel">Cancel</button>'+tapBtnsHTML(p,l);
-    b.classList.add('show');
-    $('#sbCancel').onclick=cancelPendingSend;
-    wireTaps(p,l);
-  };
-  paint();
-  const tick=setInterval(()=>{left--;if(left>0)paint();},1000);
+  const line=n=>'Emailing '+who+' in '+n+'s…';
+  /* painted once — the tick only rewrites the text, so a tap button isn't
+     destroyed mid-press by a wholesale repaint (that eats the click) */
+  showBar('<span id="sbMsg">'+esc(line(left))+'</span><button class="btn small" id="sbCancel">Cancel</button>'+tapBtnsHTML(p,l));
+  $('#sbCancel').onclick=cancelPendingSend;
+  wireTaps(pid,lid);
+  const tick=setInterval(()=>{left--;if(left>0){const m=$('#sbMsg');if(m)m.textContent=line(left);}},1000);
   const timer=setTimeout(async()=>{
     clearInterval(tick);
-    b.innerHTML='<span>Sending…</span>'+tapBtnsHTML(p,l);wireTaps(p,l);
+    pendingSend=null;               /* past the point of cancelling — a later save must not "cancel" a send already in flight */
+    showBar('<span>Sending…</span>'+tapBtnsHTML(p,l));wireTaps(pid,lid);
+    const g=barGen;                 /* if a later lesson paints over us while we wait, stay off the bar */
     try{
       await sendLessonEmail(p,l);
-      b.innerHTML='<span>✉ Sent to '+esc(who)+'</span>'+tapBtnsHTML(p,l)+
-        (taps.length?'<button class="x" id="sbX">×</button>':'');
-      pendingSend=null;
-      wireTaps(p,l);
-      if(taps.length)$('#sbX').onclick=hideBar;
-      else setTimeout(()=>{if(!pendingSend)hideBar();},5000);
-      if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();
+      if(g===barGen){
+        showBar('<span>✉ Sent to '+esc(who)+'</span>'+
+          tapBtnsHTML(person(pid)||p,state.lessons.find(x=>x.id===lid)||l)+(taps.length?closeX:''));
+        wireTaps(pid,lid);
+        if(taps.length)$('#sbX').onclick=hideBar;
+        else autoHide(5000);
+      }
+      if(drawerCtx&&drawerCtx.personId===pid)renderDrawer();
     }catch(e){
-      pendingSend=null;
-      b.innerHTML='<span class="bad">Not sent — '+esc(e.message||'something went wrong')+'</span>'+
-        '<button class="btn small" id="sbRetry">Try again</button>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>';
-      $('#sbRetry').onclick=()=>queueLessonUpdate(p,l);
-      wireTaps(p,l);
-      $('#sbX').onclick=hideBar;      /* stays put until dismissed — a failed send shouldn't slip past */
+      const cur=state.lessons.find(x=>x.id===lid);
+      if(cur&&!cur.emailedAt){cur.emailError=e.message||'something went wrong';markDirty();}   /* survives the bar — shows as ✉ failed in Story so far */
+      if(g===barGen){
+        showBar('<span class="bad">Not sent — '+esc(e.message||'something went wrong')+'</span>'+
+          '<button class="btn small" id="sbRetry">Try again</button>'+tapBtnsHTML(person(pid)||p,cur||l)+closeX);
+        $('#sbRetry').onclick=()=>{const p2=person(pid),l2=state.lessons.find(x=>x.id===lid);if(p2&&l2)queueLessonUpdate(p2,l2);else hideBar();};
+        wireTaps(pid,lid);
+        $('#sbX').onclick=hideBar;      /* stays put until dismissed — a failed send shouldn't slip past */
+      }
     }
   },SEND_DELAY);
-  pendingSend={timer,tick,lessonId:l.id,p,l};
+  pendingSend={timer,tick,personId:pid,lessonId:lid};
 }
 
 /* ---------- their Music Arcade account (optional, both ways) ----------
@@ -1134,7 +1177,7 @@ function contactBits(p){
       '<option value="parent">Parent</option><option value="teacher">Teacher</option>'+
       '<option value="student">Student</option><option value="other">Other</option></select></div>'+
     '<div class="formrow"><input class="field" id="ctEmail" placeholder="Email" type="email" style="flex:1.4">'+
-    '<input class="field" id="ctPhone" placeholder="Phone" type="tel" style="flex:.9">'+
+    '<input class="field" id="ctPhone" placeholder="Phone (087… or +44…)" type="tel" style="flex:.9">'+
     '<button class="btn small" id="ctAdd">Add</button></div></div>';
 }
 function updateBits(p){
@@ -1153,7 +1196,7 @@ function updateBits(p){
     '<label class="f" for="msgBody">MESSAGE</label>'+
     '<textarea class="field" id="msgBody">'+esc(body)+'</textarea>'+
     '<div class="msgbar">'+
-      '<button class="btn small primary" id="msgSend"'+(emails.length?'':' disabled')+'>Send now</button>'+
+      (emails.length?'<button class="btn small primary" id="msgSend">Send now</button>':'')+
       '<button class="btn small" id="msgCopy">Copy</button>'+
       tappable.map(c=>{
         const g=greetName(c.name);
@@ -1311,7 +1354,7 @@ function renderDrawer(){
   '<div class="section"><div class="sectitle">Story so far<span class="mono">'+hist.length+' lessons</span></div>'+
   (hist.length?hist.map(l=>
     '<div class="logentry"><div class="ldate">'+shortDate(l.date)+
-      (l.emailedAt?'<span class="sent" title="Emailed '+esc((l.emailedTo||[]).join(', '))+'">\u2709 sent</span>':'')+(l.texted&&l.texted.length?'<span class="sent" title="'+esc(l.texted.map(t=>(t.via==='sms'?'Texted ':'WhatsApped ')+t.name).join(', '))+'">\ud83d\udcac sent</span>':'')+'</div>'+
+      (l.emailedAt?'<span class="sent" title="Emailed '+esc((l.emailedTo||[]).join(', '))+'">\u2709 sent</span>':'')+(l.texted&&l.texted.length?'<span class="sent" title="'+esc(l.texted.map(t=>(t.via==='sms'?'Texted ':'WhatsApped ')+t.name).join(', '))+'">\ud83d\udcac sent</span>':'')+(l.emailError&&!l.emailedAt?'<span class="sent" style="color:#B3261E" title="'+esc(l.emailError)+'">\u2709 failed</span>':'')+'</div>'+
     '<div class="lactions"><button data-edit="'+l.id+'">edit</button><button data-del="'+l.id+'">\u00d7</button></div>'+
     (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>chip(r,p)).join('')+'</div>':'')+
     (l.notes?'<div class="lrow"><b>NOTES</b>'+esc(l.notes)+'</div>':'')+
@@ -1414,7 +1457,7 @@ function renderDrawer(){
       /* stamp the lesson this covers, so Story so far shows it went */
       if(msgRange==='last'){
         const l=msgLessons(p)[0];
-        if(l){l.emailedAt=new Date().toISOString();l.emailedTo=to;markDirty();}
+        if(l){l.emailedAt=new Date().toISOString();l.emailedTo=to;delete l.emailError;markDirty();}
       }
       /* let the confirmation sit for a beat, then redraw so Story so far shows
          the ✉ — the typed subject/body survive in msgSubj/msgSaid */
@@ -1434,11 +1477,9 @@ function renderDrawer(){
   d.querySelectorAll('[data-mtap]').forEach(btn=>btn.onclick=()=>{
     const c=(p.contacts||[]).find(x=>x.id===btn.dataset.mtap);
     if(!c)return;
-    const text=$('#msgBody').value;
-    if(chanOf(c)==='sms'){
-      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).catch(()=>{});
-      location.href=smsLink(c,text);
-    } else window.open(waLink(c,text),'_blank','noopener');
+    const tooLong=openHandoff(c,$('#msgBody').value);
+    const st=$('#msgStatus');
+    if(tooLong&&st)st.innerHTML='<b>Too long to hand over in a link — it’s on your clipboard, paste it into the chat.</b>';
   });
   /* suggest against the bit after the last comma, so it works mid-list */
   (()=>{
@@ -1486,7 +1527,14 @@ function renderDrawer(){
   const lgc=$('#lgCancel');if(lgc)lgc.onclick=()=>{editingLessonId=null;renderDrawer();};
   d.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editingLessonId=b.dataset.edit;renderDrawer();});
   d.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
-    if(confirm('Delete this log entry?')){state.lessons=state.lessons.filter(l=>l.id!==b.dataset.del);markDirty();renderDrawer();}
+    if(confirm('Delete this log entry?')){
+      const id=b.dataset.del;
+      state.lessons=state.lessons.filter(l=>l.id!==id);
+      /* deleting the log must also kill its update: the countdown and the tap bar */
+      if(pendingSend&&pendingSend.lessonId===id)cancelPendingSend();
+      if(sendbarLessonId===id)hideBar();
+      markDirty();renderDrawer();
+    }
   });
   d.querySelectorAll('[data-rep]').forEach(c=>c.onchange=()=>{
     const r=(p.repertoire||[]).find(x=>x.id===c.dataset.rep);if(r){r.done=c.checked;markDirty();renderDrawer();}
@@ -1509,6 +1557,11 @@ function renderManage(){
   const tn=$('#setTeacher');
   tn.value=(state.settings&&state.settings.teacherName)||'';
   tn.onchange=()=>{state.settings=state.settings||{};state.settings.teacherName=tn.value.trim();markDirty();};
+  const cc=$('#setCC');
+  cc.value=(state.settings&&state.settings.cc)||'';
+  cc.onchange=()=>{state.settings=state.settings||{};
+    state.settings.cc=cc.value.replace(/[^0-9]/g,'').replace(/^00/,'');   /* "00353" typed IDD-style must not become wa.me/00353… */
+    cc.value=state.settings.cc;markDirty();};
   const ae=$('#setAutoEmail'), en=$('#setEmailNotes');
   ae.checked=!!(state.settings&&state.settings.autoEmail);
   en.checked=!!(state.settings&&state.settings.emailNotes);
