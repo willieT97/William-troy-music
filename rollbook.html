@@ -117,13 +117,16 @@ body.panelopen .maa-ctl{display:none}
 /* the "about to email the parent" bar — lives on the body so it survives the
    drawer re-rendering, and sits above it */
 #sendbar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(14px);
-  display:none;align-items:center;gap:12px;max-width:min(560px,94vw);
+  display:none;align-items:center;gap:12px;flex-wrap:wrap;max-width:min(640px,94vw);
   border:3px solid var(--ink);background:#fff;box-shadow:5px 5px 0 var(--ink);
   padding:11px 14px;z-index:200;opacity:0;transition:opacity .18s,transform .18s}
 #sendbar.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
 #sendbar span{font-size:.9rem}
 #sendbar span.bad{color:#B3261E}
 #sendbar .x{font-family:var(--mono);border:2px solid var(--ink);background:#fff;padding:0 8px;font-weight:700}
+/* WhatsApp/SMS can't be sent by a web page — these open the app pre-filled and
+   William presses send, so a "done" button just records that he tapped it */
+#sendbar .tap.done,.msgbar .tap.done{background:var(--green);color:#fff;border-color:var(--ink)}
 .dhead{padding:18px 20px 14px;border-bottom:3px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:5}
 .dhead h2{font-family:var(--display);font-size:1.45rem;line-height:1.1;padding-right:40px}
 .chip{display:inline-block;font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);
@@ -196,6 +199,7 @@ body.panelopen .maa-ctl{display:none}
 .contact .cw{font-family:var(--mono);font-size:.63rem;color:rgba(23,20,14,.7);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .contact .del{font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);background:#fff;padding:0 6px}
+.contact .chsel{font-family:var(--mono);font-size:.62rem;border:2px solid var(--ink);background:#fff;padding:1px 2px;flex:none;max-width:92px}
 .rolechip{font-family:var(--mono);font-size:.6rem;border:2px solid var(--ink);padding:0 5px;flex:none;text-transform:uppercase}
 .rolechip.parent{background:var(--amber);color:#fff}
 .rolechip.teacher{background:var(--blue);color:#fff}
@@ -329,7 +333,8 @@ body.gated header #openManage,body.gated main,body.gated #demoBanner{display:non
       <input class="field" id="setTeacher" placeholder="Your name — signs off updates to parents">
     </div>
     <label class="tickrow" style="margin-top:10px"><input type="checkbox" id="setAutoEmail">
-      Email contacts what we covered when I save a lesson log</label>
+      Send contacts what we covered when I save a lesson log
+      <span class="hint" style="margin:0 0 0 4px">(email goes by itself; WhatsApp &amp; SMS pop up ready to tap)</span></label>
     <label class="tickrow" id="setNotesRow" style="display:none"><input type="checkbox" id="setEmailNotes">
       …and include my lesson notes <span class="hint" style="margin:0 0 0 4px">(off by default — your notes are shorthand for you)</span></label>
     <div class="mgrid">
@@ -880,11 +885,19 @@ function msgSubject(p){return p.name+' — lesson update';}
 const SEND_DELAY=8000;
 let pendingSend=null;
 
-const notifyContacts=p=>(p.contacts||[]).filter(c=>c.notify!==false&&c.email);
+/* Which way does this contact get updates? Old contacts have no channel field:
+   email if they have one (that's what they were getting), else WhatsApp. */
+const chanOf=c=>c.channel||(c.email?'email':'wa');
+const notifyContacts=p=>(p.contacts||[]).filter(c=>c.notify!==false&&c.email&&chanOf(c)==='email');
+const tapContacts=p=>(p.contacts||[]).filter(c=>c.notify!==false&&c.phone&&chanOf(c)!=='email');
+const waLink=(c,text)=>'https://wa.me/'+String(c.phone).replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(text);
+/* iOS wants & before body, Android wants ? — Macs go through Messages either way */
+const smsLink=(c,text)=>'sms:'+String(c.phone).replace(/[^0-9+]/g,'')+
+  (/iPhone|iPad|Mac/.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(text);
 
-function lessonEmail(p,l){
+function lessonEmail(p,l,who){
   const res=(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean);
-  const firsts=notifyContacts(p).map(c=>greetName(c.name)).filter(Boolean);
+  const firsts=(who||notifyContacts(p)).map(c=>greetName(c.name)).filter(Boolean);
   const L=[];
   L.push((firsts.length?'Hi '+andList(firsts):'Hi there')+',');
   L.push('');
@@ -916,43 +929,99 @@ async function sendLessonEmail(p,l){
 }
 function barHTML(inner){return inner;}
 function hideBar(){const b=$('#sendbar');if(b)b.classList.remove('show');}
+
+/* WhatsApp/SMS handoff: a page can't send these itself, so each phone contact
+   gets a button that opens the app with the message pre-filled — one tap each,
+   and William presses send. Tapped ones go green and stamp the lesson. */
+function tapBtnsHTML(p,l){
+  return tapContacts(p).map(c=>{
+    const done=(l.texted||[]).some(t=>t.id===c.id);
+    const g=greetName(c.name);
+    const lbl=(chanOf(c)==='sms'?'Text':'WhatsApp')+(g?' '+g:'');
+    return '<button class="btn small tap'+(done?' done':'')+'" data-tap="'+c.id+'"'+
+      (chanOf(c)==='sms'?' title="opens Messages ready to send (the text is copied too, in case it doesn’t carry over)"':'')+
+      '>'+(done?'✓ ':'')+esc(lbl)+'</button>';
+  }).join('');
+}
+function tapSend(p,l,c){
+  const text=lessonEmail(p,l,[c]).text;
+  if(chanOf(c)==='sms'){
+    /* macOS Messages sometimes drops the body param — the clipboard is the net */
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).catch(()=>{});
+    location.href=smsLink(c,text);
+  } else window.open(waLink(c,text),'_blank','noopener');
+  l.texted=l.texted||[];
+  if(!l.texted.some(t=>t.id===c.id))
+    l.texted.push({id:c.id,name:c.name||c.phone,via:chanOf(c),at:new Date().toISOString()});
+  markDirty();
+}
+function wireTaps(p,l){
+  $('#sendbar').querySelectorAll('[data-tap]').forEach(btn=>btn.onclick=()=>{
+    const c=(p.contacts||[]).find(x=>x.id===btn.dataset.tap);if(!c)return;
+    tapSend(p,l,c);
+    btn.classList.add('done');
+    if(btn.textContent[0]!=='✓')btn.textContent='✓ '+btn.textContent;
+    if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();
+  });
+}
+
 function cancelPendingSend(){
   if(!pendingSend)return;
+  const{p,l}=pendingSend;
   clearTimeout(pendingSend.timer);clearInterval(pendingSend.tick);
   pendingSend=null;
-  const b=$('#sendbar');b.innerHTML='<span>Not sent.</span>';
-  setTimeout(()=>{if(!pendingSend)hideBar();},2200);
+  const b=$('#sendbar');
+  if(p&&tapContacts(p).length){
+    b.innerHTML='<span>Email cancelled.</span>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>';
+    wireTaps(p,l);$('#sbX').onclick=hideBar;
+  } else {
+    b.innerHTML='<span>Not sent.</span>';
+    setTimeout(()=>{if(!pendingSend)hideBar();},2200);
+  }
 }
-function queueLessonEmail(p,l){
+function queueLessonUpdate(p,l){
   cancelPendingSend();
   const b=$('#sendbar');
-  const who=notifyContacts(p).map(c=>c.name||c.email).join(', ');
+  const emails=notifyContacts(p), taps=tapContacts(p);
+  if(!emails.length){
+    if(!taps.length)return;
+    b.innerHTML='<span>Pass it on:</span>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>';
+    b.classList.add('show');
+    wireTaps(p,l);$('#sbX').onclick=hideBar;
+    return;
+  }
+  const who=emails.map(c=>c.name||c.email).join(', ');
   let left=Math.round(SEND_DELAY/1000);
   const paint=()=>{
-    b.innerHTML='<span>Emailing '+esc(who)+' in '+left+'s\u2026</span><button class="btn small" id="sbCancel">Cancel</button>';
+    b.innerHTML='<span>Emailing '+esc(who)+' in '+left+'s…</span><button class="btn small" id="sbCancel">Cancel</button>'+tapBtnsHTML(p,l);
     b.classList.add('show');
     $('#sbCancel').onclick=cancelPendingSend;
+    wireTaps(p,l);
   };
   paint();
   const tick=setInterval(()=>{left--;if(left>0)paint();},1000);
   const timer=setTimeout(async()=>{
     clearInterval(tick);
-    b.innerHTML='<span>Sending\u2026</span>';
+    b.innerHTML='<span>Sending…</span>'+tapBtnsHTML(p,l);wireTaps(p,l);
     try{
       await sendLessonEmail(p,l);
-      b.innerHTML='<span>\u2709 Sent to '+esc(who)+'</span>';
+      b.innerHTML='<span>✉ Sent to '+esc(who)+'</span>'+tapBtnsHTML(p,l)+
+        (taps.length?'<button class="x" id="sbX">×</button>':'');
       pendingSend=null;
+      wireTaps(p,l);
+      if(taps.length)$('#sbX').onclick=hideBar;
+      else setTimeout(()=>{if(!pendingSend)hideBar();},5000);
       if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();
-      setTimeout(()=>{if(!pendingSend)hideBar();},5000);
     }catch(e){
       pendingSend=null;
-      b.innerHTML='<span class="bad">Not sent \u2014 '+esc(e.message||'something went wrong')+'</span>'+
-        '<button class="btn small" id="sbRetry">Try again</button><button class="x" id="sbX">\u00d7</button>';
-      $('#sbRetry').onclick=()=>queueLessonEmail(p,l);
+      b.innerHTML='<span class="bad">Not sent — '+esc(e.message||'something went wrong')+'</span>'+
+        '<button class="btn small" id="sbRetry">Try again</button>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>';
+      $('#sbRetry').onclick=()=>queueLessonUpdate(p,l);
+      wireTaps(p,l);
       $('#sbX').onclick=hideBar;      /* stays put until dismissed — a failed send shouldn't slip past */
     }
   },SEND_DELAY);
-  pendingSend={timer,tick,lessonId:l.id};
+  pendingSend={timer,tick,lessonId:l.id,p,l};
 }
 
 /* ---------- their Music Arcade account (optional, both ways) ----------
@@ -1044,15 +1113,22 @@ function linkBits(p){
 function contactBits(p){
   const cs=p.contacts||[];
   return '<div class="section"><div class="sectitle">Contacts<span class="mono">'+cs.length+'</span></div>'+
-    (cs.length?cs.map(c=>
-      '<div class="contact"><input type="checkbox" data-cto="'+c.id+'"'+(msgTo[c.id]?' checked':'')+' aria-label="gets updates">'+
+    (cs.length?cs.map(c=>{
+      /* channel choice only when there is one — email+phone gets all three */
+      const opts=[];
+      if(c.email)opts.push(['email','Email']);
+      if(c.phone){opts.push(['wa','WhatsApp']);opts.push(['sms','SMS']);}
+      const chsel=opts.length>1?'<select class="chsel" data-cch="'+c.id+'" aria-label="how updates go">'+
+        opts.map(([v,t])=>'<option value="'+v+'"'+(chanOf(c)===v?' selected':'')+'>'+t+'</option>').join('')+'</select>':'';
+      return '<div class="contact"><input type="checkbox" data-cto="'+c.id+'"'+(msgTo[c.id]?' checked':'')+' aria-label="gets updates">'+
       '<div class="cinfo"><div class="cn">'+esc(c.name||'(no name)')+'</div>'+
       '<div class="cw">'+esc([c.email,c.phone].filter(Boolean).join('  ·  ')||'no email or phone')+'</div></div>'+
+      chsel+
       (ROLE_LABEL[c.role]?'<span class="rolechip '+c.role+'">'+ROLE_LABEL[c.role]+'</span>':'')+
-      '<button class="del" data-cdel="'+c.id+'" aria-label="remove">×</button></div>').join('')
+      '<button class="del" data-cdel="'+c.id+'" aria-label="remove">×</button></div>';}).join('')
      :'<p class="muted" style="margin-bottom:8px">Add a parent, a class teacher, or the student — whoever should get updates.</p>')+
     (cs.length?'<p class="hint" style="margin:2px 0 10px">Ticked contacts get the update'+
-      ((state.settings&&state.settings.autoEmail)?' — automatically, each time you save a log.':', when you send one below.')+'</p>':'')+
+      ((state.settings&&state.settings.autoEmail)?' when you save a log — email goes by itself; WhatsApp and SMS come up ready to tap.':', when you send one below.')+'</p>':'')+
     '<div class="formrow"><input class="field" id="ctName" placeholder="Name" style="flex:1.2">'+
     '<select class="field" id="ctRole" style="flex:.8">'+
       '<option value="parent">Parent</option><option value="teacher">Teacher</option>'+
@@ -1064,8 +1140,8 @@ function contactBits(p){
 function updateBits(p){
   if(!state.lessons.some(l=>l.personId===p.id))return '';
   const cs=p.contacts||[], picked=cs.filter(c=>msgTo[c.id]);
-  const emails=picked.map(c=>c.email).filter(Boolean);
-  const phone=(picked.find(c=>c.phone)||{}).phone||'';
+  const emails=picked.filter(c=>chanOf(c)==='email').map(c=>c.email).filter(Boolean);
+  const tappable=picked.filter(c=>c.phone&&chanOf(c)!=='email');
   const body=msgSaid||buildMessage(p);
   const subj=msgSubj||msgSubject(p);
   const seg=[['last','This lesson'],['4w','Last 4 weeks'],['all','Everything']];
@@ -1079,13 +1155,17 @@ function updateBits(p){
     '<div class="msgbar">'+
       '<button class="btn small primary" id="msgSend"'+(emails.length?'':' disabled')+'>Send now</button>'+
       '<button class="btn small" id="msgCopy">Copy</button>'+
-      (phone?'<button class="btn small" id="msgWa">WhatsApp</button>':'')+
+      tappable.map(c=>{
+        const g=greetName(c.name);
+        return '<button class="btn small" data-mtap="'+c.id+'">'+(chanOf(c)==='sms'?'Text':'WhatsApp')+(g?' '+esc(g):'')+'</button>';
+      }).join('')+
       '<button class="btn small" id="msgReset">Rewrite it</button>'+
     '</div>'+
     '<div class="msgnote" id="msgStatus">'+
       (emails.length?'Goes straight to '+esc(emails.join(', '))+' from your own address. '+
         '<a href="#" id="msgMail">or open it in your mail app</a>'
-                    :'Tick a contact above who has an email address, or copy the message and paste it wherever you like.')+
+       :tappable.length?'WhatsApp/Text opens the app with this message ready — you press send.'
+                    :'Tick a contact above who has an email address or phone number, or copy the message and paste it wherever you like.')+
     '</div></div>';
 }
 
@@ -1231,7 +1311,7 @@ function renderDrawer(){
   '<div class="section"><div class="sectitle">Story so far<span class="mono">'+hist.length+' lessons</span></div>'+
   (hist.length?hist.map(l=>
     '<div class="logentry"><div class="ldate">'+shortDate(l.date)+
-      (l.emailedAt?'<span class="sent" title="Emailed '+esc((l.emailedTo||[]).join(', '))+'">\u2709 sent</span>':'')+'</div>'+
+      (l.emailedAt?'<span class="sent" title="Emailed '+esc((l.emailedTo||[]).join(', '))+'">\u2709 sent</span>':'')+(l.texted&&l.texted.length?'<span class="sent" title="'+esc(l.texted.map(t=>(t.via==='sms'?'Texted ':'WhatsApped ')+t.name).join(', '))+'">\ud83d\udcac sent</span>':'')+'</div>'+
     '<div class="lactions"><button data-edit="'+l.id+'">edit</button><button data-del="'+l.id+'">\u00d7</button></div>'+
     (l.rep?'<div class="lrow"><b>REP</b>'+l.rep.split(',').map(r=>chip(r,p)).join('')+'</div>':'')+
     (l.notes?'<div class="lrow"><b>NOTES</b>'+esc(l.notes)+'</div>':'')+
@@ -1300,6 +1380,11 @@ function renderDrawer(){
     /* keep whatever you've typed; only rewrite the greeting if you haven't touched it */
     if(msgSaid)msgSaid=$('#msgBody').value;
     renderDrawer();});
+  d.querySelectorAll('[data-cch]').forEach(s=>s.onchange=()=>{
+    const ct=(p.contacts||[]).find(x=>x.id===s.dataset.cch);
+    if(ct){ct.channel=s.value;markDirty();}
+    if(msgSaid)msgSaid=$('#msgBody').value;
+    renderDrawer();});
   // the update composer
   d.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{msgRange=b.dataset.range;msgSaid='';msgSubj='';renderDrawer();});
   const mn=$('#msgNotes');if(mn)mn.onchange=()=>{msgNotes=mn.checked;msgSaid='';msgSubj='';renderDrawer();};
@@ -1309,12 +1394,12 @@ function renderDrawer(){
   const mm=$('#msgMail');
   if(mm)mm.onclick=e=>{
     e.preventDefault();
-    const to=(p.contacts||[]).filter(c=>msgTo[c.id]).map(c=>c.email).filter(Boolean).join(',');
+    const to=(p.contacts||[]).filter(c=>msgTo[c.id]&&chanOf(c)==='email').map(c=>c.email).filter(Boolean).join(',');
     location.href='mailto:'+to+'?subject='+encodeURIComponent($('#msgSubj').value)+'&body='+encodeURIComponent($('#msgBody').value);
   };
   const msend=$('#msgSend');
   if(msend)msend.onclick=async()=>{
-    const to=(p.contacts||[]).filter(c=>msgTo[c.id]).map(c=>c.email).filter(Boolean);
+    const to=(p.contacts||[]).filter(c=>msgTo[c.id]&&chanOf(c)==='email').map(c=>c.email).filter(Boolean);
     if(!to.length)return;
     const st=$('#msgStatus'), text=$('#msgBody').value, subject=$('#msgSubj').value.trim()||msgSubject(p);
     msend.disabled=true;msend.textContent='Sending\u2026';
@@ -1346,12 +1431,15 @@ function renderDrawer(){
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,()=>{});
     else{$('#msgBody').select();try{document.execCommand('copy');done();}catch(e){}}
   };
-  const mw=$('#msgWa');
-  if(mw)mw.onclick=()=>{
-    const c=(p.contacts||[]).filter(x=>msgTo[x.id]).find(x=>x.phone);
+  d.querySelectorAll('[data-mtap]').forEach(btn=>btn.onclick=()=>{
+    const c=(p.contacts||[]).find(x=>x.id===btn.dataset.mtap);
     if(!c)return;
-    window.open('https://wa.me/'+String(c.phone).replace(/[^0-9]/g,'')+'?text='+encodeURIComponent($('#msgBody').value),'_blank','noopener');
-  };
+    const text=$('#msgBody').value;
+    if(chanOf(c)==='sms'){
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).catch(()=>{});
+      location.href=smsLink(c,text);
+    } else window.open(waLink(c,text),'_blank','noopener');
+  });
   /* suggest against the bit after the last comma, so it works mid-list */
   (()=>{
     const inp=$('#lgRep'), box=$('#repSuggest');
@@ -1392,8 +1480,8 @@ function renderDrawer(){
     else {saved={id:uid(),personId:p.id,date:dateISO,rep,notes:nts};state.lessons.push(saved);}
     editingLessonId=null;markDirty();renderDrawer();
     /* only a brand-new log with something to report — editing an old one never re-sends */
-    if(isNew&&rep&&state.settings&&state.settings.autoEmail&&notifyContacts(p).length)
-      queueLessonEmail(p,saved);
+    if(isNew&&rep&&state.settings&&state.settings.autoEmail&&(notifyContacts(p).length||tapContacts(p).length))
+      queueLessonUpdate(p,saved);
   };
   const lgc=$('#lgCancel');if(lgc)lgc.onclick=()=>{editingLessonId=null;renderDrawer();};
   d.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editingLessonId=b.dataset.edit;renderDrawer();});
