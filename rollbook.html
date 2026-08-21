@@ -100,6 +100,12 @@ main{padding:18px 22px 60px;max-width:1400px;margin:0 auto}
 .slotcard.c-pink{border-top:6px solid var(--pink)}
 .slotcard.c-amber{border-top:6px solid var(--amber)}
 .slotcard.c-green{border-top:6px solid var(--green)}
+/* phones: seven days can't share 370px of screen — the week scrolls sideways
+   with real column widths instead, and render() starts the scroll on today */
+@media(max-width:760px){
+  main{padding:12px 10px 60px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .grid:not(.empty){min-width:880px}
+}
 .emptyweek{grid-column:1 / -1;padding:60px 20px;text-align:center}
 .emptyweek h2{font-family:var(--display);font-size:1.4rem;margin-bottom:8px}
 
@@ -1220,6 +1226,7 @@ function render(){
     end.toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'});
 
   if(!state.slots.length){
+    g.classList.add('empty');     /* the empty message shouldn't force phones to scroll */
     g.innerHTML='<div class="emptyweek"><h2>Nothing on the timetable yet</h2>'+
       '<p class="muted">Open <b>Set up</b> to add your students and their weekly times.</p>'+
       (state.people.length?'':'<p style="margin-top:14px"><button class="btn small" id="loadDemo">Show me a sample week</button></p>')+
@@ -1228,6 +1235,7 @@ function render(){
     if(dm)dm.onclick=()=>{if(confirm('Load four sample students to look around? You can delete them in Set up.')){demoData();markDirty();}};
     return;
   }
+  g.classList.remove('empty');
   const[rs,re]=weekRange(); const hours=(re-rs)/60;
   // headers
   g.appendChild(el('<div class="corner"></div>'));
@@ -1263,6 +1271,16 @@ function render(){
       col.appendChild(card);
     });
     g.appendChild(col);
+  }
+  /* on a phone the grid is wider than the screen — open with today in view
+     (the 62px offset keeps the hour gutter peeking out on the left) */
+  if(window.innerWidth<=760){
+    const m=document.querySelector('main');
+    const th=g.querySelector('.dayhead.today');
+    if(th)requestAnimationFrame(()=>{
+      m.scrollLeft+=th.getBoundingClientRect().left-m.getBoundingClientRect().left-62;
+    });
+    else m.scrollLeft=0;
   }
 }
 function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
