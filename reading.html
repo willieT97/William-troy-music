@@ -120,6 +120,12 @@ textarea{min-height:84px;resize:vertical;line-height:1.6}
 .card{background:#fff;border:var(--line2);box-shadow:var(--pop);padding:12px 14px}
 .why{font-style:italic;font-size:13.5px;line-height:1.65}
 .rule{font-size:12px;color:var(--dim);font-style:italic;margin:6px 0 18px}
+.readit{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--blue);color:#fff;
+  border:var(--line2);box-shadow:var(--pop);padding:11px 14px;margin-bottom:22px;text-decoration:none}
+.readit:active{transform:translate(3px,3px);box-shadow:none}
+.readit b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.readit small{display:block;font-size:12px;opacity:.8;margin-top:2px}
+.readit .arrow{font-family:var(--mono);font-size:18px;flex-shrink:0}
 .note-card{background:#fff;border:var(--line2);border-left-width:6px;border-left-style:solid;padding:10px 12px;margin-bottom:10px}
 .note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .note-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700}
@@ -220,30 +226,30 @@ const CATALOG = [
   { id:"suzuki", title:"Zen Mind, Beginner's Mind", author:"Shunryu Suzuki", year:"1970", phase:3, strand:"Meditation", connects:["Meditation","Spirituality"], note:"In the beginner's mind there are many possibilities; in the expert's, few. The Gradus nursery-rhyme framing in its original habitat." },
   { id:"werner", title:"Effortless Mastery", author:"Kenny Werner", year:"1996", phase:3, strand:"Meditation", connects:["Music","Meditation"], note:"Meditation at the instrument, for players frozen by self-judgement. The most classroom-adjacent of the way traditions." },
   { id:"cage", title:"Silence", author:"John Cage", year:"1961", phase:3, strand:"Meditation", connects:["Music","Meditation","Word","Aesthetics"], note:"Zen arriving in Western aesthetics of listening. Dip in — the lectures matter more than cover-to-cover reading." },
-  { id:"inayat-khan", title:"The Mysticism of Sound and Music", author:"Hazrat Inayat Khan", year:"1923", phase:3, strand:"Meditation", connects:["Music","Meditation","Spirituality"], note:"The Sufi teaching Mathieu descends from — sound itself as spiritual path. Research layer, not classroom language." },
+  { id:"inayat-khan", title:"The Mysticism of Sound and Music", author:"Hazrat Inayat Khan", year:"1923", pd:true, phase:3, strand:"Meditation", connects:["Music","Meditation","Spirituality"], note:"The Sufi teaching Mathieu descends from — sound itself as spiritual path. Research layer, not classroom language." },
   { id:"herrigel", title:"Zen in the Art of Archery", author:"Eugen Herrigel", year:"1948", phase:3, strand:"Meditation", connects:["Meditation","Spirituality","Movement"], note:"The famous geido entry point the whole Dojo metaphor rests on. Caveat: scholars have shown Herrigel partly invented the Zen content — useful myth, held lightly." },
-  { id:"dalcroze", title:"Rhythm, Music and Education", author:"Émile Jaques-Dalcroze", year:"1921", phase:4, strand:"Somatics", connects:["Music","Movement","Somatics"], note:"The European tradition that systematised music-through-the-moving-body. Secondary guides to Eurhythmics practice may be more usable than the original." },
+  { id:"dalcroze", title:"Rhythm, Music and Education", author:"Émile Jaques-Dalcroze", year:"1921", pd:true, phase:4, strand:"Somatics", connects:["Music","Movement","Somatics"], note:"The European tradition that systematised music-through-the-moving-body. Secondary guides to Eurhythmics practice may be more usable than the original." },
   { id:"feldenkrais", title:"Awareness Through Movement", author:"Moshé Feldenkrais", year:"1972", phase:4, strand:"Somatics", connects:["Somatics","Movement","Meditation"], note:"Lessons in attention through tiny movement. Mine for warm-up shapes." },
   { id:"alcantara", title:"Indirect Procedures", author:"Pedro de Alcantara", year:"1997", phase:4, strand:"Somatics", connects:["Music","Somatics"], note:"Alexander Technique written specifically for musicians." },
   { id:"bmc", title:"Sensing, Feeling, and Action", author:"Bonnie Bainbridge Cohen", year:"1993", phase:4, strand:"Somatics", optional:true, connects:["Somatics","Movement"], note:"Body-Mind Centering. Dense — likely better mined through Aneta and the Opacity vocabulary than through the page." },
   { id:"dewey", title:"Art as Experience", author:"John Dewey", year:"1934", phase:5, strand:"Aesthetics", connects:["Aesthetics","Visual art","Play"], note:"Art as ordinary experience intensified. The philosophical spine of the whole project." },
-  { id:"schiller", title:"On the Aesthetic Education of Man", author:"Friedrich Schiller", year:"1795", phase:5, strand:"Aesthetics", connects:["Aesthetics","Play"], note:"Play as the fullest expression of being human. The arcade's oldest ancestor — read a good introduction first, the letters are heavy going." },
+  { id:"schiller", title:"On the Aesthetic Education of Man", author:"Friedrich Schiller", year:"1795", pd:true, phase:5, strand:"Aesthetics", connects:["Aesthetics","Play"], note:"Play as the fullest expression of being human. The arcade's oldest ancestor — read a good introduction first, the letters are heavy going." },
   { id:"greene", title:"Releasing the Imagination", author:"Maxine Greene", year:"1995", phase:5, strand:"Aesthetics", connects:["Aesthetics","Word","Visual art"], note:"Aesthetic education argued for inside real school systems. Ammunition for principals and parents." },
   { id:"flow", title:"Flow", author:"Mihaly Csikszentmihalyi", year:"1990", phase:5, strand:"Aesthetics", connects:["Play","Aesthetics"], note:"The secular, research-backed cousin of the way traditions. The vocabulary schools already trust." },
-  { id:"colzato", title:"Meditate to Create", author:"Colzato, Ozturk & Hommel · Frontiers in Psychology", year:"2012", phase:6, strand:"Research", connects:["Meditation"], note:"Open-monitoring meditation boosts divergent thinking; focused attention doesn't much. Caveat: lead author later found guilty of research misconduct and a related paper was retracted — treat as an idea-source, cite Lebuda instead. Open access on Frontiers." },
-  { id:"lebuda", title:"Mindfulness & Creativity Meta-Analysis", author:"Lebuda, Zabelina & Karwowski", year:"2016", phase:6, strand:"Research", connects:["Meditation"], note:"Small-to-moderate positive link between mindfulness and creativity across the literature. Your citable anchor for the whole strand." },
-  { id:"limb", title:"Jazz Improvisation fMRI Study", author:"Limb & Braun · PLoS ONE", year:"2008", phase:6, strand:"Research", connects:["Music"], note:"Self-monitoring prefrontal cortex goes quiet while jazz musicians improvise in the scanner. Six subjects — evocative folklore with citations, and Limb's TED talk is a ready-made explainer for parents." },
+  { id:"colzato", title:"Meditate to Create", author:"Colzato, Ozturk & Hommel · Frontiers in Psychology", year:"2012", doi:"10.3389/fpsyg.2012.00116", oa:true, phase:6, strand:"Research", connects:["Meditation"], note:"Open-monitoring meditation boosts divergent thinking; focused attention doesn't much. Caveat: lead author later found guilty of research misconduct and a related paper was retracted — treat as an idea-source, cite Lebuda instead. Open access on Frontiers." },
+  { id:"lebuda", title:"Mindfulness & Creativity Meta-Analysis", author:"Lebuda, Zabelina & Karwowski", year:"2016", doi:"10.1016/j.paid.2015.09.040", phase:6, strand:"Research", connects:["Meditation"], note:"Small-to-moderate positive link between mindfulness and creativity across the literature. Your citable anchor for the whole strand." },
+  { id:"limb", title:"Jazz Improvisation fMRI Study", author:"Limb & Braun · PLoS ONE", year:"2008", doi:"10.1371/journal.pone.0001679", oa:true, phase:6, strand:"Research", connects:["Music"], note:"Self-monitoring prefrontal cortex goes quiet while jazz musicians improvise in the scanner. Six subjects — evocative folklore with citations, and Limb's TED talk is a ready-made explainer for parents." },
   { id:"berkowitz", title:"The Improvising Mind", author:"Aaron Berkowitz", year:"2010", phase:6, strand:"Research", connects:["Music"], note:"Cognitive science of learned improvisation — vocabulary, chunks, recombination. Academic support for the Barry Harris block approach." },
-  { id:"phillips-silver", title:"Feeling the Beat", author:"Phillips-Silver & Trainor · Science", year:"2005", phase:6, strand:"Research", connects:["Music","Movement"], note:"Infants bounced in duple or triple time afterwards hear an ambiguous rhythm as the meter they were moved in. The ngoma insight as a two-page experiment. Adult follow-up in 2007." },
+  { id:"phillips-silver", title:"Feeling the Beat", author:"Phillips-Silver & Trainor · Science", year:"2005", doi:"10.1126/science.1110922", phase:6, strand:"Research", connects:["Music","Movement"], note:"Infants bounced in duple or triple time afterwards hear an ambiguous rhythm as the meter they were moved in. The ngoma insight as a two-page experiment. Adult follow-up in 2007." },
   { id:"leman", title:"Embodied Music Cognition", author:"Marc Leman", year:"2008", phase:6, strand:"Research", connects:["Music","Movement","Somatics"], note:"The systematic case that musical meaning runs through the body. Dense — skim for the framework." },
   { id:"varela", title:"The Embodied Mind", author:"Varela, Thompson & Rosch", year:"1991", phase:6, strand:"Research", connects:["Meditation","Somatics"], note:"Cognitive science meets Buddhist meditation practice. The academic bridge between the meditation and somatics shelves." },
-  { id:"kirschner", title:"Joint Music Making & Prosocial Behavior", author:"Kirschner & Tomasello", year:"2010", phase:6, strand:"Research", connects:["Music","Movement","Play"], note:"Joint music-making increased spontaneous helping and cooperation in four-year-olds. Probably your single most school-pitchable citation." },
-  { id:"wiltermuth", title:"Synchrony and Cooperation", author:"Wiltermuth & Heath · Psych. Science", year:"2009", phase:6, strand:"Research", connects:["Movement","Music"], note:"Moving in time together — even just marching or singing — measurably increases cooperation afterwards." },
+  { id:"kirschner", title:"Joint Music Making & Prosocial Behavior", author:"Kirschner & Tomasello", year:"2010", doi:"10.1016/j.evolhumbehav.2010.04.004", phase:6, strand:"Research", connects:["Music","Movement","Play"], note:"Joint music-making increased spontaneous helping and cooperation in four-year-olds. Probably your single most school-pitchable citation." },
+  { id:"wiltermuth", title:"Synchrony and Cooperation", author:"Wiltermuth & Heath · Psych. Science", year:"2009", doi:"10.1111/j.1467-9280.2008.02253.x", phase:6, strand:"Research", connects:["Movement","Music"], note:"Moving in time together — even just marching or singing — measurably increases cooperation afterwards." },
   { id:"sawyer", title:"Explaining Creativity", author:"Keith Sawyer", year:"2012", phase:6, strand:"Research", connects:["Music","Play"], note:"The best single gateway into creativity research, by a jazz pianist who studies group improvisation. If you read one academic book on this list, this is it. Group Genius is the popular companion." },
-  { id:"four-c", title:"The Four C Model of Creativity", author:"Beghetto & Kaufman", year:"2009", phase:6, strand:"Research", connects:["Play","Aesthetics"], note:"mini-c to little-c to Pro-c to Big-C. A defensible answer to you-can't-teach-creativity: classrooms are the natural home of mini-c and little-c." },
+  { id:"four-c", title:"The Four C Model of Creativity", author:"Beghetto & Kaufman", year:"2009", doi:"10.1037/a0013688", phase:6, strand:"Research", connects:["Play","Aesthetics"], note:"mini-c to little-c to Pro-c to Big-C. A defensible answer to you-can't-teach-creativity: classrooms are the natural home of mini-c and little-c." },
   { id:"amabile", title:"Creativity in Context", author:"Teresa Amabile", year:"1996", phase:6, strand:"Research", connects:["Play"], note:"Intrinsic motivation as creativity's engine — and evidence that surveillance and evaluation suppress it. Directly relevant to how, and whether, you assess anything in a workshop." },
   { id:"green", title:"Music, Informal Learning and the School", author:"Lucy Green", year:"2008", phase:6, strand:"Research", connects:["Music","Play"], note:"How popular musicians actually learn, brought into classrooms and researched — the Musical Futures programme. The closest thing to peer review of your whole teaching instinct." },
-  { id:"myriad", title:"The MYRIAD Trial", author:"Kuyken et al. · Evidence-Based Mental Health", year:"2022", phase:6, strand:"Research", connects:["Meditation"], note:"Largest RCT of universal school mindfulness (~28,000 UK pupils): no wellbeing benefit over normal teaching, largely because teenagers didn't practise. Two lessons — never sell the workshops as a wellbeing intervention, and design practices they actually want to repeat. Also the most trustworthy study here, precisely because it is big, pre-registered and null." },
+  { id:"myriad", title:"The MYRIAD Trial", author:"Kuyken et al. · Evidence-Based Mental Health", year:"2022", doi:"10.1136/ebmental-2021-300396", oa:true, phase:6, strand:"Research", connects:["Meditation"], note:"Largest RCT of universal school mindfulness (~28,000 UK pupils): no wellbeing benefit over normal teaching, largely because teenagers didn't practise. Two lessons — never sell the workshops as a wellbeing intervention, and design practices they actually want to repeat. Also the most trustworthy study here, precisely because it is big, pre-registered and null." },
   { id:"cameron", title:"The Artist's Way", author:"Julia Cameron", year:"1992", phase:7, strand:"Format", connects:["Spirituality","Word","Visual art"], note:"A 12-week structure with daily and weekly practices. Study the scaffolding; take or leave the content." },
   { id:"barry", title:"Syllabus", author:"Lynda Barry", year:"2014", phase:7, strand:"Format", connects:["Visual art","Word","Play"], note:"An actual creativity class published as a notebook. The closest thing to a Dojo course on paper." },
   { id:"rubin", title:"The Creative Act", author:"Rick Rubin", year:"2023", phase:7, strand:"Format", connects:["Spirituality","Aesthetics","Word"], note:"Fragment-sized chapters. A model for tone if the workshops ever become written material." },
@@ -260,6 +266,17 @@ function flagSaving(){ setStatusChip('saving','saving…'); clearTimeout(statusT
 function flagSaved(){ clearTimeout(statusT); statusT=setTimeout(()=>setStatusChip('saved','synced'),350); }
 function flagError(msg){ setStatusChip('error','save failed'); toast(msg); }
 function find(id){ return items.find(i=>i.id===id); }
+
+/* Where to actually read it. Papers go to their DOI (the open-access ones load in
+   full); public-domain books go to the full text on the Internet Archive; everything
+   else goes to Open Library, which shows a borrow/read option where one exists. */
+function sourceOf(s){
+  const surname = s.author.split(/[·,&]/)[0].trim().split(' ').pop();
+  const q = encodeURIComponent(s.title + ' ' + surname);
+  if(s.doi) return { href:'https://doi.org/' + s.doi, label: s.oa ? 'Read the paper — open access' : 'Read the paper (DOI)', note:'doi.org/' + s.doi };
+  if(s.pd)  return { href:'https://archive.org/search?query=' + q + '&sin=TXT', label:'Read the full text — public domain', note:'Internet Archive' };
+  return { href:'https://openlibrary.org/search?q=' + q, label:'Find a copy to read', note:'Open Library — borrow where available' };
+}
 
 /* ---------- the gate (same as the Rollbook) ---------- */
 const signedIn=()=>!!(window.MAAuth&&MAAuth.user&&MAAuth.user());
@@ -497,6 +514,7 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && openId) clo
 function renderDetail(){
   const s = find(openId); if(!s) return;
   const draft = $('note-text') ? $('note-text').value : '';
+  const src = sourceOf(s);
 
   const statusBtns = Object.entries(STATUS).map(([val, cfg]) => `
     <button type="button" class="chip" data-status="${val}" aria-pressed="${s.status === val}" style="flex:1 1 auto;text-align:center;padding:10px 6px;
@@ -558,7 +576,11 @@ function renderDetail(){
       <p class="rule">The drop rule: 50 pages with nothing to steal, say or shift — back on the shelf, no guilt.</p>
 
       <div class="lbl">Why it's on the list</div>
-      <div class="card why" style="margin-bottom:20px">${esc(s.note)}</div>
+      <div class="card why" style="margin-bottom:14px">${esc(s.note)}</div>
+
+      <a class="readit" href="${src.href}" target="_blank" rel="noopener noreferrer">
+        <span><b>${src.label}</b><small>${esc(src.note)}</small></span><span class="arrow" aria-hidden="true">↗</span>
+      </a>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <span class="lbl" style="margin:0">Notes${s.notes.length ? ' · ' + s.notes.length : ''}</span>
