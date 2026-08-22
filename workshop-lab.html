@@ -89,8 +89,11 @@ textarea{min-height:76px;resize:vertical}
 .seg button{flex:1;padding:14px 4px;background:#fff;border:var(--line);
   font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;min-height:48px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-.seg.reading button[aria-pressed="true"][data-v="landed"]{background:var(--blue);border-color:var(--blue);color:#fff}
-.seg.reading button[aria-pressed="true"][data-v="died"]{background:var(--pink);border-color:var(--pink);color:var(--ink)}
+/* 1–10 scales: one tap per score; the chosen score takes its own shade (pink → blue) */
+.scale{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.scale button{padding:0;background:#fff;border:var(--line);font-family:var(--mono);font-size:13px;font-weight:700;min-height:46px}
+.scale button[aria-pressed="true"]{background:var(--score,var(--ink));border-color:var(--score,var(--ink));color:#fff}
+.scale-ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-top:5px}
 
 .big{width:100%;margin-top:26px;padding:18px;background:var(--blue);color:#fff;border:var(--line);box-shadow:var(--pop);
   font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.02em}
@@ -107,10 +110,9 @@ textarea{min-height:76px;resize:vertical}
 
 /* track record strip: one tick per run, oldest left */
 .track{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0 4px}
-.tick{width:20px;height:20px;border:2px solid var(--ink);background:#fff}
-.tick.landed{background:var(--blue)}
-.tick.mixed{background:repeating-linear-gradient(45deg,var(--ink) 0 2px,#fff 2px 5px)}
-.tick.died{background:var(--pink)}
+.tick{width:22px;height:22px;border:2px solid var(--ink);background:var(--score,#fff);color:#fff;
+  font-family:var(--mono);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.tick.unmarked{color:var(--dim)}
 .track-key{font-family:var(--mono);font-size:11px;color:var(--dim)}
 
 .balance{display:flex;gap:6px;margin:10px 0 4px;height:26px}
@@ -121,8 +123,7 @@ textarea{min-height:76px;resize:vertical}
 .entry:last-child{border-bottom:none}
 .entry .meta{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .entry .meta .read{border:2px solid var(--ink);padding:0 6px;color:var(--ink)}
-.entry .meta .read.landed{background:var(--blue);border-color:var(--blue);color:#fff}
-.entry .meta .read.died{background:var(--pink);border-color:var(--pink)}
+.entry .meta .read.scored{background:var(--score);border-color:var(--score);color:#fff}
 .entry p{margin:6px 0 0;font-size:.95rem}
 .entry p b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:400}
 .entry .tools{margin-top:8px;display:flex;gap:8px}
@@ -212,22 +213,16 @@ textarea{min-height:76px;resize:vertical}
     <label for="actual">What actually happened</label>
     <textarea id="actual"></textarea>
 
-    <label>How it read in the room</label>
-    <div class="seg reading" id="reading-seg">
-      <button data-v="landed" aria-pressed="false">Landed</button>
-      <button data-v="mixed" aria-pressed="false">Mixed</button>
-      <button data-v="died" aria-pressed="false">Died</button>
-    </div>
+    <label>How it read in the room <span style="text-transform:none;letter-spacing:0">— 1 to 10</span></label>
+    <div class="scale" id="reading-seg" role="group" aria-label="How it read in the room, 1 to 10"></div>
+    <div class="scale-ends"><span>1 · died</span><span>landed · 10</span></div>
 
     <label for="change-next">Change for next time</label>
     <textarea id="change-next"></textarea>
 
-    <label>Verdict</label>
-    <div class="seg" id="verdict-seg">
-      <button data-v="keep" aria-pressed="false">Keep</button>
-      <button data-v="tweak" aria-pressed="false">Tweak</button>
-      <button data-v="bin" aria-pressed="false">Bin</button>
-    </div>
+    <label>Verdict <span style="text-transform:none;letter-spacing:0">— keep it? 1 to 10</span></label>
+    <div class="scale" id="verdict-seg" role="group" aria-label="Verdict, 1 to 10"></div>
+    <div class="scale-ends"><span>1 · bin it</span><span>keep it · 10</span></div>
 
     <button class="big" id="save-log">Save entry</button>
   </section>
@@ -284,6 +279,22 @@ const EMPTY=()=>({exercises:[],logs:[],updatedAt:''});
 let state=EMPTY(), dirty=false, saveTimer=null, cloudRowId=null, showArchived=false;
 const open_={};   // which review cards are expanded
 const pick={format:'slot',reading:null,verdict:null,strand:'music'};
+
+/* Scores are 1–10. The first build stored three words for each; read those as
+   numbers so old entries sit on the same scale as new ones. */
+const WORDS={landed:9,mixed:5,died:2,keep:9,tweak:5,bin:2};
+function score(v){
+  if(v==null||v==='')return null;
+  if(typeof v==='number')return Math.min(10,Math.max(1,Math.round(v)));
+  const n=Number(v);if(Number.isFinite(n)&&n>0)return Math.min(10,Math.round(n));
+  return WORDS[String(v).toLowerCase()]??null;
+}
+/* 1 = pink, 10 = blue, shades in between */
+const shade=n=>n==null?'#fff':`color-mix(in srgb, var(--pink) ${Math.round((10-n)/9*100)}%, var(--blue))`;
+function buildScale(elId){
+  $('#'+elId).innerHTML=Array.from({length:10},(_,i)=>`<button type="button" data-v="${i+1}" aria-pressed="false" style="--score:${shade(i+1)}" aria-label="${i+1} out of 10">${i+1}</button>`).join('');
+}
+buildScale('reading-seg');buildScale('verdict-seg');
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function toast(msg){
@@ -366,7 +377,7 @@ function segment(elId,key,onChange){
     $$('#'+elId+' button').forEach(b=>b.setAttribute('aria-pressed','false'));
     const clearable=key==='reading'||key==='verdict';     // format/strand always keep a value
     if(same&&clearable){pick[key]=null;}
-    else{btn.setAttribute('aria-pressed','true');pick[key]=btn.dataset.v;}
+    else{btn.setAttribute('aria-pressed','true');pick[key]=clearable?Number(btn.dataset.v):btn.dataset.v;}
     onChange&&onChange(pick[key]);
   });
 }
@@ -447,7 +458,8 @@ function renderReview(){
     .sort((a,b)=>b.entries.length-a.entries.length);
 
   $('#review-list').innerHTML=withLogs.length?withLogs.map(({ex,entries})=>{
-    const strip=entries.map(l=>`<span class="tick ${l.reading||''}" title="${esc(l.date)} · ${esc(l.yearGroup||'group?')} · ${l.reading||'unmarked'}"></span>`).join('');
+    const strip=entries.map(l=>{const n=score(l.reading);
+      return `<span class="tick${n==null?' unmarked':''}" style="--score:${shade(n)}" title="${esc(l.date)} · ${esc(l.yearGroup||'group?')} · ${n==null?'unmarked':'read '+n+'/10'}">${n==null?'·':n}</span>`;}).join('');
     const last=entries[entries.length-1], isOpen=!!open_[ex.id];
     return `<div class="card">
       <div class="cardrow">
@@ -456,19 +468,25 @@ function renderReview(){
       </div>
       <h2 style="margin:10px 0 0">${esc(ex.name)}</h2>
       <div class="track">${strip}</div>
-      <p class="track-key">${entries.length} run${entries.length>1?'s':''} · oldest left, newest right</p>
+      <p class="track-key">${entries.length} run${entries.length>1?'s':''} · oldest left, newest right${avgOf(entries)}</p>
       ${last.changeNext?`<p class="muted" style="margin:10px 0 0"><strong>Next time:</strong> ${esc(last.changeNext)}</p>`:''}
       ${isOpen?`<div class="entries">${entries.slice().reverse().map(entryHTML).join('')}</div>`:''}
     </div>`;
   }).join(''):'<div class="empty">Log a few entries and the track records appear here.</div>';
 }
+function avgOf(entries){
+  const ns=entries.map(l=>score(l.reading)).filter(n=>n!=null);
+  if(!ns.length)return '';
+  return ' · averages '+(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1)+'/10';
+}
 function entryHTML(l){
+  const r=score(l.reading), v=score(l.verdict);
   const bits=[l.date,l.yearGroup,l.classSize?l.classSize+' kids':null,
     l.format==='session'?('session'+(l.sessionLabel?': '+l.sessionLabel:'')):'in a lesson'].filter(Boolean);
   return `<div class="entry">
     <div class="meta">${bits.map(esc).join(' · ')}
-      ${l.reading?`<span class="read ${l.reading}">${l.reading}</span>`:''}
-      ${l.verdict?`<span class="read">${l.verdict}</span>`:''}</div>
+      ${r!=null?`<span class="read scored" style="--score:${shade(r)}">room ${r}/10</span>`:''}
+      ${v!=null?`<span class="read">keep? ${v}/10</span>`:''}</div>
     ${l.expected?`<p><b>Expected</b><br>${esc(l.expected)}</p>`:''}
     ${l.actual?`<p><b>Happened</b><br>${esc(l.actual)}</p>`:''}
     ${l.changeNext?`<p><b>Change</b><br>${esc(l.changeNext)}</p>`:''}
@@ -500,7 +518,7 @@ $('#save-ex').addEventListener('click',()=>{
 $('#save-log').addEventListener('click',()=>{
   const exerciseId=$('#ex').value;
   if(!exerciseId){toast('Pick an exercise first.');return;}
-  if(!pick.reading){toast('Mark how it read in the room.');return;}
+  if(pick.reading==null){toast('Score how it read in the room, 1 to 10.');return;}
   state.logs.push({
     id:uid(),exerciseId,
     date:$('#date').value||todayISO(),
@@ -543,8 +561,8 @@ $('#import-legacy').addEventListener('click',async()=>{
       if(state.logs.some(l=>l.id===r.id)||!exById(r.exercise_id))return;
       state.logs.push({id:r.id,exerciseId:r.exercise_id,date:r.logged_on||todayISO(),yearGroup:r.year_group||null,
         classSize:r.class_size??null,format:r.format==='session'?'session':'slot',sessionLabel:r.session_label||null,
-        expected:r.expected||null,actual:r.actual||null,reading:r.reading||null,changeNext:r.change_next||null,
-        verdict:r.verdict||null,createdAt:r.created_at||new Date().toISOString()});added++;
+        expected:r.expected||null,actual:r.actual||null,reading:score(r.reading),changeNext:r.change_next||null,
+        verdict:score(r.verdict),createdAt:r.created_at||new Date().toISOString()});added++;
     });
     if(added){markDirty();renderAll();toast('Imported '+added+' item'+(added>1?'s':'')+'.');}
     else toast('Nothing new to import.');
