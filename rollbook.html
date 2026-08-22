@@ -42,7 +42,7 @@ header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
   text-decoration:none;color:var(--ink);padding:3px 10px;box-shadow:2px 2px 0 var(--ink);line-height:1.5}
 body.gated header .homelink{display:none}
 .weeknav{display:flex;align-items:center;gap:8px}
-.btn{border:2px solid var(--ink);background:#fff;padding:7px 14px;font-weight:600;
+.btn{border:2px solid var(--ink);background:#fff;padding:7px 14px;font-weight:600;text-decoration:none;color:var(--ink);
   box-shadow:3px 3px 0 var(--ink);transition:transform .08s, box-shadow .08s}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn.primary{background:var(--blue);color:#fff}
@@ -290,7 +290,7 @@ textarea.field{resize:vertical;min-height:56px}
 #gate{display:none;padding:60px 22px 40px}
 #gate.show{display:block}
 body.gated header .weeknav,body.gated header .weeklabel,body.gated header #syncStatus,
-body.gated header #openManage,body.gated header #openAtt,body.gated main,body.gated #demoBanner{display:none}
+body.gated header #openManage,body.gated header #openAtt,body.gated header #openLab,body.gated main,body.gated #demoBanner{display:none}
 .gatecard{max-width:520px;margin:0 auto;border:3px solid var(--ink);background:#fff;
   box-shadow:8px 8px 0 var(--ink);padding:32px 30px 28px;text-align:center}
 .gatecard .lock{font-size:2.4rem;line-height:1}
@@ -317,6 +317,7 @@ body.gated header #openManage,body.gated header #openAtt,body.gated main,body.ga
   <div class="weeklabel" id="weekLabel"></div>
   <div class="spacer"></div>
   <span id="syncStatus">loading…</span>
+  <a class="btn" id="openLab" href="workshop-lab.html" title="Try exercises on a class and log what happened">Workshop</a>
   <button class="btn" id="openAtt">Attendance</button>
   <button class="btn" id="openManage">Set up</button>
 </header>

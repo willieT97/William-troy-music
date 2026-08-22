@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Workshop Lab — testing exercises in the room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+  --amber:#E0922A; --green:#1F9D55;
+  --dim:rgba(23,20,14,.58);
+  --display:'Syne',system-ui,sans-serif;
+  --body:'Hanken Grotesk',system-ui,sans-serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --line:3px solid var(--ink);
+  --pop:4px 4px 0 var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  background-image:radial-gradient(rgba(23,20,14,.055) 1px, transparent 1px);background-size:5px 5px;
+  -webkit-text-size-adjust:100%}
+button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:inherit;color:var(--ink)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- header (same chrome as the Rollbook) ---------- */
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:16px 22px;border-bottom:3px solid var(--ink);background:var(--paper);
+  position:sticky;top:0;z-index:40}
+@media(min-width:761px){ header{padding-right:calc(var(--maa-ctl-w, 170px) + 30px)} }
+@media(max-width:760px){ header{padding-top:calc(var(--maa-ctl-h, 38px) + 22px);padding-left:14px;padding-right:14px;gap:10px} .brand{font-size:1.4rem} }
+.brand{font-family:var(--display);font-weight:800;font-size:1.7rem;letter-spacing:-.02em;
+  position:relative;user-select:none;white-space:nowrap}
+.brand .ghost{position:absolute;left:2.5px;top:2px;color:var(--pink);z-index:-1}
+.brand .ghost2{position:absolute;left:-2px;top:-1.5px;color:var(--blue);z-index:-2;opacity:.85}
+.homelink{border:2px solid var(--ink);background:#fff;font-family:var(--mono);font-weight:700;
+  text-decoration:none;color:var(--ink);padding:3px 10px;box-shadow:2px 2px 0 var(--ink);line-height:1.5}
+.spacer{flex:1}
+.btn{border:2px solid var(--ink);background:#fff;padding:7px 14px;font-weight:600;text-decoration:none;color:var(--ink);
+  box-shadow:3px 3px 0 var(--ink);transition:transform .08s, box-shadow .08s;display:inline-block;line-height:1.3}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.small{padding:4px 10px;font-size:.85rem;box-shadow:2px 2px 0 var(--ink)}
+#syncStatus{font-family:var(--mono);font-size:.78rem;border:2px solid var(--ink);padding:4px 10px;background:#fff}
+#syncStatus.dirty{background:var(--amber);color:#fff}
+#syncStatus.saving{background:var(--ink);color:var(--paper)}
+#syncStatus.saved{background:var(--green);color:#fff}
+#syncStatus.error{background:var(--pink);color:#fff}
+#syncStatus.local{background:#fff;color:var(--ink);border-style:dashed}
+body.gated header .homelink,body.gated header #syncStatus,body.gated header .rollbooklink,body.gated main{display:none}
+
+/* ---------- sign-in gate ---------- */
+#gate{display:none;padding:60px 22px 40px}
+#gate.show{display:block}
+.gatecard{max-width:520px;margin:0 auto;border:3px solid var(--ink);background:#fff;
+  box-shadow:6px 6px 0 var(--ink);padding:28px 26px;text-align:center}
+.gatecard .lock{font-size:2.4rem;line-height:1}
+.gatecard h1{font-family:var(--display);font-weight:800;font-size:1.6rem;margin:10px 0 12px}
+.gatecard p{margin:0 auto 12px;max-width:42ch}
+.gatecard .fine{font-family:var(--mono);font-size:.72rem;color:rgba(23,20,14,.62);line-height:1.6}
+.gatecard .grow{display:flex;gap:14px;align-items:center;justify-content:center;margin:18px 0 14px;flex-wrap:wrap}
+.gatecard .backlink{font-family:var(--mono);font-size:.78rem;color:var(--blue);text-decoration:none}
+.gatecard .btn.primary{background:var(--blue);color:#fff}
+
+/* ---------- the lab ---------- */
+main{max-width:660px;margin:0 auto;padding:20px 16px 110px}
+.lede{color:var(--dim);font-size:.95rem;margin-bottom:18px}
+h2{font-family:var(--display);font-weight:700;font-size:1.25rem;margin:0 0 12px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 6px}
+
+nav.labtabs{display:flex;gap:8px;margin-bottom:22px}
+nav.labtabs button{flex:1;padding:12px 4px;background:#fff;border:var(--line);
+  font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;min-height:48px}
+nav.labtabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+
+label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:16px 0 6px}
+input,select,textarea{width:100%;padding:12px;background:#fff;border:var(--line);border-radius:0;font-size:16px}
+textarea{min-height:76px;resize:vertical}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;padding:14px 4px;background:#fff;border:var(--line);
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;min-height:48px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg.reading button[aria-pressed="true"][data-v="landed"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.seg.reading button[aria-pressed="true"][data-v="died"]{background:var(--pink);border-color:var(--pink);color:var(--ink)}
+
+.big{width:100%;margin-top:26px;padding:18px;background:var(--blue);color:#fff;border:var(--line);box-shadow:var(--pop);
+  font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.02em}
+.big:active{transform:translate(4px,4px);box-shadow:none}
+.big[disabled]{opacity:.5;cursor:not-allowed}
+.mini{padding:7px 12px;background:var(--paper);border:2px solid var(--ink);
+  font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.mini.danger{color:var(--pink);border-color:var(--pink)}
+
+.card{background:#fff;border:var(--line);box-shadow:var(--pop);padding:16px;margin-bottom:16px}
+.card.archived{opacity:.55;box-shadow:none;border-style:dashed}
+.cardrow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.strand-tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border:2px solid var(--ink)}
+
+/* track record strip: one tick per run, oldest left */
+.track{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0 4px}
+.tick{width:20px;height:20px;border:2px solid var(--ink);background:#fff}
+.tick.landed{background:var(--blue)}
+.tick.mixed{background:repeating-linear-gradient(45deg,var(--ink) 0 2px,#fff 2px 5px)}
+.tick.died{background:var(--pink)}
+.track-key{font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+.balance{display:flex;gap:6px;margin:10px 0 4px;height:26px}
+.balance div{border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;min-width:34px}
+
+.entries{margin-top:12px;border-top:2px dashed rgba(23,20,14,.3);padding-top:6px}
+.entry{padding:10px 0;border-bottom:1px dashed rgba(23,20,14,.25)}
+.entry:last-child{border-bottom:none}
+.entry .meta{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.entry .meta .read{border:2px solid var(--ink);padding:0 6px;color:var(--ink)}
+.entry .meta .read.landed{background:var(--blue);border-color:var(--blue);color:#fff}
+.entry .meta .read.died{background:var(--pink);border-color:var(--pink)}
+.entry p{margin:6px 0 0;font-size:.95rem}
+.entry p b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:400}
+.entry .tools{margin-top:8px;display:flex;gap:8px}
+
+.muted{color:var(--dim);font-size:15px}
+.empty{border:3px dashed var(--ink);padding:22px;text-align:center;color:var(--dim)}
+.hide{display:none !important}
+.toast{position:fixed;left:16px;right:16px;bottom:16px;max-width:628px;margin:0 auto;padding:14px 16px;
+  background:var(--ink);color:var(--paper);border:var(--line);font-family:var(--mono);font-size:13px;z-index:50}
+</style>
+</head>
+<body class="gated">
+
+<header>
+  <a class="homelink" href="index.html" title="Back to Music Arcade">←</a>
+  <div class="brand">Workshop Lab<span class="ghost" aria-hidden="true">Workshop Lab</span><span class="ghost2" aria-hidden="true">Workshop Lab</span></div>
+  <div class="spacer"></div>
+  <span id="syncStatus">loading…</span>
+  <a class="btn small rollbooklink" href="rollbook.html">Rollbook</a>
+</header>
+
+<div id="gate" class="show">
+  <div class="gatecard">
+    <div class="lock" aria-hidden="true">🔒</div>
+    <h1>The lab is private</h1>
+    <p>This is where you try exercises on real classes and write down what actually happened. Sign in and it opens; sign out and it closes behind you.</p>
+    <p class="fine">Only your account can read it. Nothing here is public, and it never appears anywhere else on the site.</p>
+    <div class="grow"><button class="btn primary" id="gateSignin">Sign in</button>
+    <a class="backlink" href="index.html">← Music Arcade</a></div>
+    <p class="fine" id="gateWait">Checking your account…</p>
+  </div>
+  <div class="gatecard" id="gateRole" style="display:none">
+    <div class="lock" aria-hidden="true">🎓</div>
+    <h1>The lab is for teachers</h1>
+    <p>Your account is set to <b>learning</b>. Switch it to <b>teaching</b> and you get the Workshop Lab and the Rollbook, plus tabs for both across the site.</p>
+    <p class="fine">Nothing about your saved songs, scores or courses changes. You can switch back any time in Your account.</p>
+    <div class="grow"><button class="btn primary" id="gateTeach">Turn on teacher mode</button>
+    <a class="backlink" href="index.html">← Music Arcade</a></div>
+    <p class="fine" id="gateRoleMsg"></p>
+  </div>
+</div>
+
+<main>
+  <p class="lede">Write down what you expect <em>before</em> the class, then what happened. The gap between the two is the finding.</p>
+
+  <nav class="labtabs" aria-label="Lab sections">
+    <button data-tab="log" aria-selected="true">Log</button>
+    <button data-tab="exercises" aria-selected="false">Exercises</button>
+    <button data-tab="review" aria-selected="false">Review</button>
+  </nav>
+
+  <!-- LOG -->
+  <section id="tab-log">
+    <label for="ex">Exercise</label>
+    <select id="ex"></select>
+
+    <label>Format</label>
+    <div class="seg" id="format-seg">
+      <button data-v="slot" aria-pressed="true">In a lesson</button>
+      <button data-v="session" aria-pressed="false">Full session</button>
+    </div>
+
+    <div id="session-wrap" class="hide">
+      <label for="session-label">Session name</label>
+      <input id="session-label" placeholder="e.g. 2nd yr Tuesday — sound &amp; stillness">
+      <p class="muted" style="margin:6px 0 0">Log each exercise separately under the same name to keep the session together.</p>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="date">Date</label>
+        <input id="date" type="date">
+      </div>
+      <div>
+        <label for="year-group">Year group</label>
+        <input id="year-group" placeholder="1st yr">
+      </div>
+      <div>
+        <label for="class-size">Size</label>
+        <input id="class-size" type="number" inputmode="numeric" min="1" placeholder="24">
+      </div>
+    </div>
+
+    <label for="expected">What you expected</label>
+    <textarea id="expected" placeholder="Fill this in before the class if you can — the gap is the finding."></textarea>
+
+    <label for="actual">What actually happened</label>
+    <textarea id="actual"></textarea>
+
+    <label>How it read in the room</label>
+    <div class="seg reading" id="reading-seg">
+      <button data-v="landed" aria-pressed="false">Landed</button>
+      <button data-v="mixed" aria-pressed="false">Mixed</button>
+      <button data-v="died" aria-pressed="false">Died</button>
+    </div>
+
+    <label for="change-next">Change for next time</label>
+    <textarea id="change-next"></textarea>
+
+    <label>Verdict</label>
+    <div class="seg" id="verdict-seg">
+      <button data-v="keep" aria-pressed="false">Keep</button>
+      <button data-v="tweak" aria-pressed="false">Tweak</button>
+      <button data-v="bin" aria-pressed="false">Bin</button>
+    </div>
+
+    <button class="big" id="save-log">Save entry</button>
+  </section>
+
+  <!-- EXERCISES -->
+  <section id="tab-exercises" class="hide">
+    <div class="card">
+      <h2>Add an exercise</h2>
+      <label for="new-ex-name">Name</label>
+      <input id="new-ex-name" placeholder="e.g. Breath and strum">
+      <label>Strand</label>
+      <div class="seg" id="strand-seg">
+        <button data-v="music" aria-pressed="true">Music</button>
+        <button data-v="meditation" aria-pressed="false">Medit.</button>
+        <button data-v="somatics" aria-pressed="false">Somatic</button>
+        <button data-v="blended" aria-pressed="false">Blend</button>
+      </div>
+      <label for="new-ex-notes">How it runs</label>
+      <textarea id="new-ex-notes" placeholder="Rough instructions so future you remembers what this was."></textarea>
+      <button class="big" id="save-ex">Add exercise</button>
+    </div>
+    <div class="cardrow" style="margin-bottom:12px">
+      <h2 style="margin:0">Your library</h2>
+      <button class="mini" id="toggle-archived" aria-pressed="false">Show archived</button>
+    </div>
+    <div id="ex-list"></div>
+    <p class="muted" style="margin-top:18px">Tried this in the earlier test version? <button class="mini" id="import-legacy">Import those entries</button></p>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="tab-review" class="hide">
+    <div class="card">
+      <p class="eyebrow">Strand balance</p>
+      <div class="balance" id="balance"></div>
+      <p class="muted" id="balance-note"></p>
+    </div>
+    <div id="review-list"></div>
+  </section>
+</main>
+
+<script>
+/* ====================================================================
+   WORKSHOP LAB — a teacher's notebook for trying exercises on a class.
+   Same plumbing as the Rollbook: the site's account (auth.js), the teacher
+   role as the gate, and one private `creations` row as the cloud copy.
+   ==================================================================== */
+'use strict';
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const todayISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
+const STRANDS=['music','meditation','somatics','blended'];
+const EMPTY=()=>({exercises:[],logs:[],updatedAt:''});
+let state=EMPTY(), dirty=false, saveTimer=null, cloudRowId=null, showArchived=false;
+const open_={};   // which review cards are expanded
+const pick={format:'slot',reading:null,verdict:null,strand:'music'};
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;t.setAttribute('role','status');
+  document.body.appendChild(t);setTimeout(()=>t.remove(),3200);
+}
+const exById=id=>state.exercises.find(e=>e.id===id);
+const logsOf=id=>state.logs.filter(l=>l.exerciseId===id).sort((a,b)=>(a.date+a.createdAt).localeCompare(b.date+b.createdAt));
+
+/* ---------- storage: this device first, then your account ----------
+   Mirrors the Rollbook: localStorage keeps it working mid-class with no
+   signal; when you're signed in it's mirrored to one owner-only row in
+   `creations` (kind 'workshop'). Newest copy wins on load. */
+const LBASE='workshop.state.v1';
+const signedIn=()=>!!(window.MAAuth&&MAAuth.user&&MAAuth.user());
+const userId=()=>{const u=window.MAAuth&&MAAuth.user&&MAAuth.user();return u?u.id:null;};
+const isTeacher=()=>!!(window.MAAuth&&MAAuth.isTeacher&&MAAuth.isTeacher());
+const lkey=()=>LBASE+':'+(userId()||'anon');
+function setStatus(cls,txt){const el=$('#syncStatus');el.className=cls;el.textContent=txt;}
+function saveLocal(){try{localStorage.setItem(lkey(),JSON.stringify(state));}catch(e){}}
+function loadLocal(){
+  try{const j=JSON.parse(localStorage.getItem(lkey()));if(j&&Array.isArray(j.exercises))return j;}catch(e){}
+  return null;
+}
+const countOf=d=>d?((d.exercises||[]).length+(d.logs||[]).length):0;
+
+function markDirty(){
+  dirty=true;state.updatedAt=new Date().toISOString();saveLocal();
+  if(signedIn()){setStatus('dirty','unsaved');clearTimeout(saveTimer);saveTimer=setTimeout(pushCloud,1200);}
+  else setStatus('local','this device');
+}
+async function pushCloud(){
+  if(!signedIn())return;
+  setStatus('saving','saving…');
+  try{
+    const row=await MAAuth.creations.save('workshop',{id:cloudRowId,title:'workshop',data:state});
+    if(row&&row.id)cloudRowId=row.id;
+    dirty=false;setStatus('saved','synced');
+  }catch(e){setStatus('error','save failed — retrying');clearTimeout(saveTimer);saveTimer=setTimeout(pushCloud,6000);}
+}
+async function pullCloud(){
+  if(!signedIn())return;
+  setStatus('saving','loading…');
+  try{
+    const rows=await MAAuth.creations.list('workshop');
+    const row=(rows||[]).filter(r=>r.title==='workshop')[0]||(rows||[])[0];
+    if(row){
+      cloudRowId=row.id;
+      const cloud=row.data||{},cloudAt=cloud.updatedAt||'',localAt=state.updatedAt||'';
+      if(countOf(cloud)&&(!countOf(state)||cloudAt>=localAt)){
+        state=Object.assign(EMPTY(),cloud,{updatedAt:cloudAt});   // keep every key the cloud row carries
+        saveLocal();setStatus('saved','synced');
+      }
+      else if(countOf(state)&&localAt>cloudAt) await pushCloud();
+      else setStatus('saved','synced');
+    }
+    else if(countOf(state)) await pushCloud();
+    else setStatus('saved','synced');
+  }catch(e){setStatus('error','couldn’t reach your account');}
+  renderAll();
+}
+window.addEventListener('beforeunload',e=>{if(dirty&&signedIn()){e.preventDefault();e.returnValue='';}});
+
+/* ---------- the gate ---------- */
+function applyGate(known){
+  const inn=signedIn(), open=inn&&isTeacher();
+  document.body.classList.toggle('gated',!open);
+  $('#gate').classList.toggle('show',!open);
+  const learner=known&&inn&&!isTeacher();
+  $('#gate').firstElementChild.style.display=learner?'none':'';
+  $('#gateRole').style.display=learner?'':'none';
+  $('#gateWait').style.display=known?'none':'';
+}
+
+/* ---------- controls ---------- */
+function segment(elId,key,onChange){
+  $('#'+elId).addEventListener('click',e=>{
+    const btn=e.target.closest('button');if(!btn)return;
+    const same=btn.getAttribute('aria-pressed')==='true';
+    $$('#'+elId+' button').forEach(b=>b.setAttribute('aria-pressed','false'));
+    const clearable=key==='reading'||key==='verdict';     // format/strand always keep a value
+    if(same&&clearable){pick[key]=null;}
+    else{btn.setAttribute('aria-pressed','true');pick[key]=btn.dataset.v;}
+    onChange&&onChange(pick[key]);
+  });
+}
+segment('format-seg','format',v=>$('#session-wrap').classList.toggle('hide',v!=='session'));
+segment('reading-seg','reading');
+segment('verdict-seg','verdict');
+segment('strand-seg','strand');
+
+$('nav.labtabs').addEventListener('click',e=>{
+  const btn=e.target.closest('button');if(!btn)return;
+  $$('nav.labtabs button').forEach(b=>b.setAttribute('aria-selected',String(b===btn)));
+  ['log','exercises','review'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==btn.dataset.tab));
+  if(btn.dataset.tab==='review')renderReview();
+});
+
+/* ---------- render ---------- */
+function renderAll(){renderExerciseSelect();renderExerciseList();prefillContext();renderReview();}
+
+function prefillContext(){
+  if(!$('#date').value)$('#date').value=todayISO();
+  const sorted=[...state.logs].sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  const last=sorted[0];if(!last)return;
+  if(!$('#year-group').value)$('#year-group').value=last.yearGroup||'';
+  if(!$('#class-size').value)$('#class-size').value=last.classSize??'';
+}
+
+function renderExerciseSelect(){
+  const sel=$('#ex'),was=sel.value;
+  const live=state.exercises.filter(e=>!e.archived).sort((a,b)=>a.name.localeCompare(b.name));
+  sel.innerHTML=live.length
+    ?live.map(e=>`<option value="${e.id}">${esc(e.name)} — ${e.strand}</option>`).join('')
+    :'<option value="">Add an exercise first →</option>';
+  if(was&&live.some(e=>e.id===was))sel.value=was;
+}
+
+function renderExerciseList(){
+  const list=state.exercises
+    .filter(e=>showArchived||!e.archived)
+    .sort((a,b)=>(a.archived-b.archived)||a.name.localeCompare(b.name));
+  $('#toggle-archived').setAttribute('aria-pressed',String(showArchived));
+  $('#toggle-archived').textContent=showArchived?'Hide archived':'Show archived';
+  $('#ex-list').innerHTML=list.length?list.map(e=>{
+    const n=logsOf(e.id).length;
+    return `<div class="card${e.archived?' archived':''}">
+      <div class="cardrow">
+        <span class="strand-tag">${e.strand}</span>
+        <button class="mini" data-archive="${e.id}">${e.archived?'Restore':'Archive'}</button>
+      </div>
+      <h2 style="margin:10px 0 4px">${esc(e.name)}</h2>
+      <p class="muted" style="margin:0">${esc(e.notes||'No notes yet.')}</p>
+      <p class="track-key" style="margin-top:8px">${n?n+' run'+(n>1?'s':'')+' logged':'not tried yet'}</p>
+    </div>`;}).join('')
+    :'<div class="empty">Nothing here yet. Add the first exercise above.</div>';
+}
+$('#ex-list').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-archive]');if(!b)return;
+  const ex=exById(b.dataset.archive);if(!ex)return;
+  ex.archived=!ex.archived;markDirty();renderAll();
+  toast(ex.archived?'Archived — its entries are kept in Review.':'Back in the library.');
+});
+$('#toggle-archived').addEventListener('click',()=>{showArchived=!showArchived;renderExerciseList();});
+
+function renderReview(){
+  const strands={music:0,meditation:0,somatics:0,blended:0};
+  state.logs.forEach(l=>{const ex=exById(l.exerciseId);if(ex&&strands[ex.strand]!=null)strands[ex.strand]++;});
+  const total=Object.values(strands).reduce((a,b)=>a+b,0);
+
+  $('#balance').innerHTML=total
+    ?STRANDS.map(k=>{const v=strands[k];return `<div style="flex:${Math.max(v,0.4)};background:${v?'var(--blue)':'#fff'};color:${v?'#fff':'var(--dim)'}" title="${k}: ${v}">${v}</div>`;}).join('')
+    :'<div style="flex:1;background:#fff;color:var(--dim)">no entries yet</div>';
+  $('#balance-note').textContent=total
+    ?STRANDS.map(k=>`${k} ${strands[k]}`).join('  ·  ')+(total>=5&&strands.music/total>0.7?' — music is taking most of the testing.':'')
+    :'Bars fill as you log. Left to right: music, meditation, somatics, blended.';
+
+  const withLogs=state.exercises
+    .map(ex=>({ex,entries:logsOf(ex.id)}))
+    .filter(x=>x.entries.length)
+    .sort((a,b)=>b.entries.length-a.entries.length);
+
+  $('#review-list').innerHTML=withLogs.length?withLogs.map(({ex,entries})=>{
+    const strip=entries.map(l=>`<span class="tick ${l.reading||''}" title="${esc(l.date)} · ${esc(l.yearGroup||'group?')} · ${l.reading||'unmarked'}"></span>`).join('');
+    const last=entries[entries.length-1], isOpen=!!open_[ex.id];
+    return `<div class="card">
+      <div class="cardrow">
+        <span class="strand-tag">${ex.strand}${ex.archived?' · archived':''}</span>
+        <button class="mini" data-expand="${ex.id}" aria-expanded="${isOpen}">${isOpen?'Hide entries':'Show entries'}</button>
+      </div>
+      <h2 style="margin:10px 0 0">${esc(ex.name)}</h2>
+      <div class="track">${strip}</div>
+      <p class="track-key">${entries.length} run${entries.length>1?'s':''} · oldest left, newest right</p>
+      ${last.changeNext?`<p class="muted" style="margin:10px 0 0"><strong>Next time:</strong> ${esc(last.changeNext)}</p>`:''}
+      ${isOpen?`<div class="entries">${entries.slice().reverse().map(entryHTML).join('')}</div>`:''}
+    </div>`;
+  }).join(''):'<div class="empty">Log a few entries and the track records appear here.</div>';
+}
+function entryHTML(l){
+  const bits=[l.date,l.yearGroup,l.classSize?l.classSize+' kids':null,
+    l.format==='session'?('session'+(l.sessionLabel?': '+l.sessionLabel:'')):'in a lesson'].filter(Boolean);
+  return `<div class="entry">
+    <div class="meta">${bits.map(esc).join(' · ')}
+      ${l.reading?`<span class="read ${l.reading}">${l.reading}</span>`:''}
+      ${l.verdict?`<span class="read">${l.verdict}</span>`:''}</div>
+    ${l.expected?`<p><b>Expected</b><br>${esc(l.expected)}</p>`:''}
+    ${l.actual?`<p><b>Happened</b><br>${esc(l.actual)}</p>`:''}
+    ${l.changeNext?`<p><b>Change</b><br>${esc(l.changeNext)}</p>`:''}
+    <div class="tools"><button class="mini danger" data-del="${l.id}">Delete entry</button></div>
+  </div>`;
+}
+$('#review-list').addEventListener('click',e=>{
+  const x=e.target.closest('button[data-expand]');
+  if(x){open_[x.dataset.expand]=!open_[x.dataset.expand];renderReview();return;}
+  const d=e.target.closest('button[data-del]');
+  if(d){
+    const l=state.logs.find(l=>l.id===d.dataset.del);if(!l)return;
+    if(!confirm('Delete this entry from '+l.date+'? This can’t be undone.'))return;
+    state.logs=state.logs.filter(x=>x.id!==l.id);markDirty();renderAll();toast('Entry deleted.');
+  }
+});
+
+/* ---------- adding things ---------- */
+$('#save-ex').addEventListener('click',()=>{
+  const name=$('#new-ex-name').value.trim();
+  if(!name){toast('Give the exercise a name.');return;}
+  const ex={id:uid(),name,strand:pick.strand,notes:$('#new-ex-notes').value.trim()||null,archived:false,createdAt:new Date().toISOString()};
+  state.exercises.push(ex);markDirty();
+  $('#new-ex-name').value='';$('#new-ex-notes').value='';
+  renderAll();$('#ex').value=ex.id;
+  toast('Exercise added.');
+});
+
+$('#save-log').addEventListener('click',()=>{
+  const exerciseId=$('#ex').value;
+  if(!exerciseId){toast('Pick an exercise first.');return;}
+  if(!pick.reading){toast('Mark how it read in the room.');return;}
+  state.logs.push({
+    id:uid(),exerciseId,
+    date:$('#date').value||todayISO(),
+    yearGroup:$('#year-group').value.trim()||null,
+    classSize:$('#class-size').value?Number($('#class-size').value):null,
+    format:pick.format,
+    sessionLabel:pick.format==='session'?($('#session-label').value.trim()||null):null,
+    expected:$('#expected').value.trim()||null,
+    actual:$('#actual').value.trim()||null,
+    reading:pick.reading,
+    changeNext:$('#change-next').value.trim()||null,
+    verdict:pick.verdict,
+    createdAt:new Date().toISOString()
+  });
+  markDirty();
+  ['#expected','#actual','#change-next'].forEach(s=>$(s).value='');
+  $$('#reading-seg button, #verdict-seg button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  pick.reading=null;pick.verdict=null;
+  renderAll();
+  toast('Entry saved.');
+});
+
+/* ---------- one-off import from the standalone test page ----------
+   The prototype kept two tables (exercises / workshop_logs) in the same
+   Supabase project. If they're there and yours, lift the rows across,
+   keeping their ids so a second import can't double anything up. */
+$('#import-legacy').addEventListener('click',async()=>{
+  const b=$('#import-legacy');b.disabled=true;b.textContent='Looking…';
+  try{
+    const sb=await MAAuth.client();
+    const [ex,lg]=await Promise.all([sb.from('exercises').select('*'),sb.from('workshop_logs').select('*')]);
+    if(ex.error||lg.error)throw new Error('no tables');
+    let added=0;
+    (ex.data||[]).forEach(r=>{
+      if(exById(r.id))return;
+      state.exercises.push({id:r.id,name:r.name||'Untitled',strand:STRANDS.includes(r.strand)?r.strand:'music',
+        notes:r.notes||null,archived:!!r.archived,createdAt:r.created_at||new Date().toISOString()});added++;
+    });
+    (lg.data||[]).forEach(r=>{
+      if(state.logs.some(l=>l.id===r.id)||!exById(r.exercise_id))return;
+      state.logs.push({id:r.id,exerciseId:r.exercise_id,date:r.logged_on||todayISO(),yearGroup:r.year_group||null,
+        classSize:r.class_size??null,format:r.format==='session'?'session':'slot',sessionLabel:r.session_label||null,
+        expected:r.expected||null,actual:r.actual||null,reading:r.reading||null,changeNext:r.change_next||null,
+        verdict:r.verdict||null,createdAt:r.created_at||new Date().toISOString()});added++;
+    });
+    if(added){markDirty();renderAll();toast('Imported '+added+' item'+(added>1?'s':'')+'.');}
+    else toast('Nothing new to import.');
+  }catch(e){toast('Nothing to import — the test tables aren’t there.');}
+  b.disabled=false;b.textContent='Import those entries';
+});
+
+/* ---------- boot ---------- */
+applyGate(false);
+$('#gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
+$('#gateTeach').onclick=()=>{
+  const m=$('#gateRoleMsg'),b=$('#gateTeach');
+  b.disabled=true;m.textContent='Switching…';
+  MAAuth.setRole('teacher').then(()=>{m.textContent='';b.disabled=false;onAuth();})
+    .catch(e=>{b.disabled=false;
+      m.textContent=/role|column|schema/i.test(e&&e.message||'')
+        ?'Roles aren’t set up on the database yet — run supabase-roles.sql in Supabase.'
+        :(e&&e.message)||'Couldn’t switch just now.';});
+};
+(function waitAuth(){
+  if(window.MAAuth&&MAAuth.onChange)MAAuth.onChange(onAuth);
+  else setTimeout(waitAuth,120);
+})();
+function onAuth(){
+  applyGate(true);
+  if(signedIn()&&isTeacher()){
+    const saved=loadLocal();
+    state=saved?Object.assign(EMPTY(),saved):EMPTY();
+    renderAll();          // the device copy straight away, then reconcile
+    pullCloud();
+  }else{
+    clearTimeout(saveTimer);dirty=false;cloudRowId=null;
+    state=EMPTY();renderAll();   // nothing stays on screen once you're out
+  }
+}
+</script>
+</body>
+</html>

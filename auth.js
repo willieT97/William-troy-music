@@ -457,23 +457,30 @@
     return { wrap: wrap, get: function () { return current; }, set: paint };
   }
 
-  /* Teachers get a Rollbook tab wherever the site's section nav appears.
-     Injected rather than hard-coded into 20-odd pages, so it can't drift. */
+  /* Teachers get Rollbook + Workshop tabs wherever the site's section nav
+     appears. Injected rather than hard-coded into 20-odd pages, so it can't drift. */
+  var TEACHER_TABS = [
+    { key: 'rollbook', href: '/rollbook.html',     label: 'Rollbook' },
+    { key: 'workshop', href: '/workshop-lab.html', label: 'Workshop' }
+  ];
   function syncNavTabs() {
     var navs = document.querySelectorAll('nav.tabs');
     for (var i = 0; i < navs.length; i++) {
-      var nav = navs[i], have = nav.querySelector('a[data-maa-rollbook]');
-      if (window.MAAuth.isTeacher()) {
-        if (!have) {
-          var a = document.createElement('a');
-          a.href = '/rollbook.html'; a.textContent = 'Rollbook';
-          a.setAttribute('data-maa-rollbook', '1');
-          if (/\/rollbook\.html$/.test(location.pathname)) { a.className = 'cur'; a.setAttribute('aria-current', 'page'); }
-          // sit beside the existing tabs — some pages wrap them in an inner flex row
-          var sibling = nav.querySelector('a');
-          (sibling ? sibling.parentNode : nav).appendChild(a);
-        }
-      } else if (have) { have.parentNode.removeChild(have); }
+      var nav = navs[i];
+      for (var t = 0; t < TEACHER_TABS.length; t++) {
+        var tab = TEACHER_TABS[t], have = nav.querySelector('a[data-maa-' + tab.key + ']');
+        if (window.MAAuth.isTeacher()) {
+          if (!have) {
+            var a = document.createElement('a');
+            a.href = tab.href; a.textContent = tab.label;
+            a.setAttribute('data-maa-' + tab.key, '1');
+            if (location.pathname.slice(-tab.href.length) === tab.href) { a.className = 'cur'; a.setAttribute('aria-current', 'page'); }
+            // sit beside the existing tabs — some pages wrap them in an inner flex row
+            var sibling = nav.querySelector('a');
+            (sibling ? sibling.parentNode : nav).appendChild(a);
+          }
+        } else if (have) { have.parentNode.removeChild(have); }
+      }
     }
     // on narrow screens the tabs are one sideways-scrollable row; make sure
     // the current page's tab starts in view instead of off the right edge
