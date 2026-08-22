@@ -457,12 +457,11 @@
     return { wrap: wrap, get: function () { return current; }, set: paint };
   }
 
-  /* Teachers get Rollbook + Workshop + Reading tabs wherever the site's section nav
-     appears. Injected rather than hard-coded into 20-odd pages, so it can't drift. */
+  /* Teachers get a Rollbook tab wherever the site's section nav appears — one
+     door; the Workshop Lab and Reading shelf sit inside the Rollbook's header.
+     Injected rather than hard-coded into 20-odd pages, so it can't drift. */
   var TEACHER_TABS = [
-    { key: 'rollbook', href: '/rollbook.html',     label: 'Rollbook' },
-    { key: 'workshop', href: '/workshop-lab.html', label: 'Workshop' },
-    { key: 'reading',  href: '/reading.html',      label: 'Reading' }
+    { key: 'rollbook', href: '/rollbook.html', label: 'Rollbook' }
   ];
   function syncNavTabs() {
     var navs = document.querySelectorAll('nav.tabs');
