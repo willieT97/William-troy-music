@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow">
+<title>Reading — the workshop shelf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
+  --amber:#E0922A; --green:#1F9D55;
+  --dim:#6B6456; --faint:#9a917f;
+  --display:'Syne',system-ui,sans-serif;
+  --body:'Hanken Grotesk',system-ui,sans-serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --line:3px solid var(--ink); --line2:2px solid var(--ink);
+  --pop:3px 3px 0 var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  background-image:radial-gradient(rgba(23,20,14,.055) 1px, transparent 1px);background-size:5px 5px;
+  -webkit-text-size-adjust:100%}
+button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea{font-family:inherit;font-size:inherit;color:var(--ink)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+::placeholder{color:var(--faint)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- header (same chrome as the Rollbook and Workshop Lab) ---------- */
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:16px 22px;border-bottom:3px solid var(--ink);background:var(--paper);
+  position:sticky;top:0;z-index:40}
+@media(min-width:761px){ header{padding-right:calc(var(--maa-ctl-w, 170px) + 30px)} }
+@media(max-width:760px){ header{padding-top:calc(var(--maa-ctl-h, 38px) + 22px);padding-left:14px;padding-right:14px;gap:10px} }
+.brand{font-family:var(--display);font-weight:800;font-size:1.7rem;letter-spacing:-.02em;
+  position:relative;user-select:none;white-space:nowrap}
+.brand .ghost{position:absolute;left:2.5px;top:2px;color:var(--pink);z-index:-1}
+.brand .ghost2{position:absolute;left:-2px;top:-1.5px;color:var(--blue);z-index:-2;opacity:.85}
+@media(max-width:760px){ .brand{font-size:1.4rem} }
+.homelink{border:2px solid var(--ink);background:#fff;font-family:var(--mono);font-weight:700;
+  text-decoration:none;color:var(--ink);padding:3px 10px;box-shadow:2px 2px 0 var(--ink);line-height:1.5}
+.spacer{flex:1}
+.btn{border:2px solid var(--ink);background:#fff;padding:7px 14px;font-weight:600;text-decoration:none;color:var(--ink);
+  box-shadow:3px 3px 0 var(--ink);transition:transform .08s, box-shadow .08s;display:inline-block;line-height:1.3}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.small{padding:4px 10px;font-size:.85rem;box-shadow:2px 2px 0 var(--ink)}
+#syncStatus{font-family:var(--mono);font-size:.78rem;border:2px solid var(--ink);padding:4px 10px;background:#fff}
+#syncStatus.saving{background:var(--ink);color:var(--paper)}
+#syncStatus.saved{background:var(--green);color:#fff}
+#syncStatus.error{background:var(--pink);color:#fff}
+body.gated header .homelink,body.gated header #syncStatus,body.gated header .sisterlink,body.gated main{display:none}
+/* auth.js pins its account chip top-right at z-index 9000 — stand it down while the detail panel is up */
+body.panelopen .maa-ctl{display:none}
+
+/* ---------- sign-in gate ---------- */
+#gate{display:none;padding:60px 22px 40px}
+#gate.show{display:block}
+.gatecard{max-width:520px;margin:0 auto;border:3px solid var(--ink);background:#fff;
+  box-shadow:6px 6px 0 var(--ink);padding:28px 26px;text-align:center}
+.gatecard .lock{font-size:2.4rem;line-height:1}
+.gatecard h1{font-family:var(--display);font-weight:800;font-size:1.6rem;margin:10px 0 12px}
+.gatecard p{margin:0 auto 12px;max-width:42ch}
+.gatecard .fine{font-family:var(--mono);font-size:.72rem;color:rgba(23,20,14,.62);line-height:1.6}
+.gatecard .grow{display:flex;gap:14px;align-items:center;justify-content:center;margin:18px 0 14px;flex-wrap:wrap}
+.gatecard .backlink{font-family:var(--mono);font-size:.78rem;color:var(--blue);text-decoration:none}
+.gatecard .btn.primary{background:var(--blue);color:#fff}
+
+/* ---------- the shelf ---------- */
+main{max-width:680px;margin:0 auto;padding:20px 16px 110px}
+.eyebrow,.lbl{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+.eyebrow{margin:0 0 4px}
+.lbl{margin:14px 0 6px}
+.stats{display:flex;gap:22px;margin:0 0 18px;padding-bottom:14px;border-bottom:var(--line)}
+.stats b{display:block;font-family:var(--display);font-weight:800;font-size:22px}
+.stats span{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+
+input[type=text],textarea{width:100%;background:#fff;border:var(--line2);border-radius:0;padding:10px 12px;font-size:15px}
+textarea{min-height:84px;resize:vertical;line-height:1.6}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
+.chips.wrap-row{flex-wrap:wrap;overflow:visible}
+.chip{background:#fff;border:var(--line2);color:var(--ink);padding:6px 12px;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;min-height:34px}
+.mini{background:var(--paper);border:var(--line2);padding:6px 12px;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink)}
+
+.phase-head{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
+.phase-num{background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:800;font-size:13px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.phase-head span{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase}
+.phase-head i{flex:1;height:2px;background:var(--ink);opacity:.15}
+.phase-head em{font-family:var(--mono);font-size:9px;color:var(--dim);font-style:normal}
+
+.row{background:#fff;border:var(--line2);box-shadow:var(--pop);padding:12px 14px;margin-bottom:12px;cursor:pointer;width:100%;text-align:left;display:block}
+.row.dropped{opacity:.55}
+.row-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.meta{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+.strand-tag{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:2px 6px;border:1.5px solid var(--ink)}
+.opt{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);border:1.5px dashed var(--dim);padding:1px 5px}
+.mono-dim{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.row h3{font-family:var(--body);font-weight:700;font-size:15px;margin:0;line-height:1.3}
+.status-badge{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;white-space:nowrap;flex-shrink:0;border:2px solid}
+.preview{display:flex;gap:6px;align-items:flex-start;margin-top:6px}
+.sq{width:8px;height:8px;border:1.5px solid var(--ink);flex-shrink:0;margin-top:4px}
+.preview span{font-size:12px;color:var(--dim);font-style:italic;line-height:1.45}
+.empty{border:3px dashed var(--ink);padding:24px;text-align:center;color:var(--dim);font-size:13px}
+
+/* ---------- detail panel ---------- */
+#detail{position:fixed;inset:0;background:var(--paper);z-index:60;display:flex;flex-direction:column}
+.d-head{border-bottom:var(--line);padding:14px 16px 12px;flex-shrink:0;background:var(--paper)}
+.d-head-inner{max-width:680px;margin:0 auto;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.d-title{font-family:var(--display);font-weight:800;font-size:20px;line-height:1.15}
+#d-close{background:#fff;border:var(--line2);box-shadow:2px 2px 0 var(--ink);width:36px;height:36px;font-family:var(--mono);font-size:16px;color:var(--ink);flex-shrink:0}
+.d-body{flex:1;overflow-y:auto}
+.d-inner{max-width:680px;margin:0 auto;padding:18px 16px 60px}
+.card{background:#fff;border:var(--line2);box-shadow:var(--pop);padding:12px 14px}
+.why{font-style:italic;font-size:13.5px;line-height:1.65}
+.rule{font-size:12px;color:var(--dim);font-style:italic;margin:6px 0 18px}
+.note-card{background:#fff;border:var(--line2);border-left-width:6px;border-left-style:solid;padding:10px 12px;margin-bottom:10px}
+.note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.note-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700}
+.note-x{color:var(--faint);font-size:15px;padding:0 4px}
+.tag-btn{display:flex;align-items:center;gap:10px;background:#fff;border:var(--line2);padding:9px 12px;text-align:left;width:100%}
+.tag-btn .sq{margin-top:0}
+.tag-btn b{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:400}
+.tag-btn small{font-size:12px;color:var(--dim);margin-left:auto}
+.hide{display:none !important}
+.toast{position:fixed;left:16px;right:16px;bottom:16px;max-width:648px;margin:0 auto;padding:14px 16px;background:var(--ink);color:var(--paper);border:var(--line);font-family:var(--mono);font-size:12px;z-index:80}
+</style>
+</head>
+<body class="gated">
+
+<header>
+  <a class="homelink" href="index.html" title="Back to Music Arcade">←</a>
+  <div class="brand">Reading<span class="ghost" aria-hidden="true">Reading</span><span class="ghost2" aria-hidden="true">Reading</span></div>
+  <div class="spacer"></div>
+  <span id="syncStatus">loading…</span>
+  <a class="btn small sisterlink" href="workshop-lab.html">Workshop</a>
+  <a class="btn small sisterlink" href="rollbook.html">Rollbook</a>
+</header>
+
+<div id="gate" class="show">
+  <div class="gatecard">
+    <div class="lock" aria-hidden="true">🔒</div>
+    <h1>The shelf is private</h1>
+    <p>The reading behind the creativity workshops — what's on the list, what you've finished, and the notes you took. Sign in and it opens; sign out and it closes behind you.</p>
+    <p class="fine">Only your account can read it. Nothing here is public, and it never appears anywhere else on the site.</p>
+    <div class="grow"><button class="btn primary" id="gateSignin">Sign in</button>
+    <a class="backlink" href="index.html">← Music Arcade</a></div>
+    <p class="fine" id="gateWait">Checking your account…</p>
+  </div>
+  <div class="gatecard" id="gateRole" style="display:none">
+    <div class="lock" aria-hidden="true">🎓</div>
+    <h1>The shelf is for teachers</h1>
+    <p>Your account is set to <b>learning</b>. Switch it to <b>teaching</b> and you get the Reading shelf, the Workshop Lab and the Rollbook, plus tabs for all three across the site.</p>
+    <p class="fine">Nothing about your saved songs, scores or courses changes. You can switch back any time in Your account.</p>
+    <div class="grow"><button class="btn primary" id="gateTeach">Turn on teacher mode</button>
+    <a class="backlink" href="index.html">← Music Arcade</a></div>
+    <p class="fine" id="gateRoleMsg"></p>
+  </div>
+</div>
+
+<main>
+  <p class="eyebrow">MARCUS · Creativity Workshops</p>
+  <div class="stats" id="stats"></div>
+  <input id="search" type="text" placeholder="Search title, author or connection…" style="margin-bottom:12px" aria-label="Search the shelf">
+  <div class="lbl" style="margin-top:0">Sort</div>
+  <div class="chips wrap-row" id="sort-chips"></div>
+  <div class="lbl">Strand</div>
+  <div class="chips" id="strand-chips"></div>
+  <div class="lbl">Connects to</div>
+  <div class="chips" id="connect-chips"></div>
+  <div class="chips wrap-row" id="status-chips" style="margin-top:6px;margin-bottom:12px"></div>
+  <div id="list"></div>
+</main>
+
+<div id="detail" class="hide" role="dialog" aria-modal="true"></div>
+
+<script>
+/* ====================================================================
+   READING — the shelf behind the creativity workshops.
+   Same plumbing as the Rollbook and Workshop Lab: the site's account
+   (auth.js), the teacher role as the gate. The catalogue lives here in
+   the page; your statuses, connections and notes live in two owner-only
+   Supabase tables (reading_state, reading_notes).
+   ==================================================================== */
+'use strict';
+const $ = id => document.getElementById(id);
+
+const STRANDS = { Listening:"#2438C8", Improvisation:"#F05B3C", Embodied:"#1E9E6E", Meditation:"#7A5FD0", Somatics:"#E8A013", Aesthetics:"#0E8C96", Research:"#6B6456", Format:"#FF4E86" };
+const TAGS = {
+  steal:{label:"Steal",color:"#2438C8",hint:"an exercise for the lab"},
+  say:{label:"Say",color:"#E8A013",hint:"language or evidence to borrow"},
+  shift:{label:"Shift",color:"#FF4E86",hint:"changes something in MARCUS"},
+  general:{label:"General",color:"#6B6456",hint:"everything else"},
+};
+const STATUS = { "to-read":{label:"To read",color:"#6B6456"}, reading:{label:"Reading",color:"#2438C8"}, finished:{label:"Finished",color:"#1E9E6E"}, dropped:{label:"Dropped",color:"#FF4E86"} };
+const PHASES = { 1:"Mine for exercises", 2:"Embodied traditions", 3:"Way traditions", 4:"Somatics", 5:"Aesthetics & philosophy", 6:"Research literature", 7:"Format studies" };
+const CONNECTS = ["Music","Movement","Somatics","Meditation","Spirituality","Visual art","Word","Aesthetics","Play"];
+const SORTS = [["phase","Phase"],["status","Status"],["strand","Strand"],["notes","Notes"]];
+
+const CATALOG = [
+  { id:"sonic-meditations", title:"Sonic Meditations", author:"Pauline Oliveros", year:"1974", phase:1, strand:"Listening", connects:["Music","Meditation","Somatics"], note:"Twenty-five text scores for group listening and sounding. Several work with a room of teenagers as written. The densest seam of stealable exercises on the whole list." },
+  { id:"deep-listening", title:"Deep Listening: A Composer's Sound Practice", author:"Pauline Oliveros", year:"2005", phase:1, strand:"Listening", connects:["Music","Meditation","Somatics"], note:"The fuller practice behind the scores — listening as meditation, body work included. Read after Sonic Meditations. Note: Deep Listening is essentially open-monitoring practice aimed at sound." },
+  { id:"listening-book", title:"The Listening Book", author:"W.A. Mathieu", year:"1991", phase:1, strand:"Listening", connects:["Music","Meditation","Spirituality"], note:"Two-page chapters, each nearly an exercise. Sufi lineage under the surface but never announced — a model for carrying the spiritual layer without naming it in class." },
+  { id:"sound-education", title:"A Sound Education: 100 Exercises", author:"R. Murray Schafer", year:"1992", phase:1, strand:"Listening", connects:["Music","Play"], note:"A hundred listening exercises written for actual school classrooms. Your closest precedent — expect the highest steal-rate per page." },
+  { id:"free-play", title:"Free Play: Improvisation in Life and Art", author:"Stephen Nachmanovitch", year:"1990", phase:1, strand:"Improvisation", connects:["Music","Play","Spirituality"], note:"Improvisation as a way of being. More Say than Steal — this is where the workshops get their spine." },
+  { id:"impro", title:"Impro: Improvisation and the Theatre", author:"Keith Johnstone", year:"1979", phase:1, strand:"Improvisation", connects:["Play","Movement","Word"], note:"Theatre games built to disarm self-censorship in groups. Translate them from speech and gesture into sound and you have a workshop." },
+  { id:"chernoff", title:"African Rhythm and African Sensibility", author:"John Miller Chernoff", year:"1979", phase:2, strand:"Embodied", connects:["Music","Movement","Spirituality"], note:"A drummer's apprenticeship among the Dagomba in Ghana. Competence is participatory — you understand by joining — and the gaps in the drumming exist for the dancers." },
+  { id:"agawu", title:"The African Imagination in Music", author:"Kofi Agawu", year:"2016", phase:2, strand:"Embodied", connects:["Music","Movement","Aesthetics"], note:"The corrective to romanticising African rhythm as one monolithic thing. Read alongside Chernoff — keeps the framing honest." },
+  { id:"musicking", title:"Musicking", author:"Christopher Small", year:"1998", phase:2, strand:"Embodied", connects:["Music","Movement","Aesthetics"], note:"Music as verb, not noun — something people do together, not an object. This one word may end up in your workshop copy." },
+  { id:"turino", title:"Music as Social Life", author:"Thomas Turino", year:"2008", phase:2, strand:"Embodied", connects:["Music","Movement"], note:"Participatory vs. presentational music. Your workshops are participatory practice inside a school system built for presentational music — Turino gives you the words to say so." },
+  { id:"carson", title:"Last Night's Fun", author:"Ciaran Carson", year:"1996", phase:2, strand:"Embodied", connects:["Music","Movement","Word"], note:"The Irish session as lived, embodied practice — tunes, drink, talk, time. Your own tradition making the same point the Ghanaian material makes, and a joy to read." },
+  { id:"floyd", title:"The Power of Black Music", author:"Samuel Floyd", year:"1995", phase:2, strand:"Embodied", optional:true, connects:["Music","Movement","Spirituality"], note:"The ring shout and its long echo through African-American music — movement, spirit and sound staying fused in a Western context." },
+  { id:"wooten", title:"The Music Lesson", author:"Victor Wooten", year:"2006", phase:2, strand:"Embodied", optional:true, connects:["Music","Spirituality","Word"], note:"Music-as-spirituality written as a novel by a working bassist. Loose, but it speaks teenagers' language and is unashamedly embodied." },
+  { id:"suzuki", title:"Zen Mind, Beginner's Mind", author:"Shunryu Suzuki", year:"1970", phase:3, strand:"Meditation", connects:["Meditation","Spirituality"], note:"In the beginner's mind there are many possibilities; in the expert's, few. The Gradus nursery-rhyme framing in its original habitat." },
+  { id:"werner", title:"Effortless Mastery", author:"Kenny Werner", year:"1996", phase:3, strand:"Meditation", connects:["Music","Meditation"], note:"Meditation at the instrument, for players frozen by self-judgement. The most classroom-adjacent of the way traditions." },
+  { id:"cage", title:"Silence", author:"John Cage", year:"1961", phase:3, strand:"Meditation", connects:["Music","Meditation","Word","Aesthetics"], note:"Zen arriving in Western aesthetics of listening. Dip in — the lectures matter more than cover-to-cover reading." },
+  { id:"inayat-khan", title:"The Mysticism of Sound and Music", author:"Hazrat Inayat Khan", year:"1923", phase:3, strand:"Meditation", connects:["Music","Meditation","Spirituality"], note:"The Sufi teaching Mathieu descends from — sound itself as spiritual path. Research layer, not classroom language." },
+  { id:"herrigel", title:"Zen in the Art of Archery", author:"Eugen Herrigel", year:"1948", phase:3, strand:"Meditation", connects:["Meditation","Spirituality","Movement"], note:"The famous geido entry point the whole Dojo metaphor rests on. Caveat: scholars have shown Herrigel partly invented the Zen content — useful myth, held lightly." },
+  { id:"dalcroze", title:"Rhythm, Music and Education", author:"Émile Jaques-Dalcroze", year:"1921", phase:4, strand:"Somatics", connects:["Music","Movement","Somatics"], note:"The European tradition that systematised music-through-the-moving-body. Secondary guides to Eurhythmics practice may be more usable than the original." },
+  { id:"feldenkrais", title:"Awareness Through Movement", author:"Moshé Feldenkrais", year:"1972", phase:4, strand:"Somatics", connects:["Somatics","Movement","Meditation"], note:"Lessons in attention through tiny movement. Mine for warm-up shapes." },
+  { id:"alcantara", title:"Indirect Procedures", author:"Pedro de Alcantara", year:"1997", phase:4, strand:"Somatics", connects:["Music","Somatics"], note:"Alexander Technique written specifically for musicians." },
+  { id:"bmc", title:"Sensing, Feeling, and Action", author:"Bonnie Bainbridge Cohen", year:"1993", phase:4, strand:"Somatics", optional:true, connects:["Somatics","Movement"], note:"Body-Mind Centering. Dense — likely better mined through Aneta and the Opacity vocabulary than through the page." },
+  { id:"dewey", title:"Art as Experience", author:"John Dewey", year:"1934", phase:5, strand:"Aesthetics", connects:["Aesthetics","Visual art","Play"], note:"Art as ordinary experience intensified. The philosophical spine of the whole project." },
+  { id:"schiller", title:"On the Aesthetic Education of Man", author:"Friedrich Schiller", year:"1795", phase:5, strand:"Aesthetics", connects:["Aesthetics","Play"], note:"Play as the fullest expression of being human. The arcade's oldest ancestor — read a good introduction first, the letters are heavy going." },
+  { id:"greene", title:"Releasing the Imagination", author:"Maxine Greene", year:"1995", phase:5, strand:"Aesthetics", connects:["Aesthetics","Word","Visual art"], note:"Aesthetic education argued for inside real school systems. Ammunition for principals and parents." },
+  { id:"flow", title:"Flow", author:"Mihaly Csikszentmihalyi", year:"1990", phase:5, strand:"Aesthetics", connects:["Play","Aesthetics"], note:"The secular, research-backed cousin of the way traditions. The vocabulary schools already trust." },
+  { id:"colzato", title:"Meditate to Create", author:"Colzato, Ozturk & Hommel · Frontiers in Psychology", year:"2012", phase:6, strand:"Research", connects:["Meditation"], note:"Open-monitoring meditation boosts divergent thinking; focused attention doesn't much. Caveat: lead author later found guilty of research misconduct and a related paper was retracted — treat as an idea-source, cite Lebuda instead. Open access on Frontiers." },
+  { id:"lebuda", title:"Mindfulness & Creativity Meta-Analysis", author:"Lebuda, Zabelina & Karwowski", year:"2016", phase:6, strand:"Research", connects:["Meditation"], note:"Small-to-moderate positive link between mindfulness and creativity across the literature. Your citable anchor for the whole strand." },
+  { id:"limb", title:"Jazz Improvisation fMRI Study", author:"Limb & Braun · PLoS ONE", year:"2008", phase:6, strand:"Research", connects:["Music"], note:"Self-monitoring prefrontal cortex goes quiet while jazz musicians improvise in the scanner. Six subjects — evocative folklore with citations, and Limb's TED talk is a ready-made explainer for parents." },
+  { id:"berkowitz", title:"The Improvising Mind", author:"Aaron Berkowitz", year:"2010", phase:6, strand:"Research", connects:["Music"], note:"Cognitive science of learned improvisation — vocabulary, chunks, recombination. Academic support for the Barry Harris block approach." },
+  { id:"phillips-silver", title:"Feeling the Beat", author:"Phillips-Silver & Trainor · Science", year:"2005", phase:6, strand:"Research", connects:["Music","Movement"], note:"Infants bounced in duple or triple time afterwards hear an ambiguous rhythm as the meter they were moved in. The ngoma insight as a two-page experiment. Adult follow-up in 2007." },
+  { id:"leman", title:"Embodied Music Cognition", author:"Marc Leman", year:"2008", phase:6, strand:"Research", connects:["Music","Movement","Somatics"], note:"The systematic case that musical meaning runs through the body. Dense — skim for the framework." },
+  { id:"varela", title:"The Embodied Mind", author:"Varela, Thompson & Rosch", year:"1991", phase:6, strand:"Research", connects:["Meditation","Somatics"], note:"Cognitive science meets Buddhist meditation practice. The academic bridge between the meditation and somatics shelves." },
+  { id:"kirschner", title:"Joint Music Making & Prosocial Behavior", author:"Kirschner & Tomasello", year:"2010", phase:6, strand:"Research", connects:["Music","Movement","Play"], note:"Joint music-making increased spontaneous helping and cooperation in four-year-olds. Probably your single most school-pitchable citation." },
+  { id:"wiltermuth", title:"Synchrony and Cooperation", author:"Wiltermuth & Heath · Psych. Science", year:"2009", phase:6, strand:"Research", connects:["Movement","Music"], note:"Moving in time together — even just marching or singing — measurably increases cooperation afterwards." },
+  { id:"sawyer", title:"Explaining Creativity", author:"Keith Sawyer", year:"2012", phase:6, strand:"Research", connects:["Music","Play"], note:"The best single gateway into creativity research, by a jazz pianist who studies group improvisation. If you read one academic book on this list, this is it. Group Genius is the popular companion." },
+  { id:"four-c", title:"The Four C Model of Creativity", author:"Beghetto & Kaufman", year:"2009", phase:6, strand:"Research", connects:["Play","Aesthetics"], note:"mini-c to little-c to Pro-c to Big-C. A defensible answer to you-can't-teach-creativity: classrooms are the natural home of mini-c and little-c." },
+  { id:"amabile", title:"Creativity in Context", author:"Teresa Amabile", year:"1996", phase:6, strand:"Research", connects:["Play"], note:"Intrinsic motivation as creativity's engine — and evidence that surveillance and evaluation suppress it. Directly relevant to how, and whether, you assess anything in a workshop." },
+  { id:"green", title:"Music, Informal Learning and the School", author:"Lucy Green", year:"2008", phase:6, strand:"Research", connects:["Music","Play"], note:"How popular musicians actually learn, brought into classrooms and researched — the Musical Futures programme. The closest thing to peer review of your whole teaching instinct." },
+  { id:"myriad", title:"The MYRIAD Trial", author:"Kuyken et al. · Evidence-Based Mental Health", year:"2022", phase:6, strand:"Research", connects:["Meditation"], note:"Largest RCT of universal school mindfulness (~28,000 UK pupils): no wellbeing benefit over normal teaching, largely because teenagers didn't practise. Two lessons — never sell the workshops as a wellbeing intervention, and design practices they actually want to repeat. Also the most trustworthy study here, precisely because it is big, pre-registered and null." },
+  { id:"cameron", title:"The Artist's Way", author:"Julia Cameron", year:"1992", phase:7, strand:"Format", connects:["Spirituality","Word","Visual art"], note:"A 12-week structure with daily and weekly practices. Study the scaffolding; take or leave the content." },
+  { id:"barry", title:"Syllabus", author:"Lynda Barry", year:"2014", phase:7, strand:"Format", connects:["Visual art","Word","Play"], note:"An actual creativity class published as a notebook. The closest thing to a Dojo course on paper." },
+  { id:"rubin", title:"The Creative Act", author:"Rick Rubin", year:"2023", phase:7, strand:"Format", connects:["Spirituality","Aesthetics","Word"], note:"Fragment-sized chapters. A model for tone if the workshops ever become written material." },
+];
+
+let items = [];
+let filters = { strand:"All", connects:[], status:"all", sort:"phase", q:"" };
+let openId = null, noteTag = "steal", addingNote = false, statusT = null;
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3200); }
+function setStatusChip(cls,txt){ const el=$('syncStatus'); el.className=cls; el.textContent=txt; }
+function flagSaving(){ setStatusChip('saving','saving…'); clearTimeout(statusT); }
+function flagSaved(){ clearTimeout(statusT); statusT=setTimeout(()=>setStatusChip('saved','synced'),350); }
+function flagError(msg){ setStatusChip('error','save failed'); toast(msg); }
+function find(id){ return items.find(i=>i.id===id); }
+
+/* ---------- the gate (same as the Rollbook) ---------- */
+const signedIn=()=>!!(window.MAAuth&&MAAuth.user&&MAAuth.user());
+const userId=()=>{const u=window.MAAuth&&MAAuth.user&&MAAuth.user();return u?u.id:null;};
+const isTeacher=()=>!!(window.MAAuth&&MAAuth.isTeacher&&MAAuth.isTeacher());
+function applyGate(known){
+  const inn=signedIn(), open=inn&&isTeacher();
+  document.body.classList.toggle('gated',!open);
+  $('gate').classList.toggle('show',!open);
+  const learner=known&&inn&&!isTeacher();
+  $('gate').firstElementChild.style.display=learner?'none':'';
+  $('gateRole').style.display=learner?'':'none';
+  $('gateWait').style.display=known?'none':'';
+  if(!open) closeDetail();
+}
+$('gateSignin').onclick=()=>{if(window.MAAuth&&MAAuth.open)MAAuth.open('signin');};
+$('gateTeach').onclick=()=>{
+  const m=$('gateRoleMsg'),b=$('gateTeach');
+  b.disabled=true;m.textContent='Switching…';
+  MAAuth.setRole('teacher').then(()=>{m.textContent='';b.disabled=false;onAuth();})
+    .catch(e=>{b.disabled=false;
+      m.textContent=/role|column|schema/i.test(e&&e.message||'')
+        ?'Roles aren’t set up on the database yet — run supabase-roles.sql in Supabase.'
+        :(e&&e.message)||'Couldn’t switch just now.';});
+};
+(function waitAuth(){
+  if(window.MAAuth&&MAAuth.onChange)MAAuth.onChange(onAuth);
+  else setTimeout(waitAuth,120);
+})();
+let loadedFor=null;
+function onAuth(){
+  applyGate(true);
+  if(signedIn()&&isTeacher()){
+    if(loadedFor===userId())return;       // same person, same data — don't refetch on every profile tick
+    loadedFor=userId();
+    renderChips(); loadAll();
+  }else{
+    loadedFor=null; items=[]; $('list').innerHTML=''; $('stats').innerHTML='';   // nothing stays on screen once you're out
+  }
+}
+
+/* ---------- data: two owner-only tables, through the site's Supabase client ---------- */
+async function loadAll(){
+  items = CATALOG.map(c => ({ ...c, status:'to-read', connects:[...c.connects], notes:[] }));
+  renderStats(); renderList();
+  setStatusChip('saving','loading…');
+  try{
+    const sb = await MAAuth.client();
+    const [st, nt] = await Promise.all([
+      sb.from('reading_state').select('*'),
+      sb.from('reading_notes').select('*').order('created_at', { ascending:true })
+    ]);
+    if(st.error || nt.error) throw (st.error || nt.error);
+    const byId = Object.fromEntries(items.map(i => [i.id, i]));
+    (st.data||[]).forEach(r => {
+      const it = byId[r.source_id]; if(!it) return;
+      if(r.status && STATUS[r.status]) it.status = r.status;
+      const valid = (r.connects || []).filter(c => CONNECTS.includes(c));
+      if(valid.length) it.connects = valid;
+    });
+    (nt.data||[]).forEach(n => { const it = byId[n.source_id]; if(it) it.notes.push(n); });
+    setStatusChip('saved','synced');
+  }catch(e){
+    setStatusChip('error','couldn’t load');
+    toast(/relation|does not exist|schema/i.test(e&&e.message||'')
+      ? 'The reading tables aren’t on the database yet — run the Reading Tracker SQL in Supabase.'
+      : 'Could not load: ' + ((e&&e.message)||'unknown error'));
+  }
+  renderStats(); renderList(); if(openId) renderDetail();
+}
+async function persistState(it){
+  flagSaving();
+  try{
+    const sb = await MAAuth.client();
+    const { error } = await sb.from('reading_state').upsert({
+      user_id: userId(), source_id: it.id, status: it.status, connects: it.connects, updated_at: new Date().toISOString()
+    });
+    if(error) throw error;
+    flagSaved();
+  }catch(e){ flagError('Save failed: ' + ((e&&e.message)||'unknown error')); }
+}
+
+/* ---------- mutations ---------- */
+async function setStatus(id, status){
+  const it = find(id); it.status = status;
+  renderStats(); renderList(); if(openId) renderDetail();
+  await persistState(it);
+}
+async function toggleConnect(id, c){
+  const it = find(id);
+  it.connects = it.connects.includes(c) ? it.connects.filter(x => x !== c) : [...it.connects, c];
+  renderList(); if(openId) renderDetail();
+  await persistState(it);
+}
+async function addNote(){
+  const body = $('note-text').value.trim();
+  if(!body){ toast('Write the note first.'); return; }
+  flagSaving();
+  try{
+    const sb = await MAAuth.client();
+    const { data, error } = await sb.from('reading_notes')
+      .insert({ user_id: userId(), source_id: openId, tag: noteTag, body }).select().single();
+    if(error) throw error;
+    find(openId).notes.push(data);
+    addingNote = false; noteTag = 'steal';
+    flagSaved();
+    renderStats(); renderList(); renderDetail();
+  }catch(e){ flagError('Save failed: ' + ((e&&e.message)||'unknown error')); }
+}
+async function deleteNote(noteId){
+  if(!confirm('Delete this note? This can’t be undone.')) return;
+  flagSaving();
+  try{
+    const sb = await MAAuth.client();
+    const { error } = await sb.from('reading_notes').delete().eq('id', noteId);
+    if(error) throw error;
+    const it = find(openId); it.notes = it.notes.filter(n => n.id !== noteId);
+    flagSaved();
+    renderStats(); renderList(); renderDetail();
+  }catch(e){ flagError('Delete failed: ' + ((e&&e.message)||'unknown error')); }
+}
+
+/* ---------- filter chips ---------- */
+function chipStyle(el, active, color){
+  el.style.background = active ? color : '#fff';
+  el.style.borderColor = active ? color : 'var(--ink)';
+  el.style.color = active ? (color === '#E8A013' ? 'var(--ink)' : '#fff') : 'var(--ink)';
+}
+function makeChip(label, active, color, onClick){
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip'; b.textContent = label; b.setAttribute('aria-pressed', String(active));
+  chipStyle(b, active, color);
+  b.addEventListener('click', onClick);
+  return b;
+}
+function renderChips(){
+  const sort = $('sort-chips'); sort.innerHTML = '';
+  SORTS.forEach(([key, label]) => sort.appendChild(
+    makeChip(label, filters.sort === key, 'var(--ink)', () => { filters.sort = key; renderChips(); renderList(); })));
+
+  const strand = $('strand-chips'); strand.innerHTML = '';
+  strand.appendChild(makeChip('All', filters.strand === 'All', 'var(--ink)', () => { filters.strand = 'All'; renderChips(); renderList(); }));
+  Object.keys(STRANDS).forEach(st => strand.appendChild(
+    makeChip(st, filters.strand === st, STRANDS[st], () => { filters.strand = st; renderChips(); renderList(); })));
+
+  const conn = $('connect-chips'); conn.innerHTML = '';
+  conn.appendChild(makeChip('All', filters.connects.length === 0, 'var(--ink)', () => { filters.connects = []; renderChips(); renderList(); }));
+  CONNECTS.forEach(c => conn.appendChild(
+    makeChip(c, filters.connects.includes(c), 'var(--blue)', () => {
+      filters.connects = filters.connects.includes(c) ? filters.connects.filter(x => x !== c) : [...filters.connects, c];
+      renderChips(); renderList();
+    })));
+
+  const stat = $('status-chips'); stat.innerHTML = '';
+  stat.appendChild(makeChip('All', filters.status === 'all', 'var(--ink)', () => { filters.status = 'all'; renderChips(); renderList(); }));
+  Object.entries(STATUS).forEach(([val, cfg]) => stat.appendChild(
+    makeChip(cfg.label, filters.status === val, cfg.color, () => { filters.status = val; renderChips(); renderList(); })));
+}
+$('search').addEventListener('input', e => { filters.q = e.target.value; renderList(); });
+
+/* ---------- stats ---------- */
+function renderStats(){
+  const steals = items.flatMap(i => i.notes).filter(n => n.tag === 'steal').length;
+  const rows = [
+    ['Sources', items.length, 'var(--ink)'],
+    ['Reading', items.filter(i => i.status === 'reading').length, 'var(--blue)'],
+    ['Finished', items.filter(i => i.status === 'finished').length, '#1E9E6E'],
+    ['Steals', steals, 'var(--pink)'],
+  ];
+  $('stats').innerHTML = rows.map(([l, v, c]) => `<div><b style="color:${c}">${v}</b><span>${l}</span></div>`).join('');
+}
+
+/* ---------- list ---------- */
+function visible(){
+  const q = filters.q.toLowerCase();
+  let list = items.filter(s => {
+    const strandOk = filters.strand === 'All' || s.strand === filters.strand;
+    const connectOk = filters.connects.length === 0 || filters.connects.every(c => s.connects.includes(c));
+    const statusOk = filters.status === 'all' || s.status === filters.status;
+    const qOk = !q || s.title.toLowerCase().includes(q) || s.author.toLowerCase().includes(q) || s.connects.some(c => c.toLowerCase().includes(q));
+    return strandOk && connectOk && statusOk && qOk;
+  });
+  if(filters.sort === 'phase') list.sort((a,b) => a.phase - b.phase);
+  if(filters.sort === 'status'){ const o = { reading:0, 'to-read':1, finished:2, dropped:3 }; list.sort((a,b) => o[a.status] - o[b.status]); }
+  if(filters.sort === 'strand') list.sort((a,b) => a.strand.localeCompare(b.strand));
+  if(filters.sort === 'notes') list.sort((a,b) => b.notes.length - a.notes.length);
+  return list;
+}
+function rowHTML(s){
+  const notes = s.notes.slice(-2).map(n => `
+    <div class="preview"><div class="sq" style="background:${(TAGS[n.tag]||TAGS.general).color}"></div>
+    <span>${esc(n.body.length > 64 ? n.body.slice(0,64) + '…' : n.body)}</span></div>`).join('');
+  return `
+    <button type="button" class="row ${s.status === 'dropped' ? 'dropped' : ''}" data-id="${s.id}">
+      <div class="row-top">
+        <div style="flex:1;min-width:0">
+          <div class="meta">
+            <span class="strand-tag" style="background:${STRANDS[s.strand]}">${s.strand}</span>
+            ${filters.sort !== 'phase' ? `<span class="mono-dim">P${s.phase}</span>` : ''}
+            ${s.optional ? '<span class="opt">optional</span>' : ''}
+            ${s.notes.length ? `<span class="mono-dim">${s.notes.length} note${s.notes.length !== 1 ? 's' : ''}</span>` : ''}
+          </div>
+          <h3>${esc(s.title)}</h3>
+          <div class="mono-dim" style="margin-top:2px">${esc(s.author)}${s.year ? ' · ' + s.year : ''}</div>
+          ${notes}
+        </div>
+        <span class="status-badge" style="color:${STATUS[s.status].color};border-color:${STATUS[s.status].color}">${STATUS[s.status].label}</span>
+      </div>
+    </button>`;
+}
+function renderList(){
+  if(!items.length){ $('list').innerHTML=''; return; }
+  const list = visible();
+  if(!list.length){ $('list').innerHTML = '<div class="empty">Nothing matches.</div>'; return; }
+  if(filters.sort === 'phase'){
+    $('list').innerHTML = [1,2,3,4,5,6,7].map(p => {
+      const group = list.filter(s => s.phase === p);
+      if(!group.length) return '';
+      return `
+        <div class="phase-head"><div class="phase-num">${p}</div><span>${PHASES[p]}</span><i></i><em>${group.length}</em></div>
+        ${group.map(rowHTML).join('')}`;
+    }).join('');
+  } else {
+    $('list').innerHTML = list.map(rowHTML).join('');
+  }
+}
+$('list').addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if(row){ openId = row.dataset.id; addingNote = false; noteTag = 'steal'; renderDetail(); $('detail').classList.remove('hide'); document.body.classList.add('panelopen'); }
+});
+function closeDetail(){ openId = null; $('detail').classList.add('hide'); document.body.classList.remove('panelopen'); }
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && openId) closeDetail(); });
+
+/* ---------- detail ---------- */
+function renderDetail(){
+  const s = find(openId); if(!s) return;
+  const draft = $('note-text') ? $('note-text').value : '';
+
+  const statusBtns = Object.entries(STATUS).map(([val, cfg]) => `
+    <button type="button" class="chip" data-status="${val}" aria-pressed="${s.status === val}" style="flex:1 1 auto;text-align:center;padding:10px 6px;
+      background:${s.status === val ? cfg.color : '#fff'};
+      border-color:${s.status === val ? cfg.color : 'var(--ink)'};
+      color:${s.status === val ? (cfg.color === '#E8A013' ? 'var(--ink)' : '#fff') : 'var(--ink)'}">${cfg.label}</button>`).join('');
+
+  const noteCards = s.notes.length ? s.notes.map(n => {
+    const t = TAGS[n.tag] || TAGS.general;
+    const d = n.created_at ? new Date(n.created_at).toLocaleDateString('en-IE', { day:'numeric', month:'short' }) : '';
+    return `
+      <div class="note-card" style="border-left-color:${t.color}">
+        <div class="note-head">
+          <span class="note-tag" style="color:${t.color}">${t.label}</span>
+          <span style="display:flex;gap:10px;align-items:center">
+            <span class="mono-dim" style="font-size:9px;color:var(--faint)">${d}</span>
+            <button type="button" class="note-x" data-del="${esc(n.id)}" aria-label="Delete note">×</button>
+          </span>
+        </div>
+        <div style="font-size:13.5px;line-height:1.6">${esc(n.body)}</div>
+      </div>`;
+  }).join('') : (!addingNote ? '<div class="empty" style="opacity:.6;font-style:italic;padding:16px">No notes yet.</div>' : '');
+
+  const noteForm = addingNote ? `
+    <div class="card" style="margin-bottom:14px">
+      <textarea id="note-text" placeholder="An exercise, a phrase worth borrowing, a change to make…">${esc(draft)}</textarea>
+      <div class="lbl">Tag it</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+        ${Object.entries(TAGS).map(([key, t]) => `
+          <button type="button" class="tag-btn" data-tag="${key}" aria-pressed="${noteTag === key}" style="border-color:${noteTag === key ? t.color : 'var(--ink)'};background:${noteTag === key ? 'var(--paper)' : '#fff'}">
+            <div class="sq" style="background:${t.color}"></div>
+            <b style="font-weight:${noteTag === key ? 700 : 400}">${t.label}</b>
+            <small>${t.hint}</small>
+          </button>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="chip" id="note-save" style="flex:1;background:var(--blue);border-color:var(--ink);color:#fff;box-shadow:2px 2px 0 var(--ink);padding:10px 0">Save note</button>
+        <button type="button" class="chip" id="note-cancel" style="flex:1;padding:10px 0">Cancel</button>
+      </div>
+    </div>` : '';
+
+  const connChips = CONNECTS.map(c => `
+    <button type="button" class="chip" data-conn="${c}" aria-pressed="${s.connects.includes(c)}" style="background:${s.connects.includes(c) ? 'var(--ink)' : '#fff'};color:${s.connects.includes(c) ? 'var(--paper)' : 'var(--ink)'}">${c}</button>`).join('');
+
+  $('detail').innerHTML = `
+    <div class="d-head">
+      <div class="d-head-inner">
+        <div style="flex:1;min-width:0">
+          <p class="eyebrow">Phase ${s.phase} · ${PHASES[s.phase]}</p>
+          <div class="d-title">${esc(s.title)}</div>
+          <div class="mono-dim" style="margin-top:3px">${esc(s.author)}${s.year ? ' · ' + s.year : ''}</div>
+        </div>
+        <button type="button" id="d-close" aria-label="Close">×</button>
+      </div>
+    </div>
+    <div class="d-body"><div class="d-inner">
+      <div class="lbl" style="margin-top:0">Status</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${statusBtns}</div>
+      <p class="rule">The drop rule: 50 pages with nothing to steal, say or shift — back on the shelf, no guilt.</p>
+
+      <div class="lbl">Why it's on the list</div>
+      <div class="card why" style="margin-bottom:20px">${esc(s.note)}</div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span class="lbl" style="margin:0">Notes${s.notes.length ? ' · ' + s.notes.length : ''}</span>
+        ${!addingNote ? '<button type="button" class="mini" id="note-add" style="box-shadow:2px 2px 0 var(--ink)">+ Add note</button>' : ''}
+      </div>
+      ${noteForm}
+      <div style="margin-bottom:20px">${noteCards}</div>
+
+      <div class="lbl">Connects to</div>
+      <div class="chips wrap-row" style="margin-bottom:18px">${connChips}</div>
+
+      <div class="lbl">Strand</div>
+      <span class="strand-tag" style="background:${STRANDS[s.strand]};font-size:10px;padding:4px 10px">${s.strand}</span>
+    </div></div>`;
+
+  $('d-close').addEventListener('click', closeDetail);
+  $('detail').querySelectorAll('[data-status]').forEach(b => b.addEventListener('click', () => setStatus(s.id, b.dataset.status)));
+  $('detail').querySelectorAll('[data-conn]').forEach(b => b.addEventListener('click', () => toggleConnect(s.id, b.dataset.conn)));
+  $('detail').querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => deleteNote(b.dataset.del)));
+  const add = $('note-add'); if(add) add.addEventListener('click', () => { addingNote = true; renderDetail(); const ta = $('note-text'); if(ta) ta.focus(); });
+  const saveB = $('note-save'); if(saveB) saveB.addEventListener('click', addNote);
+  const cancel = $('note-cancel'); if(cancel) cancel.addEventListener('click', () => { addingNote = false; renderDetail(); });
+  $('detail').querySelectorAll('[data-tag]').forEach(b => b.addEventListener('click', () => { noteTag = b.dataset.tag; renderDetail(); }));
+}
+</script>
+</body>
+</html>
