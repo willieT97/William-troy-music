@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<script src="/reading-catalog.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Reading List — the books behind the creativity workshops</title>
+<meta name="description" content="The reading list behind William Troy's creativity workshops — listening, improvisation, embodied music, meditation, somatics, aesthetics and the research literature, with a link to read each one." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wall:#D7CFC2; --board:#FCFCFA; --frame:#C7CDD2; --ink:#1F2937;
+    --mk-black:#25303B; --mk-blue:#2657C4; --mk-red:#DA4A4A; --mk-green:#1F9D55; --mk-orange:#E0922A;
+    --hand:'Caveat',cursive; --body:'Hanken Grotesk',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--wall); color:var(--ink); font-family:var(--body);
+    line-height:1.55; -webkit-font-smoothing:antialiased; min-height:100vh;
+    background-image:
+      radial-gradient(120% 90% at 50% -10%, rgba(255,255,255,.35), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.018) 0 2px, transparent 2px 26px);
+  }
+  .wrap{ max-width:960px; margin:0 auto; padding:26px 18px 70px; }
+
+  /* ---------- TABS (same as Resources) ---------- */
+  .tabs{ display:flex; gap:10px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--mono); font-size:.66rem; letter-spacing:.12em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink); background:#fff; padding:9px 16px; border-radius:8px;
+    border:1px solid rgba(0,0,0,.12); box-shadow:0 2px 5px rgba(0,0,0,.10);
+    border-bottom:3px solid transparent; transition:transform .12s, border-color .15s; }
+  .tabs a:hover{ transform:translateY(-2px); }
+  .tabs a.cur{ color:var(--mk-green); border-bottom-color:var(--mk-green); font-weight:700; }
+
+  /* ---------- WHITEBOARD ---------- */
+  .board{
+    position:relative; border-radius:14px; padding:16px;
+    background:linear-gradient(145deg,#EDF1F4,#C3CAD0 55%,#AEB6BD);
+    box-shadow:0 22px 45px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .surface{
+    position:relative; border-radius:5px; overflow:hidden; padding:clamp(28px,6vw,64px) clamp(22px,5vw,60px) clamp(40px,7vw,80px);
+    background:var(--board);
+    background-image:
+      radial-gradient(90% 60% at 20% 12%, rgba(90,140,200,.05), transparent 60%),
+      radial-gradient(70% 50% at 90% 90%, rgba(200,120,120,.045), transparent 60%);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.05), inset 0 12px 30px rgba(120,130,140,.12);
+  }
+  .surface::before{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background:
+      radial-gradient(38% 16% at 72% 26%, rgba(120,130,140,.10), transparent 70%),
+      radial-gradient(30% 12% at 18% 72%, rgba(120,130,140,.08), transparent 70%);
+  }
+  .eyebrow{ font-family:var(--mono); font-size:.66rem; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--mk-blue); margin:0 0 4px; }
+  .head{ font-family:var(--hand); font-weight:700; color:var(--mk-black);
+    font-size:clamp(3rem,10vw,5rem); line-height:.9; margin:0; }
+  .underline{ display:block; height:12px; width:min(320px,70%); margin:6px 0 0; overflow:visible; }
+  .sub{ font-family:var(--hand); font-size:clamp(1.3rem,3.5vw,1.7rem); color:var(--mk-blue); margin:16px 0 0; }
+  .intro{ max-width:62ch; margin:14px 0 0; font-size:.98rem; color:#3b4451; }
+  .intro a{ color:var(--mk-blue); }
+
+  /* pinned sticky note */
+  .sticky{ position:absolute; top:14px; right:14px; width:150px; padding:14px 12px 16px;
+    background:#FFF7A8; box-shadow:2px 5px 12px rgba(0,0,0,.18); transform:rotate(3deg);
+    font-family:var(--hand); font-size:1.1rem; color:#6b5b00; line-height:1.25; }
+  .sticky::before{ content:""; position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    width:16px; height:16px; border-radius:50%; background:var(--mk-red); box-shadow:0 1px 2px rgba(0,0,0,.3); }
+  @media(max-width:620px){ .sticky{ position:static; margin:24px 0 0; transform:rotate(-1.5deg); } }
+
+  /* ---------- the key ---------- */
+  .key{ display:flex; flex-wrap:wrap; gap:8px 18px; margin:22px 0 0; font-family:var(--mono); font-size:.62rem;
+    letter-spacing:.1em; text-transform:uppercase; color:#555; }
+  .key span{ display:inline-flex; align-items:center; gap:6px; }
+  .key i{ width:11px; height:11px; border-radius:2px; border:1px solid rgba(0,0,0,.25); }
+
+  /* ---------- the phases ---------- */
+  .phase{ margin-top:clamp(30px,5vw,46px); }
+  .phase h2{ display:flex; align-items:baseline; gap:12px; font-family:var(--hand); font-weight:700;
+    font-size:clamp(1.8rem,5vw,2.4rem); color:var(--mk-red); margin:0 0 4px; transform:rotate(-1deg); }
+  .phase h2 .n{ font-size:.62em; color:var(--mk-blue); }
+  .phase h2 .count{ margin-left:auto; font-family:var(--mono); font-size:.55rem; letter-spacing:.12em; color:#777; transform:rotate(1deg); }
+  .phase p.blurb{ margin:0 0 14px; font-size:.92rem; color:#4b5563; max-width:62ch; }
+
+  /* ---------- the cards — index cards taped to the board ---------- */
+  .shelf{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); }
+  .bk{ position:relative; display:flex; flex-direction:column; gap:8px; background:#fff; border-radius:8px;
+    border:1px solid rgba(0,0,0,.10); box-shadow:0 6px 16px rgba(0,0,0,.14); padding:14px 16px 14px;
+    transform:rotate(-.6deg); transition:transform .14s ease, box-shadow .14s ease; }
+  .bk:nth-child(even){ transform:rotate(.5deg); }
+  .bk:hover{ transform:rotate(0) translateY(-4px); box-shadow:0 12px 24px rgba(0,0,0,.18); }
+  .bk::before{ content:""; position:absolute; top:-7px; left:50%; width:54px; height:14px; transform:translateX(-50%) rotate(-2deg);
+    background:rgba(255,236,150,.55); border:1px solid rgba(0,0,0,.06); }
+  .bk .tags{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .strand{ font-family:var(--mono); font-size:.55rem; letter-spacing:.14em; text-transform:uppercase;
+    color:#fff; padding:2px 7px; border-radius:3px; }
+  .opt{ font-family:var(--mono); font-size:.55rem; letter-spacing:.12em; text-transform:uppercase;
+    color:#777; border:1px dashed #999; padding:1px 6px; border-radius:3px; }
+  .bk h3{ font-family:var(--body); font-weight:700; font-size:1rem; line-height:1.3; margin:0; color:var(--mk-black); }
+  .bk .by{ font-family:var(--mono); font-size:.66rem; color:#666; line-height:1.4; }
+  .bk .read{ margin-top:auto; align-self:flex-start; display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; text-decoration:none;
+    color:var(--mk-blue); border:1.5px solid var(--mk-blue); border-radius:6px; padding:6px 10px; }
+  .bk .read:hover{ background:var(--mk-blue); color:#fff; }
+  .bk .read.oa{ color:var(--mk-green); border-color:var(--mk-green); }
+  .bk .read.oa:hover{ background:var(--mk-green); color:#fff; }
+  .bk .read.pd{ color:var(--mk-orange); border-color:var(--mk-orange); }
+  .bk .read.pd:hover{ background:var(--mk-orange); color:#fff; }
+
+  /* marker tray */
+  .tray{ position:relative; height:20px; margin:14px 14px 2px; border-radius:0 0 8px 8px;
+    background:linear-gradient(180deg,#AEB6BD,#8C959C); box-shadow:inset 0 2px 3px rgba(0,0,0,.25); }
+  .tray .pen{ position:absolute; top:-7px; height:12px; border-radius:6px; box-shadow:0 2px 3px rgba(0,0,0,.25); }
+  .tray .pen.b{ left:8%; width:120px; background:var(--mk-black); }
+  .tray .pen.bl{ left:34%; width:100px; background:var(--mk-blue); }
+  .tray .pen.r{ left:56%; width:90px; background:var(--mk-red); }
+  .tray .eraser{ position:absolute; top:-9px; right:9%; width:70px; height:15px; border-radius:3px;
+    background:linear-gradient(180deg,#5566aa,#3b4a86); box-shadow:0 2px 3px rgba(0,0,0,.3); }
+
+  .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:.72rem;
+    letter-spacing:.04em; color:#6b6b6b; }
+  .foot a{ color:var(--mk-blue); text-decoration:none; }
+  .foot a:hover{ text-decoration:underline; }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="arcade-index.html">Arcade</a>
+    <a href="dojo.html">Dojo</a>
+    <a href="resources.html" class="cur" aria-current="page">Resources</a>
+    <a href="training.html">Training</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <div class="board">
+    <div class="surface">
+
+      <div class="sticky">Read a good one I've missed? Tell me!</div>
+
+      <p class="eyebrow">Teaching &amp; Philosophy &middot; the shelf</p>
+      <h1 class="head">Reading List</h1>
+      <svg class="underline" viewBox="0 0 320 12" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M2 8 C 80 2 150 11 210 5 S 300 3 318 7" fill="none" stroke="#2657C4" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <p class="sub">The books and papers behind the creativity workshops.</p>
+      <p class="intro">Seven shelves, read roughly in this order: first the books you can lift exercises straight out of, then the traditions that keep music in the body, the “way” traditions, somatics, the philosophy underneath it all, the research that backs it up, and finally the formats other people have used to teach creativity. Every entry has a link to read it — open-access papers and public-domain books load in full; the rest point to Open Library, which will lend you a copy where it can.</p>
+
+      <div class="key" aria-label="Key">
+        <span><i style="background:#fff;border-color:var(--mk-blue)"></i> find a copy / paper</span>
+        <span><i style="background:#fff;border-color:var(--mk-green)"></i> open access — read it now</span>
+        <span><i style="background:#fff;border-color:var(--mk-orange)"></i> public domain — full text</span>
+      </div>
+
+      <div id="list"></div>
+
+    </div>
+    <div class="tray" aria-hidden="true">
+      <span class="pen b"></span><span class="pen bl"></span><span class="pen r"></span><span class="eraser"></span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p style="margin:0;"><a href="resources.html">&larr; Resources</a> &nbsp;&middot;&nbsp; <a href="index.html#teaching">Teaching &amp; Philosophy</a></p>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var CAT = window.READING_CATALOG || [], PH = window.READING_PHASES || {}, STR = window.READING_STRANDS || {};
+  var BLURB = {
+    1: 'Books you can lift exercises straight out of.',
+    2: 'Music that never left the body — traditions where you understand by joining in.',
+    3: 'Beginner’s mind, effortless mastery, silence: the practice traditions the Dojo borrows from.',
+    4: 'The body-work lineages — attention through movement.',
+    5: 'Why any of this matters: art as experience, play as the fullest expression of being human.',
+    6: 'The evidence — what studies actually show about music, movement, meditation and creativity.',
+    7: 'How other people have structured a course in creativity.'
+  };
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function card(s) {
+    var src = window.readingSource(s);
+    var kindCls = src.kind === 'paper' && s.oa ? 'oa' : (src.kind === 'pd' ? 'pd' : '');
+    return '<div class="bk">' +
+      '<div class="tags"><span class="strand" style="background:' + (STR[s.strand] || '#666') + '">' + esc(s.strand) + '</span>' +
+        (s.optional ? '<span class="opt">optional</span>' : '') + '</div>' +
+      '<h3>' + esc(s.title) + '</h3>' +
+      '<div class="by">' + esc(s.author) + (s.year ? ' · ' + esc(s.year) : '') + '</div>' +
+      '<a class="read ' + kindCls + '" href="' + src.href + '" target="_blank" rel="noopener noreferrer" title="' + esc(src.note) + '">' + esc(src.label) + ' ↗</a>' +
+    '</div>';
+  }
+  var html = '';
+  Object.keys(PH).sort().forEach(function (p) {
+    var group = CAT.filter(function (s) { return String(s.phase) === p; });
+    if (!group.length) return;
+    html += '<section class="phase" id="phase-' + p + '">' +
+      '<h2><span class="n">' + p + '</span>' + esc(PH[p]) + '<span class="count">' + group.length + (group.length === 1 ? ' title' : ' titles') + '</span></h2>' +
+      (BLURB[p] ? '<p class="blurb">' + esc(BLURB[p]) + '</p>' : '') +
+      '<div class="shelf">' + group.map(card).join('') + '</div></section>';
+  });
+  document.getElementById('list').innerHTML = html || '<p>The shelf is empty.</p>';
+})();
+</script>
+</body>
+</html>
