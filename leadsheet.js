@@ -6,7 +6,7 @@
      key:     'C major',
      tempo:   110,
      sharp:   false,              // spell chromatic notes with ♯ (sharp keys) or ♭
-     credit:  'Made in Song Lab — williamtroymusic.com',
+     credit:  'Made in Song Lab — themusicarcade.com',
      sections:[ { label:'Verse', repeat:2,
                   bars:[ [ {beat:0, name:'C'} ], [] ],          // chord symbols per bar
                   melody:[ {midi:64, col:0, len:8} ] } ]        // 16th-grid piano roll, section-relative

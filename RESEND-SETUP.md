@@ -11,9 +11,9 @@ Branded templates to paste in are in `email-templates/`.
 
 ## 1. Resend account + verify your domain
 1. Sign up at **resend.com**.
-2. **Domains → Add Domain →** `williamtroymusic.com`.
+2. **Domains → Add Domain →** `themusicarcade.com`.
 3. Resend shows a set of **DNS records** (SPF `TXT`, DKIM, and a return-path/MX).
-   Add them wherever you manage DNS for `williamtroymusic.com` (your registrar /
+   Add them wherever you manage DNS for `themusicarcade.com` (your registrar /
    DNS host). These are *email* records — they sit alongside your existing
    GitHub Pages website records and won't affect the site.
 4. Wait for Resend to show the domain **Verified** (usually minutes; can take up
@@ -35,7 +35,7 @@ settings, never into the website code.
 
 ## 3. Point Supabase at Resend
 Supabase → **Authentication → Emails → SMTP Settings → Enable Custom SMTP**:
-- **Sender email:** `no-reply@williamtroymusic.com`  (must be on the verified domain)
+- **Sender email:** `no-reply@themusicarcade.com`  (must be on the verified domain)
 - **Sender name:** `Music Arcade`
 - **Host:** `smtp.resend.com`
 - **Port:** `465`
@@ -56,7 +56,7 @@ Supabase → **Authentication → Email Templates**:
 ## 5. Turn confirmation back on + test
 1. Supabase → **Authentication → Providers → Email → "Confirm email" ON.**
 2. Sign up on the site with a real address → the branded confirmation should
-   arrive **from no-reply@williamtroymusic.com** (check it's not in spam).
+   arrive **from no-reply@themusicarcade.com** (check it's not in spam).
 3. Try **Forgot your password?** → the reset email should arrive too.
 
 Resend's dashboard has a **Logs/Emails** view showing every send + delivery

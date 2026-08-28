@@ -81,7 +81,7 @@
 <body>
 <div class="wrap">
   <nav class="tabs" aria-label="Sections">
-    <a href="arcade-index.html">Arcade</a>
+    <a href="index.html">Arcade</a>
     <a href="dojo.html">Dojo</a>
     <a href="resources.html">Resources</a>
     <a href="training.html">Training</a>
@@ -273,7 +273,7 @@
       else if(bests===null){ host.appendChild(el('div','empty','Loading…')); }
       else{
         var got=GAMES.filter(function(g){ return bests[g.id]!=null; });
-        if(!got.length){ var e=el('div','empty','No scores under “'+uname+'” yet — go post some in the '); var a=el('a',null,'Arcade'); a.href='arcade-index.html'; e.appendChild(a); e.appendChild(document.createTextNode('!')); host.appendChild(e); }
+        if(!got.length){ var e=el('div','empty','No scores under “'+uname+'” yet — go post some in the '); var a=el('a',null,'Arcade'); a.href='index.html'; e.appendChild(a); e.appendChild(document.createTextNode('!')); host.appendChild(e); }
         else{ var sc=el('div','statchips'); got.forEach(function(g){ var s=el('span','statchip'); s.appendChild(el('b',null,String(bests[g.id]))); s.appendChild(document.createTextNode(' '+g.label)); sc.appendChild(s); }); host.appendChild(sc); }
       }
       host.appendChild(el('div','accnote','Belts and trophies come straight from your Dojo progress. High scores count plays made while signed in — they post to the leaderboard under your username.'));
