@@ -10,14 +10,14 @@
 //  Deploy:  supabase functions deploy lesson-update-email
 //           (JWT verification ON -- only a signed-in teacher may send)
 //  Secret:  supabase secrets set RESEND_API_KEY=re_...
-//  Optional: supabase secrets set ROLLBOOK_FROM="William Troy <lessons@themusicarcade.com>"
-//            (defaults to lessons@themusicarcade.com -- any address on a
+//  Optional: supabase secrets set ROLLBOOK_FROM="William Troy <lessons@williamtroymusic.com>"
+//            (defaults to lessons@williamtroymusic.com -- any address on a
 //             domain you've verified in Resend works)
 // ============================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
-const FROM = Deno.env.get('ROLLBOOK_FROM') ?? 'Music lessons <lessons@themusicarcade.com>';
+const FROM = Deno.env.get('ROLLBOOK_FROM') ?? 'Music lessons <lessons@williamtroymusic.com>';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 

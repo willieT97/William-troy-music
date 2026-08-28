@@ -19,16 +19,16 @@ Deploy **with** JWT verification (the default — no `--no-verify-jwt`). The
 function also calls `auth.getUser()` itself, so the public anon key alone can't
 send mail on your domain.
 
-Get the Resend key at resend.com → **API Keys**. `themusicarcade.com` is
+Get the Resend key at resend.com → **API Keys**. `williamtroymusic.com` is
 already verified there (see `RESEND-SETUP.md`), so no DNS work is needed.
 
 Optional — change the sender (any address on a verified domain works):
 
 ```bash
-supabase secrets set ROLLBOOK_FROM="William Troy <lessons@themusicarcade.com>"
+supabase secrets set ROLLBOOK_FROM="William Troy <lessons@williamtroymusic.com>"
 ```
 
-Default is `Music lessons <lessons@themusicarcade.com>`.
+Default is `Music lessons <lessons@williamtroymusic.com>`.
 
 ## Turning it on in the Rollbook
 
