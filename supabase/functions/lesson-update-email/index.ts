@@ -25,6 +25,9 @@ const MAX_RECIPIENTS = 6;
 const MAX_BODY = 8000;
 
 const ALLOWED_ORIGINS = [
+  'https://themusicarcade.com',
+  'https://www.themusicarcade.com',
+  // old domain kept during the changeover -- remove once the split is done
   'https://williamtroymusic.com',
   'https://www.williamtroymusic.com',
   'http://localhost:8000',

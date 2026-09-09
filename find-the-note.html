@@ -117,7 +117,7 @@
 <div class="wrap">
 
   <nav class="tabs" aria-label="Sections">
-    <a href="arcade-index.html">Arcade</a>
+    <a href="index.html">Arcade</a>
     <a href="dojo.html">Dojo</a>
     <a href="resources.html" class="cur" aria-current="page">Resources</a>
     <a href="training.html">Training</a>
@@ -252,7 +252,7 @@
     var h=state.hi, label = state.inst==='piano' ? 'Piano' : INSTR[state.inst].label;
     var tuning = state.inst==='piano' ? '' : (' · '+INSTR[state.inst].tuning);
     var title = (h.kind==='scale') ? ('The '+disp(NAMES[((h.root%12)+12)%12])+' '+SCALES[h.type].name+' scale on the '+label) : ('The chromatic scale on the '+label);
-    printhead.innerHTML='<h2>'+title+'</h2><p>Find the Note · williamtroymusic'+tuning+'</p>';
+    printhead.innerHTML='<h2>'+title+'</h2><p>Find the Note · themusicarcade'+tuning+'</p>';
     backlink.innerHTML='';
     if(h.kind==='none'){ tip.innerHTML='Every note is shown. Pick a note or a scale to highlight it — tap any key/fret to hear it.'; return; }
     if(h.kind==='scale'){ var rn=disp(NAMES[((h.root%12)+12)%12]), extra=state.showDeg?' as <b>scale degrees</b> (1 = root)':'';
