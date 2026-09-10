@@ -1363,6 +1363,7 @@ function setInstrument(k){
    ============================================================ */
 let audioCtx = null, analyser = null, micStream = null, timeBuf = null;
 let demoTimers = [];
+let demoVoices = [];   // oscillators scheduled by a running demo, so Stop can silence them
 
 function ensureCtx(){
   if(!audioCtx){
@@ -1386,6 +1387,7 @@ function voice(freq, dur, when, vol){
   g.connect(ctx.destination);
   o1.start(t0); o2.start(t0);
   o1.stop(t0 + dur + 0.05); o2.stop(t0 + dur + 0.05);
+  return [o1, o2];   // so a scheduled demo can be cut short (see stopDemo)
 }
 function blip(midi){
   voice(freqOf(midi), 0.12, undefined, 0.12);
@@ -1552,6 +1554,8 @@ function accept(target){
 function stopDemo(){
   demoTimers.forEach(clearTimeout);
   demoTimers = [];
+  demoVoices.forEach(o => { try { o.stop(); } catch(e){} });   // cut any still-sounding scheduled notes
+  demoVoices = [];
   state.playing = false;
   $("tuneBtn").textContent = "Play the tune";
   TUNE.forEach((t,i)=>{ const g=$("note-"+i); if(g) g.classList.remove("flash"); });
@@ -1574,7 +1578,7 @@ function playTune(){
       let dur = t.d;
       let j = i+1;
       while(j < TOTAL && TUNE[j].cont){ dur += TUNE[j].d; j++; }
-      voice(freqOf(t.midi + iShift()), Math.max(0.12, dur*spu*0.92), at, 0.35);
+      demoVoices.push(...voice(freqOf(t.midi + iShift()), Math.max(0.12, dur*spu*0.92), at, 0.35));
     }
     if(!t.rest){
       demoTimers.push(setTimeout(()=>{

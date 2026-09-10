@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Metronome — Music Arcade</title>
+<meta name="description" content="A simple, accurate metronome for lessons and practice — tempo, tap-tempo, time signature and an accented downbeat, right in the browser." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --gold:#FFC53D; --jade:#1E9E6A;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(440px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:18px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(2rem,7vw,3.2rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:clamp(18px,4vw,28px);
+  }
+
+  /* beat lights */
+  .beats{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:20px; min-height:30px; }
+  .beat{ width:26px; height:26px; border:2.5px solid var(--ink); border-radius:50%; background:var(--paper);
+    transition:background .04s ease, transform .04s ease; }
+  .beat.one{ border-radius:6px; }        /* the downbeat is a square, visually distinct */
+  .beat.on{ background:var(--blue); transform:scale(1.15); }
+  .beat.one.on{ background:var(--pink); }
+
+  /* big tempo readout */
+  .bpm{ text-align:center; margin:0 0 4px; }
+  .bpm b{ font-family:var(--display); font-weight:800; font-size:clamp(3.4rem,15vw,5rem); line-height:1; color:var(--ink); }
+  .bpm .u{ font-family:var(--mono); font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); display:block; margin-top:2px; }
+  .marking{ text-align:center; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--blue); min-height:1.1em; margin-bottom:14px; }
+
+  input[type=range]{ width:100%; margin:4px 0 14px; accent-color:var(--blue); height:26px; }
+
+  .nudge{ display:flex; justify-content:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .chip{
+    font-family:var(--mono); font-weight:700; font-size:.82rem; cursor:pointer;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    padding:7px 12px; box-shadow:2px 2px 0 var(--ink);
+  }
+  .chip:active{ transform:translate(2px,2px); box-shadow:none; }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:1rem; padding:14px 16px;
+    border:2.5px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer; flex:1 1 auto; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .05s ease, box-shadow .05s ease, background .12s ease;
+  }
+  .btn:hover{ background:#fff; }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.primary.running{ background:var(--pink); }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+
+  .row{ display:flex; align-items:center; justify-content:center; gap:12px;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .seg{ display:flex; border:2px solid var(--ink); }
+  .seg button{ font-family:var(--mono); font-size:.78rem; font-weight:700; padding:7px 13px; border:0;
+    background:var(--paper); cursor:pointer; color:var(--ink); }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
+  .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .back{ display:block; text-align:center; margin-top:18px; font-family:var(--mono); font-size:.72rem;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; }
+  .back:hover{ color:var(--ink); }
+
+  @media (max-width:380px){ .controls{ flex-direction:column; } }
+  @media (prefers-reduced-motion:reduce){ .beat{ transition:none; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Metronome">Metronome</span>
+      <div class="subtitle">keep the time · any lesson</div>
+    </header>
+
+    <div class="panel">
+      <div class="beats" id="beats" aria-hidden="true"></div>
+
+      <div class="bpm"><b id="bpmNum">90</b><span class="u">beats per minute</span></div>
+      <div class="marking" id="marking">Andante</div>
+
+      <input type="range" id="tempo" min="40" max="240" step="1" value="90" aria-label="Tempo in beats per minute">
+
+      <div class="nudge">
+        <button class="chip" data-d="-5">−5</button>
+        <button class="chip" data-d="-1">−1</button>
+        <button class="chip" id="tap">Tap tempo</button>
+        <button class="chip" data-d="1">+1</button>
+        <button class="chip" data-d="5">+5</button>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" id="startBtn">▶ Start</button>
+      </div>
+
+      <div class="row">
+        <span>beats&nbsp;per&nbsp;bar</span>
+        <div class="seg" role="group" aria-label="Beats per bar">
+          <button data-beats="2" aria-pressed="false">2</button>
+          <button data-beats="3" aria-pressed="false">3</button>
+          <button data-beats="4" aria-pressed="true">4</button>
+          <button data-beats="6" aria-pressed="false">6</button>
+        </div>
+      </div>
+    </div>
+
+    <a class="back" href="index.html">← back to the arcade</a>
+  </div>
+
+<script>
+/* ============================================================
+   METRONOME — Web Audio, lookahead-scheduled for tight timing.
+   The click voice matches Jam Track's: a short square blip,
+   1600 Hz on the accented downbeat, 900 Hz on the other beats.
+   ============================================================ */
+  const el = id => document.getElementById(id);
+
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx = new AC(); }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function click(t, hi){
+    const a = audioCtx, o = a.createOscillator(), g = a.createGain();
+    o.type = 'square'; o.frequency.value = hi ? 1600 : 900;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(hi ? 0.32 : 0.22, t + 0.001);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + 0.05);
+  }
+
+  // ---- state ----
+  let bpm = 90, beatsPerBar = 4, running = false;
+  let nextNoteTime = 0, beatInBar = 0, timerId = null;
+  const LOOKAHEAD_MS = 25;     // how often the scheduler wakes
+  const SCHEDULE_AHEAD = 0.12; // seconds of audio scheduled in advance
+  const flashes = [];          // {time, beat} queued for the visual to catch up to
+
+  function buildBeatLights(){
+    const box = el('beats'); box.innerHTML = '';
+    for(let i=0;i<beatsPerBar;i++){
+      const d = document.createElement('div');
+      d.className = 'beat' + (i===0 ? ' one' : '');
+      box.appendChild(d);
+    }
+  }
+  function marking(b){
+    return b<60?'Largo': b<66?'Larghetto': b<76?'Adagio': b<108?'Andante':
+           b<120?'Moderato': b<156?'Allegro': b<176?'Vivace': b<200?'Presto':'Prestissimo';
+  }
+  function setBpm(v){
+    bpm = Math.max(40, Math.min(240, Math.round(v)));
+    el('bpmNum').textContent = bpm;
+    el('tempo').value = bpm;
+    el('marking').textContent = marking(bpm);
+  }
+
+  function scheduler(){
+    const a = audioCtx;
+    while(nextNoteTime < a.currentTime + SCHEDULE_AHEAD){
+      click(nextNoteTime, beatInBar === 0);
+      flashes.push({ time: nextNoteTime, beat: beatInBar });
+      nextNoteTime += 60 / bpm;                 // seconds per beat, read live so tempo changes apply next beat
+      beatInBar = (beatInBar + 1) % beatsPerBar;
+    }
+    timerId = setTimeout(scheduler, LOOKAHEAD_MS);
+  }
+
+  // the visual runs off the audio clock so the light lands with the click
+  function drawLoop(){
+    if(!running) return;
+    const now = audioCtx.currentTime;
+    while(flashes.length && flashes[0].time <= now){
+      const f = flashes.shift();
+      const lights = el('beats').children;
+      for(let i=0;i<lights.length;i++) lights[i].classList.toggle('on', i === f.beat);
+    }
+    requestAnimationFrame(drawLoop);
+  }
+
+  function start(){
+    ensureAudio();
+    running = true;
+    beatInBar = 0;
+    nextNoteTime = audioCtx.currentTime + 0.06;
+    el('startBtn').textContent = '■ Stop';
+    el('startBtn').classList.add('running');
+    scheduler();
+    requestAnimationFrame(drawLoop);
+  }
+  function stop(){
+    running = false;
+    if(timerId){ clearTimeout(timerId); timerId = null; }
+    flashes.length = 0;
+    el('startBtn').textContent = '▶ Start';
+    el('startBtn').classList.remove('running');
+    const lights = el('beats').children;
+    for(let i=0;i<lights.length;i++) lights[i].classList.remove('on');
+  }
+  function toggle(){ running ? stop() : start(); }
+
+  // ---- tap tempo ----
+  let taps = [];
+  function tap(){
+    ensureAudio();
+    const now = audioCtx.currentTime;
+    taps = taps.filter(t => now - t < 2.5);   // forget taps older than 2.5s
+    taps.push(now);
+    if(taps.length >= 2){
+      let sum = 0; for(let i=1;i<taps.length;i++) sum += taps[i]-taps[i-1];
+      const avg = sum / (taps.length-1);
+      if(avg > 0) setBpm(60/avg);
+    }
+  }
+
+  // ---- wiring ----
+  el('startBtn').addEventListener('click', toggle);
+  el('tempo').addEventListener('input', e => setBpm(+e.target.value));
+  document.querySelectorAll('.chip[data-d]').forEach(b =>
+    b.addEventListener('click', () => setBpm(bpm + (+b.dataset.d))));
+  el('tap').addEventListener('click', tap);
+  document.querySelectorAll('.seg [data-beats]').forEach(b =>
+    b.addEventListener('click', () => {
+      beatsPerBar = +b.dataset.beats;
+      document.querySelectorAll('.seg [data-beats]').forEach(x => x.setAttribute('aria-pressed', x===b));
+      beatInBar = 0;
+      buildBeatLights();
+    }));
+  // space bar = start/stop; a tap key for tapping
+  window.addEventListener('keydown', e => {
+    if(e.code === 'Space'){ e.preventDefault(); toggle(); }
+    else if(e.key.toLowerCase() === 't'){ tap(); }
+  });
+
+  // remember the last tempo & metre on this device (private, best-effort)
+  try {
+    const saved = JSON.parse(localStorage.getItem('metronome.v1') || '{}');
+    if(saved.bpm) bpm = saved.bpm;
+    if(saved.beatsPerBar) beatsPerBar = saved.beatsPerBar;
+  } catch(e){}
+  document.querySelectorAll('.seg [data-beats]').forEach(x => x.setAttribute('aria-pressed', +x.dataset.beats === beatsPerBar));
+  function remember(){ try { localStorage.setItem('metronome.v1', JSON.stringify({bpm, beatsPerBar})); } catch(e){} }
+  window.addEventListener('beforeunload', remember);
+  setInterval(remember, 4000);
+
+  buildBeatLights();
+  setBpm(bpm);
+</script>
+</body>
+</html>

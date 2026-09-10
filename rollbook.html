@@ -293,7 +293,7 @@ textarea.field{resize:vertical;min-height:56px}
 #gate{display:none;padding:60px 22px 40px}
 #gate.show{display:block}
 body.gated header .weeknav,body.gated header .weeklabel,body.gated header #syncStatus,
-body.gated header #openManage,body.gated header #openAtt,body.gated header #openLab,body.gated header #openReading,body.gated main,body.gated #demoBanner{display:none}
+body.gated header #openManage,body.gated header #openAtt,body.gated header #openPrint,body.gated header #openLab,body.gated header #openReading,body.gated main,body.gated #demoBanner{display:none}
 .gatecard{max-width:520px;margin:0 auto;border:3px solid var(--ink);background:#fff;
   box-shadow:8px 8px 0 var(--ink);padding:32px 30px 28px;text-align:center}
 .gatecard .lock{font-size:2.4rem;line-height:1}
@@ -305,6 +305,34 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
 #demoBanner{display:none;margin:0 22px;max-width:1400px}
 #demoBanner.show{display:block}
 #demoBanner .inner{margin:14px auto 0;border:2px dashed var(--ink);background:#fff;padding:10px 14px;font-size:.9rem}
+
+/* ---------- printable weekly register (screen-hidden; the only thing that prints) ---------- */
+#printsheet{display:none}
+@media print{
+  body{background:#fff!important}
+  body>*{display:none!important}          /* hide header, grid, drawer, manage, the account chip, everything */
+  #printsheet{display:block!important;color:#000;font-family:Georgia,'Times New Roman',serif}
+  .pr-head{border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:14px}
+  .pr-head h1{font-size:20pt;margin:0}
+  .pr-head .pr-sub{font-size:11pt;color:#222;margin-top:2px}
+  .pr-day{margin:0 0 16px;break-inside:avoid}
+  .pr-day h2{font-size:13pt;margin:0 0 4px;border-bottom:1px solid #000;padding-bottom:2px}
+  .pr-day h2 span{font-weight:400;font-size:10pt;color:#444;margin-left:6px}
+  .pr-tbl{width:100%;border-collapse:collapse;font-size:11pt}
+  .pr-tbl th{text-align:left;font-size:8pt;text-transform:uppercase;letter-spacing:.06em;color:#555;font-weight:700;padding:2px 6px;border-bottom:1px solid #999}
+  .pr-tbl td{padding:6px 6px;border-bottom:1px solid #ccc;vertical-align:top}
+  .pr-tbl .c-tick{width:34px}
+  .pr-tbl .c-time{width:56px;white-space:nowrap}
+  .pr-tbl .c-who{width:44%}
+  .pr-tbl .c-note{width:auto}
+  .tickbox{display:inline-block;width:16px;height:16px;border:1.5px solid #000;text-align:center;line-height:15px;font-size:11pt}
+  .pr-inst{color:#555;font-size:9.5pt}
+  .pr-x{color:#666;font-style:italic;font-size:9pt}
+  .pr-off{color:#777}
+  .pr-off .c-who b{text-decoration:line-through}
+  .pr-empty{font-size:12pt;color:#444}
+  @page{margin:14mm}
+}
 </style>
 </head>
 <body>
@@ -323,6 +351,7 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
   <a class="btn" id="openLab" href="workshop-lab.html" title="Try exercises on a class and log what happened">Workshop</a>
   <a class="btn" id="openReading" href="reading.html" title="The reading behind the creativity workshops">Reading</a>
   <button class="btn" id="openAtt">Attendance</button>
+  <button class="btn" id="openPrint" title="Print this week as a paper register (Save as PDF to keep it)">Print week</button>
   <button class="btn" id="openManage">Set up</button>
 </header>
 
@@ -352,6 +381,8 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
 <main>
   <div class="grid" id="grid"></div>
 </main>
+
+<div id="printsheet" aria-hidden="true"></div>
 
 <div id="overlay"></div>
 <div id="sendbar"></div>
@@ -1912,6 +1943,44 @@ function renderAtt(){
 }
 $('#openAtt').onclick=()=>{renderAtt();$('#attview').classList.add('open');syncPanelChrome();};
 $('#closeAtt').onclick=()=>{$('#attview').classList.remove('open');syncPanelChrome();render();};
+
+/* ---------- printable weekly register ---------- */
+function buildRegister(){
+  const sheet=$('#printsheet'); if(!sheet) return;
+  const end=addDays(weekStart,6);
+  const range=weekStart.toLocaleDateString('en-IE',{day:'numeric',month:'short'})+' – '+
+    end.toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'});
+  const teacher=(state.settings&&state.settings.teacherName)||'';
+  const DAYFULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  let html='<div class="pr-head"><h1>Weekly register</h1><div class="pr-sub">'+esc(range)+(teacher?' · '+esc(teacher):'')+'</div></div>';
+  let any=false;
+  for(let d=0;d<7;d++){
+    const dt=addDays(weekStart,d), dISO=iso(dt);
+    const rows=[];
+    if(inTerm(dISO))
+      state.slots.filter(s=>s.day===d+1&&Number.isFinite(s.start)).forEach(s=>{const p=person(s.personId);if(p)rows.push({p,start:s.start,oid:null,note:null});});
+    (state.oneOffs||[]).filter(o=>o.date===dISO&&Number.isFinite(o.start)).forEach(o=>{const p=person(o.personId);if(p)rows.push({p,start:o.start,oid:o.id,note:o.note});});
+    if(!rows.length) continue;
+    any=true;
+    rows.sort((a,b)=>a.start-b.start);
+    html+='<section class="pr-day"><h2>'+DAYFULL[d]+' <span>'+dt.getDate()+'/'+(dt.getMonth()+1)+'</span></h2>'+
+      '<table class="pr-tbl"><thead><tr><th class="c-tick"></th><th class="c-time">Time</th><th class="c-who">Student</th><th class="c-note">Notes</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+      const att=attFor(r.p.id,dISO,r.oid), a=att?ATT[att.status]:null;
+      const off=att&&(att.status==='offthem'||att.status==='offme');
+      const detail=r.oid?(r.note||'one-off'):(r.p.instrument||'');
+      html+='<tr'+(off?' class="pr-off"':'')+'>'+
+        '<td class="c-tick"><span class="tickbox">'+(a?esc(a.mark):'')+'</span></td>'+
+        '<td class="c-time">'+fmtTime(r.start)+'</td>'+
+        '<td class="c-who"><b>'+esc(r.p.name)+'</b>'+(detail?' <span class="pr-inst">'+esc(detail)+'</span>':'')+(r.oid?' ★':'')+(off?' <span class="pr-x">('+esc(a.label)+')</span>':'')+'</td>'+
+        '<td class="c-note"></td></tr>';
+    });
+    html+='</tbody></table></section>';
+  }
+  if(!any) html+='<p class="pr-empty">No lessons scheduled this week.</p>';
+  sheet.innerHTML=html;
+}
+$('#openPrint').onclick=()=>{ buildRegister(); window.print(); };
 
 /* ---------- week nav ---------- */
 $('#prevWk').onclick=()=>{weekStart=addDays(weekStart,-7);render();};
