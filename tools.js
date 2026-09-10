@@ -148,6 +148,9 @@ var CATALOGUE = [
   { t:'What Note?', h:'Piano/what-note-piano.html', dep:1, g:['read'], lv:[1,2], i:['pno'],
     d:'A marker lands on an unlabelled keyboard. Use the black-key groups to work out which note it is.' },
 
+  { t:'What Note?', h:'Banjo/what-note-banjo.html', dep:1, g:['read'], lv:[1,2], i:['gdae'],
+    d:'A marker lands on the tenor banjo neck — GDAE, so it doubles for mandolin and fiddle fingers too.' },
+
   { t:'Pitch Invaders', h:'Ear%20Training/pitch-invaders_2.html', dep:1, g:['ears'], lv:[1,2],
     d:'Aliens fall down the lane of their note — tap the note you hear to shoot them down.' },
   { t:'Pitch Invaders — Chromatic', h:'Ear%20Training/pitch-invaders-chromatic.html', dep:1, g:['ears'], lv:[3],
