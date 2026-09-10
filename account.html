@@ -362,6 +362,20 @@
         items.forEach(function(it){
           var row=el('div','item'); row.appendChild(el('span','inm', it.title||'Untitled'));
           var open=el('a','mini','Open'); open.href=k.tool+'?open='+encodeURIComponent(it.id); row.appendChild(open);
+          if(k.kind==='jamtrack' && it.data){   // a self-contained link a class can open — no account needed
+            var cl=el('button','mini','Class link'); cl.title='Copy a link that opens this exact backing track — paste it into a class message';
+            cl.addEventListener('click', function(){
+              try{
+                var b64=btoa(unescape(encodeURIComponent(JSON.stringify(it.data)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+                var url=location.origin+'/jam-track.html?t='+b64;
+                if(url.length>7000){ cl.textContent='Too big'; setTimeout(function(){cl.textContent='Class link';},1600); return; }
+                var done=function(){ cl.textContent='Copied!'; setTimeout(function(){cl.textContent='Class link';},1400); };
+                if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(done,function(){window.prompt('Copy this class link:',url);}); }
+                else { window.prompt('Copy this class link:',url); }
+              }catch(e){ window.prompt('Copy this class link:', location.origin+'/jam-track.html'); }
+            });
+            row.appendChild(cl);
+          }
           var del=el('button','mini del','✕'); del.title='Delete';
           del.addEventListener('click', function(){ del.disabled=true; window.MAAuth.creations.remove(it.id).then(function(){ row.remove(); if(!box.querySelector('.item')) box.appendChild(el('div','empty','Nothing saved yet.')); }).catch(function(){ del.disabled=false; }); });
           row.appendChild(del); box.appendChild(row);
