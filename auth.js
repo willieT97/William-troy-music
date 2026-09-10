@@ -20,6 +20,12 @@
   'use strict';
   if (window.MAAuth) return; // don't double-load
 
+  // a page may opt out of the visible top-right account chip with
+  // <script src="/auth.js" defer data-chip="off"> — everything else (the
+  // session, scores posting under your username, the paywall) still works.
+  // Used by the arcade games so their own artwork isn't overlapped.
+  var HIDE_CHIP = (function () { try { var s = document.currentScript; return !!(s && s.dataset && s.dataset.chip === 'off'); } catch (e) { return false; } })();
+
   var SB = { url: 'https://txzxmwwqqrapcirtrurt.supabase.co', anonKey: 'sb_publishable_7DFs8Be2RgFe38U3k_HmtA_k1md1zlX' };
   var sb = null, sbReady = null, user = null, profile = null, booted = false, listeners = [];
   var entitlements = [], entListeners = [];
@@ -338,6 +344,7 @@
   // ---- account control (top-right) ----
   var ctl;
   function renderControl() {
+    if (HIDE_CHIP) { syncNavTabs(); return; }   // games opt out of the visible chip; nav-tab sync (if any) still runs
     if (!ctl) { ctl = document.createElement('div'); ctl.className = 'maa-ctl'; (document.body || document.documentElement).appendChild(ctl); }
     ctl.innerHTML = '';
     if (user && !(window.MAAuth.isPro && window.MAAuth.isPro())) {   // signed in but not Pro → discoverable upgrade

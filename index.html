@@ -1671,13 +1671,28 @@
     });
     grid.appendChild(wrap);
   });
-  document.querySelectorAll('.hof-win').forEach(function(cell){
-    HiScores.top(cell.getAttribute('data-id'),1).then(function(rows){
-      if(rows && rows.length){
-        cell.innerHTML='<span class="nm">'+esc(rows[0].initials)+'</span><span class="sc">'+rows[0].score+'</span>';
-      }
-    }).catch(function(){});
-  });
+  function fillWinners(){
+    document.querySelectorAll('.hof-win').forEach(function(cell){
+      HiScores.top(cell.getAttribute('data-id'),1).then(function(rows){
+        if(rows && rows.length){
+          cell.innerHTML='<span class="nm">'+esc(rows[0].initials)+'</span><span class="sc">'+rows[0].score+'</span>';
+        }
+      }).catch(function(){});
+    });
+  }
+  fillWinners();
+  /* refresh the Hall of Fame when the tab comes back to the front — a score set
+     in another tab (or by a student across the room) shows up without a reload.
+     Throttled so a flurry of focus/visibility events only refetches once. */
+  var lastFill=Date.now();
+  function maybeRefresh(){
+    if(document.visibilityState==='hidden') return;
+    var now=Date.now();
+    if(now-lastFill<8000) return;   // at most once every 8s
+    lastFill=now; fillWinners();
+  }
+  document.addEventListener('visibilitychange', maybeRefresh);
+  window.addEventListener('focus', maybeRefresh);
 })();
 </script>
 
