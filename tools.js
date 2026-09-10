@@ -145,6 +145,8 @@ var CATALOGUE = [
     d:'Fling a note in an arc onto the keyboard and strike the keys that spell the chord.' },
   { t:'Chord Cascade', h:'Piano/chord-cascade.html', dep:1, g:['chords'], lv:[2,3], i:['pno'],
     d:"A chord's shape drops from the sky — slide the keyboard so it lands where it actually fits." },
+  { t:'What Note?', h:'Piano/what-note-piano.html', dep:1, g:['read'], lv:[1,2], i:['pno'],
+    d:'A marker lands on an unlabelled keyboard. Use the black-key groups to work out which note it is.' },
 
   { t:'Pitch Invaders', h:'Ear%20Training/pitch-invaders_2.html', dep:1, g:['ears'], lv:[1,2],
     d:'Aliens fall down the lane of their note — tap the note you hear to shoot them down.' },

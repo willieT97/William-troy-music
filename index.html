@@ -898,7 +898,7 @@
     <div class="wrap">
       <div class="cat-head">
         <h2>Piano</h2>
-        <span class="cat-note">One octave — build the chord</span>
+        <span class="cat-note">Build the chords — name the keys</span>
       </div>
       <div class="cat-rule"></div>
       <div class="grid">
@@ -986,6 +986,36 @@
             <span class="tag">Falling</span>
             <h3>Chord Cascade</h3>
             <p>A chord's key-shape drops from the sky — scroll the piano roll so it lands on the keys that actually spell it. Since every chord's black-and-white pattern is unique, it only clicks in one place. Ramps through minors, inversions, 7ths and 9ths — chord spellings stick before you notice you've learned them.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
+        <a class="game" href="Piano/what-note-piano.html" style="--accent:var(--blue); --art-bg:#EEF2FB;">
+          <div class="game-art">
+            <svg viewBox="0 0 300 212" role="img" aria-label="What Note?: an unlabelled piano keyboard with a mystery marker to name">
+              <text x="150" y="30" font-family="'Space Mono',monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#6F6757" text-anchor="middle">NAME THIS KEY</text>
+              <!-- one octave of unlabelled keys -->
+              <rect x="17"  y="60" width="38" height="130" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="55"  y="60" width="38" height="130" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="93"  y="60" width="38" height="130" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="131" y="60" width="38" height="130" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="169" y="60" width="38" height="130" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="207" y="60" width="38" height="130" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="245" y="60" width="38" height="130" fill="#FBF7EE" stroke="#17140E" stroke-width="2.5"/>
+              <rect x="44"  y="60" width="22" height="80" fill="#17140E"/>
+              <rect x="82"  y="60" width="22" height="80" fill="#17140E"/>
+              <rect x="158" y="60" width="22" height="80" fill="#17140E"/>
+              <rect x="196" y="60" width="22" height="80" fill="#17140E"/>
+              <rect x="234" y="60" width="22" height="80" fill="#17140E"/>
+              <!-- the mystery marker on D -->
+              <circle cx="74" cy="166" r="13" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+              <text x="74" y="171" font-family="'Space Mono',monospace" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">?</text>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Key names</span>
+            <h3>What Note?</h3>
+            <p>A marker lands on an unlabelled two-octave keyboard — name the key it's sitting on. The trick is the black-key groups: find the two and the three, and every white key has an address. Naturals to start, sharps and flats when you're ready, and every answer tells you the landmark.</p>
             <span class="play">Play</span>
           </div>
         </a>
@@ -1560,7 +1590,8 @@
     ]},
     {name:'Piano', games:[
       ['Piano/chord-cascade.html','chord-cascade','Chord Cascade'],
-      ['Piano/chord-catapult.html','chord-catapult','Chord Catapult']
+      ['Piano/chord-catapult.html','chord-catapult','Chord Catapult'],
+      ['Piano/what-note-piano.html','what-note-piano','What Note?']
     ]},
     {name:'Ear Training', games:[
       ['Ear Training/chord-progress.html','chord-progress','Chord Progressions'],
