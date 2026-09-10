@@ -125,6 +125,11 @@
     </div>
 
     <div class="card">
+      <h2>Melody Trainer <span class="sub">— tunes you’ve played all the way through</span></h2>
+      <div id="melodydone"></div>
+    </div>
+
+    <div class="card">
       <h2>Your saved work <span class="sub">— across the studio</span></h2>
       <div id="creations"></div>
     </div>
@@ -306,7 +311,28 @@
     document.getElementById('gate').hidden=true; document.getElementById('hub').hidden=false;
     var er=document.getElementById('emailRow'); er.innerHTML=''; er.appendChild(document.createTextNode('Signed in as ')); var b=el('b',null,user.email); er.appendChild(b);
     document.getElementById('uname').value = (profile && profile.username) || '';
-    renderPlan(); renderAccomp(); renderTeacherLink(); renderCreations(); renderPublished(user, profile);
+    renderPlan(); renderAccomp(); renderTeacherLink(); renderMelody(); renderCreations(); renderPublished(user, profile);
+  }
+
+  function renderMelody(){
+    var host=document.getElementById('melodydone'); if(!host) return; host.innerHTML='';
+    var A=window.MAAuth;
+    if(!(A && A.melody && A.melody.list)){ host.appendChild(el('div','empty','Play a tune through in the Melody Trainer and it’ll show here.')); return; }
+    host.appendChild(el('div','empty','Loading…'));
+    A.melody.list().then(function(tunes){
+      host.innerHTML='';
+      if(!tunes.length){ host.appendChild(el('div','empty','No tunes finished yet — the Melody Trainer will list them here once you play one all the way through.')); return; }
+      tunes.forEach(function(t){
+        var row=el('div','item');
+        row.appendChild(el('span','inm', t.name || 'Untitled'));
+        var when='';
+        try{ when=new Date(t.at).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}); }catch(e){}
+        var meta=(t.count>1? '×'+t.count+' · ':'') + (when||'');
+        if(meta) row.appendChild(el('span','meta', meta));
+        var go=el('a','mini','Play'); go.href='melody-trainer_1.html'; row.appendChild(go);
+        host.appendChild(row);
+      });
+    }).catch(function(){ host.innerHTML=''; host.appendChild(el('div','empty','Couldn’t load your tunes just now.')); });
   }
 
   function renderPlan(){

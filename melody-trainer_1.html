@@ -894,7 +894,7 @@ function firstPlayable(){ let i=0; while(i<TOTAL && !isPlayable(TUNE[i])) i++; r
 const state = {
   idx: 0, micOn: false, playing: false,
   rearm: false, armSilent: false, streak: 0,
-  rmsSlow: 0.0001, done: false
+  rmsSlow: 0.0001, done: false, rearmHeldSince: 0
 };
 
 /* ============================================================
@@ -1493,7 +1493,20 @@ function loop(){
       needle.classList.toggle("ok", Math.abs(dCents) <= 45);
       needle.style.transform = `translateX(${clamped*2.6 - 2}px)`;
 
-      if(!state.playing && !state.rearm && Math.abs(dCents) <= 45 && rms > 0.012){
+      const onPitch = Math.abs(dCents) <= 45 && rms > 0.012;
+      // repeated note held on one bow: no fresh attack comes, so also clear the
+      // re-arm once the correct pitch has simply been sustained for a moment.
+      // (Detached playing still clears it instantly via the attack test above.)
+      if(state.rearm){
+        if(onPitch){
+          if(!state.rearmHeldSince) state.rearmHeldSince = performance.now();
+          else if(performance.now() - state.rearmHeldSince > 340){ state.rearm = false; state.armSilent = false; state.rearmHeldSince = 0; }
+        }else{
+          state.rearmHeldSince = 0;
+        }
+      }
+
+      if(!state.playing && !state.rearm && onPitch){
         state.streak++;
         if(state.streak >= 4) accept(target);
       }else{
@@ -1507,6 +1520,7 @@ function loop(){
     needle.classList.remove("ok");
     needle.style.transform = "translateX(-2px)";
     state.streak = 0;
+    state.rearmHeldSince = 0;
   }
 }
 
@@ -1528,6 +1542,7 @@ function accept(target){
   }
   state.rearm = (TUNE[i].midi === target.midi);
   state.armSilent = false;
+  state.rearmHeldSince = 0;
   refreshUI();
 }
 
@@ -1593,6 +1608,8 @@ function reset(){
 function finish(){
   setStatus("Tune complete.", "live");
   $("doneMsg").innerHTML = `All ${PLAYABLE_TOTAL} notes of “${TITLE}”,<br>in order, by ear and hand.`;
+  // remember it on the player's account (silent if signed out or offline)
+  try { if(window.MAAuth && MAAuth.user && MAAuth.user() && MAAuth.melody) MAAuth.melody.record(TITLE).catch(function(){}); } catch(e){}
   const box = $("confettiBox");
   box.innerHTML = "";
   const cols = ["#2438C8","#FF4E86","#E0922A","#1F9D55"];

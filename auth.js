@@ -167,6 +167,41 @@
     };
   })();
 
+  // ---- Melody Trainer completions (one row, kind 'melodydone', keyed by tune name) ----
+  window.MAAuth.melody = (function () {
+    var rowId = null;
+    function load() {
+      return window.MAAuth.creations.list('melodydone').then(function (rows) {
+        var row = (rows && rows[0]) || null;
+        if (row) rowId = row.id;
+        return (row && row.data && row.data.tunes) || {};
+      });
+    }
+    return {
+      // every finished tune, most recently played first
+      list: function () {
+        return load().then(function (tunes) {
+          return Object.keys(tunes).map(function (k) { return tunes[k]; })
+            .sort(function (a, b) { return (a.at < b.at ? 1 : (a.at > b.at ? -1 : 0)); });
+        });
+      },
+      // record one completion; dedupes by name, bumps a play count, stamps the date
+      record: function (name) {
+        name = String(name || '').trim();
+        if (!name) return Promise.resolve(null);
+        var key = name.toLowerCase().replace(/\s+/g, ' ');
+        return load().then(function (tunes) {
+          var e = tunes[key] || { name: name, count: 0, first: null };
+          e.name = name; e.count = (e.count || 0) + 1; e.at = new Date().toISOString();
+          if (!e.first) e.first = e.at;
+          tunes[key] = e;
+          return window.MAAuth.creations.save('melodydone', { id: rowId, title: 'melody-trainer', data: { tunes: tunes } })
+            .then(function (row) { if (row && row.id) rowId = row.id; return e; });
+        });
+      }
+    };
+  })();
+
   window.MAAuth.usernameFree = function (name) { return usernameFree(name); };
   window.MAAuth.setUsername = function (name) { return ensureSb().then(needUser).then(function () {
     return saveUsername(name || null).then(function (r) { if (r && r.error) throw r.error; profile = { username: name || null, role: roleOf() }; renderControl(); emit(); return profile; }); }); };
