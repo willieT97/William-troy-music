@@ -3,6 +3,7 @@
 <head>
 <script src="/analytics.js" defer></script>
 <script src="/auth.js" defer></script>
+<script src="/hi-scores.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
@@ -1165,6 +1166,24 @@ const DOJO=[
 ];
 const BELT_COL={White:'#FFFDF7',Grey:'#9AA0A6',Yellow:'#FFD34D',Orange:'#F5893B',
   Green:'#1F9D55',Blue:'#2438C8',Brown:'#7A4A1E',Black:'#17140E'};
+/* Fretboard Atlas keeps per-lesson best streaks rather than a done-map; each
+   expedition is complete once its final lesson's streak meets that lesson's goal
+   (lessons unlock in order, so the last one implies the rest). */
+const ATLAS={id:'fretboard-atlas',name:'Fretboard Atlas',
+  ranks:[['I · Surveyor','1.5',6,'#FFD34D'],['II · Mapmaker','2.3',6,'#F5893B'],
+         ['III · Pathfinder','3.5',10,'#1F9D55'],['IV · Navigator','4.4',10,'#17140E']]};
+/* leaderboard game ids -> readable names (fallback prettifies the id) */
+const GAME_NAMES={'in-tune':'In Tune (uke)','out-of-tune':'Out of Tune (uke)','chord-quiz':'Chord Quiz (uke)',
+  'chord-progress-uke':'Uke Progress','what-note-ukulele-3frets':'What Note? (uke)',
+  'what-note-guitar':'What Note? (guitar)','what-note-piano':'What Note? (piano)','what-note-banjo':'What Note? (banjo)',
+  'triad-drop':'Triad Drop','triad-slingshot':'Triad Launch','chord-quiz-guitar':'Chord Quiz (guitar)',
+  'chord-progress-guitar':'Guitar Progress','in-tune-guitar':'In Tune (guitar)','out-of-tune-guitar':'Out of Tune (guitar)',
+  'chord-cascade':'Chord Cascade','chord-catapult':'Chord Catapult','pitch-invaders':'Pitch Invaders',
+  'pitch-invaders-fifths':'Pitch Invaders · Fifths','pitch-invaders-chromatic':'Pitch Invaders · Chromatic',
+  'chord-progress':'Chord Progressions','scale-climb':'Scale Climb','rhythm-runner':'Rhythm Runner',
+  'bar-packer':'Bar Packer','missing-piece':'The Missing Piece','fix-the-plank':'Fix the Plank',
+  'note-reading':'Note Reading','apple-shot':'Apple Shot','hidden-words':'Hidden Words','note-elevator':'Note Elevator'};
+const prettyGame=g=>String(g).replace(/[-_]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase());
 let linkRows=null, linkBusy=false, linkErr='', peek={};   /* peek: personId -> their progress */
 
 function loadLinks(){
@@ -1177,8 +1196,12 @@ const linkFor=id=>(linkRows||[]).find(l=>l.person_id===id)||null;
 function loadPeek(p,l){
   if(!l||!l.student_id||peek[p.id])return;
   peek[p.id]={loading:true};
-  Promise.all([MAAuth.links.progressOf(l.student_id),MAAuth.links.usernameOf(l.student_id)])
-    .then(([rows,uname])=>{peek[p.id]={rows:rows||[],uname:uname||''};})
+  MAAuth.links.usernameOf(l.student_id).catch(()=>'')
+    .then(uname=>Promise.all([
+      MAAuth.links.progressOf(l.student_id),
+      /* their public leaderboard scores, gathered by username */
+      (uname&&window.HiScores&&HiScores.bestsByName)?HiScores.bestsByName(uname).catch(()=>[]):Promise.resolve([])
+    ]).then(([rows,bests])=>{peek[p.id]={rows:rows||[],uname:uname||'',bests:bests||[]};}))
     .catch(()=>{peek[p.id]={error:true};})
     .then(()=>{if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();});
 }
@@ -1199,14 +1222,33 @@ function linkBits(p){
       const by={}; (d.rows||[]).forEach(r=>{by[r.title]=r;});
       const last=(d.rows||[]).map(r=>r.updated_at).sort().pop();
       const started=DOJO.filter(c=>by[c.id]);
-      body=(d.uname?'<div class="who">'+esc(d.uname)+'</div>':'')+
-        (started.length?started.map(c=>{
+      let beltLines=started.map(c=>{
           const done=((by[c.id].data||{}).done)||{};
           return '<div class="beltline"><span class="mono" style="font-size:.66rem">'+esc(c.name)+'</span>'+
             c.belts.map(([b,lv])=>'<span class="beltpip'+(done[lv]?'':' off')+'"><i style="background:'+
               BELT_COL[b]+'"></i>'+b+'</span>').join('')+'</div>';
-        }).join(''):'<p class="muted" style="margin:6px 0 0">No Dojo course started yet.</p>')+
+        }).join('');
+      if(by[ATLAS.id]){
+        const best=((by[ATLAS.id].data||{}).best)||{};
+        beltLines+='<div class="beltline"><span class="mono" style="font-size:.66rem">'+esc(ATLAS.name)+'</span>'+
+          ATLAS.ranks.map(([b,num,goal,col])=>'<span class="beltpip'+(((best[num]||0)>=goal)?'':' off')+'"><i style="background:'+
+            col+'"></i>'+b+'</span>').join('')+'</div>';
+      }
+      body=(d.uname?'<div class="who">'+esc(d.uname)+'</div>':'')+
+        (beltLines||'<p class="muted" style="margin:6px 0 0">No course started yet.</p>')+
         (last?'<div class="sumfoot" style="margin-top:8px">Last moved forward '+esc(shortDate(last.slice(0,10)))+'</div>':'');
+      /* arcade bests — public leaderboard scores posted under their username */
+      const bests=d.bests||[];
+      if(bests.length){
+        const newest=bests[0]&&bests[0].when;
+        body+='<div class="mono" style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#8B8172;margin:14px 0 4px">Arcade bests · posted as '+esc(d.uname)+'</div>'+
+          bests.slice(0,6).map(b=>'<div style="display:flex;justify-content:space-between;gap:12px;font-size:.86rem;padding:2px 0"><span>'+
+            esc(GAME_NAMES[b.game]||prettyGame(b.game))+'</span><b class="mono" style="font-size:.8rem">'+esc(String(b.score))+'</b></div>').join('')+
+          (bests.length>6?'<p class="muted" style="margin:4px 0 0;font-size:.78rem">+ '+(bests.length-6)+' more game'+(bests.length-6===1?'':'s')+'</p>':'')+
+          (newest?'<div class="sumfoot" style="margin-top:6px">Last score posted '+esc(shortDate(newest.slice(0,10)))+'</div>':'');
+      } else if(d.uname){
+        body+='<p class="muted" style="margin:10px 0 0;font-size:.82rem">No arcade scores posted as '+esc(d.uname)+' yet.</p>';
+      }
     }
     return '<div class="section">'+head+'<div class="lnk">'+body+
       '<div class="inline" style="margin-top:10px"><button class="btn small" data-unlink="'+l.id+'">Unlink</button></div>'+

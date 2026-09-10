@@ -143,6 +143,29 @@
       return mine.length ? mine[0].score : null;
     },
 
+    /** every game a name has posted under → [{game, score, when}], best per game,
+        `when` = that game's most recent post. Scores are the public leaderboard,
+        so this reads only what anyone could see — used by the Rollbook's
+        linked-student peek. Most recently played first. */
+    async bestsByName(name) {
+      name = String(name || '').trim();
+      if (!name || !configured()) return [];
+      try {
+        const url = CONFIG.url + '/rest/v1/scores?select=game,score,created_at' +
+          '&initials=eq.' + encodeURIComponent(name) + '&order=score.desc&limit=500';
+        const r = await fetch(url, { headers: headers() });
+        if (!r.ok) return [];
+        const rows = await r.json();
+        const by = {};
+        rows.forEach(x => {
+          const b = by[x.game];
+          if (!b) by[x.game] = { game: x.game, score: x.score, when: x.created_at };
+          else if (x.created_at > b.when) b.when = x.created_at;   // rows arrive best-first; keep newest activity
+        });
+        return Object.values(by).sort((a, b) => (a.when < b.when ? 1 : -1));
+      } catch (_) { return []; }
+    },
+
     /** true when signed in with a username → scores post under that name automatically */
     accountName() {
       try { const A = global.MAAuth; if (A && A.user && A.user()) { const p = A.profile && A.profile(); if (p && p.username) return p.username; } } catch (_) {}
