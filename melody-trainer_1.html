@@ -1712,8 +1712,8 @@ function splitBundle(txt){
   if(cur) out.push(cur);
   return out;
 }
-const TYPE_ORDER  = {nursery:0.1,folk:0.2,carol:0.3,spiritual:0.4,reel:1,jig:2,"slip jig":3,hornpipe:4,polka:5,slide:6,waltz:7,barndance:8,strathspey:9,march:10,mazurka:11,"three-two":12,blues:20,jazz:21,rag:22};
-const TYPE_PLURAL = {nursery:"Nursery rhymes",folk:"Folk songs",carol:"Carols",spiritual:"Spirituals",reel:"Reels",jig:"Jigs","slip jig":"Slip jigs",hornpipe:"Hornpipes",polka:"Polkas",slide:"Slides",waltz:"Waltzes",barndance:"Barndances",strathspey:"Strathspeys",march:"Marches",mazurka:"Mazurkas","three-two":"Three-twos",blues:"Blues",jazz:"Jazz",rag:"Rags",example:"Examples"};
+const TYPE_ORDER  = {nursery:0.1,folk:0.2,carol:0.3,spiritual:0.4,reel:1,jig:2,"slip jig":3,hornpipe:4,polka:5,slide:6,air:6.5,waltz:7,barndance:8,strathspey:9,march:10,mazurka:11,"three-two":12,blues:20,jazz:21,rag:22};
+const TYPE_PLURAL = {nursery:"Nursery rhymes",folk:"Folk songs",carol:"Carols",spiritual:"Spirituals",reel:"Reels",jig:"Jigs","slip jig":"Slip jigs",hornpipe:"Hornpipes",polka:"Polkas",slide:"Slides",air:"Slow airs",waltz:"Waltzes",barndance:"Barndances",strathspey:"Strathspeys",march:"Marches",mazurka:"Mazurkas","three-two":"Three-twos",blues:"Blues",jazz:"Jazz",rag:"Rags",example:"Examples"};
 const typeLabel = t => TYPE_PLURAL[t] || (t.charAt(0).toUpperCase()+t.slice(1)+"s");
 
 function renderTuneList(q){

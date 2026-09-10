@@ -1,0 +1,76 @@
+% Irish session tunes — settings sourced from thesession.org (community
+% transcriptions; the tunes themselves are traditional / public domain).
+% Slow airs — for tone and ornament. Built by fetch-airs-marches-barndances.py — rerun it, or paste
+% more X:… blocks below, then rerun tunes/build-manifest.sh
+
+X:1
+T:She Moved Through The Fair
+R:air
+O:Irish session
+M:3/4
+L:1/8
+K:Dmix
+|(3DEF|G4 FG|A2 A4-|A4 GE|C2 D2 D2-|{EDC}D6-|D2 z2 AB|
+c2 d3 A|B A3 F2|G4 {AG} F>G|A6-|A2 z2 AB|
+c2 d3A|BA3 F2|G4 FG|A6-|A2 z2 (3DEF|
+G6-|G4 FG|A6-|A2 z2 GE|C2 D2 {EDC}D2-|D6-|D4|
+
+X:2
+T:The Coolin
+R:air
+O:Irish session
+M:3/4
+L:1/8
+K:Cmaj
+G A/B/|(c2 B/c/) (d>B)|c2 E2 (3CEG|(c>B) cd/e/ d>c|
+c2B2 c>B|A2 Bc (d/c/) (B/A/)|G2 (EG) cG|B/A/G/F/ EC {D/E/} DC|
+C4 G>F|(E>D) (C>D) (E>^F)|(G>^F G>A) B>G|(c>B) (cd/e/) d>c|
+(c2 B2) c>B|(A2> Bc) (d/c/) (B/A/)|G2 (EG) cG|B/A/G/F/ EC {D/E/} DC|C4||
+
+X:3
+T:Eleanor Plunkett
+R:air
+O:Irish session
+M:3/4
+L:1/8
+K:Gmaj
+GA|B2B2AG|G2G2ag|e2e2 ed|B2B2AG|E2A2 AB|
+A4 ga|b2 aged|e4 ef|g2g2b2|a2 bagf|g2 agfe|d2B2d2|e2g2G2|B2B2AG|E2A2AB|A4|
+
+X:4
+T:Tabhair Dom Do Lámh
+R:air
+O:Irish session
+M:3/4
+L:1/8
+K:Gmaj
+D2|E2 G2 G2|G4 D2|E2 G2 G>A|G4 D2|E2 G2 G2|G2 A2 B2|B2 e2 de|B4 AG|
+A2 A2 ed|B2 B2 dB|A2 AB AG|E4 D2|E2 G2 G2|G4 D2|E2 G2 G2|G4 D2|
+E2 G2 G2|G2 A2 B2|de dB AB|G4 D2|E2 G2 G2|G2 A2 B2|B2 e2 d2|B4 AG|
+A2 A2 ed|B2 B2 dB|A2 AB cd|e4 dB|d2 d2 e2|g4 ed|e2 e2 (3geg|a4 de|
+g2 g2 de|g2 g2 de|g2 g2 (3aga|b6|b2 b2 b2|b4 ag|a2 ag ab|a4 gf|
+e3 f2 (3gfe|d2 d2 g2|B3 d cB|A4 (3cBA|G2 GA Bd|=f4 ed|e2 e2 g2|e4 dB|
+d2 d2 g2|B2 B2 dB|A2 AB (3cBA|G6||
+
+X:5
+T:Fanny Power
+R:air
+O:Irish session
+M:3/4
+L:1/8
+K:Gmaj
+|:D|"G"G2D "Em"G>AB|"C"c2B "D"A2G|"C"F>GE "D"D>ED|"Bm"F2G "D"A>Bc|
+"G"B>AG "Em"B>cd|"C"e2A "D"A2G|"C"F>GE "D"D>GF|"G" G3 G2:|
+|:d|"G"dB/c/d dB/c/d|"Em"G>AG GBd|"C"ec/d/e ec/d/e|"D"A>BA ABc|
+"G"B>cd "C"e>fg|"D"f>ga d2c|"G"B>AG "D"A/B/cF|"G"G3 G2:|
+
+X:6
+T:Eibhlí Gheal Chiúin Ní Chearbhaill
+R:air
+O:Irish session
+M:3/4
+L:1/8
+K:Dmix
+|:D>EG A>GA|B>AG A>GA|B>AG G<ED|D3 D3:|
+A>Bc d>ed|d>cB A>GE|A>Bc d>ed|c3 BAG|
+A>Bc d>ed|d>cB A>GA|B>AG G<ED|D3 D3||

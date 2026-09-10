@@ -1,0 +1,66 @@
+% Irish session tunes — settings sourced from thesession.org (community
+% transcriptions; the tunes themselves are traditional / public domain).
+% Irish barndances. Built by fetch-airs-marches-barndances.py — rerun it, or paste
+% more X:… blocks below, then rerun tunes/build-manifest.sh
+
+X:1
+T:The Stack Of Barley
+R:barndance
+O:Irish session
+M:4/4
+L:1/8
+K:Gmaj
+|:Bd|gb (3agf gfed|(3BBB BA B2d2|DEGA BA (3Bcd|e2A2A2 (3Bcd|
+ga (3baf gfed|(3BBB BAB2d2|DEGA (3BBB dB|1 A2G2G2:|2 A2G2 GEDA||
+|:BGBd (3ggg gb|agfg e2d2|(3ggg fg edBd|e2(3AAA A2 ef|
+gb (3agf gfed|(3BBB BA B2d2|DEGA (3BBB dB|1 A2G2G2 GA:|2 A2G2G2||
+
+X:2
+T:Jimmy Duffy's
+R:barndance
+O:Irish session
+M:4/4
+L:1/8
+K:Gmaj
+|:dc|BGDG B2B2|BAGB d2d2|efgd BdcB|AGFG ABcA|
+BGDG B2B2|BAGB d2d2|efgd BdcB|ADFA G2:|
+Bd|g2gd B2B2|BAGB d2d2|efgd BdcB|AGFG A2A2|
+gagd B2B2|BAGB d2d2|efgd BdcB|ADFA G2||
+Bd|g2gd B2B2|BAGB d2d2|efgd BdcB|AGFG ABcA|
+BGDG B2B2|BAGB d2d2|efgd BdcB|ADFA G2||
+
+X:3
+T:Jamesy Gannon's
+R:barndance
+O:Irish session
+M:4/4
+L:1/8
+K:Gmaj
+|:D2GA B2B2|(3ABA GA B<d dg|e<d ge dBGB|A<G BG A<G EG|
+D2GA B2B2|(3ABA GA B<d dg|e<d ge dBGB|1 AGEF G2FE:|2 AGEF G2Gg||
+gfga bage|d^cde dBGg|gfga baga|agab a2ef|
+gfga bage|dcde d2ef|g2(3fgf (3efe dB|c2(3BcB A2(3GFE||
+
+X:4
+T:Lynch's
+R:barndance
+O:Irish session
+M:4/4
+L:1/8
+K:Dmaj
+|:D2 d2 D2 d2|B>dc>B A3 F|G>FG>B A>FD>F|E2 e2 (3cBA (3GFE|
+D2 d2 D2 d2|B>dc>B A3 F|G>FG>B A>FD>F|1 E>GF>E D>GF>E:|2 E>GF>E D2 a>g||
+|:(3fgf d>f (3efe B>c|(3dcd (3fdB A3 F|G>Ac>e g>ec>B|A2 b2 a3 g|
+(3fgf d>f (3efe B>c|(3dcd (3fdB A3 F|G>Ac>e g>eB>c|1 (3efe d2 d2 a>g:|2 e2 d2 d4||
+
+X:5
+T:Oh Dear Mother My Toes Are Sore
+R:barndance
+O:Irish session
+M:4/4
+L:1/8
+K:Dmaj
+|:(3FG^G|A>fd>B A>^GA>^A|B>ge>g B2 e>d|c>gB>g A2 (3ABc|(3dfe (3dcB A2 (3FG^G|
+A>fd>B A2 (3^GA^A|B>ge>g B2 (3fed|c>gB>g A>B (3cBA|d2 A2 D2:|
+|:(3a^ga|b>af>d A>dc>d|e>dc>d B2 e>d|c>gB>g A2 (3ABc|(3dfe (3dcB A2 (3a^ga|
+b>af>d A2 (3dcd|e>^de>g B2 (3edB|c>gB>g A>a (3gfe|d2 (3AAA d2:|

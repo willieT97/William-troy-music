@@ -1,0 +1,94 @@
+% Irish session tunes — settings sourced from thesession.org (community
+% transcriptions; the tunes themselves are traditional / public domain).
+% Traditional Irish marches. Built by fetch-airs-marches-barndances.py — rerun it, or paste
+% more X:… blocks below, then rerun tunes/build-manifest.sh
+
+X:1
+T:Brian Boru's March
+R:march
+O:Irish session
+M:6/8
+L:1/8
+K:Amin
+ed|:c3/2B/A Aed|cBA Adc|B3/2A/G Gdc|BAG Ged|
+c3/2B/A Aed|cBA A3|Acd e2 d|1 cBA Aed:|2 cBA A2 G||
+|:Acd e2 d|e2 d e3/2c/A|GAB d2 B|d2 B d3/2B/G|Acd e2 d|
+e2 d e3/2c/A|A3/2c/d e2 d|1 c3/2B/A A2 G:|2 c3/2B/A A2 B||
+|:c3/2B/A a2 a|c3/2B/A a2 a|B3/2A/G g2 g|B3/2A/G g2 B|
+c3/2B/A a2 a|c3/2B/A a2 b|c'ba gfe|dcB A2 B:|
+|:cde g2 e|g2 e g3/2e/c|GAB d2 B|d2 B d3/2B/G|
+cde g2 e|g2 e g3/2e/c|Acd e2 d|1 c3/2B/A A2 B:|2 c3/2B/A A2||
+
+X:2
+T:O'Donnell Abu
+R:march
+O:Irish session
+M:4/4
+L:1/8
+K:Dmaj
+D2 FG A2 FA|f2 dB A2 GF|E2 E>F G2 FE|D2 FG A4|
+D2 FG A2 FA|f2 dB A2 GF|E2 e>d cA/A/Bc|d2 d>c dA/B/ c/d/e/=f/||
+|:f2 fe dB A2|d2 dB AF D2|G2 BG F2 AF|E2 E>F EGFE|
+D2 FG A2 FA|f2 dB A2 GF|E2 e>d cA/A/Bc|1 d2 d>c dA/B/ c/d/e/=f/:|2 d2 d>c d4||
+
+X:3
+T:Roddy McCorley
+R:march
+O:Irish session
+M:4/4
+L:1/8
+K:Gmaj
+(GA)|B2 (AB) D2 D2|B3 A G2 D2|E2 G2 G3 A|G6 (Bc)|
+d2 d2 d2 (Bd)|e2 e2 d2 (BA)|G2 E2 c2 B2|A6 (Bc)|
+d2 d2 d2 (Bd)|e2 e2 d2 (BA)|G2 E2 c2 B2|A6 (GA)|
+B2 AB D2 D2|B3 A G2 D2|E2 G2 G3 A|G6||
+
+X:4
+T:The Minstrel Boy
+R:march
+O:Irish session
+M:4/4
+L:1/8
+K:Gmaj
+D|G3 A cBAG|B2 d2 g2 fg|e2 d2 Bc dB|A4 G2 z D|
+G3 A cBAG|B2 d2 g2 fg|e2 d2 Bc dB|A4 G2 z G|
+g2 f2 e2 fg|f2 e2 d2 z e|e2 B2 B2 e2|e2 f2 g2 z g|
+G3 A cBAG|B2 d2 g2 fg|e2 d2 Bc dB|A4 G2 z2||
+
+X:5
+T:Lord Mayo
+R:march
+O:Irish session
+M:4/4
+L:1/8
+K:Gmaj
+|:AG AB|e2 e/d/B/d/|eA AB/A/|G/A/G/F/ ED|
+AG AB/d/|e>f g>f|e>f g/d/B/G/|A4:|
+a2 g/e/g/a/|b2 ba/g/|ed d/e/g|G>A GE|
+a2 g/e/g/a/|b2 ba/g/|ed d/e/g|a4||
+a2 g/e/g/a/|b2 ba/g/|ed d/e/g|G>A GE|
+A>B d>B|A/G/A/B/ g2|e>f g/d/B/G/|A4||
+
+X:6
+T:After The Battle Of Aughrim
+R:march
+O:Irish session
+M:4/4
+L:1/8
+K:Ador
+|:E2A2 ABcd|e2d2 c2A2|B2G2 GFGA|B2AG E2D2|
+E2A2 ABcd|e2d2 e2ag|e2d2 BedB|A4 A4:|
+|:a2e2 e2fg|abag e2fg|abaf g3e|dedB G4|
+a2e2 efg|abag e2d2|B2e2 d2B2|A4 A4:|
+
+X:7
+T:The Wearing Of The Green
+R:march
+O:Irish session
+M:4/4
+L:1/8
+K:Dmaj
+DE|FFFE FAAF|FEEF E3 A|BGdc BAFD|EDDE D2 DE|
+FFFE FAAF|FEEF E3 A|BGdc BAFD|EDDE D2 dc||
+BAAF AFDE|FFFE F2 dc|BAAF AFDE|FEEF E2 DE|
+FFFE FAAF|FEEF E3 A|BGdc BAFD|EDDE D4||
