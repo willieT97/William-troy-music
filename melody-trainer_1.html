@@ -397,6 +397,20 @@
     .meter{width:100%}
     .toggle{margin-left:0;width:100%}
   }
+
+  /* ---------- printable tune sheet (screen-hidden; the only thing that prints) ---------- */
+  #tuneprint{display:none}
+  @media print{
+    body{background:#fff!important}
+    body>*{display:none!important}
+    #tuneprint{display:block!important;color:#000;font-family:'Hanken Grotesk',system-ui,sans-serif}
+    #tuneprint h1{font-family:'Space Mono',monospace;font-size:22pt;margin:0 0 2px}
+    #tuneprint .pmeta{font-family:'Space Mono',monospace;font-size:10pt;color:#333;margin:0 0 16px;letter-spacing:.04em}
+    #tuneprint svg{width:100%;height:auto}
+    /* neutralise the practice highlight colours so the sheet is plain black notation */
+    #tuneprint .note, #tuneprint .note *, #tuneprint .nm{fill:#000!important;stroke:#000!important}
+    @page{margin:14mm}
+  }
 </style>
 </head>
 <body>
@@ -456,6 +470,7 @@
         <button id="hearBtn">Hear this note</button>
         <button id="tuneBtn">Play the tune</button>
         <button id="resetBtn">Restart</button>
+        <button id="printBtn" title="Print this tune as a sheet — Save as PDF to keep it">🖨 Print</button>
         <label class="toggle"><input type="checkbox" id="anyOct" checked> any octave counts</label>
         <label class="toggle" style="margin-left:0"><input type="checkbox" id="showNames"> show note names</label>
       </div>
@@ -500,6 +515,8 @@
 
   <footer>single file · no dependencies · web audio api only</footer>
 </div>
+
+<div id="tuneprint" aria-hidden="true"></div>
 
 <div class="overlay" id="overlay">
   <div class="panel">
@@ -1684,6 +1701,19 @@ $("micBtn").addEventListener("click", startMic);
 $("hearBtn").addEventListener("click", hearNote);
 $("tuneBtn").addEventListener("click", playTune);
 $("resetBtn").addEventListener("click", reset);
+
+/* ---- print the current tune as a plain notation sheet (Save-as-PDF to keep it) ---- */
+function printTune(){
+  const score = $("scoreBox").innerHTML;
+  if(!score.trim()){ setStatus("Load a tune first, then print it.", ""); return; }
+  const I = INSTRUMENTS[inst];
+  const meta = (KEY ? KEY.label : "") + (I ? " · " + I.label : "");
+  $("tuneprint").innerHTML =
+    '<h1>' + (TITLE ? escHtml(TITLE) : "Tune") + '</h1>' +
+    '<div class="pmeta">' + escHtml(meta) + '</div>' + score;
+  window.print();
+}
+$("printBtn").addEventListener("click", printTune);
 $("againBtn").addEventListener("click", reset);
 $("loadBtn").addEventListener("click", loadFromTextarea);
 $("showNames").addEventListener("change", e=>{

@@ -150,6 +150,10 @@ var CATALOGUE = [
 
   { t:'What Note?', h:'Banjo/what-note-banjo.html', dep:1, g:['read'], lv:[1,2], i:['gdae'],
     d:'A marker lands on the tenor banjo neck — GDAE, so it doubles for mandolin and fiddle fingers too.' },
+  { t:'In Tune?', h:'Banjo/in-tune-banjo.html', dep:1, g:['ears'], lv:[1,2], i:['gdae'],
+    d:'The four GDAE strings play in turn — is the whole banjo in tune, or is one off? Strum to hear the wobble.' },
+  { t:'Out of Tune?', h:'Banjo/out-of-tune-banjo.html', dep:1, g:['ears'], lv:[1,2], i:['gdae'],
+    d:'One GDAE string is out. Find it by ear and say whether it’s sharp or flat — the real tuning-up ear.' },
 
   { t:'Pitch Invaders', h:'Ear%20Training/pitch-invaders_2.html', dep:1, g:['ears'], lv:[1,2],
     d:'Aliens fall down the lane of their note — tap the note you hear to shoot them down.' },
