@@ -264,33 +264,29 @@
   <div class="card">
     <span class="rivet tl"></span><span class="rivet tr"></span>
     <span class="rivet bl"></span><span class="rivet br"></span>
-    <h2>The progression</h2>
+    <div class="parthead">
+      <h2 id="partTitle">The progression</h2>
+      <div class="seg" id="partSeg" role="group" aria-label="Which part to show">
+        <button data-part="chords" class="on">Chords</button>
+        <button data-part="bass" id="partBassBtn" style="display:none">Bass</button>
+        <button data-part="drums" id="partDrumBtn" style="display:none">Drums</button>
+      </div>
+    </div>
     <div class="sub" id="rhythmLabel"></div>
-    <div class="panel"><div id="chart"></div></div>
+    <div class="panel">
+      <div id="chart"></div>
+      <div id="bassChart" style="display:none"></div>
+      <div id="drumChart" style="display:none"></div>
+    </div>
     <div class="controls">
       <button id="playBtn">▶ Play</button>
+      <button class="partplay" id="partPlay" style="display:none">▶ Play this part</button>
       <span class="tempo">🐢 <input type="range" id="tempo" min="50" max="150" value="88"> 🐇 <b id="bpm">88</b> bpm</span>
       <label class="toggle" id="bassTog" style="display:none"><input type="checkbox" id="bassCb" checked> bass</label>
       <label class="toggle" id="drumTog" style="display:none"><input type="checkbox" id="drumCb" checked> drums</label>
       <label class="toggle"><input type="checkbox" id="metro"> click</label>
       <label class="toggle"><input type="checkbox" id="loop" checked> loop</label>
     </div>
-  </div>
-
-  <div class="card" id="bassCard" style="display:none">
-    <span class="rivet tl"></span><span class="rivet tr"></span>
-    <span class="rivet bl"></span><span class="rivet br"></span>
-    <h2>Bass line</h2>
-    <div class="parthead"><span class="sub">As written — for the bass player</span><button class="partplay" id="bassPlay">▶ Play bass</button></div>
-    <div class="panel"><div id="bassChart"></div></div>
-  </div>
-
-  <div class="card" id="drumCard" style="display:none">
-    <span class="rivet tl"></span><span class="rivet tr"></span>
-    <span class="rivet bl"></span><span class="rivet br"></span>
-    <h2>Drum groove</h2>
-    <div class="parthead"><span class="sub">As written — for the drummer</span><button class="partplay" id="drumPlay">▶ Play drums</button></div>
-    <div class="panel"><div id="drumChart"></div></div>
   </div>
 
   <div class="card">
@@ -1177,12 +1173,28 @@
       fireEvent(ev, when, now); schedIdx++;
     }
   }
-  var bassPlay=document.getElementById('bassPlay'), drumPlay=document.getElementById('drumPlay');
+  var partPlay=document.getElementById('partPlay'), currentPart='chords';
+  // one box, three views: switch which notation is shown (chords / bass / drums)
+  function showPart(part){
+    currentPart=part;
+    [].forEach.call(document.querySelectorAll('#partSeg button'), function(b){ b.classList.toggle('on', b.dataset.part===part); });
+    document.getElementById('chart').style.display     = part==='chords' ? '' : 'none';
+    document.getElementById('bassChart').style.display = part==='bass'   ? '' : 'none';
+    document.getElementById('drumChart').style.display = part==='drums'  ? '' : 'none';
+    var title=document.getElementById('partTitle'), sub=document.getElementById('rhythmLabel');
+    if(part==='bass'){ title.textContent='Bass line'; sub.textContent='As written — for the bass player'; }
+    else if(part==='drums'){ title.textContent='Drum groove'; sub.textContent='As written — for the drummer'; }
+    else { title.textContent='The progression'; sub.textContent=(song&&song.rhythm)||''; }
+    // "play just this part" only for bass/drums — chords use the main Play + the bass/drums toggles
+    partPlay.style.display = (part==='bass'||part==='drums') ? '' : 'none';
+    updatePlay();
+  }
   function updatePlay(){
     var full=playing && !soloMode;
     playBtn.textContent = full?'■ Stop':'▶ Play'; playBtn.classList.toggle('on', full);
-    if(bassPlay){ var b=playing&&soloMode==='bass'; bassPlay.textContent=b?'■ Stop':'▶ Play bass'; bassPlay.classList.toggle('on', b); }
-    if(drumPlay){ var d=playing&&soloMode==='drums'; drumPlay.textContent=d?'■ Stop':'▶ Play drums'; drumPlay.classList.toggle('on', d); }
+    var active = playing && soloMode===currentPart && (currentPart==='bass'||currentPart==='drums');
+    partPlay.textContent = active ? '■ Stop' : ('▶ Play ' + (currentPart==='drums'?'drums':'bass'));
+    partPlay.classList.toggle('on', active);
   }
   function start(only){ if(!events.length) return; if(playing) stop(); ac(); soloMode=only||null; buildSched(); if(!sched.length){ soloMode=null; return; }
     playing=true; spb=secPerBeat(); anchorT=ac().currentTime+0.12; anchorBeat=0; schedIdx=0; loopCount=0;
@@ -1191,8 +1203,8 @@
   function stop(){ playing=false; soloMode=null; if(schedInt){ clearInterval(schedInt); schedInt=null; } if(endTimer){ clearTimeout(endTimer); endTimer=null; }
     hiTimers.forEach(function(t){ clearTimeout(t); }); hiTimers=[]; clearHi(); updatePlay(); }
   playBtn.addEventListener('click', function(){ (playing && !soloMode) ? stop() : start(null); });
-  if(bassPlay) bassPlay.addEventListener('click', function(){ (playing && soloMode==='bass') ? stop() : start('bass'); });
-  if(drumPlay) drumPlay.addEventListener('click', function(){ (playing && soloMode==='drums') ? stop() : start('drums'); });
+  partPlay.addEventListener('click', function(){ (playing && soloMode===currentPart) ? stop() : start(currentPart); });
+  [].forEach.call(document.querySelectorAll('#partSeg button'), function(b){ b.addEventListener('click', function(){ showPart(b.dataset.part); }); });
   tempo.addEventListener('input', function(){ bpm.textContent=tempo.value;
     if(playing){ var now=ac().currentTime; anchorBeat=anchorBeat+(now-anchorT)/spb; anchorT=now; spb=secPerBeat(); } });
   document.getElementById('bassCb').addEventListener('change', function(){ bassOn=this.checked; });
@@ -1210,11 +1222,14 @@
   var sel=document.getElementById('songSel');
   SONGS.forEach(function(s,i){ var o=document.createElement('option'); o.value=i; o.textContent=s.title+' — '+s.artist; sel.appendChild(o); });
   function renderAll(){
-    document.getElementById('bassTog').style.display = (song.play && song.play.hasBass) ? '' : 'none';
-    document.getElementById('drumTog').style.display = (song.play && song.play.hasDrums) ? '' : 'none';
-    document.getElementById('bassCard').style.display = (song.play && song.play.hasBass) ? '' : 'none';
-    document.getElementById('drumCard').style.display = (song.play && song.play.hasDrums) ? '' : 'none';
-    renderChart(); renderParts(); renderShapes(); renderTheory(); updatePlay();
+    var hasBass=!!(song.play && song.play.hasBass), hasDrums=!!(song.play && song.play.hasDrums);
+    document.getElementById('bassTog').style.display = hasBass ? '' : 'none';
+    document.getElementById('drumTog').style.display = hasDrums ? '' : 'none';
+    document.getElementById('partBassBtn').style.display = hasBass ? '' : 'none';
+    document.getElementById('partDrumBtn').style.display = hasDrums ? '' : 'none';
+    renderChart(); renderParts(); renderShapes(); renderTheory();
+    if((currentPart==='bass' && !hasBass) || (currentPart==='drums' && !hasDrums)) currentPart='chords';
+    showPart(currentPart);
     document.getElementById('keyNow').textContent=keyInfo().name;
     var orig=KEYINFO[song.mode][song.tonicPc].name;
     document.getElementById('songMeta').innerHTML='~'+song.tempo+' bpm'+(off!==0?' · originally '+orig:'');
