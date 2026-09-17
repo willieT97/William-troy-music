@@ -66,12 +66,13 @@
 
   .rule{ border-top:1px solid #d6dce7; margin:12px 0 18px; }
 
-  /* sheets */
-  .sheet{ display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
-  #chart #sheetPiano,#chart #sheetGuitar,#chart #sheetBanjo{ display:none; }
-  #chart[data-inst="piano"] #sheetPiano{ display:grid; }
-  #chart[data-inst="guitar"] #sheetGuitar{ display:grid; }
-  #chart[data-inst="banjo"] #sheetBanjo{ display:grid; }
+  /* level slider sits just under the instrument tabs */
+  .levwrap{ display:flex; flex-direction:column; align-items:center; gap:4px; margin:2px 0 4px; }
+  .levwrap .hint{ font-family:var(--mono); font-size:.68rem; color:var(--muted); }
+
+  /* sheets: one responsive grid, filled to match the chosen instrument + level */
+  .sheet{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+    gap:14px 16px; align-items:start; }
   /* dots are plain until you ask for a label */
   #chart[data-lab="none"] .lab{ display:none; }
   #chart[data-lab="deg"]  .lab.note{ display:none; }
@@ -142,7 +143,7 @@
   <header class="top">
     <span class="kicker">Reference sheet</span>
     <h1>Chords 🎹🎸🪕</h1>
-    <p class="lede">Every major &amp; minor chord for piano, guitar and Irish tenor banjo — starting on F and C, then travelling around the circle of fifths.</p>
+    <p class="lede">Chords for piano, guitar and Irish tenor banjo. Start with the beginner set, then add more — or switch to advanced for every major &amp; minor chord around the circle of fifths.</p>
   </header>
 
   <div class="insttabs noprint">
@@ -151,6 +152,17 @@
       <button data-inst="guitar">🎸 Guitar</button>
       <button data-inst="banjo">🪕 Tenor banjo</button>
     </div>
+  </div>
+
+  <div class="levwrap noprint">
+    <div class="insttabs" style="margin:0">
+      <div class="seg" role="group" aria-label="How many chords to show">
+        <button data-level="beginner" class="on">Beginner</button>
+        <button data-level="intermediate">Intermediate</button>
+        <button data-level="advanced">Advanced</button>
+      </div>
+    </div>
+    <span class="hint" id="levHint"></span>
   </div>
 
   <p id="banjoNote">Irish tenor banjo — GDAE, tuned in fifths like a fiddle or mandolin, an octave below the fiddle. Every shape sits in the first four frets.</p>
@@ -174,10 +186,8 @@
 
   <div class="rule"></div>
 
-  <div id="chart" data-inst="piano" data-lab="none">
-    <div class="sheet" id="sheetPiano"></div>
-    <div class="sheet" id="sheetGuitar"></div>
-    <div class="sheet" id="sheetBanjo"></div>
+  <div id="chart" data-inst="piano" data-level="beginner" data-lab="none">
+    <div class="sheet" id="sheet"></div>
   </div>
 
   <p class="foot noprint"><a href="resources.html">← Back to Resources</a></p>
@@ -338,55 +348,125 @@
     return svg;
   }
 
-  // ---- build cells ----
-  function head(sheet,txt,cls){ var d=document.createElement('div'); d.className='colhead '+cls; d.textContent=txt; sheet.appendChild(d); }
-  function cell(sheet, root, isMinor, kind){
-    var accentMaj=cssv('--maj'), tintMaj=cssv('--maj-tint'), accentMin=cssv('--min'), tintMin=cssv('--min-tint');
-    var accent=isMinor?accentMin:accentMaj, tint=isMinor?tintMin:tintMaj, thirdInt=isMinor?3:4, q=isMinor?'minor':'major';
+  function cssv(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  var ROOT_NAME={}; ROOTS.forEach(function(r){ ROOT_NAME[r.pc]=r.name; });
+
+  /* ---- what to show at each level ----
+     A spec is {pc, q, name?, plain?, frets?, base?, notes?}.  pc+q always drive the
+     colour, the deep-link target and the spotlight; the optional bits let a level
+     override the grip or the label.  Beginner guitar uses the physically-easy
+     shapes from William's teaching sheets, relabelled to plain names (an Em7 grip
+     shown simply as "Em") -- close enough for a first lesson.  Missing frets/notes
+     fall back to the standard voicing and the textbook spelling. */
+  var advanced=[];
+  ROOTS.forEach(function(r){ advanced.push({pc:r.pc,q:'major'}); advanced.push({pc:r.pc,q:'minor'}); });
+
+  /* non-plain triads take their name from ROOT_NAME + the quality word ("D minor"),
+     matching the rest of the page; only give a name to tidy an enharmonic root or to
+     show a plain shorthand (beginner guitar, the 7ths). */
+  var LEVELS={
+    piano:{
+      beginner:[ {pc:0,q:'major'},{pc:2,q:'minor'},{pc:4,q:'minor'},
+                 {pc:5,q:'major'},{pc:7,q:'major'},{pc:9,q:'minor'} ],
+      intermediate:[ {pc:0,q:'major'},{pc:7,q:'major'},{pc:2,q:'major'},
+                 {pc:9,q:'major'},{pc:5,q:'major'},{pc:10,q:'major',name:'B\u266d'},
+                 {pc:9,q:'minor'},{pc:4,q:'minor'},{pc:2,q:'minor'},{pc:11,q:'minor'} ],
+      advanced:advanced
+    },
+    guitar:{
+      beginner:[ {pc:7,q:'major',name:'G',  plain:true, frets:[3,2,0,0,3,3]},
+                 {pc:0,q:'major',name:'C',  plain:true, frets:[-1,3,2,0,3,3]},
+                 {pc:2,q:'major',name:'D',  plain:true, frets:[-1,-1,0,2,3,3]},
+                 {pc:9,q:'major',name:'A',  plain:true, frets:[-1,0,2,0,3,3]},
+                 {pc:4,q:'minor',name:'Em', plain:true, frets:[0,2,2,0,3,3]},
+                 {pc:2,q:'major',name:'D/F\u266f',plain:true, frets:[2,0,0,2,3,3]} ],
+      intermediate:[ {pc:0,q:'major'},{pc:9,q:'major'},{pc:7,q:'major'},
+                 {pc:4,q:'major'},{pc:2,q:'major'},
+                 {pc:9,q:'minor'},{pc:4,q:'minor'},{pc:2,q:'minor'},
+                 {pc:4,q:'major',name:'E7',plain:true,frets:[0,2,0,1,0,0], notes:'E \u00b7 G\u266f \u00b7 B \u00b7 D'},
+                 {pc:9,q:'major',name:'A7',plain:true,frets:[-1,0,2,0,2,0],notes:'A \u00b7 C\u266f \u00b7 E \u00b7 G'},
+                 {pc:2,q:'major',name:'D7',plain:true,frets:[-1,-1,0,2,1,2],notes:'D \u00b7 F\u266f \u00b7 A \u00b7 C'},
+                 {pc:7,q:'major',name:'G7',plain:true,frets:[3,2,0,0,0,1], notes:'G \u00b7 B \u00b7 D \u00b7 F'},
+                 {pc:0,q:'major',name:'C7',plain:true,frets:[-1,3,2,3,1,0],notes:'C \u00b7 E \u00b7 G \u00b7 B\u266d'},
+                 {pc:11,q:'major',name:'B7',plain:true,frets:[-1,2,1,2,0,2],notes:'B \u00b7 D\u266f \u00b7 F\u266f \u00b7 A'} ],
+      advanced:advanced
+    },
+    banjo:{
+      beginner:[ {pc:2,q:'major'},{pc:7,q:'major'},{pc:9,q:'major'},{pc:4,q:'minor'} ],
+      intermediate:[ {pc:2,q:'major'},{pc:7,q:'major'},{pc:9,q:'major'},
+                 {pc:0,q:'major'},{pc:5,q:'major'},
+                 {pc:4,q:'minor'},{pc:9,q:'minor'},{pc:11,q:'minor'},{pc:2,q:'minor'} ],
+      advanced:advanced
+    }
+  };
+  var LEVEL_HINT={
+    beginner:'The first chords to learn \u2014 enough to play plenty of tunes.',
+    intermediate:'More shapes and keys, once the beginner chords feel easy.',
+    advanced:'Every major & minor chord, all the way round the circle of fifths.'
+  };
+
+  // ---- build one chord card from a spec ----
+  function cell(sheet, spec, kind){
+    var isMinor=spec.q==='minor';
+    var accent=isMinor?cssv('--min'):cssv('--maj'), tint=isMinor?cssv('--min-tint'):cssv('--maj-tint');
+    var thirdInt=isMinor?3:4;
+    var disp=spec.name||ROOT_NAME[spec.pc];
     var box=document.createElement('div'); box.className='chord '+(isMinor?'min':'maj');
     box.setAttribute('role','button'); box.setAttribute('tabindex','0');
-    box.dataset.pc=root.pc; box.dataset.q=q;          /* so a lesson link can point at one chord */
-    box.setAttribute('aria-label', root.name.replace(' / ',' or ')+' '+q+' chord');
-    var h=document.createElement('h3'); h.innerHTML=root.name+' <span class="qual">'+q+'</span>'; box.appendChild(h);
-    var spelled=(isMinor?MIN:MAJ)[root.pc];
+    box.dataset.pc=spec.pc; box.dataset.q=spec.q;      /* so a lesson link can point at one chord */
+    box.setAttribute('aria-label', disp.replace(' / ',' or ')+(spec.plain?'':' '+spec.q)+' chord');
+    var h=document.createElement('h3');
+    h.innerHTML= spec.plain ? disp : disp+' <span class="qual">'+spec.q+'</span>';
+    box.appendChild(h);
+    var spelled=spec.notes||(isMinor?MIN:MAJ)[spec.pc];
     var nm=document.createElement('div'); nm.className='nm'; nm.textContent=spelled; box.appendChild(nm);
-    var names=spelled.split(' \u00b7 ');       /* [root, third, fifth], spelled as this chord spells them */
+    var names=spelled.split(' \u00b7 ');       /* [root, third, fifth (, seventh)] as this chord spells them */
     var hit;
     if(kind==='piano'){
-      box.appendChild(keyboard(root.pc, thirdInt, accent, tint, names));
-      hit=function(){ playPiano(root.pc, thirdInt); };
+      box.appendChild(keyboard(spec.pc, thirdInt, accent, tint, names));
+      hit=function(){ playPiano(spec.pc, thirdInt); };
     } else if(kind==='banjo'){
-      var bj=(isMinor?BMIN:BMAJ)[root.pc];
-      box.appendChild(guitar(bj.f, bj.b, root.pc, thirdInt, accent, names, B_OPEN_PC));
+      var bj=spec.frets?{f:spec.frets,b:spec.base||1}:(isMinor?BMIN:BMAJ)[spec.pc];
+      box.appendChild(guitar(bj.f, bj.b, spec.pc, thirdInt, accent, names, B_OPEN_PC));
       hit=function(){ playBanjo(bj.f); };
     } else {
-      var g=(isMinor?GMIN:GMAJ)[root.pc];
-      box.appendChild(guitar(g.f, g.b, root.pc, thirdInt, accent, names, G_OPEN_PC));
+      var g=spec.frets?{f:spec.frets,b:spec.base||1}:(isMinor?GMIN:GMAJ)[spec.pc];
+      box.appendChild(guitar(g.f, g.b, spec.pc, thirdInt, accent, names, G_OPEN_PC));
       hit=function(){ playGuitar(g.f); };
     }
     box.addEventListener('click', hit);
     box.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); hit(); } });
     sheet.appendChild(box);
   }
-  function cssv(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 
-  function build(sheetId, kind){
-    var sheet=document.getElementById(sheetId);
-    head(sheet,'Major','maj'); head(sheet,'Minor','min');
-    ROOTS.forEach(function(r){ cell(sheet,r,false,kind); cell(sheet,r,true,kind); });
+  var sheetEl=document.getElementById('sheet');
+  function renderSheet(){
+    var inst=chart.getAttribute('data-inst'), level=chart.getAttribute('data-level');
+    var specs=(LEVELS[inst]&&LEVELS[inst][level])||LEVELS[inst].advanced;
+    sheetEl.innerHTML='';
+    specs.forEach(function(s){ cell(sheetEl, s, inst); });
+    var hint=document.getElementById('levHint'); if(hint) hint.textContent=LEVEL_HINT[level]||'';
   }
-  build('sheetPiano','piano');
-  build('sheetGuitar','guitar');
-  build('sheetBanjo','banjo');
 
   // ---- instrument tabs ----
   var chart=document.getElementById('chart');
-  document.querySelectorAll('.insttabs button').forEach(function(b){
+  document.querySelectorAll('.insttabs button[data-inst]').forEach(function(b){
     b.addEventListener('click', function(){
       chart.setAttribute('data-inst', b.dataset.inst);
       document.getElementById('banjoNote').classList.toggle('on', b.dataset.inst==='banjo');
-      document.querySelectorAll('.insttabs button').forEach(function(x){ x.classList.remove('on'); });
+      document.querySelectorAll('.insttabs button[data-inst]').forEach(function(x){ x.classList.remove('on'); });
       b.classList.add('on');
+      renderSheet();
+    });
+  });
+
+  // ---- level: how many chords to show ----
+  document.querySelectorAll('button[data-level]').forEach(function(b){
+    b.addEventListener('click', function(){
+      chart.setAttribute('data-level', b.dataset.level);
+      document.querySelectorAll('button[data-level]').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      renderSheet();
     });
   });
 
@@ -398,20 +478,22 @@
     var wantInst=(q.get('inst')||'').toLowerCase();
     if(wantInst==='piano'||wantInst==='guitar'||wantInst==='banjo'){
       chart.setAttribute('data-inst',wantInst);
-      document.querySelectorAll('.insttabs button').forEach(function(x){
+      document.querySelectorAll('.insttabs button[data-inst]').forEach(function(x){
         x.classList.toggle('on', x.dataset.inst===wantInst); });
       document.getElementById('banjoNote').classList.toggle('on', wantInst==='banjo');
     }
     var wantRoot=q.get('root'), wantQ=(q.get('quality')||'').toLowerCase();
-    if(!wantRoot)return;
+    if(!wantRoot){ renderSheet(); return; }
     var key=wantRoot.trim().toUpperCase().replace(/\u266F/g,'#').replace(/\u266D/g,'B');
     var PC={'C':0,'C#':1,'DB':1,'D':2,'D#':3,'EB':3,'E':4,'FB':4,'F':5,'F#':6,'GB':6,
             'G':7,'G#':8,'AB':8,'A':9,'A#':10,'BB':10,'B':11,'CB':11};
-    var pc=PC[key]; if(pc===undefined)return;
+    var pc=PC[key]; if(pc===undefined){ renderSheet(); return; }
     if(wantQ!=='minor'&&wantQ!=='major')wantQ='major';
-    var live=chart.getAttribute('data-inst');
-    var sheet=document.getElementById(live==='guitar'?'sheetGuitar':live==='banjo'?'sheetBanjo':'sheetPiano');
-    var cellEl=sheet&&sheet.querySelector('.chord[data-pc="'+pc+'"][data-q="'+wantQ+'"]');
+    /* a lesson can have logged any chord, so open the full set to be sure it's shown */
+    chart.setAttribute('data-level','advanced');
+    document.querySelectorAll('button[data-level]').forEach(function(x){ x.classList.toggle('on', x.dataset.level==='advanced'); });
+    renderSheet();
+    var cellEl=sheetEl.querySelector('.chord[data-pc="'+pc+'"][data-q="'+wantQ+'"]');
     if(!cellEl)return;
     cellEl.classList.add('spot');
     /* the fretboard SVGs finish laying out after this runs and shift the target,
