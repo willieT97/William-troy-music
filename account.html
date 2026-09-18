@@ -81,7 +81,11 @@
   #teachersheets .grouplbl:first-child{ margin-top:0; }
   #teachersheets .sheetrow{ display:flex; align-items:center; gap:10px; border:2px solid var(--ink);
     background:#fff; padding:9px 12px; margin-bottom:8px; }
-  #teachersheets .sheetrow b{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  #teachersheets .sr-left{ flex:1; min-width:0; }
+  #teachersheets .sr-left b{ overflow-wrap:anywhere; }
+  #teachersheets .chordtags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+  #teachersheets .chordtag{ font-family:'Space Mono',monospace; font-size:.64rem; border:1.5px solid var(--ink);
+    background:var(--bg,#eef2f8); padding:0 6px; }
 </style>
 </head>
 <body>
@@ -244,7 +248,11 @@
       if(card) card.hidden=false;
       host.innerHTML='';
       rows.forEach(function(r){
-        var row=el('div','sheetrow'); row.appendChild(el('b',null,r.title));
+        var row=el('div','sheetrow');
+        var left=el('div','sr-left'); left.appendChild(el('b',null,r.title));
+        if(r.chords&&r.chords.length){ var tg=el('div','chordtags');
+          r.chords.forEach(function(c){ tg.appendChild(el('span','chordtag',c)); }); left.appendChild(tg); }
+        row.appendChild(left);
         var open=el('button','btn go','Open'); open.type='button';
         open.addEventListener('click',function(){ open.disabled=true;
           A.sheets.url(r.path).then(function(u){ open.disabled=false; window.open(u,'_blank','noopener'); })

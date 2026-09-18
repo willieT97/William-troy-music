@@ -31,9 +31,11 @@ create table if not exists public.sheets (
   mime        text,
   size        bigint,
   assigned    text[] not null default '{}',  -- rollbook person ids this sheet is assigned to
+  chords      text[] not null default '{}',  -- chords the song uses, e.g. {G,C,D,Em} — for filtering
   created_at  timestamptz not null default now()
 );
 create index if not exists sheets_teacher on public.sheets(teacher_id);
+alter table public.sheets add column if not exists chords text[] not null default '{}';  -- for upgrades
 alter table public.sheets enable row level security;
 
 -- Upgrade from the earlier per-sheet 'scope' model: drop the policies that used
