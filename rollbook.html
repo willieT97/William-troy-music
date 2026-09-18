@@ -2024,8 +2024,13 @@ function sheetRow(r, fullIds, fullCount){
   const refreshTags=()=>{ const t=document.getElementById('tags_'+r.id); if(t) t.innerHTML=metaTags(r); };
   row.innerHTML='<span class="who">'+esc(r.title)+'</span><div id="tags_'+r.id+'">'+metaTags(r)+'</div>'+
     '<div class="hint" id="sum_'+r.id+'" style="margin:2px 0 7px">'+summary(r.assigned||[])+'</div>';
-  const open=shBtn('Open'); open.onclick=()=>{ open.disabled=true;
-    MAAuth.sheets.url(r.path).then(u=>{open.disabled=false;window.open(u,'_blank','noopener');}).catch(()=>{open.disabled=false;}); };
+  const open=shBtn('Open'); open.onclick=()=>{
+    // open the tab NOW (in the click) so it isn't popup-blocked; point it at the signed url once it lands
+    const w=window.open('','_blank'); if(w){ try{w.opener=null;}catch(e){} try{w.document.write('Opening the sheet…');}catch(e){} }
+    open.disabled=true;
+    MAAuth.sheets.url(r.path).then(u=>{ open.disabled=false;
+      if(w&&!w.closed) w.location.href=u; else window.open(u,'_blank');
+    }).catch(e=>{ open.disabled=false; if(w&&!w.closed) w.close(); alert('Couldn’t open — '+((e&&e.message)||'')); }); };
   const asn=shBtn('Assign');
   const edit=shBtn('Edit tags'); edit.style.marginLeft='8px';
   const del=shBtn('Delete'); del.style.marginLeft='8px';
