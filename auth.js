@@ -656,7 +656,7 @@
       var gp = el('a', 'maa-alt', '✦ Go Pro'); gp.href = '/upgrade.html';
       gp.style.display = 'block'; gp.style.textDecoration = 'none'; gp.style.textAlign = 'center'; gp.style.boxSizing = 'border-box'; cardBody.appendChild(gp);
     }
-    var page = el('a', 'maa-alt', 'Your saved work & songs →'); page.href = '/account.html'; page.style.display = 'block'; page.style.textDecoration = 'none'; page.style.textAlign = 'center'; page.style.boxSizing = 'border-box'; cardBody.appendChild(page);
+    var page = el('a', 'maa-alt', 'Your account →'); page.href = '/account.html'; page.style.display = 'block'; page.style.textDecoration = 'none'; page.style.textAlign = 'center'; page.style.boxSizing = 'border-box'; cardBody.appendChild(page);
     var out = el('button', 'maa-alt', 'Sign out'); out.type = 'button'; cardBody.appendChild(out);
     save.addEventListener('click', function () {
       var name = (un.input.value || '').trim();
