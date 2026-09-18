@@ -122,11 +122,19 @@
     invite: function (personId) { return ensureSb().then(needUser).then(function () {
       return sb.rpc('create_student_link', { p_person_id: String(personId) })
         .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
-    // teacher: every link and pending invite they hold
+    // teacher: every link and pending invite they hold. library_access is added
+    // by supabase-sheets.sql; fall back gracefully if that hasn't been run yet.
     list: function () { return ensureSb().then(needUser).then(function () {
-      return sb.from('student_links').select('id,person_id,code,student_id,claimed_at,expires_at')
+      return sb.from('student_links').select('id,person_id,code,student_id,claimed_at,expires_at,library_access')
         .eq('teacher_id', user.id)
-        .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
+        .then(function (r) {
+          if (r.error) return sb.from('student_links').select('id,person_id,code,student_id,claimed_at,expires_at')
+            .eq('teacher_id', user.id).then(function (r2) { if (r2.error) throw r2.error; return r2.data || []; });
+          return r.data || []; }); }); },
+    // teacher: give (or take away) a student's full run of the sheet library
+    setLibraryAccess: function (personId, on) { return ensureSb().then(needUser).then(function () {
+      return sb.rpc('set_library_access', { p_person_id: String(personId), p_on: !!on })
+        .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
     // student: redeem a code
     claim: function (code) { return ensureSb().then(needUser).then(function () {
       return sb.rpc('claim_student_link', { p_code: String(code || '') })
@@ -156,32 +164,30 @@
      write. scope 'assigned' + assigned:[person_id] targets specific students;
      scope 'library' is visible to all of that teacher's linked students. */
   window.MAAuth.sheets = {
-    // teacher: upload a file and record who it's for
-    add: function (file, title, scope, assigned) { return ensureSb().then(needUser).then(function () {
+    // teacher: upload a file into the library (assign to students separately)
+    add: function (file, title) { return ensureSb().then(needUser).then(function () {
       if (!file) return Promise.reject(new Error('Pick a file first.'));
       var ext = (String(file.name || '').split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
       var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
              : ('sx' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
-      var path = user.id + '/' + id + '.' + ext, lib = scope === 'library';
+      var path = user.id + '/' + id + '.' + ext;
       return sb.storage.from('sheets').upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false })
         .then(function (up) { if (up.error) throw up.error;
           return sb.from('sheets').insert({
             id: id, teacher_id: user.id, title: String(title || file.name || 'Sheet').slice(0, 120),
-            path: path, mime: file.type || '', size: file.size || 0,
-            scope: lib ? 'library' : 'assigned', assigned: lib ? [] : (assigned || []).map(String)
-          }).select('id,title,path,mime,size,scope,assigned,created_at').single()
+            path: path, mime: file.type || '', size: file.size || 0, assigned: []
+          }).select('id,title,path,mime,size,assigned,created_at').single()
             .then(function (r) { if (r.error) { try { sb.storage.from('sheets').remove([path]); } catch (e) {} throw r.error; } return r.data; });
         }); }); },
-    // teacher: their own sheets, newest first
+    // teacher: the whole library, newest first
     listMine: function () { return ensureSb().then(needUser).then(function () {
-      return sb.from('sheets').select('id,title,path,mime,size,scope,assigned,created_at')
+      return sb.from('sheets').select('id,title,path,mime,size,assigned,created_at')
         .eq('teacher_id', user.id).order('created_at', { ascending: false })
         .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
-    // teacher: change who a sheet is shared with
-    share: function (id, scope, assigned) { return ensureSb().then(needUser).then(function () {
-      var lib = scope === 'library';
-      return sb.from('sheets').update({ scope: lib ? 'library' : 'assigned', assigned: lib ? [] : (assigned || []).map(String) })
-        .eq('id', id).eq('teacher_id', user.id).select('id,scope,assigned').single()
+    // teacher: set exactly which students a sheet is assigned to (replaces the list)
+    assign: function (id, personIds) { return ensureSb().then(needUser).then(function () {
+      return sb.from('sheets').update({ assigned: (personIds || []).map(String) })
+        .eq('id', id).eq('teacher_id', user.id).select('id,assigned').single()
         .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
     // teacher: remove the file and its row
     remove: function (id, path) { return ensureSb().then(needUser).then(function () {
@@ -190,7 +196,7 @@
           .then(function (r) { if (r.error) throw r.error; return true; }); }); }); },
     // student (or teacher): every sheet shared with me — RLS returns only those
     listForMe: function () { return ensureSb().then(needUser).then(function () {
-      return sb.from('sheets').select('id,title,path,mime,scope,teacher_id,created_at')
+      return sb.from('sheets').select('id,title,path,mime,teacher_id,created_at')
         .order('created_at', { ascending: false })
         .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
     // a short-lived link to view one file (only works if RLS lets you read it)

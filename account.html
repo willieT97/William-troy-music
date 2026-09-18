@@ -230,8 +230,8 @@
   }
 
   /* ---- song sheets a teacher has shared privately with this student ----
-     RLS returns only sheets aimed at them (assigned) or put in the library. The
-     whole card hides when there's nothing to show. */
+     RLS returns only what they may see: the sheets assigned to them, or the whole
+     library if their teacher gave them full access. The card hides when empty. */
   function renderTeacherSheets(){
     var card=document.getElementById('sheetsCard'), host=document.getElementById('teachersheets');
     if(!host) return;
@@ -243,21 +243,14 @@
       if(!rows.length){ if(card) card.hidden=true; return; }
       if(card) card.hidden=false;
       host.innerHTML='';
-      var foryou=rows.filter(function(r){ return r.scope!=='library'; });
-      var lib=rows.filter(function(r){ return r.scope==='library'; });
-      function group(label, list){
-        if(!list.length) return;
-        host.appendChild(el('div','grouplbl',label));
-        list.forEach(function(r){
-          var row=el('div','sheetrow'); row.appendChild(el('b',null,r.title));
-          var open=el('button','btn go','Open'); open.type='button';
-          open.addEventListener('click',function(){ open.disabled=true;
-            A.sheets.url(r.path).then(function(u){ open.disabled=false; window.open(u,'_blank','noopener'); })
-              .catch(function(){ open.disabled=false; }); });
-          row.appendChild(open); host.appendChild(row);
-        });
-      }
-      group('For you', foryou); group('Library', lib);
+      rows.forEach(function(r){
+        var row=el('div','sheetrow'); row.appendChild(el('b',null,r.title));
+        var open=el('button','btn go','Open'); open.type='button';
+        open.addEventListener('click',function(){ open.disabled=true;
+          A.sheets.url(r.path).then(function(u){ open.disabled=false; window.open(u,'_blank','noopener'); })
+            .catch(function(){ open.disabled=false; }); });
+        row.appendChild(open); host.appendChild(row);
+      });
     }).catch(function(){ if(card) card.hidden=true; });   // table not set up yet, or transient
   }
 

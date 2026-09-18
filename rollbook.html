@@ -497,36 +497,31 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
   <div class="mwrap">
     <button class="btn" id="closeSheets" style="float:right">Back to week</button>
     <h1>Song sheets</h1>
-    <p class="muted">Private PDFs and images you share with your students. Nothing here is public &mdash; only a student you&rsquo;ve linked can open a sheet, and only the ones you share with them.</p>
+    <p class="muted">Your private library of PDFs and images. Give long-term students full access to browse it all; everyone else sees only the sheets you assign to them. Nothing here is public.</p>
     <div class="mgrid">
       <div class="mcard">
-        <h2>Add a sheet</h2>
+        <h2>Add to the library</h2>
         <div class="formrow">
           <input class="field" id="shTitle" placeholder="Title (e.g. Cooley&rsquo;s Reel)">
         </div>
         <div class="formrow">
           <input class="field" id="shFile" type="file" accept="application/pdf,image/*">
         </div>
-        <div class="formrow">
-          <select class="field" id="shScope">
-            <option value="assigned">Assign to specific students</option>
-            <option value="library">Library &mdash; any of my students can browse</option>
-          </select>
-        </div>
-        <div id="shAssignWrap">
-          <label class="f" style="display:block;margin:2px 0 4px">WHICH STUDENTS</label>
-          <div class="mlist" id="shAssign" style="max-height:220px;overflow-y:auto"></div>
-        </div>
-        <div class="formrow" style="margin-top:10px">
-          <button class="btn primary" id="shSave">Upload sheet</button>
+        <div class="formrow" style="margin-top:6px">
+          <button class="btn primary" id="shSave">Upload to library</button>
         </div>
         <div class="msg" id="shMsg" style="min-height:1em;font-size:.85rem;font-weight:600;margin-top:6px"></div>
         <div class="hint">PDF or image, up to 25&nbsp;MB. Check your licence allows sharing digital copies with students.</div>
       </div>
       <div class="mcard">
-        <h2>Your sheets</h2>
-        <div class="mlist" id="sheetList"></div>
+        <h2>Full library access</h2>
+        <p class="muted" style="font-size:.85rem">Tick a student to let them browse the whole library. Everyone else sees only what you assign below.</p>
+        <div class="mlist" id="shAccess" style="max-height:320px;overflow-y:auto"></div>
       </div>
+    </div>
+    <div class="mcard" style="margin-top:22px">
+      <h2>Your library</h2>
+      <div class="mlist" id="sheetList"></div>
     </div>
   </div>
 </div>
@@ -1937,70 +1932,100 @@ $('#oSave').onclick=()=>{
 $('#openManage').onclick=()=>{resetPForm();resetSForm();renderManage();$('#manage').classList.add('open');syncPanelChrome();};
 $('#closeManage').onclick=()=>{$('#manage').classList.remove('open');syncPanelChrome();render();};
 
-/* ---------- song sheets: private files shared down to linked students ----------
-   Upload lands in the private 'sheets' bucket; a public.sheets row records who
-   it's for. Enforced by RLS (supabase-sheets.sql) — this UI just drives it. */
-function renderSheetAssign(){
-  const wrap=$('#shAssign'); if(!wrap) return;
-  loadLinks().then(()=>{
-    if(!state.people.length){ wrap.innerHTML='<p class="muted" style="font-size:.85rem;margin:0">Add students in &ldquo;Set up&rdquo; first.</p>'; return; }
-    wrap.innerHTML=state.people.map(p=>{
-      const l=linkFor(p.id), linked=!!(l&&l.claimed_at);
-      return '<label class="tickrow" style="margin:2px 0"><input type="checkbox" class="shchk" value="'+esc(p.id)+'"> '+
-        esc(p.name)+' <span class="hint" style="margin:0 0 0 6px">'+(linked?'linked':'not linked yet')+'</span></label>';
-    }).join('');
+/* ---------- song sheets: a private library shared down to linked students ------
+   Every upload lands in the private 'sheets' bucket + a public.sheets row. A
+   student either has full library access (a flag on their link row) or sees only
+   the sheets whose `assigned` lists their person id. All enforced by RLS
+   (supabase-sheets.sql); this UI just drives it. */
+function shBtn(t){ const b=document.createElement('button'); b.className='btn small'; b.textContent=t; return b; }
+
+function renderSheetAccess(){
+  const host=$('#shAccess'); if(!host) return;
+  const withLink=state.people.filter(p=>!!linkFor(p.id));
+  if(!withLink.length){ host.innerHTML='<p class="muted" style="font-size:.85rem;margin:0">No linked students yet. Invite a student from their lesson first (open a lesson &rarr; &ldquo;Link this student&rdquo;), then you can grant library access here.</p>'; return; }
+  host.innerHTML='';
+  withLink.forEach(p=>{
+    const l=linkFor(p.id), claimed=!!(l&&l.claimed_at), on=!!(l&&l.library_access);
+    const lab=document.createElement('label'); lab.className='tickrow'; lab.style.margin='3px 0';
+    lab.innerHTML='<input type="checkbox"'+(on?' checked':'')+'> '+esc(p.name)+
+      ' <span class="hint" style="margin:0 0 0 6px">'+(claimed?'linked':'invite pending')+'</span>';
+    const cb=lab.querySelector('input');
+    cb.onchange=()=>{ cb.disabled=true;
+      MAAuth.links.setLibraryAccess(p.id, cb.checked).then(()=>loadLinks())
+        .then(()=>{ cb.disabled=false; renderLibrary(); })
+        .catch(e=>{ cb.disabled=false; cb.checked=!cb.checked; alert('Couldn’t change access — '+((e&&e.message)||'')); }); };
+    host.appendChild(lab);
   });
 }
-function renderSheets(){
-  renderSheetAssign();
-  $('#shAssignWrap').style.display = ($('#shScope').value==='library') ? 'none' : '';
-  const list=$('#sheetList'); list.innerHTML='<p class="muted" style="font-size:.85rem">Loading&hellip;</p>';
+
+function sheetRow(r, fullIds, fullCount){
+  const row=document.createElement('div'); row.className='lnk'; row.style.marginBottom='12px';
+  const summary=(assigned)=>{
+    const nm=assigned.map(pid=>{const pp=person(pid);return pp?esc(pp.name):null;}).filter(Boolean);
+    return (nm.length?('Assigned to: '+nm.join(', ')):'Not assigned to anyone yet')+
+      (fullCount?' <span class="hint" style="margin:0">(+'+fullCount+' with full access)</span>':'');
+  };
+  row.innerHTML='<span class="who">'+esc(r.title)+'</span><div class="hint" id="sum_'+r.id+'" style="margin:2px 0 7px">'+summary(r.assigned||[])+'</div>';
+  const open=shBtn('Open'); open.onclick=()=>{ open.disabled=true;
+    MAAuth.sheets.url(r.path).then(u=>{open.disabled=false;window.open(u,'_blank','noopener');}).catch(()=>{open.disabled=false;}); };
+  const asn=shBtn('Assign');
+  const del=shBtn('Delete'); del.style.marginLeft='8px';
+  del.onclick=()=>{ if(!confirm('Delete "'+r.title+'"? Students will no longer see it.')) return;
+    del.disabled=true; MAAuth.sheets.remove(r.id,r.path).then(renderLibrary)
+      .catch(e=>{ del.disabled=false; alert('Couldn’t delete — '+((e&&e.message)||'')); }); };
+  row.appendChild(open); row.appendChild(asn); row.appendChild(del);
+  // assign panel — full-access students are omitted (they see everything already)
+  const panel=document.createElement('div'); panel.style.display='none'; panel.style.marginTop='8px';
+  const pool=state.people.filter(p=>fullIds.indexOf(p.id)<0);
+  if(!pool.length){ panel.innerHTML='<p class="muted" style="font-size:.82rem;margin:0">'+(state.people.length?'Everyone has full access.':'Add students in &ldquo;Set up&rdquo; first.')+'</p>'; }
+  else panel.innerHTML=pool.map(p=>{
+    const l=linkFor(p.id), st=(l&&l.claimed_at)?'linked':(l?'invite pending':'not linked yet');
+    const checked=(r.assigned||[]).indexOf(p.id)>=0?' checked':'';
+    return '<label class="tickrow" style="margin:2px 0"><input type="checkbox" class="asn" value="'+esc(p.id)+'"'+checked+'> '+
+      esc(p.name)+' <span class="hint" style="margin:0 0 0 6px">'+st+'</span></label>';
+  }).join('');
+  asn.onclick=()=>{ const open=panel.style.display==='none'; panel.style.display=open?'':'none'; asn.textContent=open?'Done':'Assign'; };
+  panel.addEventListener('change', ()=>{
+    const ids=[].slice.call(panel.querySelectorAll('.asn:checked')).map(c=>c.value);
+    MAAuth.sheets.assign(r.id, ids).then(()=>{ r.assigned=ids;
+      const sumEl=document.getElementById('sum_'+r.id); if(sumEl) sumEl.innerHTML=summary(ids);
+    }).catch(e=>{ alert('Couldn’t save — '+((e&&e.message)||'')); });
+  });
+  row.appendChild(panel);
+  return row;
+}
+
+function renderLibrary(){
+  const list=$('#sheetList'); if(!list) return;
+  list.innerHTML='<p class="muted" style="font-size:.85rem">Loading&hellip;</p>';
   if(!(window.MAAuth&&MAAuth.sheets)){ list.innerHTML='<p class="muted" style="font-size:.85rem">Sign-in library still loading &mdash; try again in a moment.</p>'; return; }
   MAAuth.sheets.listMine().then(rows=>{
-    if(!rows.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">No sheets yet. Add one on the left.</p>'; return; }
+    if(!rows.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">Nothing in your library yet. Add a sheet above.</p>'; return; }
+    const fullIds=(linkRows||[]).filter(l=>l.library_access).map(l=>l.person_id);
     list.innerHTML='';
-    rows.forEach(r=>{
-      const who = r.scope==='library'
-        ? 'Library &mdash; all my students'
-        : ('For: '+((r.assigned||[]).map(pid=>{const pp=person(pid);return pp?esc(pp.name):'&mdash;';}).join(', ')||'nobody yet'));
-      const row=document.createElement('div'); row.className='lnk'; row.style.marginBottom='10px';
-      row.innerHTML='<span class="who">'+esc(r.title)+'</span><div class="hint" style="margin:2px 0 7px">'+who+'</div>';
-      const open=document.createElement('button'); open.className='btn small'; open.textContent='Open';
-      open.onclick=()=>{ open.disabled=true; MAAuth.sheets.url(r.path)
-        .then(u=>{ open.disabled=false; window.open(u,'_blank','noopener'); })
-        .catch(()=>{ open.disabled=false; }); };
-      const del=document.createElement('button'); del.className='btn small'; del.textContent='Delete'; del.style.marginLeft='8px';
-      del.onclick=()=>{ if(!confirm('Delete "'+r.title+'"? Students will no longer see it.')) return;
-        del.disabled=true; MAAuth.sheets.remove(r.id,r.path).then(renderSheets)
-          .catch(e=>{ del.disabled=false; alert('Couldn’t delete — '+((e&&e.message)||'')); }); };
-      row.appendChild(open); row.appendChild(del); list.appendChild(row);
-    });
+    rows.forEach(r=>list.appendChild(sheetRow(r, fullIds, fullIds.length)));
   }).catch(e=>{
     const m=(e&&e.message)||'';
     list.innerHTML='<p class="muted" style="font-size:.85rem">'+
-      (/relation|does not exist|schema|bucket|not found/i.test(m)
+      (/relation|does not exist|schema|bucket|not found|column/i.test(m)
         ? 'Song sheets aren’t set up yet — run supabase-sheets.sql in Supabase.'
-        : 'Couldn’t load your sheets just now.')+'</p>';
+        : 'Couldn’t load your library just now.')+'</p>';
   });
 }
-$('#shScope').onchange=function(){ $('#shAssignWrap').style.display=(this.value==='library')?'none':''; };
+
+function renderSheets(){ const done=()=>{ renderSheetAccess(); renderLibrary(); }; loadLinks().then(done, done); }
+
 $('#shSave').onclick=function(){
   const inp=$('#shFile'), f=inp.files&&inp.files[0], msg=$('#shMsg');
-  function say(t,ok){ msg.textContent=t; msg.style.color=ok?'#1F9D55':(ok===false?'#B3261E':''); }
+  const say=(t,ok)=>{ msg.textContent=t; msg.style.color=ok?'#1F9D55':(ok===false?'#B3261E':''); };
   say('');
   if(!f){ say('Pick a PDF or image first.',false); return; }
-  const scope=$('#shScope').value;
-  const assigned=[].slice.call(document.querySelectorAll('.shchk:checked')).map(c=>c.value);
-  if(scope!=='library' && !assigned.length){ say('Tick at least one student, or choose Library.',false); return; }
   $('#shSave').disabled=true; say('Uploading…');
-  MAAuth.sheets.add(f, $('#shTitle').value.trim(), scope, assigned).then(()=>{
-    $('#shSave').disabled=false; say('Shared.',true);
-    $('#shTitle').value=''; inp.value='';
-    document.querySelectorAll('.shchk:checked').forEach(c=>c.checked=false);
-    renderSheets();
-  }).catch(e=>{
-    $('#shSave').disabled=false; const m=(e&&e.message)||'';
-    say(/bucket|not found|does not exist|relation/i.test(m)
+  MAAuth.sheets.add(f, $('#shTitle').value.trim()).then(()=>{
+    $('#shSave').disabled=false; say('Added to your library.',true);
+    $('#shTitle').value=''; inp.value=''; renderLibrary();
+  }).catch(e=>{ $('#shSave').disabled=false; const m=(e&&e.message)||'';
+    say(/bucket|not found|does not exist|relation|column/i.test(m)
       ? 'Storage isn’t set up yet — run supabase-sheets.sql.'
       : (m||'That didn’t upload.'), false);
   });
