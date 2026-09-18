@@ -516,6 +516,10 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
         </div>
         <label class="f" style="display:block;margin:8px 0 2px">CHORDS THE SONG USES <span style="text-transform:none">(optional — lets you search by chord)</span></label>
         <div id="shChords"></div>
+        <label class="f" style="display:block;margin:8px 0 2px">KEY <span style="text-transform:none">(optional)</span></label>
+        <div id="shKey"></div>
+        <label class="f" style="display:block;margin:8px 0 2px">DIFFICULTY <span style="text-transform:none">(optional)</span></label>
+        <div id="shDiff"></div>
         <div class="formrow" style="margin-top:8px">
           <button class="btn primary" id="shSave">Upload to library</button>
         </div>
@@ -533,7 +537,11 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
       <div id="shFilterWrap" style="border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:6px">
         <label class="f" style="display:block;margin:0 0 2px">SHOW SONGS PLAYABLE WITH THESE CHORDS</label>
         <div id="shFilter"></div>
-        <div class="hint" id="shFilterNote" style="margin-top:4px">Tap the chords a student knows to see what they can play. Leave blank to show everything.</div>
+        <label class="f" style="display:block;margin:10px 0 2px">KEY</label>
+        <div id="shKeyFilter"></div>
+        <label class="f" style="display:block;margin:10px 0 2px">DIFFICULTY</label>
+        <div id="shDiffFilter"></div>
+        <div class="hint" id="shFilterNote" style="margin-top:6px">Tap the chords a student knows to see what they can play. Leave blank to show everything.</div>
       </div>
       <div class="mlist" id="sheetList"></div>
     </div>
@@ -1953,23 +1961,31 @@ $('#closeManage').onclick=()=>{$('#manage').classList.remove('open');syncPanelCh
    (supabase-sheets.sql); this UI just drives it. */
 function shBtn(t){ const b=document.createElement('button'); b.className='btn small'; b.textContent=t; return b; }
 
-/* the chords a teacher can tag a song with (trad-friendly common set) */
+/* the chords / keys / difficulties a teacher can tag a song with */
 const SHEET_CHORDS=['G','C','D','A','E','F','B♭','Em','Am','Dm','Bm','F♯m','G7','C7','D7','A7','E7','B7'];
-let shLastChords=[];   // remembered between uploads, so a run of G-C-D songs is one tap each
-let shUploadChords=[]; // the current upload's selection
-let shFilterSel=[];    // "playable with these chords" filter
-/* a row of tap-to-toggle chord chips; mutates `selected` in place, calls onToggle(selected) */
-function chordGrid(selected, onToggle){
+const SHEET_KEYS=['G','D','A','C','E','F','B♭','Em','Am','Bm','Dm','F♯m'];
+const SHEET_DIFFS=['Beginner','Intermediate','Advanced'];
+let shLastChords=[], shLastDiff=[];   // remembered between uploads (fast for a run of similar songs)
+let shUploadChords=[], shUploadKey=[], shUploadDiff=[];   // the current upload's selections
+let shFilterSel=[], shKeyFilter=[], shDiffFilter=[];      // library filters
+/* a row of tap-to-toggle chips; mutates `selected` in place, calls onToggle(selected).
+   multi=false makes it single-select (tapping one clears the rest). */
+function chipRow(options, selected, multi, onToggle){
   const wrap=document.createElement('div'); wrap.className='chordgrid';
-  SHEET_CHORDS.forEach(ch=>{
+  options.forEach(opt=>{
     const b=document.createElement('button'); b.type='button';
-    b.className='chordchip'+(selected.indexOf(ch)>=0?' on':''); b.textContent=ch;
-    b.onclick=()=>{ const i=selected.indexOf(ch); if(i>=0) selected.splice(i,1); else selected.push(ch);
-      b.classList.toggle('on'); if(onToggle) onToggle(selected); };
+    b.className='chordchip'+(selected.indexOf(opt)>=0?' on':''); b.textContent=opt;
+    b.onclick=()=>{
+      if(multi){ const i=selected.indexOf(opt); if(i>=0) selected.splice(i,1); else selected.push(opt); }
+      else { const was=selected.indexOf(opt)>=0; selected.length=0; if(!was) selected.push(opt); }
+      [...wrap.children].forEach(c=>c.classList.toggle('on', selected.indexOf(c.textContent)>=0));
+      if(onToggle) onToggle(selected);
+    };
     wrap.appendChild(b);
   });
   return wrap;
 }
+function chordGrid(selected, onToggle){ return chipRow(SHEET_CHORDS, selected, true, onToggle); }
 
 function renderSheetAccess(){
   const host=$('#shAccess'); if(!host) return;
@@ -1997,29 +2013,40 @@ function sheetRow(r, fullIds, fullCount){
     return (nm.length?('Assigned to: '+nm.join(', ')):'Not assigned to anyone yet')+
       (fullCount?' <span class="hint" style="margin:0">(+'+fullCount+' with full access)</span>':'');
   };
-  const chordTags=(chords)=> (chords&&chords.length)
-    ? '<div class="chordtags">'+chords.map(c=>'<span class="chordtag">'+esc(c)+'</span>').join('')+'</div>'
-    : '<div class="chordtags"><span class="hint" style="margin:0">No chords tagged yet</span></div>';
-  row.innerHTML='<span class="who">'+esc(r.title)+'</span><div id="tags_'+r.id+'">'+chordTags(r.chords||[])+'</div>'+
+  const metaTags=(r2)=>{
+    let h='<div class="chordtags">';
+    (r2.chords||[]).forEach(c=> h+='<span class="chordtag">'+esc(c)+'</span>');
+    if(r2.key) h+='<span class="chordtag" style="background:#fff">Key '+esc(r2.key)+'</span>';
+    if(r2.difficulty) h+='<span class="chordtag" style="background:#fff">'+esc(r2.difficulty)+'</span>';
+    if(!(r2.chords&&r2.chords.length)&&!r2.key&&!r2.difficulty) h+='<span class="hint" style="margin:0">Not tagged yet</span>';
+    return h+'</div>';
+  };
+  const refreshTags=()=>{ const t=document.getElementById('tags_'+r.id); if(t) t.innerHTML=metaTags(r); };
+  row.innerHTML='<span class="who">'+esc(r.title)+'</span><div id="tags_'+r.id+'">'+metaTags(r)+'</div>'+
     '<div class="hint" id="sum_'+r.id+'" style="margin:2px 0 7px">'+summary(r.assigned||[])+'</div>';
   const open=shBtn('Open'); open.onclick=()=>{ open.disabled=true;
     MAAuth.sheets.url(r.path).then(u=>{open.disabled=false;window.open(u,'_blank','noopener');}).catch(()=>{open.disabled=false;}); };
   const asn=shBtn('Assign');
-  const chd=shBtn('Chords'); chd.style.marginLeft='8px';
+  const edit=shBtn('Edit tags'); edit.style.marginLeft='8px';
   const del=shBtn('Delete'); del.style.marginLeft='8px';
   del.onclick=()=>{ if(!confirm('Delete "'+r.title+'"? Students will no longer see it.')) return;
     del.disabled=true; MAAuth.sheets.remove(r.id,r.path).then(renderLibrary)
       .catch(e=>{ del.disabled=false; alert('Couldn’t delete — '+((e&&e.message)||'')); }); };
-  row.appendChild(open); row.appendChild(asn); row.appendChild(chd); row.appendChild(del);
-  // chord-tag panel: tap the chords the song uses; saves as you go
+  row.appendChild(open); row.appendChild(asn); row.appendChild(edit); row.appendChild(del);
+  // edit panel: chords / key / difficulty — each saves as you tap
   const cpanel=document.createElement('div'); cpanel.style.display='none'; cpanel.style.marginTop='8px';
-  const csel=(r.chords||[]).slice();
-  cpanel.appendChild(chordGrid(csel, sel=>{
-    MAAuth.sheets.setChords(r.id, sel).then(()=>{ r.chords=sel.slice();
-      const t=document.getElementById('tags_'+r.id); if(t) t.innerHTML=chordTags(r.chords);
-    }).catch(e=>{ alert('Couldn’t save chords — '+((e&&e.message)||'')); });
-  }));
-  chd.onclick=()=>{ const o=cpanel.style.display==='none'; cpanel.style.display=o?'':'none'; chd.textContent=o?'Done':'Chords'; };
+  const chSel=(r.chords||[]).slice(), keySel=r.key?[r.key]:[], diffSel=r.difficulty?[r.difficulty]:[];
+  const lab=t=>{ const d=document.createElement('div'); d.className='f'; d.style.margin='6px 0 2px'; d.textContent=t; return d; };
+  cpanel.appendChild(lab('CHORDS'));
+  cpanel.appendChild(chordGrid(chSel, sel=>{ MAAuth.sheets.setChords(r.id, sel).then(()=>{ r.chords=sel.slice(); refreshTags(); })
+    .catch(e=>{ alert('Couldn’t save chords — '+((e&&e.message)||'')); }); }));
+  cpanel.appendChild(lab('KEY'));
+  cpanel.appendChild(chipRow(SHEET_KEYS, keySel, false, sel=>{ MAAuth.sheets.setInfo(r.id, {key: sel[0]||''}).then(()=>{ r.key=sel[0]||''; refreshTags(); })
+    .catch(e=>{ alert('Couldn’t save key — '+((e&&e.message)||'')); }); }));
+  cpanel.appendChild(lab('DIFFICULTY'));
+  cpanel.appendChild(chipRow(SHEET_DIFFS, diffSel, false, sel=>{ MAAuth.sheets.setInfo(r.id, {difficulty: sel[0]||''}).then(()=>{ r.difficulty=sel[0]||''; refreshTags(); })
+    .catch(e=>{ alert('Couldn’t save difficulty — '+((e&&e.message)||'')); }); }));
+  edit.onclick=()=>{ const o=cpanel.style.display==='none'; cpanel.style.display=o?'':'none'; edit.textContent=o?'Done':'Edit tags'; };
   // assign panel — full-access students are omitted (they see everything already)
   const panel=document.createElement('div'); panel.style.display='none'; panel.style.marginTop='8px';
   const pool=state.people.filter(p=>fullIds.indexOf(p.id)<0);
@@ -2046,20 +2073,29 @@ function renderLibrary(){
   list.innerHTML='<p class="muted" style="font-size:.85rem">Loading&hellip;</p>';
   if(!(window.MAAuth&&MAAuth.sheets)){ list.innerHTML='<p class="muted" style="font-size:.85rem">Sign-in library still loading &mdash; try again in a moment.</p>'; return; }
   MAAuth.sheets.listMine().then(rows=>{
-    if(!rows.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">Nothing in your library yet. Add a sheet above.</p>'; $('#shFilterNote').textContent='Tap the chords a student knows to see what they can play. Leave blank to show everything.'; return; }
+    if(!rows.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">Nothing in your library yet. Add a sheet above.</p>'; $('#shFilterNote').textContent='Tap the chords a student knows (and a key or level) to narrow the list. Leave blank to show everything.'; return; }
     const fullIds=(linkRows||[]).filter(l=>l.library_access).map(l=>l.person_id);
-    let shown=rows, hidden=0;
-    if(shFilterSel.length){
-      // "playable with these chords" = every chord the song uses is one the student knows
-      shown=rows.filter(r=>(r.chords&&r.chords.length&&r.chords.every(c=>shFilterSel.indexOf(c)>=0)));
-      hidden=rows.length-shown.length;
-      $('#shFilterNote').innerHTML='Playable with '+shFilterSel.map(esc).join(' ')+': <b>'+shown.length+'</b> song'+(shown.length===1?'':'s')+'. '+
-        (hidden?('<span class="hint" style="margin:0">'+hidden+' other'+(hidden===1?'':'s')+' need more chords or aren’t tagged.</span>'):'');
+    const active=shFilterSel.length||shKeyFilter.length||shDiffFilter.length;
+    const shown=rows.filter(r=>{
+      // chords: "playable with" = every chord the song uses is one the student knows
+      if(shFilterSel.length && !(r.chords&&r.chords.length&&r.chords.every(c=>shFilterSel.indexOf(c)>=0))) return false;
+      if(shKeyFilter.length && shKeyFilter.indexOf(r.key)<0) return false;
+      if(shDiffFilter.length && shDiffFilter.indexOf(r.difficulty)<0) return false;
+      return true;
+    });
+    if(active){
+      const bits=[];
+      if(shFilterSel.length) bits.push('playable with '+shFilterSel.map(esc).join(' '));
+      if(shKeyFilter.length) bits.push('in '+shKeyFilter.map(esc).join(' / '));
+      if(shDiffFilter.length) bits.push(shDiffFilter.map(d=>esc(d.toLowerCase())).join(' / '));
+      const hidden=rows.length-shown.length;
+      $('#shFilterNote').innerHTML='<b>'+shown.length+'</b> song'+(shown.length===1?'':'s')+' '+bits.join(', ')+'. '+
+        (hidden?('<span class="hint" style="margin:0">'+hidden+' other'+(hidden===1?'':'s')+' don’t match or aren’t tagged.</span>'):'');
     } else {
-      $('#shFilterNote').textContent='Tap the chords a student knows to see what they can play. Leave blank to show everything.';
+      $('#shFilterNote').textContent='Tap the chords a student knows (and a key or level) to narrow the list. Leave blank to show everything.';
     }
     list.innerHTML='';
-    if(!shown.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">No songs use only those chords yet.</p>'; return; }
+    if(!shown.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">Nothing matches those filters yet.</p>'; return; }
     shown.forEach(r=>list.appendChild(sheetRow(r, fullIds, fullIds.length)));
   }).catch(e=>{
     const m=(e&&e.message)||'';
@@ -2071,11 +2107,15 @@ function renderLibrary(){
 }
 
 function renderSheets(){
-  // upload chord picker — starts from the last upload's chords (fast for a run of similar songs)
-  shUploadChords=shLastChords.slice();
+  // upload pickers — chords + difficulty start from the last upload (fast for a run of similar songs); key resets
+  shUploadChords=shLastChords.slice(); shUploadKey=[]; shUploadDiff=shLastDiff.slice();
   const up=$('#shChords'); if(up){ up.innerHTML=''; up.appendChild(chordGrid(shUploadChords, ()=>{})); }
-  // library filter — "playable with these chords"
+  const uk=$('#shKey'); if(uk){ uk.innerHTML=''; uk.appendChild(chipRow(SHEET_KEYS, shUploadKey, false, ()=>{})); }
+  const ud=$('#shDiff'); if(ud){ ud.innerHTML=''; ud.appendChild(chipRow(SHEET_DIFFS, shUploadDiff, false, ()=>{})); }
+  // library filters
   const flt=$('#shFilter'); if(flt){ flt.innerHTML=''; flt.appendChild(chordGrid(shFilterSel, ()=>renderLibrary())); }
+  const kf=$('#shKeyFilter'); if(kf){ kf.innerHTML=''; kf.appendChild(chipRow(SHEET_KEYS, shKeyFilter, true, ()=>renderLibrary())); }
+  const df=$('#shDiffFilter'); if(df){ df.innerHTML=''; df.appendChild(chipRow(SHEET_DIFFS, shDiffFilter, true, ()=>renderLibrary())); }
   const done=()=>{ renderSheetAccess(); renderLibrary(); }; loadLinks().then(done, done);
 }
 
@@ -2085,10 +2125,10 @@ $('#shSave').onclick=function(){
   say('');
   if(!f){ say('Pick a PDF or image first.',false); return; }
   $('#shSave').disabled=true; say('Uploading…');
-  MAAuth.sheets.add(f, $('#shTitle').value.trim(), shUploadChords).then(()=>{
+  MAAuth.sheets.add(f, $('#shTitle').value.trim(), shUploadChords, shUploadKey[0]||'', shUploadDiff[0]||'').then(()=>{
     $('#shSave').disabled=false; say('Added to your library.',true);
-    shLastChords=shUploadChords.slice();   // remember for the next upload
-    $('#shTitle').value=''; inp.value=''; renderLibrary();
+    shLastChords=shUploadChords.slice(); shLastDiff=shUploadDiff.slice();   // remember for the next upload
+    $('#shTitle').value=''; inp.value=''; renderSheets();
   }).catch(e=>{ $('#shSave').disabled=false; const m=(e&&e.message)||'';
     say(/bucket|not found|does not exist|relation|column/i.test(m)
       ? 'Storage isn’t set up yet — run supabase-sheets.sql.'

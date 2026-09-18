@@ -32,10 +32,14 @@ create table if not exists public.sheets (
   size        bigint,
   assigned    text[] not null default '{}',  -- rollbook person ids this sheet is assigned to
   chords      text[] not null default '{}',  -- chords the song uses, e.g. {G,C,D,Em} — for filtering
+  key         text not null default '',      -- the song's key, e.g. 'G' or 'Em'
+  difficulty  text not null default '',      -- 'Beginner' | 'Intermediate' | 'Advanced'
   created_at  timestamptz not null default now()
 );
 create index if not exists sheets_teacher on public.sheets(teacher_id);
-alter table public.sheets add column if not exists chords text[] not null default '{}';  -- for upgrades
+alter table public.sheets add column if not exists chords text[] not null default '{}';   -- for upgrades
+alter table public.sheets add column if not exists key text not null default '';
+alter table public.sheets add column if not exists difficulty text not null default '';
 alter table public.sheets enable row level security;
 
 -- Upgrade from the earlier per-sheet 'scope' model: drop the policies that used

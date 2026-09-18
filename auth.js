@@ -164,8 +164,8 @@
      write. scope 'assigned' + assigned:[person_id] targets specific students;
      scope 'library' is visible to all of that teacher's linked students. */
   window.MAAuth.sheets = {
-    // teacher: upload a file into the library (assign / tag chords separately)
-    add: function (file, title, chords) { return ensureSb().then(needUser).then(function () {
+    // teacher: upload a file into the library (assign / tag chords etc. separately)
+    add: function (file, title, chords, key, difficulty) { return ensureSb().then(needUser).then(function () {
       if (!file) return Promise.reject(new Error('Pick a file first.'));
       var ext = (String(file.name || '').split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
       var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
@@ -175,13 +175,14 @@
         .then(function (up) { if (up.error) throw up.error;
           return sb.from('sheets').insert({
             id: id, teacher_id: user.id, title: String(title || file.name || 'Sheet').slice(0, 120),
-            path: path, mime: file.type || '', size: file.size || 0, assigned: [], chords: (chords || []).map(String)
-          }).select('id,title,path,mime,size,assigned,chords,created_at').single()
+            path: path, mime: file.type || '', size: file.size || 0, assigned: [],
+            chords: (chords || []).map(String), key: String(key || ''), difficulty: String(difficulty || '')
+          }).select('id,title,path,mime,size,assigned,chords,key,difficulty,created_at').single()
             .then(function (r) { if (r.error) { try { sb.storage.from('sheets').remove([path]); } catch (e) {} throw r.error; } return r.data; });
         }); }); },
     // teacher: the whole library, newest first
     listMine: function () { return ensureSb().then(needUser).then(function () {
-      return sb.from('sheets').select('id,title,path,mime,size,assigned,chords,created_at')
+      return sb.from('sheets').select('id,title,path,mime,size,assigned,chords,key,difficulty,created_at')
         .eq('teacher_id', user.id).order('created_at', { ascending: false })
         .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
     // teacher: set exactly which students a sheet is assigned to (replaces the list)
@@ -194,6 +195,12 @@
       return sb.from('sheets').update({ chords: (chords || []).map(String) })
         .eq('id', id).eq('teacher_id', user.id).select('id,chords').single()
         .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
+    // teacher: patch a sheet's key and/or difficulty ({key, difficulty})
+    setInfo: function (id, patch) { return ensureSb().then(needUser).then(function () {
+      var p = {}; if (patch && 'key' in patch) p.key = String(patch.key || '');
+      if (patch && 'difficulty' in patch) p.difficulty = String(patch.difficulty || '');
+      return sb.from('sheets').update(p).eq('id', id).eq('teacher_id', user.id).select('id,key,difficulty').single()
+        .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
     // teacher: remove the file and its row
     remove: function (id, path) { return ensureSb().then(needUser).then(function () {
       return sb.storage.from('sheets').remove([path]).then(function () {
@@ -201,7 +208,7 @@
           .then(function (r) { if (r.error) throw r.error; return true; }); }); }); },
     // student (or teacher): every sheet shared with me — RLS returns only those
     listForMe: function () { return ensureSb().then(needUser).then(function () {
-      return sb.from('sheets').select('id,title,path,mime,chords,teacher_id,created_at')
+      return sb.from('sheets').select('id,title,path,mime,chords,key,difficulty,teacher_id,created_at')
         .order('created_at', { ascending: false })
         .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
     // a short-lived link to view one file (only works if RLS lets you read it)

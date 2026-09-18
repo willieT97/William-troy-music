@@ -250,8 +250,11 @@
       rows.forEach(function(r){
         var row=el('div','sheetrow');
         var left=el('div','sr-left'); left.appendChild(el('b',null,r.title));
-        if(r.chords&&r.chords.length){ var tg=el('div','chordtags');
-          r.chords.forEach(function(c){ tg.appendChild(el('span','chordtag',c)); }); left.appendChild(tg); }
+        if((r.chords&&r.chords.length)||r.key||r.difficulty){ var tg=el('div','chordtags');
+          (r.chords||[]).forEach(function(c){ tg.appendChild(el('span','chordtag',c)); });
+          if(r.key){ var k=el('span','chordtag',' Key '+r.key); k.style.background='#fff'; tg.appendChild(k); }
+          if(r.difficulty){ var d=el('span','chordtag',r.difficulty); d.style.background='#fff'; tg.appendChild(d); }
+          left.appendChild(tg); }
         row.appendChild(left);
         var open=el('button','btn go','Open'); open.type='button';
         open.addEventListener('click',function(){ open.disabled=true;
