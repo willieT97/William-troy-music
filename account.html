@@ -76,6 +76,12 @@
   #teacherlink .shares{ margin:10px 0 0; padding-left:18px; font-size:.9rem; }
   #teacherlink .shares li{ margin:2px 0; }
   #teacherlink .no{ opacity:.7; }
+  #teachersheets .grouplbl{ font-family:var(--disp); font-weight:700; font-size:.72rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted); margin:10px 0 6px; }
+  #teachersheets .grouplbl:first-child{ margin-top:0; }
+  #teachersheets .sheetrow{ display:flex; align-items:center; gap:10px; border:2px solid var(--ink);
+    background:#fff; padding:9px 12px; margin-bottom:8px; }
+  #teachersheets .sheetrow b{ flex:1; min-width:0; overflow-wrap:anywhere; }
 </style>
 </head>
 <body>
@@ -114,6 +120,11 @@
     <div class="card">
       <h2>Your teacher <span class="sub">— optional, and only if you want to</span></h2>
       <div id="teacherlink"></div>
+    </div>
+
+    <div class="card" id="sheetsCard" hidden>
+      <h2>Sheets from your teacher <span class="sub">— shared privately with you</span></h2>
+      <div id="teachersheets"></div>
     </div>
 
     <div class="card">
@@ -218,6 +229,38 @@
     });
   }
 
+  /* ---- song sheets a teacher has shared privately with this student ----
+     RLS returns only sheets aimed at them (assigned) or put in the library. The
+     whole card hides when there's nothing to show. */
+  function renderTeacherSheets(){
+    var card=document.getElementById('sheetsCard'), host=document.getElementById('teachersheets');
+    if(!host) return;
+    var A=window.MAAuth;
+    if(!(A&&A.sheets&&A.user&&A.user())){ if(card) card.hidden=true; return; }
+    A.sheets.listForMe().then(function(rows){
+      var me=A.user().id;
+      rows=(rows||[]).filter(function(r){ return r.teacher_id!==me; });   // not my own uploads
+      if(!rows.length){ if(card) card.hidden=true; return; }
+      if(card) card.hidden=false;
+      host.innerHTML='';
+      var foryou=rows.filter(function(r){ return r.scope!=='library'; });
+      var lib=rows.filter(function(r){ return r.scope==='library'; });
+      function group(label, list){
+        if(!list.length) return;
+        host.appendChild(el('div','grouplbl',label));
+        list.forEach(function(r){
+          var row=el('div','sheetrow'); row.appendChild(el('b',null,r.title));
+          var open=el('button','btn go','Open'); open.type='button';
+          open.addEventListener('click',function(){ open.disabled=true;
+            A.sheets.url(r.path).then(function(u){ open.disabled=false; window.open(u,'_blank','noopener'); })
+              .catch(function(){ open.disabled=false; }); });
+          row.appendChild(open); host.appendChild(row);
+        });
+      }
+      group('For you', foryou); group('Library', lib);
+    }).catch(function(){ if(card) card.hidden=true; });   // table not set up yet, or transient
+  }
+
   // ---- accomplishments: belts + trophies derived from Dojo progress; counts from creations ----
   var DOJO=[
     { id:'learning-to-walk', pkey:'ltw.progress.v1', name:'Learning to Walk',
@@ -311,7 +354,7 @@
     document.getElementById('gate').hidden=true; document.getElementById('hub').hidden=false;
     var er=document.getElementById('emailRow'); er.innerHTML=''; er.appendChild(document.createTextNode('Signed in as ')); var b=el('b',null,user.email); er.appendChild(b);
     document.getElementById('uname').value = (profile && profile.username) || '';
-    renderPlan(); renderAccomp(); renderTeacherLink(); renderMelody(); renderCreations(); renderPublished(user, profile);
+    renderPlan(); renderAccomp(); renderTeacherLink(); renderTeacherSheets(); renderMelody(); renderCreations(); renderPublished(user, profile);
   }
 
   function renderMelody(){

@@ -149,6 +149,56 @@
         .then(function (r) { return (r && r.data && r.data.username) || ''; }); }); }
   };
 
+  /* ---- private song sheets a teacher shares with linked students ----
+     Files live in a PRIVATE Storage bucket (see supabase-sheets.sql); a row in
+     public.sheets records the title and who it's for. RLS means a student can
+     only ever read a sheet shared with them, and only the owning teacher can
+     write. scope 'assigned' + assigned:[person_id] targets specific students;
+     scope 'library' is visible to all of that teacher's linked students. */
+  window.MAAuth.sheets = {
+    // teacher: upload a file and record who it's for
+    add: function (file, title, scope, assigned) { return ensureSb().then(needUser).then(function () {
+      if (!file) return Promise.reject(new Error('Pick a file first.'));
+      var ext = (String(file.name || '').split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+      var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+             : ('sx' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+      var path = user.id + '/' + id + '.' + ext, lib = scope === 'library';
+      return sb.storage.from('sheets').upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false })
+        .then(function (up) { if (up.error) throw up.error;
+          return sb.from('sheets').insert({
+            id: id, teacher_id: user.id, title: String(title || file.name || 'Sheet').slice(0, 120),
+            path: path, mime: file.type || '', size: file.size || 0,
+            scope: lib ? 'library' : 'assigned', assigned: lib ? [] : (assigned || []).map(String)
+          }).select('id,title,path,mime,size,scope,assigned,created_at').single()
+            .then(function (r) { if (r.error) { try { sb.storage.from('sheets').remove([path]); } catch (e) {} throw r.error; } return r.data; });
+        }); }); },
+    // teacher: their own sheets, newest first
+    listMine: function () { return ensureSb().then(needUser).then(function () {
+      return sb.from('sheets').select('id,title,path,mime,size,scope,assigned,created_at')
+        .eq('teacher_id', user.id).order('created_at', { ascending: false })
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
+    // teacher: change who a sheet is shared with
+    share: function (id, scope, assigned) { return ensureSb().then(needUser).then(function () {
+      var lib = scope === 'library';
+      return sb.from('sheets').update({ scope: lib ? 'library' : 'assigned', assigned: lib ? [] : (assigned || []).map(String) })
+        .eq('id', id).eq('teacher_id', user.id).select('id,scope,assigned').single()
+        .then(function (r) { if (r.error) throw r.error; return r.data; }); }); },
+    // teacher: remove the file and its row
+    remove: function (id, path) { return ensureSb().then(needUser).then(function () {
+      return sb.storage.from('sheets').remove([path]).then(function () {
+        return sb.from('sheets').delete().eq('id', id).eq('teacher_id', user.id)
+          .then(function (r) { if (r.error) throw r.error; return true; }); }); }); },
+    // student (or teacher): every sheet shared with me — RLS returns only those
+    listForMe: function () { return ensureSb().then(needUser).then(function () {
+      return sb.from('sheets').select('id,title,path,mime,scope,teacher_id,created_at')
+        .order('created_at', { ascending: false })
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; }); }); },
+    // a short-lived link to view one file (only works if RLS lets you read it)
+    url: function (path) { return ensureSb().then(function () {
+      return sb.storage.from('sheets').createSignedUrl(path, 3600)
+        .then(function (r) { if (r.error) throw r.error; return r.data.signedUrl; }); }); }
+  };
+
   // ---- keyed progress (one creations row per course, kind 'progress', title = course id) ----
   window.MAAuth.progress = (function () {
     var ids = {};   // course id -> creations row id (remembered for the session so pushes update, not duplicate)

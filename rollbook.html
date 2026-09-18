@@ -269,8 +269,8 @@ textarea.field{resize:vertical;min-height:56px}
 .muted{color:rgba(23,20,14,.6);font-size:.88rem}
 
 /* ---------- manage ---------- */
-#manage,#attview{position:fixed;inset:0;background:var(--paper);z-index:80;display:none;overflow-y:auto}
-#manage.open,#attview.open{display:block}
+#manage,#attview,#sheets{position:fixed;inset:0;background:var(--paper);z-index:80;display:none;overflow-y:auto}
+#manage.open,#attview.open,#sheets.open{display:block}
 .mwrap{max-width:860px;margin:0 auto;padding:26px 22px 100px}
 .mwrap h1{font-family:var(--display);font-size:1.8rem;margin-bottom:4px}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px}
@@ -293,7 +293,7 @@ textarea.field{resize:vertical;min-height:56px}
 #gate{display:none;padding:60px 22px 40px}
 #gate.show{display:block}
 body.gated header .weeknav,body.gated header .weeklabel,body.gated header #syncStatus,
-body.gated header #openManage,body.gated header #openAtt,body.gated header #openPrint,body.gated header #openLab,body.gated header #openReading,body.gated main,body.gated #demoBanner{display:none}
+body.gated header #openManage,body.gated header #openAtt,body.gated header #openPrint,body.gated header #openSheets,body.gated header #openLab,body.gated header #openReading,body.gated main,body.gated #demoBanner{display:none}
 .gatecard{max-width:520px;margin:0 auto;border:3px solid var(--ink);background:#fff;
   box-shadow:8px 8px 0 var(--ink);padding:32px 30px 28px;text-align:center}
 .gatecard .lock{font-size:2.4rem;line-height:1}
@@ -352,6 +352,7 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
   <a class="btn" id="openReading" href="reading.html" title="The reading behind the creativity workshops">Reading</a>
   <button class="btn" id="openAtt">Attendance</button>
   <button class="btn" id="openPrint" title="Print this week as a paper register (Save as PDF to keep it)">Print week</button>
+  <button class="btn" id="openSheets" title="Private song sheets you share with your students">Sheets</button>
   <button class="btn" id="openManage">Set up</button>
 </header>
 
@@ -487,6 +488,44 @@ body.gated header #openManage,body.gated header #openAtt,body.gated header #open
           <button class="btn primary" id="oSave">Add one-off</button>
         </div>
         <div class="mlist" id="oneOffList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="sheets">
+  <div class="mwrap">
+    <button class="btn" id="closeSheets" style="float:right">Back to week</button>
+    <h1>Song sheets</h1>
+    <p class="muted">Private PDFs and images you share with your students. Nothing here is public &mdash; only a student you&rsquo;ve linked can open a sheet, and only the ones you share with them.</p>
+    <div class="mgrid">
+      <div class="mcard">
+        <h2>Add a sheet</h2>
+        <div class="formrow">
+          <input class="field" id="shTitle" placeholder="Title (e.g. Cooley&rsquo;s Reel)">
+        </div>
+        <div class="formrow">
+          <input class="field" id="shFile" type="file" accept="application/pdf,image/*">
+        </div>
+        <div class="formrow">
+          <select class="field" id="shScope">
+            <option value="assigned">Assign to specific students</option>
+            <option value="library">Library &mdash; any of my students can browse</option>
+          </select>
+        </div>
+        <div id="shAssignWrap">
+          <label class="f" style="display:block;margin:2px 0 4px">WHICH STUDENTS</label>
+          <div class="mlist" id="shAssign" style="max-height:220px;overflow-y:auto"></div>
+        </div>
+        <div class="formrow" style="margin-top:10px">
+          <button class="btn primary" id="shSave">Upload sheet</button>
+        </div>
+        <div class="msg" id="shMsg" style="min-height:1em;font-size:.85rem;font-weight:600;margin-top:6px"></div>
+        <div class="hint">PDF or image, up to 25&nbsp;MB. Check your licence allows sharing digital copies with students.</div>
+      </div>
+      <div class="mcard">
+        <h2>Your sheets</h2>
+        <div class="mlist" id="sheetList"></div>
       </div>
     </div>
   </div>
@@ -1473,7 +1512,8 @@ function el(html){const t=document.createElement('template');t.innerHTML=html.tr
 /* ---------- drawer ---------- */
 function syncPanelChrome(){
   document.body.classList.toggle('panelopen',
-    $('#drawer').classList.contains('open') || $('#manage').classList.contains('open') || $('#attview').classList.contains('open'));
+    $('#drawer').classList.contains('open') || $('#manage').classList.contains('open') ||
+    $('#attview').classList.contains('open') || $('#sheets').classList.contains('open'));
 }
 function openDrawer(personId,dateISO,slotId,oneOffId){
   drawerCtx={personId,dateISO,slotId,oneOffId};editingLessonId=null;
@@ -1896,6 +1936,77 @@ $('#oSave').onclick=()=>{
 };
 $('#openManage').onclick=()=>{resetPForm();resetSForm();renderManage();$('#manage').classList.add('open');syncPanelChrome();};
 $('#closeManage').onclick=()=>{$('#manage').classList.remove('open');syncPanelChrome();render();};
+
+/* ---------- song sheets: private files shared down to linked students ----------
+   Upload lands in the private 'sheets' bucket; a public.sheets row records who
+   it's for. Enforced by RLS (supabase-sheets.sql) — this UI just drives it. */
+function renderSheetAssign(){
+  const wrap=$('#shAssign'); if(!wrap) return;
+  loadLinks().then(()=>{
+    if(!state.people.length){ wrap.innerHTML='<p class="muted" style="font-size:.85rem;margin:0">Add students in &ldquo;Set up&rdquo; first.</p>'; return; }
+    wrap.innerHTML=state.people.map(p=>{
+      const l=linkFor(p.id), linked=!!(l&&l.claimed_at);
+      return '<label class="tickrow" style="margin:2px 0"><input type="checkbox" class="shchk" value="'+esc(p.id)+'"> '+
+        esc(p.name)+' <span class="hint" style="margin:0 0 0 6px">'+(linked?'linked':'not linked yet')+'</span></label>';
+    }).join('');
+  });
+}
+function renderSheets(){
+  renderSheetAssign();
+  $('#shAssignWrap').style.display = ($('#shScope').value==='library') ? 'none' : '';
+  const list=$('#sheetList'); list.innerHTML='<p class="muted" style="font-size:.85rem">Loading&hellip;</p>';
+  if(!(window.MAAuth&&MAAuth.sheets)){ list.innerHTML='<p class="muted" style="font-size:.85rem">Sign-in library still loading &mdash; try again in a moment.</p>'; return; }
+  MAAuth.sheets.listMine().then(rows=>{
+    if(!rows.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">No sheets yet. Add one on the left.</p>'; return; }
+    list.innerHTML='';
+    rows.forEach(r=>{
+      const who = r.scope==='library'
+        ? 'Library &mdash; all my students'
+        : ('For: '+((r.assigned||[]).map(pid=>{const pp=person(pid);return pp?esc(pp.name):'&mdash;';}).join(', ')||'nobody yet'));
+      const row=document.createElement('div'); row.className='lnk'; row.style.marginBottom='10px';
+      row.innerHTML='<span class="who">'+esc(r.title)+'</span><div class="hint" style="margin:2px 0 7px">'+who+'</div>';
+      const open=document.createElement('button'); open.className='btn small'; open.textContent='Open';
+      open.onclick=()=>{ open.disabled=true; MAAuth.sheets.url(r.path)
+        .then(u=>{ open.disabled=false; window.open(u,'_blank','noopener'); })
+        .catch(()=>{ open.disabled=false; }); };
+      const del=document.createElement('button'); del.className='btn small'; del.textContent='Delete'; del.style.marginLeft='8px';
+      del.onclick=()=>{ if(!confirm('Delete "'+r.title+'"? Students will no longer see it.')) return;
+        del.disabled=true; MAAuth.sheets.remove(r.id,r.path).then(renderSheets)
+          .catch(e=>{ del.disabled=false; alert('Couldn’t delete — '+((e&&e.message)||'')); }); };
+      row.appendChild(open); row.appendChild(del); list.appendChild(row);
+    });
+  }).catch(e=>{
+    const m=(e&&e.message)||'';
+    list.innerHTML='<p class="muted" style="font-size:.85rem">'+
+      (/relation|does not exist|schema|bucket|not found/i.test(m)
+        ? 'Song sheets aren’t set up yet — run supabase-sheets.sql in Supabase.'
+        : 'Couldn’t load your sheets just now.')+'</p>';
+  });
+}
+$('#shScope').onchange=function(){ $('#shAssignWrap').style.display=(this.value==='library')?'none':''; };
+$('#shSave').onclick=function(){
+  const inp=$('#shFile'), f=inp.files&&inp.files[0], msg=$('#shMsg');
+  function say(t,ok){ msg.textContent=t; msg.style.color=ok?'#1F9D55':(ok===false?'#B3261E':''); }
+  say('');
+  if(!f){ say('Pick a PDF or image first.',false); return; }
+  const scope=$('#shScope').value;
+  const assigned=[].slice.call(document.querySelectorAll('.shchk:checked')).map(c=>c.value);
+  if(scope!=='library' && !assigned.length){ say('Tick at least one student, or choose Library.',false); return; }
+  $('#shSave').disabled=true; say('Uploading…');
+  MAAuth.sheets.add(f, $('#shTitle').value.trim(), scope, assigned).then(()=>{
+    $('#shSave').disabled=false; say('Shared.',true);
+    $('#shTitle').value=''; inp.value='';
+    document.querySelectorAll('.shchk:checked').forEach(c=>c.checked=false);
+    renderSheets();
+  }).catch(e=>{
+    $('#shSave').disabled=false; const m=(e&&e.message)||'';
+    say(/bucket|not found|does not exist|relation/i.test(m)
+      ? 'Storage isn’t set up yet — run supabase-sheets.sql.'
+      : (m||'That didn’t upload.'), false);
+  });
+};
+$('#openSheets').onclick=()=>{ $('#sheets').classList.add('open'); syncPanelChrome(); renderSheets(); };
+$('#closeSheets').onclick=()=>{ $('#sheets').classList.remove('open'); syncPanelChrome(); render(); };
 
 /* ---------- attendance overview ----------
    The end-of-year question this answers: which lessons do I owe? Every mark
