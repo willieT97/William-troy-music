@@ -181,7 +181,7 @@
       <button data-deg="5">Fifth</button>
     </div>
     <button class="printbtn" onclick="window.print()">🖨 Print</button>
-    <span class="legend">Dots are the chord tones — turn on <b>1 3 5</b> or <b>note names</b> to label them. Tap a chord to hear it.</span>
+    <span class="legend">Dots are the chord tones — turn on <b>1 3 5</b> or <b>note names</b> to label them. The numbers spell the chord exactly, so a minor shows a <b>♭3</b> and a seventh a <b>♭7</b>. Tap a chord to hear it.</span>
   </div>
 
   <div class="rule"></div>
@@ -200,11 +200,41 @@
   function el(t){ return document.createElementNS(NS,t); }
   var WHITE_ORDER=[0,2,4,5,7,9,11];
   function isBlack(pc){ return pc===1||pc===3||pc===6||pc===8||pc===10; }
-  var DEG_IX={'1':0,'3':1,'5':2};
-  function noteFor(deg, names){ return (deg&&names)?names[DEG_IX[deg]]:''; }
-  function degreeOf(pc, rootPc, thirdInt){
-    var d=(pc-rootPc+12)%12;
-    if(d===0) return '1'; if(d===thirdInt) return '3'; if(d===7) return '5'; return null;
+  /* ---- what gets written on a dot ----
+     The number says which slot of the chord a note fills -- root, third, fifth,
+     seventh -- and the accidental says how far that slot really sits from the
+     root, so a minor third reads \u266d3 and a diminished fifth \u266d5.  It's worked out
+     from the chord's own spelling under the title, so anything added later
+     labels itself: E \u00b7 G \u00b7 B gives 1 \u266d3 5, and G \u00b7 B \u00b7 D \u00b7 F gives 1 3 5 \u266d7. */
+  var SLOT_DEG=['1','3','5','7'];          /* the plain slot -- what the spotlight matches on */
+  var SLOT_LAB=[                           /* slot -> semitones above the root -> what to write */
+    {0:'1'},
+    {2:'2',3:'\u266d3',4:'3',5:'4'},
+    {6:'\u266d5',7:'5',8:'\u266f5'},
+    {9:'\u266d\u266d7',10:'\u266d7',11:'7'}
+  ];
+  var DEFAULT_IV=[0,4,7,10];
+  var NOTE_PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  function pcOfName(n){
+    var m=/^\s*([A-G])([\u266f\u266d#b]*)/.exec(n||''); if(!m) return null;
+    var pc=NOTE_PC[m[1]];
+    for(var i=0;i<m[2].length;i++) pc+=(m[2].charAt(i)==='\u266f'||m[2].charAt(i)==='#')?1:-1;
+    return (pc%12+12)%12;
+  }
+  /* pitch class -> {deg, lab, note, iv} for every tone of one chord */
+  function toneMap(rootPc, names, thirdInt){
+    var m={};
+    for(var i=0;i<names.length&&i<4;i++){
+      var pc=pcOfName(names[i]);
+      var iv=(pc===null)?(i===1?thirdInt:DEFAULT_IV[i]):(pc-rootPc+12)%12;
+      m[(rootPc+iv)%12]={deg:SLOT_DEG[i], lab:(SLOT_LAB[i]&&SLOT_LAB[i][iv])||SLOT_DEG[i],
+                         note:names[i], iv:iv};
+    }
+    return m;
+  }
+  function intervals(tones){
+    var a=[]; for(var k in tones) a.push(tones[k].iv);
+    return a.sort(function(x,y){ return x-y; });
   }
 
   // circle-of-fifths order, F then C
@@ -256,7 +286,7 @@
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(a.destination);
     o.start(t); o.stop(t+dur+0.05);
   }
-  function playPiano(rootPc, thirdInt){ try{ [0,thirdInt,7].forEach(function(iv,k){ tone(60+rootPc+iv, k*0.045, 1.4); }); }catch(e){} }
+  function playPiano(rootPc, tones){ try{ intervals(tones).forEach(function(iv,k){ tone(60+rootPc+iv, k*0.045, 1.4); }); }catch(e){} }
   function playFrets(frets, openMidi){ try{ var k=0; for(var i=0;i<frets.length;i++){ if(frets[i]>=0){ tone(openMidi[i]+frets[i], k*0.05, 1.6); k++; } } }catch(e){} }
   function playGuitar(frets){ playFrets(frets, G_OPEN_MIDI); }
   function playBanjo(frets){ playFrets(frets, B_OPEN_MIDI); }
@@ -276,42 +306,42 @@
       t.setAttribute('font-size',size); t.setAttribute('fill',txt); t.textContent=text||'';
       g.appendChild(t);
     }
-    lab('deg', label||'', r>=8?'10.5':'9.5');
+    /* "\u266d3" is two characters in a dot built for one -- shrink it so it still sits inside */
+    lab('deg', label||'', (label||'').length>1 ? (r>=8?'8.5':'7.6') : (r>=8?'10.5':'9.5'));
     lab('note', note||'', r>=8?'9':'8');
     parent.appendChild(g);
   }
 
   // ---- piano keyboard ----
-  function keyboard(rootPc, thirdInt, accent, tint, names){
+  function keyboard(rootPc, tones, accent, tint){
     var wW=22,wH=94,bW=13,bH=59,n=7;
     var base=isBlack(rootPc)?(rootPc+11)%12:rootPc, start=WHITE_ORDER.indexOf(base), seq=[];
     for(var i=0;i<n;i++) seq.push(WHITE_ORDER[(start+i)%7]);
-    var deg={}; deg[rootPc]='1'; deg[(rootPc+thirdInt)%12]='3'; deg[(rootPc+7)%12]='5';
     var svg=el('svg'); svg.setAttribute('viewBox','0 0 '+(n*wW)+' '+(wH+2)); svg.setAttribute('class','kbd');
     for(var i=0;i<n;i++){
-      var pc=seq[i], x=i*wW, d=deg[pc];
+      var pc=seq[i], x=i*wW, d=tones[pc];
       var r=el('rect'); r.setAttribute('x',x); r.setAttribute('y',0); r.setAttribute('width',wW); r.setAttribute('height',wH);
       r.setAttribute('rx',3); r.setAttribute('stroke','#c7cfdb'); r.setAttribute('stroke-width',1.4);
-      if(d){ r.setAttribute('fill',tint); r.setAttribute('class','keytint'); r.setAttribute('data-deg',d); } else r.setAttribute('fill','#fff');
+      if(d){ r.setAttribute('fill',tint); r.setAttribute('class','keytint'); r.setAttribute('data-deg',d.deg); } else r.setAttribute('fill','#fff');
       svg.appendChild(r);
-      if(d) mark(svg, x+wW/2, wH-15, 8, d, accent, null, '#fff', d, noteFor(d,names));
+      if(d) mark(svg, x+wW/2, wH-15, 8, d.lab, accent, null, '#fff', d.deg, d.note);
     }
     for(var i=0;i<n-1;i++){
       var a=seq[i], b=seq[i+1];
       if(((b-a+12)%12)===2){
-        var bpc=(a+1)%12, bx=(i+1)*wW-bW/2, d=deg[bpc];
+        var bpc=(a+1)%12, bx=(i+1)*wW-bW/2, d=tones[bpc];
         var rr=el('rect'); rr.setAttribute('x',bx); rr.setAttribute('y',0); rr.setAttribute('width',bW); rr.setAttribute('height',bH);
         rr.setAttribute('rx',2);
-        if(d){ rr.setAttribute('fill',accent); rr.setAttribute('class','keyblk'); rr.setAttribute('data-deg',d); } else rr.setAttribute('fill','#2A3242');
+        if(d){ rr.setAttribute('fill',accent); rr.setAttribute('class','keyblk'); rr.setAttribute('data-deg',d.deg); } else rr.setAttribute('fill','#2A3242');
         svg.appendChild(rr);
-        if(d) mark(svg, bx+bW/2, bH-11, 7.5, d, '#fff', null, accent, d, noteFor(d,names));
+        if(d) mark(svg, bx+bW/2, bH-11, 7.5, d.lab, '#fff', null, accent, d.deg, d.note);
       }
     }
     return svg;
   }
 
   // ---- guitar diagram ----
-  function guitar(frets, base, rootPc, thirdInt, accent, names, openPc){
+  function guitar(frets, base, tones, accent, openPc){
     openPc=openPc||G_OPEN_PC;
     var nStr=openPc.length, last=nStr-1;
     var padL=26, padT=26, sGap=(nStr===4?19:15), fretGap=22, nFrets=4;
@@ -341,9 +371,9 @@
         t.setAttribute('font-family',"'Space Mono',monospace"); t.setAttribute('font-size','11'); t.setAttribute('fill','#9aa3b2');
         t.textContent='×'; svg.appendChild(t); continue;
       }
-      var pc=(openPc[i]+f)%12, deg=degreeOf(pc, rootPc, thirdInt), nn=noteFor(deg,names);
-      if(f===0){ mark(svg, x, nutY-9, 7, deg, '#fff', accent, accent, deg, nn); }
-      else { mark(svg, x, nutY+(f-base+0.5)*fretGap, 8, deg, accent, null, '#fff', deg, nn); }
+      var pc=(openPc[i]+f)%12, t=tones[pc], lab=t?t.lab:'', dg=t?t.deg:null, nn=t?t.note:'';
+      if(f===0){ mark(svg, x, nutY-9, 7, lab, '#fff', accent, accent, dg, nn); }
+      else { mark(svg, x, nutY+(f-base+0.5)*fretGap, 8, lab, accent, null, '#fff', dg, nn); }
     }
     return svg;
   }
@@ -421,17 +451,18 @@
     var spelled=spec.notes||(isMinor?MIN:MAJ)[spec.pc];
     var nm=document.createElement('div'); nm.className='nm'; nm.textContent=spelled; box.appendChild(nm);
     var names=spelled.split(' \u00b7 ');       /* [root, third, fifth (, seventh)] as this chord spells them */
+    var tones=toneMap(spec.pc, names, thirdInt);  /* that spelling decides every dot label */
     var hit;
     if(kind==='piano'){
-      box.appendChild(keyboard(spec.pc, thirdInt, accent, tint, names));
-      hit=function(){ playPiano(spec.pc, thirdInt); };
+      box.appendChild(keyboard(spec.pc, tones, accent, tint));
+      hit=function(){ playPiano(spec.pc, tones); };
     } else if(kind==='banjo'){
       var bj=spec.frets?{f:spec.frets,b:spec.base||1}:(isMinor?BMIN:BMAJ)[spec.pc];
-      box.appendChild(guitar(bj.f, bj.b, spec.pc, thirdInt, accent, names, B_OPEN_PC));
+      box.appendChild(guitar(bj.f, bj.b, tones, accent, B_OPEN_PC));
       hit=function(){ playBanjo(bj.f); };
     } else {
       var g=spec.frets?{f:spec.frets,b:spec.base||1}:(isMinor?GMIN:GMAJ)[spec.pc];
-      box.appendChild(guitar(g.f, g.b, spec.pc, thirdInt, accent, names, G_OPEN_PC));
+      box.appendChild(guitar(g.f, g.b, tones, accent, G_OPEN_PC));
       hit=function(){ playGuitar(g.f); };
     }
     box.addEventListener('click', hit);
