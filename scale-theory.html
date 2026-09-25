@@ -237,12 +237,13 @@
   <!-- SCALE LIBRARY -->
   <section id="s-directory">
     <h2 class="sec">The scale library</h2>
-    <p class="secnote">Any scale, any root — mapped across the <b>whole piano</b> or the <b>full neck</b> of each string instrument. The complete picture to study or print.</p>
+    <p class="secnote">Any scale, any root — mapped on the <b>piano</b> or the <b>neck</b> of each string instrument. Pick <b>one octave</b> for the run you'd actually play — root up to the octave above it — or <b>two</b> to carry it further. The complete picture to study or print.</p>
     <div class="picker dirctrl">
       <label class="dl">Scale <select id="dirScale" class="sel"></select></label>
       <label class="dl">Root <select id="dirRoot" class="sel"></select></label>
     </div>
     <div class="picker"><div class="roots" id="dirInst"></div></div>
+    <div class="picker"><div class="roots" id="dirOct"></div></div>
     <div id="dirDia"></div>
   </section>
 
@@ -391,21 +392,32 @@
     return s+'</svg>';
   }
 
-  // ---- library: whole piano (two octaves) ----
-  function pianoFullSVG(root, sc){
+  // ---- library: the piano, one or two octaves up from the root ----
+  // The run starts ON the root and ends on the octave above it, which is what
+  // you'd actually play -- not every note of that pitch class across the keys.
+  function pianoFullSVG(root, sc, octs){
+    octs = octs===2 ? 2 : 1;
     var KW=22, KH=104, BW=13, BH=64, PADX=8, TOP=8;
-    var whites=[]; for(var m=48;m<=72;m++){ if(isWhite(m)) whites.push(m); }
+    var lo=48+root.pc, hi=lo+12*octs;
+    // draw whole keys either side so it still reads as a keyboard
+    var start=lo; while(!isWhite(start)) start--;
+    var end=hi;   while(!isWhite(end)) end++;
+    var whites=[]; for(var m=start;m<=end;m++){ if(isWhite(m)) whites.push(m); }
+    // every note of the run, by actual pitch, with its degree
+    var degAt={};
+    for(var o=0;o<octs;o++) sc.ints.forEach(function(iv,i){ degAt[lo+o*12+iv]=sc.degs[i]; });
+    degAt[hi]='8';
     var degOf={}; sc.ints.forEach(function(iv,i){ degOf[(root.pc+iv)%12]=sc.degs[i]; });
     function wxi(i){ return PADX+i*KW; }
     function cxm(mm){ return isWhite(mm) ? wxi(whites.indexOf(mm))+KW/2 : wxi(whites.indexOf(mm-1))+KW; }
     var W=PADX*2+whites.length*KW, H=TOP+KH+8, my=TOP+KH-16;
-    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+' across the piano">';
-    whites.forEach(function(wm,i){ var pc=((wm%12)+12)%12, hit=(pc in degOf);
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+', '+octs+' octave'+(octs>1?'s':'')+' on the piano">';
+    whites.forEach(function(wm,i){ var hit=(wm in degAt);
       s+='<rect x="'+wxi(i)+'" y="'+TOP+'" width="'+KW+'" height="'+KH+'" rx="3" fill="'+(hit?'var(--tint)':'#fff')+'" stroke="#c7cfdb" stroke-width="1"/>'; });
-    whites.forEach(function(wm,i){ if(i===whites.length-1)return; if(whites[i+1]-wm===2){ var bm=wm+1, pc=((bm%12)+12)%12, hit=(pc in degOf);
+    whites.forEach(function(wm,i){ if(i===whites.length-1)return; if(whites[i+1]-wm===2){ var bm=wm+1, hit=(bm in degAt);
       s+='<rect x="'+(wxi(i)+KW-BW/2)+'" y="'+TOP+'" width="'+BW+'" height="'+BH+'" rx="2" fill="'+(hit?'var(--acc)':'#2a3242')+'"/>'; }});
     var by=TOP+BH-15;
-    for(var mm=48;mm<=72;mm++){ var pc=((mm%12)+12)%12; if(!(pc in degOf)) continue; var x=cxm(mm), ring=(pc===root.pc), lbl=degOf[pc];
+    for(var mm=start;mm<=end;mm++){ if(!(mm in degAt)) continue; var x=cxm(mm), ring=(mm===lo||mm===hi), lbl=degAt[mm];
       if(isWhite(mm)){
         s+='<circle cx="'+x+'" cy="'+my+'" r="8.5" fill="var(--acc)"'+(ring?' stroke="#fff" stroke-width="2"':'')+'/>'+
           '<text x="'+x+'" y="'+(my+3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" font-weight="700" fill="#fff">'+lbl+'</text>';
@@ -418,31 +430,45 @@
   }
 
   // ---- library: the whole neck (all strings, 12 frets) ----
-  function fretboardFullSVG(instKey, root, sc){
+  function fretboardFullSVG(instKey, root, sc, octs){
+    octs = octs===2 ? 2 : 1;
     var T=TUNINGS[instKey], open=T.open, n=open.length;
     var degOf={}; sc.ints.forEach(function(iv,i){ degOf[((root.pc+iv)%12+12)%12]=sc.degs[i]; });
+    // The run starts on the lowest root you can actually reach in the first 12
+    // frets and climbs an octave (or two). Everything else on the neck is still
+    // drawn, but ghosted -- you can see where the shape sits without losing it.
+    var FRETS=12, loRoot=null;
+    open.forEach(function(m){ for(var f=0;f<=FRETS;f++){ var mm=m+f;
+      if(((mm%12)+12)%12===root.pc && (loRoot===null || mm<loRoot)) loRoot=mm; } });
+    var hiRoot = loRoot===null ? null : loRoot+12*octs;
+    var inRun = function(mm){ return loRoot!==null && mm>=loRoot && mm<=hiRoot; };
     var FR=12, leftPad=8, openW=26, nutW=8, fretW=40, topPad=14, stringGap=26, neckTop=8, rightPad=12;
     var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FR*fretW;
     var neckH=topPad*2+(n-1)*stringGap, W=fretEnd+rightPad, H=neckTop+neckH+22;
     function sy(i){ return neckTop+topPad+i*stringGap; }
     function fx(f){ return fbStart+(f-0.5)*fretW; }
     function wireX(f){ return fbStart+f*fretW; }
-    function dot(cx,cy,label){ var ring=(label==='1'); return '<circle cx="'+cx+'" cy="'+cy+'" r="9.5" fill="var(--acc)"'+(ring?' stroke="#fff" stroke-width="2"':'')+'/>'+
+    function dot(cx,cy,label,ghost){
+      if(ghost) return '<circle cx="'+cx+'" cy="'+cy+'" r="9.5" fill="#fff" stroke="#b7bdc9" stroke-width="1.4" stroke-dasharray="3 2"/>'+
+        '<text x="'+cx+'" y="'+(cy+3.3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" font-weight="700" fill="#aab0bd">'+label+'</text>';
+      var ring=(label==='1'||label==='8'); return '<circle cx="'+cx+'" cy="'+cy+'" r="9.5" fill="var(--acc)"'+(ring?' stroke="#fff" stroke-width="2"':'')+'/>'+
       '<text x="'+cx+'" y="'+(cy+3.3)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" font-weight="700" fill="#fff">'+label+'</text>'; }
-    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+' on '+T.label+'">';
+    // the top root closes the run, so it reads 1..8 rather than restarting at 1
+    function degFor(mm){ var d=degOf[((mm%12)+12)%12]; return (mm===hiRoot&&d==='1')?'8':d; }
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="kbsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+root.name+' '+sc.name+', '+octs+' octave'+(octs>1?'s':'')+' on '+T.label+'">';
     s+='<rect x="'+fbStart+'" y="'+neckTop+'" width="'+(fretEnd-fbStart)+'" height="'+neckH+'" rx="6" fill="#f6efe0" stroke="#d8c79b" stroke-width="1.4"/>';
     [3,5,7,9].forEach(function(fr){ s+='<circle cx="'+fx(fr)+'" cy="'+(neckTop+neckH/2)+'" r="3.2" fill="#e4d5ab"/>'; });
     s+='<circle cx="'+fx(12)+'" cy="'+(neckTop+neckH*0.3)+'" r="3.2" fill="#e4d5ab"/><circle cx="'+fx(12)+'" cy="'+(neckTop+neckH*0.7)+'" r="3.2" fill="#e4d5ab"/>';
     for(var f=1; f<=FR; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#b7bcc8" stroke-width="2.2"/>'; }
     s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#efe7d2" stroke="#cdbf95" stroke-width="1"/>';
     open.forEach(function(m,i){ var y=sy(i), th=(1.1+i*0.35).toFixed(1); s+='<line x1="'+openX+'" y1="'+y+'" x2="'+fretEnd+'" y2="'+y+'" stroke="#8a8f9c" stroke-width="'+th+'"/>'; });
-    open.forEach(function(m,i){ var y=sy(i), pc=((m%12)+12)%12, d=degOf[pc];
-      if(d!==undefined){ s+=dot(openX,y,d); }
+    open.forEach(function(m,i){ var y=sy(i), pc=((m%12)+12)%12, d=degFor(m);
+      if(d!==undefined){ s+=dot(openX,y,d,!inRun(m)); }
       else{ s+='<circle cx="'+openX+'" cy="'+y+'" r="9.5" fill="#fff" stroke="#c7cfdb" stroke-width="1.4"/>'+
         '<text x="'+openX+'" y="'+(y+3.4)+'" text-anchor="middle" font-family="'+DISP+'" font-size="9" font-weight="700" fill="#aab0bd">'+NAMES[pc]+'</text>'; }
     });
     open.forEach(function(m,i){ var y=sy(i);
-      for(var f2=1; f2<=FR; f2++){ var pc=((m+f2)%12+12)%12, d=degOf[pc]; if(d!==undefined) s+=dot(fx(f2),y,d); }
+      for(var f2=1; f2<=FR; f2++){ var mm=m+f2, d=degFor(mm); if(d!==undefined) s+=dot(fx(f2),y,d,!inRun(mm)); }
     });
     for(var fn=1; fn<=FR; fn++){ s+='<text x="'+fx(fn)+'" y="'+(neckTop+neckH+15)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" fill="#9aa3b2">'+fn+'</text>'; }
     s+='<text x="'+openX+'" y="'+(neckTop+neckH+15)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" fill="#9aa3b2">open</text>';
@@ -532,7 +558,7 @@
     playScale(ROOTS[rIdx], SC[key]); });
 
   // ---- scale library (bottom of page) ----
-  var dir={ scale:'major', rootIdx:0, inst:'guitar' };
+  var dir={ scale:'major', rootIdx:0, inst:'guitar', octs:1 };
   var dirScaleEl=document.getElementById('dirScale'), dirRootEl=document.getElementById('dirRoot'), dirInstEl=document.getElementById('dirInst');
   DIR_ORDER.forEach(function(key){ var o=document.createElement('option'); o.value=key;
     o.textContent=SC[key].name+(key==='ionian'?' (= major)':(key==='aeolian'?' (= natural minor)':'')); dirScaleEl.appendChild(o); });
@@ -541,19 +567,27 @@
   dirRootEl.addEventListener('change', function(){ dir.rootIdx=+this.value; renderDirectory(); });
   DIR_INSTS.forEach(function(it){ var b=document.createElement('button'); b.textContent=it.label; b.dataset.inst=it.k;
     b.addEventListener('click', function(){ dir.inst=it.k; renderDirectory(); }); dirInstEl.appendChild(b); });
+  /* One or two only: past two you're off the end of a banjo or a bass, and the
+     picture stops being something you could pick up and play. */
+  var dirOctEl=document.getElementById('dirOct');
+  [1,2].forEach(function(o){ var b=document.createElement('button');
+    b.textContent=o+' octave'+(o>1?'s':''); b.dataset.oct=o;
+    b.addEventListener('click', function(){ dir.octs=o; renderDirectory(); }); dirOctEl.appendChild(b); });
   function renderDirectory(){
     var root=ROOTS[dir.rootIdx], sc=SC[dir.scale];
-    var dia = dir.inst==='piano' ? pianoFullSVG(root,sc) : fretboardFullSVG(dir.inst,root,sc);
+    var dia = dir.inst==='piano' ? pianoFullSVG(root,sc,dir.octs) : fretboardFullSVG(dir.inst,root,sc,dir.octs);
     var instLabel = dir.inst==='piano' ? 'Piano' : TUNINGS[dir.inst].label;
     set('dirDia', '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'
       +'<div class="qhead"><span class="qsym">'+root.name+'</span><div><div class="qname">'+sc.name+'</div>'
-      +'<div class="qsub">'+root.name+' '+sc.name.toLowerCase()+' · '+instLabel+'</div></div></div>'
+      +'<div class="qsub">'+root.name+' '+sc.name.toLowerCase()+' · '+instLabel+' · '+dir.octs+' octave'+(dir.octs>1?'s':'')+'</div></div></div>'
       +'<div class="kb">'+dia+'</div>'
       +'<div class="frow"><span class="flab">Notes</span>'+chipsHTML(root,sc)+'</div>'
       +'<button class="playq" data-scale="'+dir.scale+'" data-root="'+dir.rootIdx+'">▶ Hear it</button>'
-      +'<div class="legend2">The root (1) is ringed; the numbers are scale degrees.</div></div>');
+      +'<div class="legend2">The root (1) and its octave (8) are ringed; the numbers are scale degrees.'
+      +(dir.inst==='piano'?'':' Dashed notes are the same scale further along the neck, outside this run.')+'</div></div>');
     dirScaleEl.value=dir.scale; dirRootEl.value=dir.rootIdx;
     [].forEach.call(dirInstEl.children, function(b){ b.classList.toggle('on', b.dataset.inst===dir.inst); });
+    [].forEach.call(dirOctEl.children, function(b){ b.classList.toggle('on', +b.dataset.oct===dir.octs); });
   }
   document.addEventListener('click', function(e){ var a=e.target.closest('#csbody a[data-scale]'); if(!a) return;
     dir.scale=a.dataset.scale; renderDirectory(); });
