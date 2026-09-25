@@ -1298,8 +1298,17 @@ const intlPhone=raw=>{
   if(s.startsWith('+'))s=s.slice(1);
   else if(s.startsWith('00'))s=s.slice(2);
   else if(s.startsWith('0'))s=cc+s.slice(1);
-  return s.replace(/[^0-9]/g,'');
+  s=s.replace(/[^0-9]/g,'');
+  /* "+353 (0) 87 …" — that 0 is for dialling inside the country and is never
+     part of the international number. Left in, WhatsApp rejects the link. */
+  if(cc&&s.length>cc.length&&s.startsWith(cc+'0'))s=cc+s.slice(cc.length+1);
+  return s;
 };
+/* E.164 allows 8–15 digits and never a leading zero. Anything else isn't a
+   phone number — an empty contact field, a note like "ask her mum", a number
+   missing its country code — and handing it to wa.me just bounces the teacher
+   to WhatsApp's own 404, which explains nothing. Catch it here instead. */
+const phoneOK=n=>/^[1-9][0-9]{7,14}$/.test(n);
 
 function lessonEmail(p,l,who){
   const res=(l.rep||'').split(',').map(x=>x.trim()).filter(Boolean);
@@ -1363,24 +1372,32 @@ function tapBtnsHTML(p,l){
 }
 /* opens the app with the message pre-filled; returns true when the text was
    too long to ride a URL and went to the clipboard instead */
+/* opens the app with the message pre-filled. Returns '' when it went cleanly,
+   'long' when the text had to go to the clipboard instead, or 'bad-number'
+   when the contact's phone isn't a number WhatsApp can take. */
 function openHandoff(c,text){
   const enc=encodeURIComponent(text);
   const tooLong=enc.length>6000;   /* the OS drops or cuts custom-scheme URLs around here */
-  if((tooLong||chanOf(c)==='sms')&&navigator.clipboard&&navigator.clipboard.writeText)
+  const wa=chanOf(c)!=='sms';
+  const num=wa?intlPhone(c.phone):'';
+  /* check before anything else happens — no tab opened, nothing marked sent */
+  if(wa&&!phoneOK(num))return 'bad-number';
+  if((tooLong||!wa)&&navigator.clipboard&&navigator.clipboard.writeText)
     navigator.clipboard.writeText(text).catch(()=>{});   /* macOS Messages can drop the body param — the clipboard is the net */
-  if(chanOf(c)==='sms')
+  if(!wa)
     location.href='sms:'+String(c.phone).replace(/[^0-9+]/g,'')+
       (tooLong?'':(/iPhone|iPad|Mac/.test(navigator.userAgent)?'&':'?')+'body='+enc);
-  else window.open('https://wa.me/'+intlPhone(c.phone)+(tooLong?'':'?text='+enc),'_blank','noopener');
-  return tooLong;
+  else window.open('https://wa.me/'+num+(tooLong?'':'?text='+enc),'_blank','noopener');
+  return tooLong?'long':'';
 }
 function tapSend(p,l,c){
-  const tooLong=openHandoff(c,lessonEmail(p,l,[c]).text);
+  const how=openHandoff(c,lessonEmail(p,l,[c]).text);
+  if(how==='bad-number')return how;        /* nothing opened — don't log it as passed on */
   l.texted=l.texted||[];
   if(!l.texted.some(t=>t.id===c.id))
     l.texted.push({id:c.id,name:c.name||c.phone,via:chanOf(c),at:new Date().toISOString()});
   markDirty();
-  return tooLong;
+  return how;
 }
 function wireTaps(personId,lessonId){
   $('#sendbar').querySelectorAll('[data-tap]').forEach(btn=>btn.onclick=()=>{
@@ -1388,9 +1405,14 @@ function wireTaps(personId,lessonId){
     const p=person(personId), l=state.lessons.find(x=>x.id===lessonId);
     const c=p&&(p.contacts||[]).find(x=>x.id===btn.dataset.tap);
     if(!p||!l||!c){hideBar();return;}
-    const tooLong=tapSend(p,l,c);
+    const how=tapSend(p,l,c);
+    if(how==='bad-number'){
+      btn.textContent=(c.name||'That contact')+'’s number isn’t a full one — fix it in Contacts';
+      btn.disabled=true;
+      return;
+    }
     btn.classList.add('done');
-    btn.textContent=tooLong?'✓ copied — paste it':'✓ '+btn.textContent.replace(/^✓ /,'');
+    btn.textContent=how==='long'?'✓ copied — paste it':'✓ '+btn.textContent.replace(/^✓ /,'');
     /* no renderDrawer here — it would wipe half-typed notes; the 💬 shows on the next redraw */
   });
 }
@@ -1970,9 +1992,14 @@ function renderDrawer(){
   d.querySelectorAll('[data-mtap]').forEach(btn=>btn.onclick=()=>{
     const c=(p.contacts||[]).find(x=>x.id===btn.dataset.mtap);
     if(!c)return;
-    const tooLong=openHandoff(c,$('#msgBody').value);
+    const how=openHandoff(c,$('#msgBody').value);
     const st=$('#msgStatus');
-    if(tooLong&&st)st.innerHTML='<b>Too long to hand over in a link — it’s on your clipboard, paste it into the chat.</b>';
+    if(!st)return;
+    if(how==='bad-number')
+      st.innerHTML='<b>'+esc(c.name||'That contact')+'’s number isn’t one WhatsApp can open — '+
+        '“'+esc(c.phone||'(blank)')+'”. It wants the full international number, e.g. 087 123 4567 or +44 7700 900123.</b>';
+    else if(how==='long')
+      st.innerHTML='<b>Too long to hand over in a link — it’s on your clipboard, paste it into the chat.</b>';
   });
   /* suggest against the bit after the last comma, so it works mid-list */
   (()=>{
