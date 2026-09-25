@@ -15,6 +15,11 @@
       dep 1 a game you can play right now / 2 a proper tool / 3 a whole course
       mic true if it listens through the microphone
       note a short caveat shown on the card (e.g. Pro courses)
+      pro true if any of it is behind the paywall. The rollbook reads this to
+          decide what it may link in a note home — homework must never land a
+          parent on a sales page — so a new course needs it even when its first
+          module is free. Say pro:false out loud for a course that is genuinely
+          free, or it is assumed Pro.
       w   tie-breaker: doing beats reading about it (see score())
       mk  builds the href from the answers, for pages that take ?inst=
 
@@ -229,27 +234,27 @@ var CATALOGUE = [
     d:'The grown-up studio: verses, choruses and bridges, any chord you like, and a drum beat you tap out yourself.' },
   { t:'Phrasebook', h:'phrasebook.html', dep:2, g:['write'], lv:[3],
     d:'Collect the licks you love in notation, then drill them through all twelve keys and every mode.' },
-  { t:'The Listening Lab', h:'listening-lab.html', w:8, dep:2, g:['write'], lv:[3], mic:true,
+  { t:'The Listening Lab', h:'listening-lab.html', w:8, dep:2, pro:true, g:['write'], lv:[3], mic:true,
     d:'Solo over jazz and blues charts and the lab listens — your solo comes back written out and marked.' },
   { t:'The Charts', h:'gallery.html', w:-10, dep:2, g:['write'], lv:[1,2,3],
     d:'Listen to songs other people have built here, and vote your favourites up the charts.' },
 
   /* ---- depth 3 · a whole course ---- */
-  { t:'Old Man and the C', h:'Theory/old-man-and-the-c.html', dep:3, g:['read'], lv:[1,2],
+  { t:'Old Man and the C', h:'Theory/old-man-and-the-c.html', dep:3, pro:false, g:['read'], lv:[1,2],
     d:'A seafaring note-reading tale. Read each note to reel it in and sail from the shallows out to deeper water.' },
-  { t:'The Fretboard Atlas', h:'Guitar/fretboard-atlas.html', dep:3, g:['read'], lv:[1,2], i:['gtr'],
+  { t:'The Fretboard Atlas', h:'Guitar/fretboard-atlas.html', dep:3, pro:true, g:['read'], lv:[1,2], i:['gtr'],
     note:'Expedition I is free',
     d:'Set out across the guitar neck with an old mapmaker and chart where every note lives, string by string.' },
-  { t:'Learning to Fly', h:'learning-to-fly.html', dep:3, g:['write','ears'], lv:[2,3], mic:true,
+  { t:'Learning to Fly', h:'learning-to-fly.html', dep:3, pro:true, g:['write','ears'], lv:[2,3], mic:true,
     note:'First belt is free',
     d:'A whole course in making it up as you go — from tunes you already know, out to soloing over a groove on your own instrument.' },
   /* filed under making your own music, not under chords: it is the only
      course tagged for harmony, and it was turning up as the horizon for
      every chords plan — a ukulele beginner does not need walking bass */
-  { t:'Learning to Walk', h:'learning-to-walk.html', dep:3, g:['write'], lv:[2,3], fav:['bass'],
+  { t:'Learning to Walk', h:'learning-to-walk.html', dep:3, pro:true, g:['write'], lv:[2,3], fav:['bass'],
     note:'First module is free',
     d:'Sit in with an old jazz cat and learn to walk a bassline from the ground up — barn dance to blues to a late-night club.' },
-  { t:'The Counterpoint Dojo', h:'Theory/gradus-shell.html', dep:3, g:['write'], lv:[3],
+  { t:'The Counterpoint Dojo', h:'Theory/gradus-shell.html', dep:3, pro:true, g:['write'], lv:[3],
     note:'First module is free',
     d:'Write a line above an old melody and have a stern master correct it note by note. The way it was taught 300 years ago.' }
 ];

@@ -4,6 +4,7 @@
 <script src="/analytics.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/hi-scores.js" defer></script>
+<script src="/tools.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
@@ -795,7 +796,8 @@ const CHORD_WORDS=[
 /* the student's own instrument, mapped onto what each page understands.
    Order matters: "bass guitar" is a bass, not a guitar. */
 const INSTS=[[/ukulele|\buke\b/,'ukulele'],[/bass/,'bass'],[/banjo/,'banjo'],
-             [/mandolin/,'mandolin'],[/guitar/,'guitar'],[/piano|keyboard|\bkeys\b/,'piano']];
+             [/mandolin/,'mandolin'],[/fiddle|violin/,'banjo'],   /* GDAE — and musicalFor only knows 'banjo' */
+             [/guitar/,'guitar'],[/piano|keyboard|\bkeys\b/,'piano']];
 function instOf(p){
   const t=String((p&&p.instrument)||'').toLowerCase();
   for(const[re,k]of INSTS)if(re.test(t))return k;
@@ -849,6 +851,69 @@ async function loadTunes(){
   TUNES=out;
   if(drawerCtx)renderDrawer();          // chips that were plain text can link now
   return TUNES;
+}
+
+/* ---------- every game and tool on the site ----------
+   tools.js is the one catalogue the whole site recommends from — 56 rows, 31 of
+   them games. Reading it here means a game set as homework becomes a real link
+   in the note home, and adding a tool to the site never means editing this file
+   as well.
+
+   RES stays exactly as it was and keeps the first word. Its rows point at the
+   same pages, so nothing a lesson already logged can change meaning, and its
+   hand-tuned keywords ('egbdf', 'jig reel') go on working.
+
+   Read lazily, never cached: this script is inline and runs during parse, long
+   before a deferred tools.js has executed, so MATools is guaranteed missing at
+   the top level. Returning an uncached [] means a slow load heals itself on the
+   next keystroke instead of freezing an empty catalogue for the session. */
+const TOOL_INST={ukulele:'uke',guitar:'gtr',piano:'pno',
+                 banjo:'gdae',mandolin:'gdae',bass:'bass'};
+const KIND={1:'game',2:'tool',3:'course'};
+/* "Guitar/what-note-guitar.html" -> "Guitar". One word, no comma: the qualifier
+   is stored in the lesson, and rep is comma-split. */
+const folderOf=u=>{const m=/^([^/]+)\//.exec(String(u||''));return m?decodeURIComponent(m[1]):'';};
+/* tools.js says so outright. A course added later without the flag is assumed
+   Pro rather than linked by mistake — a wrong guess here emails a parent a
+   sales page, so it fails closed. */
+const catPro=x=>x.pro===undefined?x.dep===3:!!x.pro;
+
+function catRows(p){
+  const C=(window.MATools&&MATools.CATALOGUE)||[];
+  if(!C.length)return [];
+  const mine=TOOL_INST[instOf(p)]||'';
+  const seen=new Set(), dupes=new Set();
+  C.forEach(x=>{const k=nrm(x.t); if(seen.has(k))dupes.add(k); seen.add(k);});
+  const out=[];
+  C.forEach(x=>{
+    const only=x.i||null, q=dupes.has(nrm(x.t))?folderOf(x.h):'';
+    /* two rows under one name: the second would be unreachable behind .find,
+       or worse would hijack the first. Unreachable by design beats wrong. */
+    if(dupes.has(nrm(x.t))&&!q)return;
+    out.push({
+      t: q?x.t+' ('+q+')':x.t,
+      u: SITE+x.h,                       /* already percent-encoded — concatenate, never re-encode */
+      href: decodeURIComponent(x.h),     /* the dedupe key: same page, two names */
+      pro: catPro(x),
+      kind: KIND[x.dep]||'tool',
+      fits: !only||(!!mine&&only.indexOf(mine)>=0),
+      cat: true,
+      /* searchable by what it trains, not just by name: "rhythm" finds Bar
+         Packer, "aliens" finds Pitch Invaders */
+      key: [x.d||'', (x.g||[]).map(g=>(MATools.GOAL_WORD&&MATools.GOAL_WORD[g])||g).join(' '), q]
+             .join(' ').toLowerCase()
+    });
+  });
+  return out;
+}
+/* One stored title -> one row, by exact match only. A duplicated name is always
+   offered qualified ("What Note? (Banjo)") so the lesson pins which page it
+   meant; resolving a bare one from the student's instrument would silently
+   re-point their whole history the day they switch instrument — including a
+   link already sent home. */
+function catFor(title,p){
+  const q=nrm(title);
+  return catRows(p).find(x=>nrm(x.t)===q)||null;
 }
 
 /* ---------- the Song Trainer's songbook ----------
@@ -940,6 +1005,8 @@ function lookup(title,p){
   if(r)return {t:r.t, u:SITE+r.u, pro:!!r.pro};
   const tu=(TUNES||[]).find(x=>nrm(x.t)===q);
   if(tu)return {t:tu.t, u:tuneUrl(tu.t), tune:true};
+  const ct=catFor(bare,p);
+  if(ct)return ct;
   const mu=musicalFor(title,p);
   if(mu)return {t:mu.t, u:mu.u, musical:true};
   return null;
@@ -960,6 +1027,7 @@ function chip(title,p){
       '\ud83d\udcc4 '+esc(r.t)+'</button>';
   } else {
     const why=r.pro?'On the site \u2014 Pro, so it is not linked to parents'
+            :r.cat?('Opens the '+r.kind+' on the site')
             :r.songOnly?'Play-along only \u2014 opens the Song Trainer on this song, no sheet shared'
             :r.song?'Opens in the Song Trainer, on this song'
             :r.tune?'Opens in Melody Trainer'
@@ -996,7 +1064,36 @@ function suggest(q,forPerson){
     out.push(paired
       ? {sc:sc+0.7,t:songOnlyTitle(t),u:'song-trainer.html',sub:'play along only \u2014 no sheet sent',song:true}
       : {sc:sc+0.7,t,u:'song-trainer.html',sub:'Song Trainer \u2014 play along',song:true});});
-  RES.forEach(r=>{const sc=score(r.t,r.k);if(sc)out.push({sc,t:r.t,u:r.u,sub:r.pro?'not linked to parents':'',pro:!!r.pro});});
+  /* the catalogue's own name for a page RES also carries counts as a keyword,
+     so "note names" still finds it even though RES calls it Naming the Notes */
+  const alias={};
+  catRows(forPerson).forEach(x=>{alias[x.href]=(alias[x.href]||'')+' '+x.t.toLowerCase();});
+  RES.forEach(r=>{
+    const sc=score(r.t,(r.k||'')+(alias[decodeURIComponent(r.u)]||''));
+    if(sc)out.push({sc,t:r.t,u:r.u,sub:r.pro?'not linked to parents':'',pro:!!r.pro});});
+  /* the rest of the site: games first-class, searchable by what they train.
+     Deduped on the PAGE, not the name — note-names.html is "Naming the Notes"
+     in RES and "Note Names" in the catalogue, and offering both would be two
+     rows for one link. Their instrument only nudges the ranking: filtering by
+     it would empty the list for a bass student (no games carry that code), for
+     a blank instrument, and for a teacher deliberately reaching across. */
+  const inRES=new Set(RES.map(r=>decodeURIComponent(r.u)));
+  const games=[];
+  catRows(forPerson).forEach(x=>{
+    if(inRES.has(x.href))return;
+    /* the keyword tier is a plain substring test over a description, so a
+       two-letter query would drag in half the catalogue at once */
+    const sc=score(x.t, q.length>=3?x.key:'');
+    if(!sc)return;
+    const row={sc:sc+(x.fits?0.4:0.2),t:x.t,u:x.u.replace(SITE,''),
+      sub:x.kind+(x.pro?' \u00b7 not linked to parents':''),pro:x.pro,game:x.kind==='game'};
+    (row.game?games:out).push(row);
+  });
+  /* 31 games would bury everything else — "tune" title-matches six of them.
+     Take the best four, and only when nothing else matched do they get the run
+     of the list. */
+  games.sort((a,b)=>b.sc-a.sc||a.t.length-b.t.length);
+  out.push(...(out.length?games.slice(0,4):games));
   (TUNES||[]).forEach(t=>{const sc=score(t.t,'');if(sc)out.push({sc:sc+0.5,t:t.t,u:'melody-trainer_1.html',
     sub:[t.r,t.o].filter(Boolean).join(' \u00b7 '),tune:true});});
   const mu=musicalFor(q,forPerson);
@@ -1732,7 +1829,7 @@ function renderDrawer(){
   '<div class="repwrap"><input class="field" id="lgRep" autocomplete="off" value="'+esc(editing?editing.rep:'')+
     '" placeholder="e.g. Kesh Jig, Scale Theory">'+
   '<div class="suggest" id="repSuggest"></div></div>'+
-  '<p class="hint" style="margin-top:4px">Start typing to pull in a page from the site, a song from the Song Trainer, or one of your own sheets \u2014 those become links in the note home, and a sheet is shared with them when you save.</p>'+
+  '<p class="hint" style="margin-top:4px">Start typing to pull in a game or tool from the site, a song from the Song Trainer, or one of your own sheets \u2014 search a game by what it trains (\u201crhythm\u201d, \u201cears\u201d) as well as by name. These become links in the note home, and a sheet is shared with them when you save.</p>'+
   (shareNote?'<p class="hint" style="margin-top:4px"><b>'+esc(shareNote)+'</b></p>':'')+
   '<label class="f" for="lgNotes">NOTES</label><textarea class="field" id="lgNotes" placeholder="What happened, how it went, what\u2019s next\u2026">'+esc(editing?editing.notes:'')+'</textarea>'+
   '<div class="inline" style="margin-top:12px"><button class="btn primary" id="lgSave">'+(editing?'Save changes':'Save log')+'</button>'+
@@ -1886,7 +1983,7 @@ function renderDrawer(){
     const hide=()=>{box.classList.remove('show');box.innerHTML='';hits=[];cur=-1;};
     const paint=()=>{
       box.innerHTML=hits.map((r,i)=>'<button type="button" data-i="'+i+'" class="'+(i===cur?'on':'')+'">'+
-        (r.sheet?'\uD83D\uDCC4 ':'')+(r.song?'\u266a ':'')+esc(r.t)+(r.pro?' \uD83D\uDD12':'')+(r.tune?' \u266a':'')+
+        (r.sheet?'\uD83D\uDCC4 ':'')+(r.song?'\u266a ':'')+(r.game?'\uD83C\uDFAE ':'')+esc(r.t)+(r.pro?' \uD83D\uDD12':'')+(r.tune?' \u266a':'')+
         '<span class="lk">'+esc(r.sub||r.u)+'</span></button>').join('');
       box.classList.add('show');
       box.querySelectorAll('[data-i]').forEach(b=>b.onmousedown=e=>{e.preventDefault();pick(+b.dataset.i);});
