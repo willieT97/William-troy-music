@@ -1381,9 +1381,14 @@ async function sendLessonEmail(p,l){
    bumps it, so a stale auto-hide timer or a send that settles late can't
    clobber (or vanish) whatever the bar is showing now. sendbarLessonId lets
    the delete handler kill a bar whose lesson is gone. */
-let barGen=0, sendbarLessonId=null;
+let barGen=0, sendbarLessonId=null, sendbarPersonId=null;
 function showBar(html){barGen++;const b=$('#sendbar');b.innerHTML=html;b.classList.add('show');return b;}
-function hideBar(){barGen++;sendbarLessonId=null;const b=$('#sendbar');if(b)b.classList.remove('show');}
+function hideBar(){barGen++;sendbarLessonId=null;sendbarPersonId=null;const b=$('#sendbar');if(b)b.classList.remove('show');}
+/* The bar is fixed to the window, outside the drawer, so it outlives the
+   student it belongs to. Every message on it names them — without that, a bar
+   left over from the last lesson reads as though it belongs to whoever is open
+   now, and one tap sends that student's parent somebody else's update. */
+const barWho=p=>'<b>'+esc((p&&p.name)||'')+'</b>';
 function autoHide(ms){const g=barGen;setTimeout(()=>{if(barGen===g)hideBar();},ms);}
 
 /* WhatsApp/SMS handoff: a page can't send these itself, so each phone contact
@@ -1434,6 +1439,13 @@ function wireTaps(personId,lessonId){
     const p=person(personId), l=state.lessons.find(x=>x.id===lessonId);
     const c=p&&(p.contacts||[]).find(x=>x.id===btn.dataset.tap);
     if(!p||!l||!c){hideBar();return;}
+    /* last line of defence: never hand one parent another student's lesson */
+    if(drawerCtx&&drawerCtx.personId!==personId){
+      showBar('<span>That was '+barWho(p)+'’s update — not sent. Open '+
+        esc(p.name)+' again if you meant it.</span><button class="x" id="sbX">×</button>');
+      $('#sbX').onclick=hideBar; autoHide(6000);
+      return;
+    }
     const how=tapSend(p,l,c);
     if(how==='bad-number'){
       btn.textContent=(c.name||'That contact')+'’s number isn’t a full one — fix it in Contacts';
@@ -1446,6 +1458,14 @@ function wireTaps(personId,lessonId){
   });
 }
 
+/* send a queued update immediately rather than waiting out its countdown */
+function flushPendingSend(){
+  if(!pendingSend)return;
+  const{timer,tick,fire}=pendingSend;
+  clearTimeout(timer);clearInterval(tick);
+  if(fire)fire();                 /* clears pendingSend itself, and paints its own bar */
+  else pendingSend=null;
+}
 function cancelPendingSend(){
   if(!pendingSend)return;
   const{timer,tick,personId,lessonId}=pendingSend;
@@ -1453,8 +1473,8 @@ function cancelPendingSend(){
   pendingSend=null;
   const p=person(personId), l=state.lessons.find(x=>x.id===lessonId);
   if(p&&l&&tapContacts(p).length){
-    sendbarLessonId=lessonId;
-    showBar('<span>Email cancelled.</span>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>');
+    sendbarLessonId=lessonId;sendbarPersonId=personId;
+    showBar('<span>Email cancelled — '+barWho(p)+'.</span>'+tapBtnsHTML(p,l)+'<button class="x" id="sbX">×</button>');
     wireTaps(personId,lessonId);$('#sbX').onclick=hideBar;
   } else {
     showBar('<span>Not sent.</span>');
@@ -1462,35 +1482,40 @@ function cancelPendingSend(){
   }
 }
 function queueLessonUpdate(p,l){
-  cancelPendingSend();
+  /* Re-saving THIS lesson restarts its countdown. A countdown still running for
+     a different lesson belongs to another student, though, and binning it would
+     quietly rob that parent of an update they were promised — so it goes now
+     instead of being cancelled. */
+  if(pendingSend&&pendingSend.lessonId!==l.id)flushPendingSend();
+  else cancelPendingSend();
   const pid=p.id, lid=l.id;
   const emails=notifyContacts(p), taps=tapContacts(p);
-  sendbarLessonId=lid;
+  sendbarLessonId=lid;sendbarPersonId=pid;
   const closeX='<button class="x" id="sbX">×</button>';
   if(!emails.length){
     if(!taps.length)return;
-    showBar('<span>Pass it on:</span>'+tapBtnsHTML(p,l)+closeX);
+    showBar('<span>Pass on '+barWho(p)+'’s lesson:</span>'+tapBtnsHTML(p,l)+closeX);
     wireTaps(pid,lid);$('#sbX').onclick=hideBar;
     return;
   }
   const who=emails.map(c=>c.name||c.email).join(', ');
   let left=Math.round(SEND_DELAY/1000);
-  const line=n=>'Emailing '+who+' in '+n+'s…';
+  const line=n=>'Emailing '+who+' about '+p.name+' in '+n+'s…';
   /* painted once — the tick only rewrites the text, so a tap button isn't
      destroyed mid-press by a wholesale repaint (that eats the click) */
   showBar('<span id="sbMsg">'+esc(line(left))+'</span><button class="btn small" id="sbCancel">Cancel</button>'+tapBtnsHTML(p,l));
   $('#sbCancel').onclick=cancelPendingSend;
   wireTaps(pid,lid);
   const tick=setInterval(()=>{left--;if(left>0){const m=$('#sbMsg');if(m)m.textContent=line(left);}},1000);
-  const timer=setTimeout(async()=>{
+  const fire=async()=>{
     clearInterval(tick);
     pendingSend=null;               /* past the point of cancelling — a later save must not "cancel" a send already in flight */
-    showBar('<span>Sending…</span>'+tapBtnsHTML(p,l));wireTaps(pid,lid);
+    showBar('<span>Sending '+barWho(p)+'’s update…</span>'+tapBtnsHTML(p,l));wireTaps(pid,lid);
     const g=barGen;                 /* if a later lesson paints over us while we wait, stay off the bar */
     try{
       await sendLessonEmail(p,l);
       if(g===barGen){
-        showBar('<span>✉ Sent to '+esc(who)+'</span>'+
+        showBar('<span>✉ '+barWho(p)+'’s update sent to '+esc(who)+'</span>'+
           tapBtnsHTML(person(pid)||p,state.lessons.find(x=>x.id===lid)||l)+(taps.length?closeX:''));
         wireTaps(pid,lid);
         if(taps.length)$('#sbX').onclick=hideBar;
@@ -1508,8 +1533,9 @@ function queueLessonUpdate(p,l){
         $('#sbX').onclick=hideBar;      /* stays put until dismissed — a failed send shouldn't slip past */
       }
     }
-  },SEND_DELAY);
-  pendingSend={timer,tick,personId:pid,lessonId:lid};
+  };
+  const timer=setTimeout(fire,SEND_DELAY);
+  pendingSend={timer,tick,fire,personId:pid,lessonId:lid};
 }
 
 /* ---------- their Music Arcade account (optional, both ways) ----------
@@ -1804,6 +1830,10 @@ function syncPanelChrome(){
     $('#attview').classList.contains('open') || $('#sheets').classList.contains('open'));
 }
 function openDrawer(personId,dateISO,slotId,oneOffId){
+  /* A bar belonging to a different student must not be sitting there while you
+     read this one — its buttons still send the OTHER student's update. A live
+     countdown is left alone: it names its student and has its own Cancel. */
+  if(sendbarPersonId&&sendbarPersonId!==personId&&!pendingSend)hideBar();
   drawerCtx={personId,dateISO,slotId,oneOffId};editingLessonId=null;shareNote='';lastDrawerKey='';
   msgSaid='';msgSubj='';msgTo={};
   ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=c.notify!==false;});
