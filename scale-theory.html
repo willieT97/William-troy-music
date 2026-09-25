@@ -243,7 +243,8 @@
       <label class="dl">Root <select id="dirRoot" class="sel"></select></label>
     </div>
     <div class="picker"><div class="roots" id="dirInst"></div></div>
-    <div class="picker"><div class="roots" id="dirOct"></div></div>
+    <div class="picker"><div class="roots" id="dirOct"></div>
+      <div class="roots" id="dirView"></div></div>
     <div id="dirDia"></div>
   </section>
 
@@ -430,9 +431,66 @@
   }
 
   // ---- library: the whole neck (all strings, 12 frets) ----
-  function fretboardFullSVG(instKey, root, sc, octs){
+  /* ---- one fingering shape ----
+     Every position of a pitch is true, but it isn't a way to PLAY the scale.
+     A player doesn't pick notes off the whole neck; they put the hand in one
+     place and take what falls under it. So that is what this looks for: a
+     window of frets the hand can cover, inside which the whole run can be
+     played, climbing string by string and never going back down.
+
+     It tries the tightest hand first (four frets) and only opens out to five or
+     six if the scale won't fit — which is how the standard banjo C major shape,
+     5-7-9-10 on the G string and again on the D, falls out on its own. Open
+     strings are free in any position, and the lowest window wins, so a shape
+     sits as low on the neck as it can.
+
+     TUNINGS lists strings high-to-low (a chart is drawn that way up), so this
+     works on a low-to-high copy and maps the index back at the end. */
+  function shapePath(open, root, sc, octs){
+    var lowFirst=open.slice().reverse();
+    var back=function(i){ return open.length-1-i; };
+    var FRETS=12;
+    var lo=null;
+    lowFirst.forEach(function(m){ for(var f=0;f<=FRETS;f++){ var mm=m+f;
+      if(((mm%12)+12)%12===root.pc && (lo===null||mm<lo)) lo=mm; } });
+    if(lo===null) return null;
+
+    var pitches=[], labels=[];
+    for(var o=0;o<octs;o++) sc.ints.forEach(function(iv,i){ pitches.push(lo+o*12+iv); labels.push(sc.degs[i]); });
+    pitches.push(lo+12*octs); labels.push('8');
+
+    /* one hand position: frets a..a+reach, plus the open strings */
+    function tryWindow(a, reach){
+      var out=[], si=0;
+      for(var k=0;k<pitches.length;k++){
+        var placed=null;
+        for(var t=si; t<lowFirst.length && !placed; t++){
+          var f=pitches[k]-lowFirst[t];
+          if(f<0||f>FRETS) continue;
+          if(f===0 || (f>=a && f<=a+reach)) placed={s:t,f:f};
+        }
+        if(!placed) return null;
+        si=placed.s;
+        out.push({string:back(placed.s), fret:placed.f, deg:labels[k], midi:pitches[k]});
+      }
+      return out;
+    }
+    /* tightest hand first, then lowest on the neck */
+    for(var reach=3; reach<=5; reach++)
+      for(var a=0; a+reach<=FRETS; a++){
+        var path=tryWindow(a, reach);
+        if(path) return path;
+      }
+    return null;                           // won't fit inside twelve frets
+  }
+
+  function fretboardFullSVG(instKey, root, sc, octs, shape){
     octs = octs===2 ? 2 : 1;
     var T=TUNINGS[instKey], open=T.open, n=open.length;
+    /* shape mode marks the exact places your fingers go; everything else on the
+       neck is still drawn, dashed, so the shape keeps its context */
+    var inShape=null;
+    if(shape){ inShape={}; shape.forEach(function(x){ inShape[x.string+':'+x.fret]=x.deg; }); }
     var degOf={}; sc.ints.forEach(function(iv,i){ degOf[((root.pc+iv)%12+12)%12]=sc.degs[i]; });
     // The run starts on the lowest root you can actually reach in the first 12
     // frets and climbs an octave (or two). Everything else on the neck is still
@@ -442,6 +500,8 @@
       if(((mm%12)+12)%12===root.pc && (loRoot===null || mm<loRoot)) loRoot=mm; } });
     var hiRoot = loRoot===null ? null : loRoot+12*octs;
     var inRun = function(mm){ return loRoot!==null && mm>=loRoot && mm<=hiRoot; };
+    var onIt = function(si,f,mm){ return inShape ? (inShape[si+':'+f]!==undefined) : inRun(mm); };
+    var degIn = function(si,f,mm){ return inShape ? inShape[si+':'+f] : null; };
     var FR=12, leftPad=8, openW=26, nutW=8, fretW=40, topPad=14, stringGap=26, neckTop=8, rightPad=12;
     var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FR*fretW;
     var neckH=topPad*2+(n-1)*stringGap, W=fretEnd+rightPad, H=neckTop+neckH+22;
@@ -462,13 +522,14 @@
     for(var f=1; f<=FR; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#b7bcc8" stroke-width="2.2"/>'; }
     s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#efe7d2" stroke="#cdbf95" stroke-width="1"/>';
     open.forEach(function(m,i){ var y=sy(i), th=(1.1+i*0.35).toFixed(1); s+='<line x1="'+openX+'" y1="'+y+'" x2="'+fretEnd+'" y2="'+y+'" stroke="#8a8f9c" stroke-width="'+th+'"/>'; });
-    open.forEach(function(m,i){ var y=sy(i), pc=((m%12)+12)%12, d=degFor(m);
-      if(d!==undefined){ s+=dot(openX,y,d,!inRun(m)); }
+    open.forEach(function(m,i){ var y=sy(i), pc=((m%12)+12)%12, d=degIn(i,0,m)||degFor(m);
+      if(d!==undefined){ s+=dot(openX,y,d,!onIt(i,0,m)); }
       else{ s+='<circle cx="'+openX+'" cy="'+y+'" r="9.5" fill="#fff" stroke="#c7cfdb" stroke-width="1.4"/>'+
         '<text x="'+openX+'" y="'+(y+3.4)+'" text-anchor="middle" font-family="'+DISP+'" font-size="9" font-weight="700" fill="#aab0bd">'+NAMES[pc]+'</text>'; }
     });
     open.forEach(function(m,i){ var y=sy(i);
-      for(var f2=1; f2<=FR; f2++){ var mm=m+f2, d=degFor(mm); if(d!==undefined) s+=dot(fx(f2),y,d,!inRun(mm)); }
+      for(var f2=1; f2<=FR; f2++){ var mm=m+f2, d=degIn(i,f2,mm)||degFor(mm);
+        if(d!==undefined) s+=dot(fx(f2),y,d,!onIt(i,f2,mm)); }
     });
     for(var fn=1; fn<=FR; fn++){ s+='<text x="'+fx(fn)+'" y="'+(neckTop+neckH+15)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8.5" fill="#9aa3b2">'+fn+'</text>'; }
     s+='<text x="'+openX+'" y="'+(neckTop+neckH+15)+'" text-anchor="middle" font-family="'+MONO+'" font-size="8" fill="#9aa3b2">open</text>';
@@ -558,7 +619,7 @@
     playScale(ROOTS[rIdx], SC[key]); });
 
   // ---- scale library (bottom of page) ----
-  var dir={ scale:'major', rootIdx:0, inst:'guitar', octs:1 };
+  var dir={ scale:'major', rootIdx:0, inst:'guitar', octs:1, shape:false };
   var dirScaleEl=document.getElementById('dirScale'), dirRootEl=document.getElementById('dirRoot'), dirInstEl=document.getElementById('dirInst');
   DIR_ORDER.forEach(function(key){ var o=document.createElement('option'); o.value=key;
     o.textContent=SC[key].name+(key==='ionian'?' (= major)':(key==='aeolian'?' (= natural minor)':'')); dirScaleEl.appendChild(o); });
@@ -573,21 +634,43 @@
   [1,2].forEach(function(o){ var b=document.createElement('button');
     b.textContent=o+' octave'+(o>1?'s':''); b.dataset.oct=o;
     b.addEventListener('click', function(){ dir.octs=o; renderDirectory(); }); dirOctEl.appendChild(b); });
+
+  /* Every position of a note is true, but it isn't a way to play the scale.
+     "One shape" picks a single hand position and shows just that. Piano has no
+     such thing, so the buttons only appear for the string instruments. */
+  var dirViewEl=document.getElementById('dirView');
+  [['',
+    'All positions'],['1','One shape']].forEach(function(pair){
+    var b=document.createElement('button'); b.textContent=pair[1]; b.dataset.shape=pair[0];
+    b.addEventListener('click', function(){ dir.shape=!!pair[0]; renderDirectory(); }); dirViewEl.appendChild(b); });
   function renderDirectory(){
     var root=ROOTS[dir.rootIdx], sc=SC[dir.scale];
-    var dia = dir.inst==='piano' ? pianoFullSVG(root,sc,dir.octs) : fretboardFullSVG(dir.inst,root,sc,dir.octs);
+    var wantShape = dir.shape && dir.inst!=='piano';
+    var shape = wantShape ? shapePath(TUNINGS[dir.inst].open, root, sc, dir.octs) : null;
+    /* two octaves often won't sit under one hand on four strings — say so
+       rather than quietly showing something else */
+    var noShape = wantShape && !shape;
+    var dia = dir.inst==='piano' ? pianoFullSVG(root,sc,dir.octs)
+                                 : fretboardFullSVG(dir.inst,root,sc,dir.octs,shape);
     var instLabel = dir.inst==='piano' ? 'Piano' : TUNINGS[dir.inst].label;
     set('dirDia', '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'
       +'<div class="qhead"><span class="qsym">'+root.name+'</span><div><div class="qname">'+sc.name+'</div>'
-      +'<div class="qsub">'+root.name+' '+sc.name.toLowerCase()+' · '+instLabel+' · '+dir.octs+' octave'+(dir.octs>1?'s':'')+'</div></div></div>'
+      +'<div class="qsub">'+root.name+' '+sc.name.toLowerCase()+' · '+instLabel+' · '+dir.octs+' octave'+(dir.octs>1?'s':'')
+      +(shape?' · one shape':'')+'</div></div></div>'
       +'<div class="kb">'+dia+'</div>'
       +'<div class="frow"><span class="flab">Notes</span>'+chipsHTML(root,sc)+'</div>'
       +'<button class="playq" data-scale="'+dir.scale+'" data-root="'+dir.rootIdx+'">▶ Hear it</button>'
       +'<div class="legend2">The root (1) and its octave (8) are ringed; the numbers are scale degrees.'
-      +(dir.inst==='piano'?'':' Dashed notes are the same scale further along the neck, outside this run.')+'</div></div>');
+      +(dir.inst==='piano'?''
+        : shape ? ' Solid notes are the shape — one hand position, low string to high. Dashed ones are the same scale elsewhere on the neck.'
+        : noShape ? ' <b>'+dir.octs+' octaves won’t sit under one hand on '+instLabel.toLowerCase()+
+                    ' — that needs a position shift, so every position is shown instead.</b>'
+        : ' Dashed notes are the same scale further along the neck, outside this run.')+'</div></div>');
     dirScaleEl.value=dir.scale; dirRootEl.value=dir.rootIdx;
     [].forEach.call(dirInstEl.children, function(b){ b.classList.toggle('on', b.dataset.inst===dir.inst); });
     [].forEach.call(dirOctEl.children, function(b){ b.classList.toggle('on', +b.dataset.oct===dir.octs); });
+    dirViewEl.style.display = dir.inst==='piano' ? 'none' : '';
+    [].forEach.call(dirViewEl.children, function(b){ b.classList.toggle('on', !!b.dataset.shape===dir.shape); });
   }
   document.addEventListener('click', function(e){ var a=e.target.closest('#csbody a[data-scale]'); if(!a) return;
     dir.scale=a.dataset.scale; renderDirectory(); });
