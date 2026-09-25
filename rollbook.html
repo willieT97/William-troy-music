@@ -833,14 +833,24 @@ function musicalFor(title,p){
    Read from the same manifest Melody Trainer uses, so it never drifts out of
    sync: 200-odd tunes, ~128K, fetched once after the gate opens. If it can't be
    reached the rollbook just carries on with tunes as plain text. */
-let TUNES=null;
+/* a redeploy can answer with an HTML 404 body, which .json() then throws on —
+   but into the same catch as a real outage, so check the status out loud */
+async function fetchJSON(u){
+  const r=await fetch(u,{cache:'no-store'});
+  if(!r.ok)throw new Error(u+' '+r.status);
+  return r.json();
+}
+let TUNES=null, tunesGoing=null;
 async function loadTunes(){
-  if(TUNES)return TUNES;
+  if(TUNES&&TUNES.length)return TUNES;      // only a load that worked is worth keeping
+  if(tunesGoing)return tunesGoing;          // two sign-in events must not fetch it twice
+  tunesGoing=(async()=>{
   const out=[];
+  let partial=false;
   try{
-    const man=await (await fetch('tunes/manifest.json')).json();
+    const man=await fetchJSON('tunes/manifest.json');
     for(const f of man){
-      let txt; try{ txt=await (await fetch('tunes/'+f)).text(); }catch(e){ continue; }
+      let txt; try{ txt=await (await fetch('tunes/'+f)).text(); }catch(e){ partial=true; continue; }
       txt.split(/\nX:/).forEach(blk=>{
         const t=/^T:(.+)$/m.exec(blk); if(!t)return;
         const r=/^R:(.+)$/m.exec(blk), o=/^O:(.+)$/m.exec(blk);
@@ -848,9 +858,15 @@ async function loadTunes(){
       });
     }
   }catch(e){ /* offline, or the library moved — not fatal */ }
-  TUNES=out;
-  if(drawerCtx)renderDrawer();          // chips that were plain text can link now
-  return TUNES;
+  /* an empty array is truthy, so caching a failure would hide the tune library
+     for the whole session with no way back but a reload. A half-read library is
+     no better: leave it uncached and the next keystroke tries again. */
+  TUNES=(out.length&&!partial)?out:null;
+  tunesGoing=null;
+  if(drawerCtx)repaintChips();          // chips that were plain text can link now
+  return out;
+  })();
+  return tunesGoing;
 }
 
 /* ---------- every game and tool on the site ----------
@@ -921,17 +937,22 @@ function catFor(title,p){
    drift. The file name is the title (that's the trainer's own fallback) and the
    ?song= link matches on the file name too, so a score whose <work-title> was
    never set still opens on the right song. */
-let SONGBOOK=null;
+let SONGBOOK=null, songsGoing=null;
 async function loadSongbook(){
-  if(SONGBOOK)return SONGBOOK;
+  if(SONGBOOK&&SONGBOOK.length)return SONGBOOK;
+  if(songsGoing)return songsGoing;
+  songsGoing=(async()=>{
   let out=[];
   try{
-    const man=await (await fetch('songs/manifest.json')).json();
+    const man=await fetchJSON('songs/manifest.json');
     out=(man||[]).map(f=>String(f).replace(/\.musicxml$/i,'').trim()).filter(Boolean);
   }catch(e){ /* offline, or no songs yet — songs just stay plain text */ }
-  SONGBOOK=out;
-  if(drawerCtx)renderDrawer();
-  return SONGBOOK;
+  SONGBOOK=out.length?out:null;         // a blip at sign-in must not hide the songs all session
+  songsGoing=null;
+  if(drawerCtx)repaintChips();
+  return out;
+  })();
+  return songsGoing;
 }
 
 /* ---------- your own song sheets ----------
@@ -943,7 +964,7 @@ function loadSheets(){
   if(!(window.MAAuth&&MAAuth.sheets)){SHEETS=[];return Promise.resolve(SHEETS);}
   return MAAuth.sheets.listMine().then(rows=>{
     SHEETS=rows||[];
-    if(drawerCtx)renderDrawer();          // titles that were plain text can link now
+    if(drawerCtx)repaintChips();          // titles that were plain text can link now
     return SHEETS;
   }).catch(()=>{SHEETS=[];return SHEETS;});   /* not set up, or offline — never fatal */
 }
@@ -1293,7 +1314,8 @@ const tapContacts=p=>(p.contacts||[]).filter(c=>c.notify!==false&&c.phone&&chanO
    353871234567 or WhatsApp refuses the link. +44… and 0044… pass through;
    a bare local 0… gets the teacher's country code (Set up, default Ireland). */
 const intlPhone=raw=>{
-  let s=String(raw||'').replace(/[^0-9+]/g,'');
+  const raw0=String(raw||'').trim();
+  let s=raw0.replace(/[^0-9+]/g,'');
   const cc=((state.settings&&state.settings.cc)||'353').replace(/[^0-9]/g,'').replace(/^00/,'');
   if(s.startsWith('+'))s=s.slice(1);
   else if(s.startsWith('00'))s=s.slice(2);
@@ -1302,6 +1324,13 @@ const intlPhone=raw=>{
   /* "+353 (0) 87 …" — that 0 is for dialling inside the country and is never
      part of the international number. Left in, WhatsApp rejects the link. */
   if(cc&&s.length>cc.length&&s.startsWith(cc+'0'))s=cc+s.slice(cc.length+1);
+  /* "87 123 4567" — written the way you'd say it, with neither the country code
+     nor the 0. Nine digits is a plausible length for a real international
+     number, so this can't be caught later: it opens WhatsApp on a number in
+     some other country. Too short to be international and not already carrying
+     the country code means it's a local number, so give it one — but only from
+     six digits up, or a blank field and a typo would be dressed up as real. */
+  if(cc&&!/^[+0]/.test(raw0)&&!s.startsWith(cc)&&s.length>=6&&s.length<10)s=cc+s;
   return s;
 };
 /* E.164 allows 8–15 digits and never a leading zero. Anything else isn't a
@@ -1775,7 +1804,7 @@ function syncPanelChrome(){
     $('#attview').classList.contains('open') || $('#sheets').classList.contains('open'));
 }
 function openDrawer(personId,dateISO,slotId,oneOffId){
-  drawerCtx={personId,dateISO,slotId,oneOffId};editingLessonId=null;shareNote='';
+  drawerCtx={personId,dateISO,slotId,oneOffId};editingLessonId=null;shareNote='';lastDrawerKey='';
   msgSaid='';msgSubj='';msgTo={};
   ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=c.notify!==false;});
   renderDrawer();
@@ -1784,6 +1813,15 @@ function openDrawer(personId,dateISO,slotId,oneOffId){
 function closeDrawer(){
   $('#overlay').classList.remove('open');$('#drawer').classList.remove('open');syncPanelChrome();
   drawerCtx=null;
+}
+let lastDrawerKey='';      /* what the drawer was last showing — see renderDrawer */
+/* A loader landing only needs the chips re-resolved — a title that was plain
+   text a second ago can link now. That isn't worth a repaint while the teacher
+   is mid-word, and the next keystroke reads the fresh cache anyway. */
+function repaintChips(){
+  const d=$('#drawer');
+  if(d&&d.contains(document.activeElement))return;
+  renderDrawer();
 }
 function renderDrawer(){
   if(!drawerCtx)return;
@@ -1829,6 +1867,26 @@ function renderDrawer(){
   }
 
   const d=$('#drawer');
+  /* A repaint rebuilds every field from saved state, so anything typed but not
+     yet saved would be thrown away mid-word — and repaints arrive unbidden:
+     each of the four loaders fires one when it lands, and so does a Supabase
+     token refresh on a tab left open between lessons. Carry the live text and
+     the caret across. */
+  /* ...but only when the drawer is still showing the same thing. Opening
+     another student, or clicking edit on a past lesson, SHOULD replace the
+     fields — carrying text across then would paste it over the lesson you just
+     opened. */
+  const key=[drawerCtx.personId,dateISO,drawerCtx.oneOffId||'',editingLessonId||''].join('|');
+  const same=(key===lastDrawerKey);
+  lastDrawerKey=key;
+  const live={};
+  if(same)['lgRep','lgNotes','cmtNew','repNew'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&el.value)live[id]={v:el.value,a:el.selectionStart,b:el.selectionEnd};
+  });
+  const hadFocus=same&&document.activeElement&&d.contains(document.activeElement)
+    ? document.activeElement.id : '';
+
   d.innerHTML=
   '<div class="dhead"><h2>'+esc(p.name)+'</h2>'+
   '<span class="chip kind-'+p.kind+'">'+(p.kind==='class'?'CLASS':'STUDENT')+'</span>'+
@@ -1873,6 +1931,15 @@ function renderDrawer(){
   linkBits(p)+
   updateBits(p)+
   '</div>';
+
+  /* put back what was being typed, caret and all, before anything is wired */
+  Object.keys(live).forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.value=live[id].v;
+    if(id===hadFocus){try{el.setSelectionRange(live[id].a,live[id].b);}catch(e){}}
+  });
+  if(hadFocus){const el=document.getElementById(hadFocus); if(el)el.focus({preventScroll:true});}
 
   $('#dClose').onclick=closeDrawer;
   /* a sheet chip: the file is private, so the url is signed on the tap. Open the
@@ -2541,7 +2608,7 @@ function onAuth(){
     migrateExceptions();
     render();
     loadTunes(); loadSongbook(); loadSheets();
-    loadLinks().then(()=>{if(drawerCtx)renderDrawer();});            // show the device copy straight away, then reconcile
+    loadLinks().then(()=>{if(drawerCtx)repaintChips();});            // show the device copy straight away, then reconcile
     pullCloud();
   } else {
     clearTimeout(saveTimer); dirty=false; cloudRowId=null;
