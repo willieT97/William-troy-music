@@ -256,6 +256,8 @@ textarea.field{resize:vertical;min-height:56px}
 .lactions button{font-family:var(--mono);font-size:.68rem;border:2px solid var(--ink);background:#fff;padding:1px 7px}
 .reschip{display:inline-block;border:2px solid var(--ink);background:var(--paper);
   font-size:.78rem;padding:1px 8px;margin:3px 4px 0 0}
+button.reschip{font:inherit;font-size:.78rem;line-height:inherit;cursor:pointer;color:inherit}
+button.reschip[disabled]{opacity:.5}
 .repitem{display:flex;align-items:center;gap:9px;border:2px solid var(--ink);background:#fff;
   padding:7px 10px;margin-bottom:7px}
 .repitem input[type=checkbox]{width:18px;height:18px;accent-color:var(--green)}
@@ -849,14 +851,91 @@ async function loadTunes(){
   return TUNES;
 }
 
+/* ---------- the Song Trainer's songbook ----------
+   Read from the same manifest the Song Trainer itself reads, so the two can't
+   drift. The file name is the title (that's the trainer's own fallback) and the
+   ?song= link matches on the file name too, so a score whose <work-title> was
+   never set still opens on the right song. */
+let SONGBOOK=null;
+async function loadSongbook(){
+  if(SONGBOOK)return SONGBOOK;
+  let out=[];
+  try{
+    const man=await (await fetch('songs/manifest.json')).json();
+    out=(man||[]).map(f=>String(f).replace(/\.musicxml$/i,'').trim()).filter(Boolean);
+  }catch(e){ /* offline, or no songs yet — songs just stay plain text */ }
+  SONGBOOK=out;
+  if(drawerCtx)renderDrawer();
+  return SONGBOOK;
+}
+
+/* ---------- your own song sheets ----------
+   The private library (the Sheets panel) is searchable from the log too. Typing
+   a sheet's name into REP is the act of giving it to them: saving the log
+   assigns the sheet, so it turns up in their Music Arcade account. */
+let SHEETS=null;
+function loadSheets(){
+  if(!(window.MAAuth&&MAAuth.sheets)){SHEETS=[];return Promise.resolve(SHEETS);}
+  return MAAuth.sheets.listMine().then(rows=>{
+    SHEETS=rows||[];
+    if(drawerCtx)renderDrawer();          // titles that were plain text can link now
+    return SHEETS;
+  }).catch(()=>{SHEETS=[];return SHEETS;});   /* not set up, or offline — never fatal */
+}
+
+/* Naming one of your sheets in a log hands it over: the sheet is assigned to
+   that student, so it shows up under "Sheets from your teacher" in their
+   account. Assigning is additive and idempotent — logging the same song again
+   next week is harmless, and it never takes a sheet off anyone else. */
+let shareNote='';
+function shareSheetsIn(p,rep){
+  if(!(window.MAAuth&&MAAuth.sheets))return;
+  const want=String(rep||'').split(',').map(x=>x.trim()).filter(Boolean)
+    .map(t=>(SHEETS||[]).find(x=>nrm(x.title)===nrm(t))).filter(Boolean)
+    .filter(sh=>!((sh.assigned||[]).indexOf(p.id)>=0));
+  if(!want.length)return;
+  const repaint=()=>{if(drawerCtx&&drawerCtx.personId===p.id)renderDrawer();};
+  shareNote='Sharing '+want.map(sh=>sh.title).join(', ')+'\u2026'; repaint();
+  Promise.all(want.map(sh=>{
+    const ids=[...new Set([...(sh.assigned||[]),p.id])];
+    return MAAuth.sheets.assign(sh.id,ids).then(()=>{sh.assigned=ids;});
+  })).then(()=>{
+    const l=linkFor(p.id), reachable=!!(l&&l.student_id);
+    shareNote='\u2713 '+want.map(sh=>sh.title).join(', ')+' \u2014 now shared with '+p.name+
+      (reachable?' (in their account).':'. They have no Music Arcade account linked yet, so they won\u2019t see it until they do.');
+    repaint();
+  }).catch(e=>{
+    shareNote='Couldn\u2019t share '+want.map(sh=>sh.title).join(', ')+' \u2014 '+((e&&e.message)||'try the Sheets panel');
+    repaint();
+  });
+}
+
 /* loose match: case, a leading "The", and punctuation all ignored — so the
    comma-stripped "Twinkle Twinkle Little Star" still finds its tune */
 const nrm=s=>String(s||'').toLowerCase().replace(/^the\s+/,'').replace(/[^a-z0-9]+/g,' ').trim();
 const tuneUrl=t=>SITE+'melody-trainer_1.html?tune='+encodeURIComponent(t);
+const songUrl=t=>SITE+'song-trainer.html?song='+encodeURIComponent(t);
 
-/* one logged item -> where it lives on the site, or null */
+/* one logged item -> where it lives, or null.
+   Your own sheet wins over anything on the site — if you named a song and you
+   have a sheet for it, that sheet is what you meant. A song in the Song Trainer
+   rides along as `also`, so "Zombie" gives them the sheet AND the play-along.
+   "Zombie (Song Trainer)" is how you ask for the play-along on its own: the
+   qualifier means song only, and nothing is shared. */
+function songFor(q){ return (SONGBOOK||[]).find(x=>nrm(x)===q)||null; }
+const SONGONLY_RE=/\s*\(\s*(?:song\s*trainer|play[\s-]?along)\s*\)\s*$/i;
+const songOnlyTitle=t=>String(t||'').trim()+' (Song Trainer)';
 function lookup(title,p){
-  const q=nrm(title); if(!q)return null;
+  const raw=String(title||'').trim(), bare=raw.replace(SONGONLY_RE,'');
+  const q=nrm(bare); if(!q)return null;
+  if(bare!==raw){                       // play-along only — never resolves to a sheet
+    const only=songFor(q);
+    return only?{t:only, u:songUrl(only), song:true, songOnly:true}:null;
+  }
+  const sh=(SHEETS||[]).find(x=>nrm(x.title)===q);
+  if(sh){const so=songFor(q);return {t:sh.title, sheet:sh, also:so?{t:so,u:songUrl(so)}:null};}
+  const so=songFor(q);
+  if(so)return {t:so, u:songUrl(so), song:true};
   const r=RES.find(x=>nrm(x.t)===q);
   if(r)return {t:r.t, u:SITE+r.u, pro:!!r.pro};
   const tu=(TUNES||[]).find(x=>nrm(x.t)===q);
@@ -865,17 +944,33 @@ function lookup(title,p){
   if(mu)return {t:mu.t, u:mu.u, musical:true};
   return null;
 }
-/* what a parent can actually open: paywalled things are named, never linked */
-const resLink=(title,p)=>{const r=lookup(title,p);return (r&&!r.pro)?r.u:null;};
+/* what a parent can actually open: paywalled things are named, never linked.
+   A sheet has no public url at all — it lives behind the student's sign-in. */
+const resLink=(title,p)=>{const r=lookup(title,p);return (r&&!r.pro&&!r.sheet)?r.u:null;};
 
 function chip(title,p){
   const t=String(title||'').trim(); if(!t)return '';
   const r=lookup(t,p);
   if(!r)return '<span class="reschip">'+esc(t)+'</span>';
-  const why=r.pro?'On the site \u2014 Pro, so it is not linked to parents'
-          :r.tune?'Opens in Melody Trainer'
-          :r.musical?'Opens on the site, set to this one':'Opens on the site';
-  return '<a class="reschip linked" href="'+r.u+'" target="_blank" rel="noopener" title="'+esc(why)+'">'+esc(t)+'</a>';
+  let out;
+  if(r.sheet){
+    /* a button, not a link: the file is private, so the url has to be signed on the tap */
+    out='<button type="button" class="reschip linked" data-sheetopen="'+esc(r.sheet.id)+'" '+
+      'title="'+esc('Your sheet \u2014 shared with '+((p&&p.name)||'them')+'. Tap to open it.')+'">'+
+      '\ud83d\udcc4 '+esc(r.t)+'</button>';
+  } else {
+    const why=r.pro?'On the site \u2014 Pro, so it is not linked to parents'
+            :r.songOnly?'Play-along only \u2014 opens the Song Trainer on this song, no sheet shared'
+            :r.song?'Opens in the Song Trainer, on this song'
+            :r.tune?'Opens in Melody Trainer'
+            :r.musical?'Opens on the site, set to this one':'Opens on the site';
+    out='<a class="reschip linked" href="'+r.u+'" target="_blank" rel="noopener" title="'+esc(why)+'">'+
+      (r.song?'\u266a '+esc(r.t):esc(t))+'</a>';
+  }
+  if(r.also)
+    out+='<a class="reschip linked" href="'+r.also.u+'" target="_blank" rel="noopener" '+
+      'title="Play it along in the Song Trainer">\u266a Song Trainer</a>';
+  return out;
 }
 
 /* suggestions: site pages and tunes together, best match first */
@@ -888,6 +983,19 @@ function suggest(q,forPerson){
     if(n.includes(k))return 2;
     return (keys&&keys.includes(q.toLowerCase()))?1:0;
   };
+  /* your own sheets first — they're the thing you'd actually hand over */
+  (SHEETS||[]).forEach(r=>{
+    const sc=score(r.title,'sheet '+(r.chords||[]).join(' ')+' '+r.key+' '+r.difficulty);
+    if(sc)out.push({sc:sc+1,t:r.title,u:'',sub:'your sheet \u2014 shared on save',sheet:true});});
+  /* A song you also have a sheet for gets its own row underneath, qualified, so
+     you can log the play-along on its own without handing over the PDF. */
+  (SONGBOOK||[]).forEach(t=>{
+    const sc=score(t,'song play along');
+    if(!sc)return;
+    const paired=out.some(x=>x.sheet&&nrm(x.t)===nrm(t));
+    out.push(paired
+      ? {sc:sc+0.7,t:songOnlyTitle(t),u:'song-trainer.html',sub:'play along only \u2014 no sheet sent',song:true}
+      : {sc:sc+0.7,t,u:'song-trainer.html',sub:'Song Trainer \u2014 play along',song:true});});
   RES.forEach(r=>{const sc=score(r.t,r.k);if(sc)out.push({sc,t:r.t,u:r.u,sub:r.pro?'not linked to parents':'',pro:!!r.pro});});
   (TUNES||[]).forEach(t=>{const sc=score(t.t,'');if(sc)out.push({sc:sc+0.5,t:t.t,u:'melody-trainer_1.html',
     sub:[t.r,t.o].filter(Boolean).join(' \u00b7 '),tune:true});});
@@ -997,10 +1105,25 @@ function signOff(){
   const pr=(window.MAAuth&&MAAuth.profile&&MAAuth.profile())||null;
   return (pr&&pr.username)||'';
 }
-/* one line of the "we worked on" list, with the link when the site has that page */
+/* one line of the "we worked on" list, with the link when the site has that page.
+   A sheet is private, so it gets no url of its own — it's named, and pointed at
+   the account page they read it from (only once they actually have an account
+   linked, or the link would go nowhere for them). */
 function bullet(r,p){
-  const u=resLink(r,p);
-  return '• '+r+(u?' \u2014 '+u:'');
+  const hit=lookup(r,p), bits=[];
+  if(hit&&hit.sheet){
+    /* only promise it's there if it really is: they need an account, and the
+       sheet has to be assigned to them (or they have the whole library) */
+    const l=linkFor(p.id);
+    const canSee=l&&l.student_id&&(l.library_access||(hit.sheet.assigned||[]).indexOf(p.id)>=0);
+    if(canSee)bits.push('the sheet is in their Music Arcade account: '+SITE+'account.html');
+  } else {
+    const u=resLink(r,p); if(u)bits.push(u);
+  }
+  if(hit&&hit.also)bits.push('play along: '+hit.also.u);
+  /* "(Song Trainer)" is shorthand for you, not something a parent needs to read */
+  const label=(hit&&hit.songOnly)?hit.t:r;
+  return '\u2022 '+label+(bits.length?' \u2014 '+bits.join(' \u00b7 '):'');
 }
 function andList(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 /* "Ms Byrne" stays "Ms Byrne"; "Máire Ní Bhriain" becomes "Máire" */
@@ -1533,7 +1656,7 @@ function syncPanelChrome(){
     $('#attview').classList.contains('open') || $('#sheets').classList.contains('open'));
 }
 function openDrawer(personId,dateISO,slotId,oneOffId){
-  drawerCtx={personId,dateISO,slotId,oneOffId};editingLessonId=null;
+  drawerCtx={personId,dateISO,slotId,oneOffId};editingLessonId=null;shareNote='';
   msgSaid='';msgSubj='';msgTo={};
   ((person(personId)||{}).contacts||[]).forEach(c=>{msgTo[c.id]=c.notify!==false;});
   renderDrawer();
@@ -1609,7 +1732,8 @@ function renderDrawer(){
   '<div class="repwrap"><input class="field" id="lgRep" autocomplete="off" value="'+esc(editing?editing.rep:'')+
     '" placeholder="e.g. Kesh Jig, Scale Theory">'+
   '<div class="suggest" id="repSuggest"></div></div>'+
-  '<p class="hint" style="margin-top:4px">Start typing to pull in a page from the site — those become links in the note home.</p>'+
+  '<p class="hint" style="margin-top:4px">Start typing to pull in a page from the site, a song from the Song Trainer, or one of your own sheets \u2014 those become links in the note home, and a sheet is shared with them when you save.</p>'+
+  (shareNote?'<p class="hint" style="margin-top:4px"><b>'+esc(shareNote)+'</b></p>':'')+
   '<label class="f" for="lgNotes">NOTES</label><textarea class="field" id="lgNotes" placeholder="What happened, how it went, what\u2019s next\u2026">'+esc(editing?editing.notes:'')+'</textarea>'+
   '<div class="inline" style="margin-top:12px"><button class="btn primary" id="lgSave">'+(editing?'Save changes':'Save log')+'</button>'+
   (editingLessonId?'<button class="btn" id="lgCancel">Cancel</button>':'')+'</div></div>'+
@@ -1632,6 +1756,16 @@ function renderDrawer(){
   '</div>';
 
   $('#dClose').onclick=closeDrawer;
+  /* a sheet chip: the file is private, so the url is signed on the tap. Open the
+     tab inside the click (not in the .then) or the popup blocker eats it. */
+  d.querySelectorAll('[data-sheetopen]').forEach(b=>b.onclick=()=>{
+    const sh=(SHEETS||[]).find(x=>x.id===b.dataset.sheetopen); if(!sh)return;
+    const w=window.open('','_blank'); if(w){ try{w.opener=null;}catch(e){} try{w.document.write('Opening the sheet\u2026');}catch(e){} }
+    b.disabled=true;
+    MAAuth.sheets.url(sh.path).then(u=>{ b.disabled=false;
+      if(w&&!w.closed) w.location.href=u; else window.open(u,'_blank');
+    }).catch(e=>{ b.disabled=false; if(w&&!w.closed) w.close(); alert('Couldn\u2019t open \u2014 '+((e&&e.message)||'')); });
+  });
   d.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{ setAtt(p.id,dateISO,b.dataset.att,drawerCtx.oneOffId||null); renderDrawer(); });
   // their Music Arcade account
   const li=$('#lnkInvite');
@@ -1752,7 +1886,7 @@ function renderDrawer(){
     const hide=()=>{box.classList.remove('show');box.innerHTML='';hits=[];cur=-1;};
     const paint=()=>{
       box.innerHTML=hits.map((r,i)=>'<button type="button" data-i="'+i+'" class="'+(i===cur?'on':'')+'">'+
-        esc(r.t)+(r.pro?' \uD83D\uDD12':'')+(r.tune?' \u266a':'')+
+        (r.sheet?'\uD83D\uDCC4 ':'')+(r.song?'\u266a ':'')+esc(r.t)+(r.pro?' \uD83D\uDD12':'')+(r.tune?' \u266a':'')+
         '<span class="lk">'+esc(r.sub||r.u)+'</span></button>').join('');
       box.classList.add('show');
       box.querySelectorAll('[data-i]').forEach(b=>b.onmousedown=e=>{e.preventDefault();pick(+b.dataset.i);});
@@ -1781,7 +1915,10 @@ function renderDrawer(){
     let saved;
     if(editing){Object.assign(editing,{rep,notes:nts});saved=editing;}
     else {saved={id:uid(),personId:p.id,date:dateISO,rep,notes:nts,oneOffId:drawerCtx.oneOffId||null};state.lessons.push(saved);}
-    editingLessonId=null;markDirty();renderDrawer();
+    editingLessonId=null;markDirty();
+    shareNote='';
+    renderDrawer();
+    if(rep)shareSheetsIn(p,rep);          /* a sheet you named is a sheet you handed over */
     /* only a brand-new log with something to report — editing an old one never re-sends */
     if(isNew&&rep&&state.settings&&state.settings.autoEmail&&(notifyContacts(p).length||tapContacts(p).length))
       queueLessonUpdate(p,saved);
@@ -2078,6 +2215,7 @@ function renderLibrary(){
   list.innerHTML='<p class="muted" style="font-size:.85rem">Loading&hellip;</p>';
   if(!(window.MAAuth&&MAAuth.sheets)){ list.innerHTML='<p class="muted" style="font-size:.85rem">Sign-in library still loading &mdash; try again in a moment.</p>'; return; }
   MAAuth.sheets.listMine().then(rows=>{
+    SHEETS=rows||[];                       // the log's suggestions read the same list
     if(!rows.length){ list.innerHTML='<p class="muted" style="font-size:.85rem">Nothing in your library yet. Add a sheet above.</p>'; $('#shFilterNote').textContent='Tap the chords a student knows (and a key or level) to narrow the list. Leave blank to show everything.'; return; }
     const fullIds=(linkRows||[]).filter(l=>l.library_access).map(l=>l.person_id);
     const active=shFilterSel.length||shKeyFilter.length||shDiffFilter.length;
@@ -2278,7 +2416,7 @@ function onAuth(){
     state=saved?Object.assign(EMPTY(),saved):EMPTY();
     migrateExceptions();
     render();
-    loadTunes();
+    loadTunes(); loadSongbook(); loadSheets();
     loadLinks().then(()=>{if(drawerCtx)renderDrawer();});            // show the device copy straight away, then reconcile
     pullCloud();
   } else {

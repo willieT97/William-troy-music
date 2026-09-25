@@ -1314,10 +1314,28 @@
       .then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; })
       .then(function(cfg){ if(cfg && cfg.mode) applyTonality(s, /min/i.test(cfg.mode)?'min':'maj'); });
   }
+  // ?song=... opens straight onto one song instead of the first in the folder.
+  // That's how the rollbook links a song it logged for a student. Matching is
+  // loose (case, "The", punctuation) and tries the file name as well as the
+  // title, so a score whose <work-title> was never set still opens.
+  var nrmT=function(s){ return String(s||'').toLowerCase().replace(/^the\s+/,'').replace(/[^a-z0-9]+/g,' ').trim(); };
+  function wantedIdx(byFile){
+    var want=null; try{ want=new URLSearchParams(location.search).get('song'); }catch(e){}
+    if(!want) return -1;
+    var k=nrmT(want), names=Object.keys(byFile), i;
+    for(i=0;i<names.length;i++) if(nrmT(names[i].replace(/\.musicxml$/i,''))===k) return byFile[names[i]];
+    for(i=0;i<SONGS.length;i++) if(nrmT(SONGS[i].title)===k) return i;
+    for(i=0;i<names.length;i++) if(nrmT(names[i].replace(/\.musicxml$/i,'')).indexOf(k)===0) return byFile[names[i]];
+    for(i=0;i<SONGS.length;i++) if(nrmT(SONGS[i].title).indexOf(k)===0) return i;
+    return -1;
+  }
   discoverSongs().then(function(names){
-    var seq=Promise.resolve(), firstIdx=-1;
-    names.forEach(function(n){ seq=seq.then(function(){ return loadFolderSong(n); }).then(function(idx){ if(firstIdx<0 && idx>=0) firstIdx=idx; }); });
-    return seq.then(function(){ if(firstIdx>=0){ sel.value=firstIdx; loadSong(firstIdx); } });
+    var seq=Promise.resolve(), firstIdx=-1, byFile={};
+    names.forEach(function(n){ seq=seq.then(function(){ return loadFolderSong(n); }).then(function(idx){ if(idx>=0){ byFile[n]=idx; if(firstIdx<0) firstIdx=idx; } }); });
+    return seq.then(function(){
+      var idx=wantedIdx(byFile); if(idx<0) idx=firstIdx;
+      if(idx>=0){ sel.value=idx; loadSong(idx); }
+    });
   });
 })();
 </script>

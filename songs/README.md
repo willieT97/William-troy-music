@@ -60,3 +60,13 @@ A key signature can be a major key *or* its relative minor (e.g. one sharp = **G
 - Chords play as major/minor triads; 7ths, sus, etc. are shown as their base triad.
 - The key, tempo, roman numerals and soloing scales are all worked out from the file.
 - The bass part is any pitched staff that isn't the chord staff; the drum part is any percussion staff. The bass plays the notes exactly as written; drums use the standard General-MIDI drum sounds.
+
+## Linking straight to a song
+
+`song-trainer.html?song=Zombie` opens the trainer on that song instead of the
+first one in the folder. The match ignores case, punctuation and a leading
+"The", and it tries the **file name** as well as the score's title — so a song
+still opens even if you never set a work title in MuseScore.
+
+That's how the Rollbook links a song it logged for a student: type the song into
+REP / RESOURCES in the session log and it becomes a play-along link.
