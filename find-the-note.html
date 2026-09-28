@@ -152,6 +152,11 @@
       <button class="scalebtn" id="scaleBtn">Show scale</button>
       <label class="degtoggle"><input type="checkbox" id="degToggle"> scale degrees</label>
     </div>
+    <div class="scalepick" id="viewpick">
+      <span class="plabel" style="margin:0">Show:</span>
+      <div class="notes" id="rangeBtns"></div>
+      <div class="notes" id="shapeBtns"></div>
+    </div>
     <button class="pdfbtn" id="pdfBtn">🖨 Print</button>
   </div>
 
@@ -207,8 +212,102 @@
     harmonicminor:{name:'Harmonic minor', iv:[0,2,3,5,7,8,11]}
   };
   var DEGREES={0:'1',1:'♭2',2:'2',3:'♭3',4:'3',5:'4',6:'♭5',7:'5',8:'♭6',9:'6',10:'♭7',11:'7'};
-  var state={ inst:'piano', hi:{kind:'note', pc:0}, showDeg:false };   // hi = {kind:'note',pc} | {kind:'scale',root,type} | {kind:'none'}
+  // range: 'all' (every occurrence, the whole point of this page) | 1 | 2 octaves from the root.
+  // shape: on a neck, narrow those octaves to ONE hand position you could actually play.
+  var state={ inst:'piano', hi:{kind:'note', pc:0}, showDeg:false, range:'all', shape:false };
   function scalePCs(root,type){ return (SCALES[type]||SCALES.major).iv.map(function(s){ return ((root+s)%12+12)%12; }); }
+  function narrowed(){ return state.hi.kind==='scale' && state.range!=='all'; }
+
+  /* ---- which strings a scale may run along ----
+     Strings are listed high-to-low, so the physical low-to-high order is the
+     array reversed. On a RE-ENTRANT ukulele that order doesn't ascend in pitch:
+     the 4th string G sounds above the C and E. A player runs scales on the
+     strings that do ascend and leaves the high G as a drone, so take the
+     longest ascending run. Guitar, bass and tenor banjo are unaffected. */
+  function runStrings(strings){
+    var phys=strings.map(function(o,i){ return {m:o.m, i:i}; }).reverse();
+    var best=[], cur=[phys[0]];
+    for(var k=1;k<phys.length;k++){
+      if(phys[k].m>cur[cur.length-1].m) cur.push(phys[k]);
+      else { if(cur.length>best.length) best=cur; cur=[phys[k]]; }
+    }
+    return (cur.length>best.length?cur:best);
+  }
+
+  /* ---- one fingering shape ----
+     A window of frets the hand can cover, inside which the whole run can be
+     played, climbing string by string and never going back down. Tightest hand
+     first, lowest window wins, and an open string is in reach from anywhere.
+     Returns [{si,fret,deg,midi}] in playing order, or null if it won't fit. */
+  function shapePath(strings, rootPc, iv, octs){
+    var run=runStrings(strings), FR=FRETS, lo=null;
+    run.forEach(function(st){ for(var f=0;f<=FR;f++){ var mm=st.m+f;
+      if(((mm%12)+12)%12===rootPc && (lo===null||mm<lo)) lo=mm; } });
+    if(lo===null) return null;
+    var pitches=[], degs=[];
+    for(var o=0;o<octs;o++) iv.forEach(function(v){ pitches.push(lo+o*12+v); degs.push(DEGREES[v%12]); });
+    pitches.push(lo+12*octs); degs.push('8');
+    function tryWindow(a,reach){
+      var out=[], si=0;
+      for(var k=0;k<pitches.length;k++){
+        var placed=null;
+        for(var t=si;t<run.length&&!placed;t++){
+          var f=pitches[k]-run[t].m;
+          if(f<0||f>FR) continue;
+          if(f===0||(f>=a&&f<=a+reach)) placed={t:t,f:f};
+        }
+        if(!placed) return null;
+        si=placed.t;
+        out.push({si:run[placed.t].i, fret:placed.f, deg:degs[k], midi:pitches[k]});
+      }
+      return out;
+    }
+    for(var reach=3;reach<=5;reach++)
+      for(var a=0;a+reach<=FR;a++){ var path=tryWindow(a,reach); if(path) return path; }
+    return null;
+  }
+
+  /* What the current view actually shows. Rebuilt on every render; null means
+     the page behaves exactly as it always has — every occurrence, by pitch class. */
+  var VIEW=null;
+  function buildView(){
+    VIEW=null;
+    if(!narrowed()) return;
+    var h=state.hi, rootPc=((h.root%12)+12)%12, iv=(SCALES[h.type]||SCALES.major).iv;
+    var octs=(state.range===2?2:1);
+    if(state.inst==='piano'){
+      var lo=48+rootPc, at={};
+      for(var o=0;o<octs;o++) iv.forEach(function(v){ at[lo+o*12+v]=DEGREES[v%12]; });
+      at[lo+12*octs]='8';
+      VIEW={kind:'piano', lo:lo, hi:lo+12*octs, at:at};
+      return;
+    }
+    var strings=INSTR[state.inst].strings;
+    if(state.shape){
+      var path=shapePath(strings, rootPc, iv, octs);
+      if(path){ var m={}; path.forEach(function(n){ m[n.si+':'+n.fret]=n.deg; });
+        VIEW={kind:'shape', at:m}; return; }
+      VIEW={kind:'nofit'};                 // say so rather than show something else
+      return;
+    }
+    // a pitch range: the run from the lowest root you can reach, up an octave or two
+    var run=runStrings(strings), loR=null;
+    run.forEach(function(st){ for(var f=0;f<=FRETS;f++){ var mm=st.m+f;
+      if(((mm%12)+12)%12===rootPc && (loR===null||mm<loR)) loR=mm; } });
+    VIEW=(loR===null)?{kind:'nofit'}:{kind:'run', lo:loR, hi:loR+12*octs, rootPc:rootPc};
+  }
+  /* one note on the diagram -> how it should be drawn */
+  function noteAt(pc, midi, si, fret){
+    if(!VIEW||VIEW.kind==='nofit') return {st:styleFor(pc), lab:noteLabel(pc)};
+    var deg=null, on=false;
+    if(VIEW.kind==='shape'){ deg=VIEW.at[si+':'+fret]; on=(deg!==undefined); }
+    else if(VIEW.kind==='piano'){ deg=VIEW.at[midi]; on=(deg!==undefined); }
+    else { on=(midi>=VIEW.lo&&midi<=VIEW.hi&&scalePCs(state.hi.root,state.hi.type).indexOf(pc)>=0);
+      if(on) deg=(midi===VIEW.hi&&pc===VIEW.rootPc)?'8':DEGREES[((pc-state.hi.root)%12+12)%12]; }
+    if(!on) return {st:'', lab:disp(NAMES[pc])};
+    return {st:(deg==='1'||deg==='8')?'root':'scale',
+            lab:state.showDeg?deg:disp(NAMES[pc])};
+  }
   function styleFor(pc){ var h=state.hi;
     if(h.kind==='note') return pc===h.pc ? 'root' : '';
     if(h.kind==='scale'){ var r=((h.root%12)+12)%12; if(pc===r) return 'root'; return scalePCs(h.root,h.type).indexOf(pc)>=0 ? 'scale' : ''; }
@@ -235,6 +334,27 @@
     scaleWrap.classList.toggle('active', h.kind==='scale'); }
   function setNote(pc){ state.hi={kind:'note', pc:pc}; syncPicker(); render(); }
   function setScale(root,type){ state.hi={kind:'scale', root:root, type:type}; syncPicker(); render(); }
+
+  /* Narrowing is opt-in: the whole point of this page is "where does this live
+     on my instrument", so All stays the default and nothing changes until you
+     ask it to. One shape only means anything on a neck, so it hides on piano
+     and whenever the view isn't narrowed to an octave. */
+  var rangeBtnsEl=document.getElementById('rangeBtns'), shapeBtnsEl=document.getElementById('shapeBtns'),
+      viewPickEl=document.getElementById('viewpick');
+  [['all','All'],[1,'1 octave'],[2,'2 octaves']].forEach(function(pair){
+    var b=document.createElement('button'); b.textContent=pair[1]; b.dataset.range=pair[0];
+    b.addEventListener('click', function(){ state.range=pair[0]; render(); }); rangeBtnsEl.appendChild(b); });
+  [['','Every position'],['1','One shape']].forEach(function(pair){
+    var b=document.createElement('button'); b.textContent=pair[1]; b.dataset.shape=pair[0];
+    b.addEventListener('click', function(){ state.shape=!!pair[0]; render(); }); shapeBtnsEl.appendChild(b); });
+  function syncView(){
+    viewPickEl.style.display = state.hi.kind==='scale' ? '' : 'none';   // an octave of one note means nothing
+    shapeBtnsEl.style.display = (narrowed() && state.inst!=='piano') ? '' : 'none';
+    [].forEach.call(rangeBtnsEl.children, function(b){
+      b.classList.toggle('on', String(b.dataset.range)===String(state.range)); });
+    [].forEach.call(shapeBtnsEl.children, function(b){
+      b.classList.toggle('on', !!b.dataset.shape===state.shape); });
+  }
   function setNone(){ state.hi={kind:'none'}; syncPicker(); render(); }
   syncPicker();
 
@@ -247,16 +367,29 @@
 
   // ---- rendering ----
   var diagram=document.getElementById('diagram'), tip=document.getElementById('tip'), printhead=document.getElementById('printhead'), backlink=document.getElementById('backlink');
-  function render(){ if(state.inst==='piano') renderPiano(); else renderFretboard(INSTR[state.inst]); updateText(); }
+  function render(){ buildView(); syncView();
+    if(state.inst==='piano') renderPiano(); else renderFretboard(INSTR[state.inst]); updateText(); }
   function updateText(){
     var h=state.hi, label = state.inst==='piano' ? 'Piano' : INSTR[state.inst].label;
     var tuning = state.inst==='piano' ? '' : (' · '+INSTR[state.inst].tuning);
-    var title = (h.kind==='scale') ? ('The '+disp(NAMES[((h.root%12)+12)%12])+' '+SCALES[h.type].name+' scale on the '+label) : ('The chromatic scale on the '+label);
+    var narrow = (h.kind==='scale'&&VIEW&&VIEW.kind!=='nofit')
+      ? (VIEW.kind==='shape' ? ' — one fingering shape'
+                             : ' — '+(state.range===2?'two octaves':'one octave')) : '';
+    var title = (h.kind==='scale') ? ('The '+disp(NAMES[((h.root%12)+12)%12])+' '+SCALES[h.type].name+' scale on the '+label+narrow) : ('The chromatic scale on the '+label);
     printhead.innerHTML='<h2>'+title+'</h2><p>Find the Note · themusicarcade'+tuning+'</p>';
     backlink.innerHTML='';
     if(h.kind==='none'){ tip.innerHTML='Every note is shown. Pick a note or a scale to highlight it — tap any key/fret to hear it.'; return; }
     if(h.kind==='scale'){ var rn=disp(NAMES[((h.root%12)+12)%12]), extra=state.showDeg?' as <b>scale degrees</b> (1 = root)':'';
-      tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.';
+      var what='';
+      if(VIEW&&VIEW.kind==='nofit')
+        what=' — <b>'+state.range+' octaves won’t sit under one hand on the '+label.toLowerCase()+
+             ', so every position is shown instead</b>';
+      else if(VIEW&&VIEW.kind==='shape')
+        what=' — <b>one hand position</b>, root up to the octave, low string to high';
+      else if(VIEW)
+        what=' — <b>'+(state.range===2?'two octaves':'one octave')+'</b> from the lowest root you can reach';
+      tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+what+
+        ' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.';
       // for the two diatonic scales the Circle of Fifths maps directly — offer a link back to that key
       if(h.type==='major') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root%12)+12)%12)+'">See the key of '+rn+' major on the Circle of Fifths →</a>';
       else if(h.type==='minor') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root+3)%12)+12)%12+'">See '+rn+' minor on the Circle of Fifths →</a>';
@@ -272,11 +405,11 @@
     for(var m=lo;m<=hi;m++){ var pc=m%12; if(!isBlack(pc)){ whites.push({m:m,pc:pc,x:wc*W}); wc++; } else { blacks.push({m:m,pc:pc,x:wc*W-BW/2}); } }
     var totalW=wc*W;
     var piano=document.createElement('div'); piano.className='piano'; piano.style.width=totalW+'px'; piano.style.height=H+'px';
-    whites.forEach(function(k){ var st=styleFor(k.pc); var lab=noteLabel(k.pc); var b=document.createElement('button'); b.className='pkey white'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=(W-1)+'px'; b.style.height=H+'px';
+    whites.forEach(function(k){ var na=noteAt(k.pc,k.m); var st=na.st, lab=na.lab; var b=document.createElement('button'); b.className='pkey white'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=(W-1)+'px'; b.style.height=H+'px';
       b.textContent=lab+((k.pc===0 && lab===disp(NAMES[0]))?(Math.floor(k.m/12)-1):''); b.title=disp(NAMES[k.pc]);
       b.addEventListener('click', function(){ setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
-    blacks.forEach(function(k){ var st=styleFor(k.pc); var b=document.createElement('button'); b.className='pkey black'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=BW+'px'; b.style.height=BH+'px';
-      b.textContent=noteLabel(k.pc); b.title=disp(NAMES[k.pc]);
+    blacks.forEach(function(k){ var na=noteAt(k.pc,k.m); var st=na.st; var b=document.createElement('button'); b.className='pkey black'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=BW+'px'; b.style.height=BH+'px';
+      b.textContent=na.lab; b.title=disp(NAMES[k.pc]);
       b.addEventListener('click', function(e){ e.stopPropagation(); setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
     var felt=document.createElement('div'); felt.className='pfelt'; felt.style.width=totalW+'px';
     var cse=document.createElement('div'); cse.className='pcase'; cse.appendChild(felt); cse.appendChild(piano);
@@ -307,16 +440,16 @@
     strings.forEach(function(str,i){ var y=sy(i), t=i/Math.max(1,n-1), th=(3.5-t*2.2).toFixed(2), col=mix([176,138,72],[201,206,216],t);
       s+='<line x1="'+openX+'" y1="'+y+'" x2="'+fretEnd+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+th+'"/>'; });
     // open-string notes, before the first fret
-    strings.forEach(function(str,i){ var y=sy(i), pc=str.m%12, st=styleFor(pc);
+    strings.forEach(function(str,i){ var y=sy(i), pc=((str.m%12)+12)%12, na=noteAt(pc,str.m,i,0), st=na.st;
       var fill=st==='root'?'#E6462F':st==='scale'?'#2E77E6':'#fff', stk=st==='root'?'#b5361f':st==='scale'?'#1f5fbf':'#cfd6e2', txt=st?'#fff':'#2A3242';
       s+='<circle cx="'+openX+'" cy="'+y+'" r="11" fill="'+fill+'" stroke="'+stk+'" stroke-width="'+(st?1.5:2)+'"/>'
-        +'<text x="'+openX+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" font-weight="'+(st?700:600)+'" fill="'+txt+'">'+noteLabel(pc)+'</text>'
+        +'<text x="'+openX+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" font-weight="'+(st?700:600)+'" fill="'+txt+'">'+na.lab+'</text>'
         +'<rect x="'+(openX-openW/2)+'" y="'+(y-14)+'" width="'+openW+'" height="28" fill="transparent" data-midi="'+str.m+'" data-pc="'+pc+'" style="cursor:pointer"/>'; });
     // fretted notes (frets 1-12)
     strings.forEach(function(str,i){ var y=sy(i);
-      for(var f2=1; f2<=FRETS; f2++){ var midi=str.m+f2, pc=((midi%12)+12)%12, x=fx(f2), st=styleFor(pc);
-        if(st){ s+='<circle cx="'+x+'" cy="'+y+'" r="12.5" fill="'+(st==='root'?'#E6462F':'#2E77E6')+'" stroke="'+(st==='root'?'#b5361f':'#1f5fbf')+'" stroke-width="1.5"/><text x="'+x+'" y="'+(y+3.9)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">'+noteLabel(pc)+'</text>'; }
-        else { s+='<text x="'+x+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" paint-order="stroke" stroke="#efdcae" stroke-width="2.6" stroke-linejoin="round" fill="#5a4423">'+noteLabel(pc)+'</text>'; }
+      for(var f2=1; f2<=FRETS; f2++){ var midi=str.m+f2, pc=((midi%12)+12)%12, x=fx(f2), na=noteAt(pc,midi,i,f2), st=na.st;
+        if(st){ s+='<circle cx="'+x+'" cy="'+y+'" r="12.5" fill="'+(st==='root'?'#E6462F':'#2E77E6')+'" stroke="'+(st==='root'?'#b5361f':'#1f5fbf')+'" stroke-width="1.5"/><text x="'+x+'" y="'+(y+3.9)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">'+na.lab+'</text>'; }
+        else { s+='<text x="'+x+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" paint-order="stroke" stroke="#efdcae" stroke-width="2.6" stroke-linejoin="round" fill="#5a4423">'+na.lab+'</text>'; }
         s+='<rect x="'+(x-fretW/2)+'" y="'+(y-15)+'" width="'+fretW+'" height="30" fill="transparent" data-midi="'+midi+'" data-pc="'+pc+'" style="cursor:pointer"/>';
       } });
     // fret numbers + open label
