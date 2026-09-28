@@ -804,10 +804,40 @@ function instOf(p){
   return '';
 }
 
+/* ---------- "D major scale 1 octave 1 shape" ----------
+   A scale on its own goes to the theory page, which explains it. Add an octave
+   count or ask for a shape and it goes to Find the Note instead, opened on the
+   student's own instrument and already narrowed to what the lesson meant.
+
+   No commas in the canonical title: rep is a comma-separated field, so one
+   would split the chip in two. */
+const OCT_RE=/\b(one|two|1|2)\s*(?:oct|octave|octaves)\b/;
+const SHAPE_RE=/\b(?:one|1)\s*shapes?\b|\bshapes?\b|\bfingering\b|\bposition\b/;
+/* Find the Note carries fewer scales than the theory page parses, and calls two
+   of them by another name. Anything missing stays on the theory page. */
+const FTN_SCALE={major:'major',ionian:'major',minor:'minor',aeolian:'minor',
+  majpent:'majpent',minpent:'minpent',blues:'blues',dorian:'dorian',
+  mixolydian:'mixolydian',harmonic:'harmonicminor',melodic:'melodicminor',
+  phrygian:'phrygian',lydian:'lydian',locrian:'locrian'};
+/* the student's instrument, in Find the Note's vocabulary. A mandolin is tuned
+   GDAE like the tenor banjo, so it reads the same neck. */
+const FTN_INST={guitar:'guitar',ukulele:'ukulele',bass:'bass',
+  banjo:'banjo',mandolin:'banjo',piano:'piano'};
+/* Find the Note takes the root as a pitch class number, not a name */
+const PC_OF={'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'Fb':4,'E#':5,'F':5,
+  'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11,'Cb':11,'B#':0};
+
 function musicalFor(title,p){
   const r=readRoot(String(title||'')); if(!r)return null;
   let rest=r.rest.toLowerCase().replace(/\s+/g,' ').trim();
   const isChord=/\bchord\b/.test(rest);
+  /* lift the "1 octave" / "1 shape" wording out before the scale is read, or
+     it would sit in front of the scale name and stop it matching */
+  let octs=0, wantShape=false;
+  const om=OCT_RE.exec(rest);
+  if(om){ octs=(om[1]==='two'||om[1]==='2')?2:1; rest=rest.replace(OCT_RE,' '); }
+  if(SHAPE_RE.test(rest)){ wantShape=true; rest=rest.replace(SHAPE_RE,' '); }
+  rest=rest.replace(/\s+/g,' ').trim();
   rest=rest.replace(/\b(scale|chord)\b/g,'').trim();
   if(isChord){
     let q='major';
@@ -823,7 +853,22 @@ function musicalFor(title,p){
   }
   if(!rest)return null;                       // a bare "C" isn't an assignment
   for(const[re,key,label]of SCALE_WORDS){
-    if(re.test(rest))return {t:r.root+' '+label,
+    if(!re.test(rest))continue;
+    const ftn=FTN_SCALE[key], inst=FTN_INST[instOf(p)]||'';
+    /* asked for a fingering, and Find the Note can draw it: send them there */
+    if((octs||wantShape)&&ftn){
+      if(!octs)octs=1;                        // "one shape" is one octave unless told otherwise
+      const pc=PC_OF[r.root];
+      if(pc===undefined)break;              // can't name it as a number — stay on the theory page
+      const bits=['root='+pc,'scale='+ftn,'octs='+octs];
+      /* pass it even when we don't know their instrument: the page opens on
+         piano, which has no shapes, but the moment they tap Guitar it's there */
+      if(wantShape&&inst!=='piano')bits.push('shape=1');
+      if(inst)bits.push('inst='+inst);
+      return {t:r.root+' '+label+' '+octs+' octave'+(octs>1?'s':'')+(wantShape?' 1 shape':''),
+        u:SITE+'find-the-note.html?'+bits.join('&')};
+    }
+    return {t:r.root+' '+label,
       u:SITE+'scale-theory.html?root='+encodeURIComponent(r.root)+'&scale='+key};
   }
   return null;

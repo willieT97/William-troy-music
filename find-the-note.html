@@ -209,7 +209,11 @@
     blues:{name:'Blues', iv:[0,3,5,6,7,10]},
     dorian:{name:'Dorian', iv:[0,2,3,5,7,9,10]},
     mixolydian:{name:'Mixolydian', iv:[0,2,4,5,7,9,10]},
-    harmonicminor:{name:'Harmonic minor', iv:[0,2,3,5,7,8,11]}
+    harmonicminor:{name:'Harmonic minor', iv:[0,2,3,5,7,8,11]},
+    melodicminor:{name:'Melodic minor', iv:[0,2,3,5,7,9,11]},
+    phrygian:{name:'Phrygian', iv:[0,1,3,5,7,8,10]},
+    lydian:{name:'Lydian', iv:[0,2,4,6,7,9,11]},
+    locrian:{name:'Locrian', iv:[0,1,3,5,6,8,10]}
   };
   var DEGREES={0:'1',1:'♭2',2:'2',3:'♭3',4:'3',5:'4',6:'♭5',7:'5',8:'♭6',9:'6',10:'♭7',11:'7'};
   // range: 'all' (every occurrence, the whole point of this page) | 1 | 2 octaves from the root.
@@ -466,6 +470,11 @@
     var q=new URLSearchParams(location.search), inst=q.get('inst'), scale=q.get('scale'), root=q.get('root'), note=q.get('note');
     if(inst && (inst==='piano' || INSTR[inst])){ state.inst=inst;
       [].forEach.call(tabs.children, function(x){ x.classList.toggle('on', x.dataset.inst===inst); }); }
+    /* ?octs=1|2 and ?shape=1 — the rollbook links a logged scale straight to the
+       view the lesson meant, so a student opens it already narrowed down */
+    var octs=q.get('octs');
+    if(octs==='1'||octs==='2') state.range=+octs;
+    if(q.get('shape')==='1'){ state.shape=true; if(state.range==='all') state.range=1; }
     if(scale && SCALES[scale] && root!==null){ var r=((+root)%12+12)%12; scaleRoot.value=r; scaleType.value=scale; setScale(r, scale); }
     else if(note!==null){ setNote(((+note)%12+12)%12); }
   })();
