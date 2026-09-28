@@ -6,7 +6,7 @@
      · the 205-tune library   (tunes/index.json, fetched on first focus)
      · musical phrases        ("D major scale", "F# minor chord", "note Bb")
        which become deep links into Scale Theory, the chord sheets and
-       Find the Note — the same links the Rollbook emails use.
+       Scales — the same links the Rollbook emails use.
 
    Mount it into a container:
        <div id="whatever"></div>
@@ -83,7 +83,7 @@
     }
     if (root && wantsNote && !scale) {
       out.push({ t: 'The note ' + root + ' on your instrument',
-                 d: 'Every place it lives on ' + findInst() + ' — in Find the Note',
+                 d: 'Every place it lives on ' + findInst() + ' — in Scales',
                  h: 'find-the-note.html?note=' + noteToPc(root) + '&inst=' + findInst(), kind: 'theory' });
     }
     if (!root && scale && wantsScale) {

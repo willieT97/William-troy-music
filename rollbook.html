@@ -734,7 +734,8 @@ function migrateExceptions(){
 const SITE='https://themusicarcade.com/';
 const RES=[
   {t:'Naming the Notes',      u:'note-names.html',      k:'notes treble stave reading beginner egbdf'},
-  {t:'Find the Note',         u:'find-the-note.html',   k:'note fretboard piano guitar where instrument scale scales octave shape fingering position'},
+  {t:'Scales',                u:'find-the-note.html',   k:'note fretboard piano guitar where instrument scale octave shape fingering position find the note',
+                                                       was:'Find the Note'},
   {t:'Scale Theory',          u:'scale-theory.html',    k:'scale major minor mode whole half step'},
   {t:'Chord Theory',          u:'chord-theory.html',    k:'chord major minor diminished augmented triad'},
   {t:'Chords',                u:'chords.html',          k:'chord chart reference sheet piano guitar'},
@@ -805,9 +806,10 @@ function instOf(p){
 }
 
 /* ---------- "D major scale 1 octave 1 shape" ----------
-   A scale on its own goes to the theory page, which explains it. Add an octave
-   count or ask for a shape and it goes to Find the Note instead, opened on the
-   student's own instrument and already narrowed to what the lesson meant.
+   A scale on its own goes to the top of the theory page, which explains it.
+   Add an octave count or ask for a shape and it goes to that page's scale
+   library instead — opened on the student's own instrument, already narrowed
+   to what the lesson meant, and scrolled straight to it.
 
    No commas in the canonical title: rep is a comma-separated field, so one
    would split the chip in two. */
@@ -1057,7 +1059,9 @@ function lookup(title,p){
   if(sh){const so=songFor(q);return {t:sh.title, sheet:sh, also:so?{t:so,u:songUrl(so)}:null};}
   const so=songFor(q);
   if(so)return {t:so, u:songUrl(so), song:true};
-  const r=RES.find(x=>nrm(x.t)===q);
+  /* `was` is a title this page used to go by. A lesson logged under the old
+     name keeps linking, and keeps reading the way it was written. */
+  const r=RES.find(x=>nrm(x.t)===q||(x.was&&nrm(x.was)===q));
   if(r)return {t:r.t, u:SITE+r.u, pro:!!r.pro};
   const tu=(TUNES||[]).find(x=>nrm(x.t)===q);
   if(tu)return {t:tu.t, u:tuneUrl(tu.t), tune:true};
