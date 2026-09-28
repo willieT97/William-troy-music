@@ -297,8 +297,9 @@
   var MODE_ORDER=['ionian','dorian','phrygian','lydian','mixolydian','aeolian','locrian'];
 
   var NAMES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
-  var TUNINGS={ guitar:{ label:'Guitar', open:[64,59,55,50,45,40] }, bass:{ label:'Bass', open:[43,38,33,28] }, banjo:{ label:'Tenor Banjo', open:[64,57,50,43] } };
-  var DIR_INSTS=[{k:'piano',label:'Piano'},{k:'guitar',label:'Guitar'},{k:'bass',label:'Bass'},{k:'banjo',label:'Banjo'}];
+  var TUNINGS={ guitar:{ label:'Guitar', open:[64,59,55,50,45,40] }, bass:{ label:'Bass', open:[43,38,33,28] },
+                banjo:{ label:'Tenor Banjo', open:[64,57,50,43] }, ukulele:{ label:'Ukulele', open:[69,64,60,67] } };
+  var DIR_INSTS=[{k:'piano',label:'Piano'},{k:'guitar',label:'Guitar'},{k:'ukulele',label:'Ukulele'},{k:'bass',label:'Bass'},{k:'banjo',label:'Banjo'}];
   var DIR_ORDER=['major','minor','harmonic','melodic','majpent','minpent','blues','ionian','dorian','phrygian','lydian','mixolydian','aeolian','locrian'];
 
   function steps(sc){ var a=sc.ints, out=[]; for(var i=0;i<a.length-1;i++) out.push(a[i+1]-a[i]); out.push(12-a[a.length-1]); return out; }
@@ -446,12 +447,25 @@
 
      TUNINGS lists strings high-to-low (a chart is drawn that way up), so this
      works on a low-to-high copy and maps the index back at the end. */
+  /* Strings are listed high-to-low, so physical low-to-high is the array
+     reversed. On a RE-ENTRANT ukulele that order doesn't ascend in pitch — the
+     4th string G sounds above the C and E — so a scale runs along the strings
+     that do ascend and leaves the high G as a drone. Taking the longest
+     ascending run gives C-E-A on a uke and changes nothing anywhere else. */
+  function runStrings(open){
+    var phys=open.map(function(m,i){ return {m:m,i:i}; }).reverse();
+    var best=[], cur=[phys[0]];
+    for(var k=1;k<phys.length;k++){
+      if(phys[k].m>cur[cur.length-1].m) cur.push(phys[k]);
+      else { if(cur.length>best.length) best=cur; cur=[phys[k]]; }
+    }
+    return (cur.length>best.length?cur:best);
+  }
   function shapePath(open, root, sc, octs){
-    var lowFirst=open.slice().reverse();
-    var back=function(i){ return open.length-1-i; };
+    var run=runStrings(open);
     var FRETS=12;
     var lo=null;
-    lowFirst.forEach(function(m){ for(var f=0;f<=FRETS;f++){ var mm=m+f;
+    run.forEach(function(st){ for(var f=0;f<=FRETS;f++){ var mm=st.m+f;
       if(((mm%12)+12)%12===root.pc && (lo===null||mm<lo)) lo=mm; } });
     if(lo===null) return null;
 
@@ -464,14 +478,14 @@
       var out=[], si=0;
       for(var k=0;k<pitches.length;k++){
         var placed=null;
-        for(var t=si; t<lowFirst.length && !placed; t++){
-          var f=pitches[k]-lowFirst[t];
+        for(var t=si; t<run.length && !placed; t++){
+          var f=pitches[k]-run[t].m;
           if(f<0||f>FRETS) continue;
           if(f===0 || (f>=a && f<=a+reach)) placed={s:t,f:f};
         }
         if(!placed) return null;
         si=placed.s;
-        out.push({string:back(placed.s), fret:placed.f, deg:labels[k], midi:pitches[k]});
+        out.push({string:run[placed.s].i, fret:placed.f, deg:labels[k], midi:pitches[k]});
       }
       return out;
     }
@@ -495,9 +509,13 @@
     // The run starts on the lowest root you can actually reach in the first 12
     // frets and climbs an octave (or two). Everything else on the neck is still
     // drawn, but ghosted -- you can see where the shape sits without losing it.
-    var FRETS=12, loRoot=null;
-    open.forEach(function(m){ for(var f=0;f<=FRETS;f++){ var mm=m+f;
+    var FRETS=12, loRoot=null, runs=runStrings(open);
+    var ceiling=Math.max.apply(null, runs.map(function(st){ return st.m+FRETS; }));
+    runs.forEach(function(st){ for(var f=0;f<=FRETS;f++){ var mm=st.m+f;
       if(((mm%12)+12)%12===root.pc && (loRoot===null || mm<loRoot)) loRoot=mm; } });
+    /* the run can climb past the twelfth fret — that's the end of the neck, not
+       something a different hand position would solve */
+    if(loRoot!==null && loRoot+12*octs>ceiling) loRoot=null;
     var hiRoot = loRoot===null ? null : loRoot+12*octs;
     var inRun = function(mm){ return loRoot!==null && mm>=loRoot && mm<=hiRoot; };
     var onIt = function(si,f,mm){ return inShape ? (inShape[si+':'+f]!==undefined) : inRun(mm); };
@@ -647,24 +665,33 @@
     var root=ROOTS[dir.rootIdx], sc=SC[dir.scale];
     var wantShape = dir.shape && dir.inst!=='piano';
     var shape = wantShape ? shapePath(TUNINGS[dir.inst].open, root, sc, dir.octs) : null;
-    /* two octaves often won't sit under one hand on four strings — say so
-       rather than quietly showing something else */
-    var noShape = wantShape && !shape;
+    /* two failures, two different explanations: the run may not be on the neck
+       at all, or it may be there but need a position shift */
+    var offNeck = dir.inst!=='piano' && (function(){
+      var runs=runStrings(TUNINGS[dir.inst].open), lo=null;
+      var top=Math.max.apply(null, runs.map(function(st){ return st.m+12; }));
+      runs.forEach(function(st){ for(var f=0;f<=12;f++){ var mm=st.m+f;
+        if(((mm%12)+12)%12===root.pc && (lo===null||mm<lo)) lo=mm; } });
+      return lo===null || lo+12*dir.octs>top; })();
+    var noShape = wantShape && !shape && !offNeck;
     var dia = dir.inst==='piano' ? pianoFullSVG(root,sc,dir.octs)
                                  : fretboardFullSVG(dir.inst,root,sc,dir.octs,shape);
     var instLabel = dir.inst==='piano' ? 'Piano' : TUNINGS[dir.inst].label;
     set('dirDia', '<div class="scard" style="--acc:'+sc.acc+';--tint:'+sc.tint+'">'
       +'<div class="qhead"><span class="qsym">'+root.name+'</span><div><div class="qname">'+sc.name+'</div>'
       +'<div class="qsub">'+root.name+' '+sc.name.toLowerCase()+' · '+instLabel+' · '+dir.octs+' octave'+(dir.octs>1?'s':'')
-      +(shape?' · one shape':'')+'</div></div></div>'
+      +(shape?' · one shape':'')+(offNeck?' · not on this neck':'')+'</div></div></div>'
       +'<div class="kb">'+dia+'</div>'
       +'<div class="frow"><span class="flab">Notes</span>'+chipsHTML(root,sc)+'</div>'
       +'<button class="playq" data-scale="'+dir.scale+'" data-root="'+dir.rootIdx+'">▶ Hear it</button>'
       +'<div class="legend2">The root (1) and its octave (8) are ringed; the numbers are scale degrees.'
       +(dir.inst==='piano'?''
         : shape ? ' Solid notes are the shape — one hand position, low string to high. Dashed ones are the same scale elsewhere on the neck.'
-        : noShape ? ' <b>'+dir.octs+' octaves won’t sit under one hand on '+instLabel.toLowerCase()+
-                    ' — that needs a position shift, so every position is shown instead.</b>'
+        : offNeck ? ' <b>'+(dir.octs===2?'Two octaves':'One octave')+' of '+root.name+
+                    ' climbs past the twelfth fret on '+instLabel.toLowerCase()+
+                    ', so the whole neck is shown instead.</b>'
+        : noShape ? ' <b>'+(dir.octs===2?'Two octaves':'One octave')+' won’t sit under one hand on '+
+                    instLabel.toLowerCase()+' — that needs a position shift, so every position is shown instead.</b>'
         : ' Dashed notes are the same scale further along the neck, outside this run.')+'</div></div>');
     dirScaleEl.value=dir.scale; dirRootEl.value=dir.rootIdx;
     [].forEach.call(dirInstEl.children, function(b){ b.classList.toggle('on', b.dataset.inst===dir.inst); });
@@ -683,13 +710,36 @@
   (function deepLink(){
     var q = new URLSearchParams(location.search);
     var wantRoot = q.get('root'), wantScale = (q.get('scale')||'').toLowerCase().replace(/[^a-z]/g,'');
+    var i;                                  // the root's index, shared with the library branch below
     if(wantRoot){
       var key = wantRoot.trim().toUpperCase().replace(/\u266F/g,'#').replace(/\u266D/g,'B').replace(/^([A-G])B$/,'$1b');
       var ALIAS = {'C':0,'C#':1,'DB':1,'Db':1,'D':2,'D#':3,'EB':3,'Eb':3,'E':4,'FB':4,'F':5,'F#':6,'GB':6,'Gb':6,
                    'G':7,'G#':8,'AB':8,'Ab':8,'A':9,'A#':10,'BB':10,'Bb':10,'B':11,'CB':11};
-      var i = ALIAS[key];
+      i = ALIAS[key];
       if(i===undefined) i = ALIAS[key.charAt(0)+key.slice(1).toLowerCase()];
       if(i!==undefined){ state.rootIdx=i; renderRoots(); renderAll(); }
+    }
+    /* ?octs= / ?shape= / ?inst= means the lesson wanted the LIBRARY, not the
+       write-up: open it on that scale, narrowed as asked, and go straight
+       there rather than making them scroll past the whole page. */
+    var qOct=q.get('octs'), qShape=q.get('shape')==='1', qInst=q.get('inst');
+    if(qOct || qShape || qInst){
+      var libKey = wantScale && SC[wantScale] ? wantScale
+                 : (wantScale==='naturalminor'?'minor'
+                 : wantScale==='harmonicminor'?'harmonic'
+                 : wantScale==='melodicminor'?'melodic'
+                 : wantScale==='majorpentatonic'?'majpent'
+                 : wantScale==='minorpentatonic'?'minpent' : null);
+      if(libKey) dir.scale=libKey;
+      if(typeof i!=='undefined' && i!==undefined) dir.rootIdx=i;
+      if(qOct==='1'||qOct==='2') dir.octs=+qOct;
+      if(qShape){ dir.shape=true; }
+      /* piano has no fingering shapes, so a shape request implies a neck */
+      if(qInst && (qInst==='piano' || TUNINGS[qInst])) dir.inst=qInst;
+      renderDirectory();
+      var lib=document.getElementById('s-directory');
+      if(lib) setTimeout(function(){ lib.scrollIntoView({behavior:'smooth',block:'start'}); }, 120);
+      return;
     }
     if(!wantScale) return;
     var SECTION = {major:'s-major', minor:'s-minor', naturalminor:'s-minor',

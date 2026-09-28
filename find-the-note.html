@@ -287,22 +287,26 @@
       return;
     }
     var strings=INSTR[state.inst].strings;
-    if(state.shape){
-      var path=shapePath(strings, rootPc, iv, octs);
-      if(path){ var m={}; path.forEach(function(n){ m[n.si+':'+n.fret]=n.deg; });
-        VIEW={kind:'shape', at:m}; return; }
-      VIEW={kind:'nofit'};                 // say so rather than show something else
-      return;
-    }
-    // a pitch range: the run from the lowest root you can reach, up an octave or two
     var run=runStrings(strings), loR=null;
+    var ceiling=Math.max.apply(null, run.map(function(st){ return st.m+FRETS; }));
     run.forEach(function(st){ for(var f=0;f<=FRETS;f++){ var mm=st.m+f;
       if(((mm%12)+12)%12===rootPc && (loR===null||mm<loR)) loR=mm; } });
-    VIEW=(loR===null)?{kind:'nofit'}:{kind:'run', lo:loR, hi:loR+12*octs, rootPc:rootPc};
+    /* Two different failures, and they need different words. The run may simply
+       climb past the twelfth fret — no hand position anywhere could have held
+       it, so telling someone to shift their hand is useless advice. */
+    if(loR===null || loR+12*octs>ceiling){ VIEW={kind:'offneck'}; return; }
+    var runView={kind:'run', lo:loR, hi:loR+12*octs, rootPc:rootPc};
+    if(!state.shape){ VIEW=runView; return; }
+    var path=shapePath(strings, rootPc, iv, octs);
+    if(path){ var m={}; path.forEach(function(n){ m[n.si+':'+n.fret]=n.deg; });
+      VIEW={kind:'shape', at:m}; return; }
+    /* The run does fit the neck, it just won't sit under one hand. Keep the
+       octave narrowing they also asked for and drop only the shape. */
+    runView.noShape=true; VIEW=runView;
   }
   /* one note on the diagram -> how it should be drawn */
   function noteAt(pc, midi, si, fret){
-    if(!VIEW||VIEW.kind==='nofit') return {st:styleFor(pc), lab:noteLabel(pc)};
+    if(!VIEW||VIEW.kind==='offneck') return {st:styleFor(pc), lab:noteLabel(pc)};
     var deg=null, on=false;
     if(VIEW.kind==='shape'){ deg=VIEW.at[si+':'+fret]; on=(deg!==undefined); }
     else if(VIEW.kind==='piano'){ deg=VIEW.at[midi]; on=(deg!==undefined); }
@@ -356,8 +360,10 @@
     shapeBtnsEl.style.display = (narrowed() && state.inst!=='piano') ? '' : 'none';
     [].forEach.call(rangeBtnsEl.children, function(b){
       b.classList.toggle('on', String(b.dataset.range)===String(state.range)); });
+    /* if the shape couldn't be drawn, don't leave "One shape" lit claiming it was */
+    var got = state.shape && !(VIEW&&(VIEW.noShape||VIEW.kind==='offneck'));
     [].forEach.call(shapeBtnsEl.children, function(b){
-      b.classList.toggle('on', !!b.dataset.shape===state.shape); });
+      b.classList.toggle('on', !!b.dataset.shape===got); });
   }
   function setNone(){ state.hi={kind:'none'}; syncPicker(); render(); }
   syncPicker();
@@ -376,7 +382,7 @@
   function updateText(){
     var h=state.hi, label = state.inst==='piano' ? 'Piano' : INSTR[state.inst].label;
     var tuning = state.inst==='piano' ? '' : (' · '+INSTR[state.inst].tuning);
-    var narrow = (h.kind==='scale'&&VIEW&&VIEW.kind!=='nofit')
+    var narrow = (h.kind==='scale'&&VIEW&&VIEW.kind!=='offneck')
       ? (VIEW.kind==='shape' ? ' — one fingering shape'
                              : ' — '+(state.range===2?'two octaves':'one octave')) : '';
     var title = (h.kind==='scale') ? ('The '+disp(NAMES[((h.root%12)+12)%12])+' '+SCALES[h.type].name+' scale on the '+label+narrow) : ('The chromatic scale on the '+label);
@@ -384,14 +390,17 @@
     backlink.innerHTML='';
     if(h.kind==='none'){ tip.innerHTML='Every note is shown. Pick a note or a scale to highlight it — tap any key/fret to hear it.'; return; }
     if(h.kind==='scale'){ var rn=disp(NAMES[((h.root%12)+12)%12]), extra=state.showDeg?' as <b>scale degrees</b> (1 = root)':'';
-      var what='';
-      if(VIEW&&VIEW.kind==='nofit')
-        what=' — <b>'+state.range+' octaves won’t sit under one hand on the '+label.toLowerCase()+
-             ', so every position is shown instead</b>';
+      var what='', many=(state.range===2), Oct=many?'Two octaves':'One octave', oct=many?'two octaves':'one octave';
+      if(VIEW&&VIEW.kind==='offneck')
+        what=' — <b>'+Oct+' of '+rn+' climbs past the twelfth fret on the '+label.toLowerCase()+
+             ', so the whole neck is shown instead</b>';
       else if(VIEW&&VIEW.kind==='shape')
         what=' — <b>one hand position</b>, root up to the octave, low string to high';
+      else if(VIEW&&VIEW.noShape)
+        what=' — <b>'+oct+'</b> from the lowest root you can reach. '+Oct+' won’t sit under one hand '+
+             'on the '+label.toLowerCase()+', so every position in that range is shown';
       else if(VIEW)
-        what=' — <b>'+(state.range===2?'two octaves':'one octave')+'</b> from the lowest root you can reach';
+        what=' — <b>'+oct+'</b> from the lowest root you can reach';
       tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+what+
         ' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.';
       // for the two diatonic scales the Circle of Fifths maps directly — offer a link back to that key
@@ -405,16 +414,24 @@
 
   function renderPiano(){
     var lo=48, hi=72, W=38, BW=24, H=162, BH=102;
+    /* the drawn keyboard has to cover the run, or two octaves quietly becomes
+       one for every root but C. Snap out to whole white keys: starting on a
+       black one would hang half a key off the left edge with nothing under it. */
+    if(VIEW&&VIEW.kind==='piano'){
+      lo=VIEW.lo; hi=VIEW.hi;
+      while(isBlack(((lo%12)+12)%12)) lo--;
+      while(isBlack(((hi%12)+12)%12)) hi++;
+    }
     var whites=[], blacks=[], wc=0;
     for(var m=lo;m<=hi;m++){ var pc=m%12; if(!isBlack(pc)){ whites.push({m:m,pc:pc,x:wc*W}); wc++; } else { blacks.push({m:m,pc:pc,x:wc*W-BW/2}); } }
     var totalW=wc*W;
     var piano=document.createElement('div'); piano.className='piano'; piano.style.width=totalW+'px'; piano.style.height=H+'px';
     whites.forEach(function(k){ var na=noteAt(k.pc,k.m); var st=na.st, lab=na.lab; var b=document.createElement('button'); b.className='pkey white'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=(W-1)+'px'; b.style.height=H+'px';
       b.textContent=lab+((k.pc===0 && lab===disp(NAMES[0]))?(Math.floor(k.m/12)-1):''); b.title=disp(NAMES[k.pc]);
-      b.addEventListener('click', function(){ setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
+      b.addEventListener('click', function(){ if(state.hi.kind!=='scale') setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
     blacks.forEach(function(k){ var na=noteAt(k.pc,k.m); var st=na.st; var b=document.createElement('button'); b.className='pkey black'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=BW+'px'; b.style.height=BH+'px';
       b.textContent=na.lab; b.title=disp(NAMES[k.pc]);
-      b.addEventListener('click', function(e){ e.stopPropagation(); setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
+      b.addEventListener('click', function(e){ e.stopPropagation(); if(state.hi.kind!=='scale') setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
     var felt=document.createElement('div'); felt.className='pfelt'; felt.style.width=totalW+'px';
     var cse=document.createElement('div'); cse.className='pcase'; cse.appendChild(felt); cse.appendChild(piano);
     diagram.innerHTML=''; diagram.appendChild(cse);
@@ -462,7 +479,11 @@
     s+='</svg>';
     diagram.innerHTML=s;
     var svg=diagram.querySelector('svg');
-    svg.addEventListener('click', function(e){ var t=e.target.closest('[data-midi]'); if(!t) return; setNote(+t.dataset.pc); playNote(+t.dataset.midi); });
+    /* while a scale is up, a tap just sounds the note — switching to note mode
+       would throw away the scale, the octave and the shape on the very gesture
+       the tip invites you to make */
+    svg.addEventListener('click', function(e){ var t=e.target.closest('[data-midi]'); if(!t) return;
+      if(state.hi.kind!=='scale') setNote(+t.dataset.pc); playNote(+t.dataset.midi); });
   }
 
   // deep-link from the Circle of Fifths: ?scale=major&root=7 (or ?note=7, &inst=guitar)

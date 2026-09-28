@@ -734,7 +734,7 @@ function migrateExceptions(){
 const SITE='https://themusicarcade.com/';
 const RES=[
   {t:'Naming the Notes',      u:'note-names.html',      k:'notes treble stave reading beginner egbdf'},
-  {t:'Find the Note',         u:'find-the-note.html',   k:'note fretboard piano guitar where instrument'},
+  {t:'Find the Note',         u:'find-the-note.html',   k:'note fretboard piano guitar where instrument scale scales octave shape fingering position'},
   {t:'Scale Theory',          u:'scale-theory.html',    k:'scale major minor mode whole half step'},
   {t:'Chord Theory',          u:'chord-theory.html',    k:'chord major minor diminished augmented triad'},
   {t:'Chords',                u:'chords.html',          k:'chord chart reference sheet piano guitar'},
@@ -813,19 +813,10 @@ function instOf(p){
    would split the chip in two. */
 const OCT_RE=/\b(one|two|1|2)\s*(?:oct|octave|octaves)\b/;
 const SHAPE_RE=/\b(?:one|1)\s*shapes?\b|\bshapes?\b|\bfingering\b|\bposition\b/;
-/* Find the Note carries fewer scales than the theory page parses, and calls two
-   of them by another name. Anything missing stays on the theory page. */
-const FTN_SCALE={major:'major',ionian:'major',minor:'minor',aeolian:'minor',
-  majpent:'majpent',minpent:'minpent',blues:'blues',dorian:'dorian',
-  mixolydian:'mixolydian',harmonic:'harmonicminor',melodic:'melodicminor',
-  phrygian:'phrygian',lydian:'lydian',locrian:'locrian'};
-/* the student's instrument, in Find the Note's vocabulary. A mandolin is tuned
-   GDAE like the tenor banjo, so it reads the same neck. */
-const FTN_INST={guitar:'guitar',ukulele:'ukulele',bass:'bass',
+/* the student's instrument, in the scale library's vocabulary. A mandolin is
+   tuned GDAE like the tenor banjo, so it reads the same neck. */
+const LIB_INST={guitar:'guitar',ukulele:'ukulele',bass:'bass',
   banjo:'banjo',mandolin:'banjo',piano:'piano'};
-/* Find the Note takes the root as a pitch class number, not a name */
-const PC_OF={'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'Fb':4,'E#':5,'F':5,
-  'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11,'Cb':11,'B#':0};
 
 function musicalFor(title,p){
   const r=readRoot(String(title||'')); if(!r)return null;
@@ -854,19 +845,18 @@ function musicalFor(title,p){
   if(!rest)return null;                       // a bare "C" isn't an assignment
   for(const[re,key,label]of SCALE_WORDS){
     if(!re.test(rest))continue;
-    const ftn=FTN_SCALE[key], inst=FTN_INST[instOf(p)]||'';
-    /* asked for a fingering, and Find the Note can draw it: send them there */
-    if((octs||wantShape)&&ftn){
+    const inst=LIB_INST[instOf(p)]||'';
+    /* asked for a fingering: the scale library draws it, so go there instead of
+       the write-up — and straight to it, rather than the top of a long page */
+    if(octs||wantShape){
       if(!octs)octs=1;                        // "one shape" is one octave unless told otherwise
-      const pc=PC_OF[r.root];
-      if(pc===undefined)break;              // can't name it as a number — stay on the theory page
-      const bits=['root='+pc,'scale='+ftn,'octs='+octs];
-      /* pass it even when we don't know their instrument: the page opens on
-         piano, which has no shapes, but the moment they tap Guitar it's there */
+      const bits=['root='+encodeURIComponent(r.root),'scale='+key,'octs='+octs];
+      /* pass it even when we don't know their instrument: the library opens on
+         guitar, and piano is the one view with no shapes to show */
       if(wantShape&&inst!=='piano')bits.push('shape=1');
       if(inst)bits.push('inst='+inst);
       return {t:r.root+' '+label+' '+octs+' octave'+(octs>1?'s':'')+(wantShape?' 1 shape':''),
-        u:SITE+'find-the-note.html?'+bits.join('&')};
+        u:SITE+'scale-theory.html?'+bits.join('&')+'#s-directory'};
     }
     return {t:r.root+' '+label,
       u:SITE+'scale-theory.html?root='+encodeURIComponent(r.root)+'&scale='+key};

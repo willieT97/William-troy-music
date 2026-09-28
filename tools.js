@@ -204,7 +204,7 @@ var CATALOGUE = [
   { t:'Note Names', h:'note-names.html', w:20, dep:2, g:['read'], lv:[1],
     d:'Every Good Boy Deserves Football. The names of the notes on the stave, from scratch.' },
   { t:'Find the Note', h:'find-the-note.html', dep:2, g:['read','chords'], lv:[1,2],
-    d:'Where every note lives on your own instrument — pick a note and it lights up everywhere it hides.',
+    d:'Where every note lives on your own instrument — pick a note and it lights up everywhere it hides, or pick a scale and narrow it to one octave or a single fingering shape.',
     mk:function(a){ return 'find-the-note.html?inst=' + (FIND_INST[a.inst] || 'piano'); } },
   { t:'Melody Trainer', h:'melody-trainer_1.html', w:15, dep:2, g:['tunes','read'], lv:[1,2,3], mic:true,
     fav:['gdae','voice'],
