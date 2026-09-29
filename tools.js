@@ -145,6 +145,8 @@ var CATALOGUE = [
     d:'A marker lands on the neck. Work out the note and tap it on the little keyboard.' },
   { t:'Triad Drop', h:'Guitar/triad-drop.html', dep:1, g:['chords'], lv:[3], i:['gtr'],
     d:'Slide a three-note grip up the neck to the one fret where it spells the chord you were given.' },
+  { t:'Triad Launch', h:'Guitar/triad-slingshot.html', dep:1, g:['chords'], lv:[3], i:['gtr'],
+    d:'Charge up a triad grip and fire it along the neck so it stops on the fret that spells the chord.' },
 
   { t:'Chord Catapult', h:'Piano/chord-catapult.html', dep:1, g:['chords'], lv:[1,2], i:['pno'],
     d:'Fling a note in an arc onto the keyboard and strike the keys that spell the chord.' },

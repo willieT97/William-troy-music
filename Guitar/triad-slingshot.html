@@ -124,6 +124,9 @@
   }
   .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
   .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+  .diffrow + .diffrow{ margin-top:8px; }
+  .seg.sets button{ padding:7px 9px; text-transform:none; }
+  @media (max-width:420px){ .diffrow{ flex-wrap:wrap; } .seg.sets button{ padding:7px 6px; } }
 
   .score{
     display:flex; justify-content:center; gap:clamp(16px,6vw,40px); margin-top:20px;
@@ -192,6 +195,16 @@
           <button id="d0" aria-pressed="true">Easy</button>
           <button id="d1" aria-pressed="false">Medium</button>
           <button id="d2" aria-pressed="false">Hard</button>
+        </div>
+      </div>
+      <div class="diffrow">
+        <span>strings:</span>
+        <div class="seg sets" role="group" aria-label="String set" id="setSeg">
+          <button data-set="-1" aria-pressed="true">Any</button>
+          <button data-set="0" aria-pressed="false">EAD</button>
+          <button data-set="1" aria-pressed="false">ADG</button>
+          <button data-set="2" aria-pressed="false">DGB</button>
+          <button data-set="3" aria-pressed="false">GBe</button>
         </div>
       </div>
       <div class="hint">Hold the grip, the button, or Space to charge — release to fire.</div>
@@ -289,7 +302,8 @@
   function playGrip(){ round.set.strings.forEach((s,i)=>pluck(BASE[s]*Math.pow(2,(round.pos+round.shape[i])/12), i*0.11)); }
 
   // state
-  let diff=0, round=null, state='idle';   // idle | load | aim | fly | done
+  let diff=0, round=null, state='idle';
+  let pinnedSet=-1;                       // -1 = let the level choose; 0..3 = confine to SETS[i]   // idle | load | aim | fly | done
   let xpos=1, vel=0, power=0, charging=false;
   let score=0, streak=0, best=0;
   const rnd=n=>Math.floor(Math.random()*n);
@@ -298,7 +312,7 @@
   function gen(){
     const d=DIFFS[diff];
     for(let tries=0;tries<300;tries++){
-      const set=SETS[d.sets[rnd(d.sets.length)]];
+      const set=SETS[pinnedSet>=0 ? pinnedSet : d.sets[rnd(d.sets.length)]];
       const q=d.q[rnd(d.q.length)], inv=rnd(3);
       const off=VOICING[q][inv], g=set.gaps;
       const shape=[0,off[1]-g[0],off[2]-g[0]-g[1]];
@@ -476,7 +490,20 @@
   function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
   function updateScore(){ el('sScore').textContent=score; el('sStreak').textContent=streak; el('sBest').textContent=best; }
 
-  newRound();
+  function setPinned(i){
+    pinnedSet=i;
+    document.querySelectorAll('#setSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.set===i));
+    try{ localStorage.setItem('triadLaunch.set', String(i)); }catch(_){}
+    newRound();
+  }
+  document.querySelectorAll('#setSeg button').forEach(b=>b.addEventListener('click', ()=>setPinned(+b.dataset.set)));
+
+  // start: ?strings=DGB (a link from a lesson log) wins, else the last set picked here
+  let savedSet=-1;
+  try{ const v=parseInt(localStorage.getItem('triadLaunch.set'),10); if(v>=-1&&v<=3) savedSet=v; }catch(_){}
+  const asked=(new URLSearchParams(location.search).get('strings')||'').toUpperCase().replace(/[^A-Z]/g,'');
+  const askedSet=SETS.findIndex(x=>x.label.toUpperCase().replace(/[^A-Z]/g,'')===asked);
+  setPinned(askedSet>=0 ? askedSet : savedSet);
 
 /* ---- leaderboard: best streak ---- */
 (function(){
