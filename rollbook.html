@@ -969,6 +969,20 @@ function catFor(title,p){
   return catRows(p).find(x=>nrm(x.t)===q)||null;
 }
 
+/* "Triad Drop on DGB strings" -> the game, pinned to those three strings.
+   Any spelling of the set works ("d-g-b", "G B e strings"); the canonical title
+   parses back to itself. A bare "Triad Drop" is left to the catalogue. */
+const TD_SETS=['EAD','ADG','DGB','GBE'];
+function triadDropFor(title,p){
+  const m=/^triad drop\b(.*)$/.exec(nrm(title)); if(!m)return null;
+  const set=m[1].replace(/\b(on|the|strings?|set)\b/g,'').replace(/[^a-z]/g,'').toUpperCase();
+  if(!TD_SETS.includes(set))return null;
+  const base=catFor('Triad Drop',p); if(!base)return null;
+  const label=set==='GBE'?'GBe':set;
+  return Object.assign({},base,{t:'Triad Drop on '+label+' strings',
+    u:base.u+(base.u.includes('?')?'&':'?')+'strings='+label});
+}
+
 /* ---------- the Song Trainer's songbook ----------
    Read from the same manifest the Song Trainer itself reads, so the two can't
    drift. The file name is the title (that's the trainer's own fallback) and the
@@ -1065,6 +1079,8 @@ function lookup(title,p){
   if(r)return {t:r.t, u:SITE+r.u, pro:!!r.pro};
   const tu=(TUNES||[]).find(x=>nrm(x.t)===q);
   if(tu)return {t:tu.t, u:tuneUrl(tu.t), tune:true};
+  const td=triadDropFor(bare,p);
+  if(td)return td;
   const ct=catFor(bare,p);
   if(ct)return ct;
   const mu=musicalFor(title,p);
@@ -1156,6 +1172,8 @@ function suggest(q,forPerson){
   out.push(...(out.length?games.slice(0,4):games));
   (TUNES||[]).forEach(t=>{const sc=score(t.t,'');if(sc)out.push({sc:sc+0.5,t:t.t,u:'melody-trainer_1.html',
     sub:[t.r,t.o].filter(Boolean).join(' \u00b7 '),tune:true});});
+  const td=triadDropFor(q,forPerson);
+  if(td)out.unshift({sc:9,t:td.t,u:td.u.replace(SITE,''),sub:td.kind+' \u00b7 those three strings only'+(td.pro?' \u00b7 not linked to parents':''),pro:td.pro,game:true});
   const mu=musicalFor(q,forPerson);
   if(mu&&!out.some(x=>nrm(x.t)===nrm(mu.t)))
     out.unshift({sc:9,t:mu.t,u:mu.u.replace(SITE,''),sub:'on the site',musical:true});
