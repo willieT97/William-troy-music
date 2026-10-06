@@ -21,6 +21,12 @@
           module is free. Say pro:false out loud for a course that is genuinely
           free, or it is assumed Pro.
       w   tie-breaker: doing beats reading about it (see score())
+      feat  the arcade front page shows only a short "start here" list on each
+          tab, with everything else behind "Show all". A number puts this row
+          on that short list, in that position (1 first). Leave it off and
+          the game is still on the page, just behind the button.
+      hero  true on the one game in the banner above the tabs. It keeps its
+          place on its own tab as well — the banner is an extra, not a move.
       mk  builds the href from the answers, for pages that take ?inst=
 
    Exposed as window.MATools:
@@ -122,60 +128,60 @@ var FIND_INST  = { uke:'ukulele', gtr:'guitar', pno:'piano', gdae:'banjo', bass:
 var CATALOGUE = [
 
   /* ---- depth 1 · a game you can play right now ---- */
-  { t:'In Tune?', h:'Ukulele/in-tune.html', dep:1, g:['ears'], lv:[1,2], i:['uke'],
+  { t:'In Tune?', h:'Ukulele/in-tune.html', feat:1, dep:1, g:['ears'], lv:[1,2], i:['uke'],
     d:'The four strings play one by one. Your call: is the uke in tune, or is something off?' },
   { t:'Out of Tune?', h:'Ukulele/out-of-tune.html', dep:1, g:['ears'], lv:[1,2], i:['uke'],
     d:'One string has gone sour. Find it by ear — the same trick you use tuning up for real.' },
-  { t:'Chord Quiz', h:'Ukulele/chord-quiz.html', dep:1, g:['chords'], lv:[1,2], i:['uke'],
+  { t:'Chord Quiz', h:'Ukulele/chord-quiz.html', feat:2, dep:1, g:['chords'], lv:[1,2], i:['uke'],
     d:'A chord name pops up. Build the shape from memory, then check your work.' },
   { t:'Uke Progress', h:'Ukulele/chord-progress-uke.html', dep:1, g:['ears','chords'], lv:[2,3], i:['uke'],
     d:'A run of chords plays and the last card stays blank — name the chord you heard.' },
-  { t:'What Note?', h:'Ukulele/what-note-ukulele-3frets.html', dep:1, g:['read'], lv:[1,2], i:['uke'],
+  { t:'What Note?', h:'Ukulele/what-note-ukulele-3frets.html', feat:3, dep:1, g:['read'], lv:[1,2], i:['uke'],
     d:'A marker lands on the fretboard. Work out which note that is and tap it on the keyboard.' },
 
-  { t:'In Tune?', h:'Guitar/in-tune-guitar.html', dep:1, g:['ears'], lv:[1,2], i:['gtr'],
+  { t:'In Tune?', h:'Guitar/in-tune-guitar.html', feat:1, dep:1, g:['ears'], lv:[1,2], i:['gtr'],
     d:'Six strings, played in turn. Is the guitar in tune, or is one of them off?' },
   { t:'Out of Tune?', h:'Guitar/out-of-tune-guitar.html', dep:1, g:['ears'], lv:[1,2], i:['gtr'],
     d:'One of the six is out. Find it by ear — the ear-test you use tuning up for real.' },
-  { t:'Chord Quiz', h:'Guitar/chord-quiz-guitar.html', dep:1, g:['chords'], lv:[1,2], i:['gtr'],
+  { t:'Chord Quiz', h:'Guitar/chord-quiz-guitar.html', feat:2, dep:1, g:['chords'], lv:[1,2], i:['gtr'],
     d:'A chord name pops up. Build the shape by tapping frets, then check it.' },
   { t:'Guitar Progress', h:'Guitar/chord-progress-guitar.html', dep:1, g:['ears','chords'], lv:[2,3], i:['gtr'],
     d:'Chords play with their real shapes and the last one is blank — name what you heard.' },
-  { t:'What Note?', h:'Guitar/what-note-guitar.html', dep:1, g:['read'], lv:[1,2], i:['gtr'],
+  { t:'What Note?', h:'Guitar/what-note-guitar.html', feat:3, dep:1, g:['read'], lv:[1,2], i:['gtr'],
     d:'A marker lands on the neck. Work out the note and tap it on the little keyboard.' },
   { t:'Triad Drop', h:'Guitar/triad-drop.html', dep:1, g:['chords'], lv:[3], i:['gtr'],
     d:'Slide a three-note grip up the neck to the one fret where it spells the chord you were given.' },
   { t:'Triad Launch', h:'Guitar/triad-slingshot.html', dep:1, g:['chords'], lv:[3], i:['gtr'],
     d:'Charge up a triad grip and fire it along the neck so it stops on the fret that spells the chord.' },
 
-  { t:'Chord Catapult', h:'Piano/chord-catapult.html', dep:1, g:['chords'], lv:[1,2], i:['pno'],
+  { t:'Chord Catapult', h:'Piano/chord-catapult.html', feat:2, dep:1, g:['chords'], lv:[1,2], i:['pno'],
     d:'Fling a note in an arc onto the keyboard and strike the keys that spell the chord.' },
-  { t:'Chord Cascade', h:'Piano/chord-cascade.html', dep:1, g:['chords'], lv:[2,3], i:['pno'],
+  { t:'Chord Cascade', h:'Piano/chord-cascade.html', feat:3, dep:1, g:['chords'], lv:[2,3], i:['pno'],
     d:"A chord's shape drops from the sky — slide the keyboard so it lands where it actually fits." },
-  { t:'What Note?', h:'Piano/what-note-piano.html', dep:1, g:['read'], lv:[1,2], i:['pno'],
+  { t:'What Note?', h:'Piano/what-note-piano.html', feat:1, dep:1, g:['read'], lv:[1,2], i:['pno'],
     d:'A marker lands on an unlabelled keyboard. Use the black-key groups to work out which note it is.' },
 
-  { t:'What Note?', h:'Banjo/what-note-banjo.html', dep:1, g:['read'], lv:[1,2], i:['gdae'],
+  { t:'What Note?', h:'Banjo/what-note-banjo.html', feat:1, dep:1, g:['read'], lv:[1,2], i:['gdae'],
     d:'A marker lands on the tenor banjo neck — GDAE, so it doubles for mandolin and fiddle fingers too.' },
-  { t:'In Tune?', h:'Banjo/in-tune-banjo.html', dep:1, g:['ears'], lv:[1,2], i:['gdae'],
+  { t:'In Tune?', h:'Banjo/in-tune-banjo.html', feat:2, dep:1, g:['ears'], lv:[1,2], i:['gdae'],
     d:'The four GDAE strings play in turn — is the whole banjo in tune, or is one off? Strum to hear the wobble.' },
-  { t:'Out of Tune?', h:'Banjo/out-of-tune-banjo.html', dep:1, g:['ears'], lv:[1,2], i:['gdae'],
+  { t:'Out of Tune?', h:'Banjo/out-of-tune-banjo.html', feat:3, dep:1, g:['ears'], lv:[1,2], i:['gdae'],
     d:'One GDAE string is out. Find it by ear and say whether it’s sharp or flat — the real tuning-up ear.' },
 
-  { t:'Pitch Invaders', h:'Ear%20Training/pitch-invaders_2.html', dep:1, g:['ears'], lv:[1,2],
+  { t:'Pitch Invaders', h:'Ear%20Training/pitch-invaders_2.html', feat:1, hero:true, dep:1, g:['ears'], lv:[1,2],
     d:'Aliens fall down the lane of their note — tap the note you hear to shoot them down.' },
-  { t:'Pitch Invaders — Chromatic', h:'Ear%20Training/pitch-invaders-chromatic.html', dep:1, g:['ears'], lv:[3],
+  { t:'Pitch Invaders — Chromatic', h:'Ear%20Training/pitch-invaders-chromatic.html', feat:4, dep:1, g:['ears'], lv:[3],
     d:'All twelve notes, sharps and flats included, one new one at a time so your ear can settle.' },
-  { t:'Pitch Invaders — Circle of Fifths', h:'Ear%20Training/pitch-invaders-fifths.html', dep:1, g:['ears','chords'], lv:[2,3],
+  { t:'Pitch Invaders — Circle of Fifths', h:'Ear%20Training/pitch-invaders-fifths.html', feat:2, dep:1, g:['ears','chords'], lv:[2,3],
     d:'Only the notes of the key fall, and the wheel spins to a new key every time you beat a boss.' },
-  { t:'Chord Progress', h:'Ear%20Training/chord-progress.html', dep:1, g:['ears','chords'], lv:[2,3],
+  { t:'Chord Progress', h:'Ear%20Training/chord-progress.html', feat:3, dep:1, g:['ears','chords'], lv:[2,3],
     d:'A chord progression plays with the last card blank. Name the chord you heard.' },
-  { t:'Scale Climb', h:'Theory/scale-climb.html', dep:1, g:['ears','chords'], lv:[2],
+  { t:'Scale Climb', h:'Theory/scale-climb.html', feat:3, dep:1, g:['ears','chords'], lv:[2],
     d:"Tap the scale's next note to climb a step — and stay ahead of the barrels rolling down." },
 
   { t:'Rhythm Zoo', h:'rhythm-zoo.html', dep:1, g:['rhythm'], lv:[1],
     d:'Every note is an animal. The gentlest way in to how long each one lasts.' },
-  { t:'Bar Packer', h:'Theory/bar-packer.html', dep:1, g:['rhythm'], lv:[1,2],
+  { t:'Bar Packer', h:'Theory/bar-packer.html', feat:2, dep:1, g:['rhythm'], lv:[1,2],
     d:'Pack a bar with note blocks so it fills exactly — no gaps, no spilling over.' },
   { t:'The Missing Piece', h:'Theory/missing-piece.html', dep:1, g:['rhythm'], lv:[1,2],
     d:'A bar drawn as a jigsaw with one piece gone. Pick the note that fills the hole exactly.' },
@@ -188,15 +194,15 @@ var CATALOGUE = [
     d:"Read the apple's note, draw the bow and loose it as your aim crosses that note." },
   { t:'Hidden Words', h:'Theory/hidden-words.html', dep:1, g:['read'], lv:[1],
     d:'Each note on the stave stands for a letter. Read them in turn and spell the hidden word.' },
-  { t:'Note Reading', h:'Theory/note-reading.html', dep:1, g:['read'], lv:[1,2],
+  { t:'Note Reading', h:'Theory/note-reading.html', feat:1, dep:1, g:['read'], lv:[1,2],
     d:'A note appears on the stave — name it before the clock runs down.' },
   { t:'Note Elevator', h:'Theory/note-elevator.html', dep:1, g:['read'], lv:[2],
     d:'Read the note, press its floor, send the lift there. Faster and faster as you go.' },
 
   /* ---- depth 2 · a proper tool ---- */
-  { t:'Tuner', h:'tuner.html', dep:2, g:['ears'], lv:[1], mic:true,
+  { t:'Tuner', h:'tuner.html', feat:1, dep:2, g:['ears'], lv:[1], mic:true,
     d:'Play a note and the needle shows how sharp or flat you are. Worth doing before anything else.' },
-  { t:'Metronome', h:'metronome.html', dep:2, g:['rhythm'], lv:[1,2,3],
+  { t:'Metronome', h:'metronome.html', feat:2, dep:2, g:['rhythm'], lv:[1,2,3],
     d:'A steady click for practice and lessons — set the tempo, tap it in, pick the beats per bar, accented downbeat.' },
   { t:'Pitch Practice', h:'Ear%20Training/pitch-practice.html', w:10, dep:2, g:['ears'], lv:[2,3],
     d:'Pure ear training, no game. Hear a short run of notes off a home note and name what you heard.' },
