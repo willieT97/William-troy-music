@@ -406,6 +406,7 @@
     const sBox = document.createElement('div');
     if (host && host.parentNode) host.parentNode.insertBefore(sBox, host.nextSibling); else document.body.appendChild(sBox);
     sideBoard = HiScores.mountBoard(sBox, GAME, { n:5, title:'High Scores', fixed:true });
+    if(HiScores.track) HiScores.track(GAME, function(){ return (typeof score==='number')?score:0; });   // not lost if they leave mid-run
   }
   function renderBoard(listEl, rows){
     listEl.querySelector('.dot').classList.toggle('live', HiScores.online());

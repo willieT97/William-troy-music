@@ -302,6 +302,7 @@
     var _hsBox=document.createElement('div');
     if(_hsHost.parentNode){ _hsHost.parentNode.insertBefore(_hsBox,_hsHost.nextSibling); } else { _hsHost.appendChild(_hsBox); }
     var _hsBoard=HiScores.mountBoard(_hsBox, 'hidden-words', {n:5,title:'Longest Streaks',fixed:true});
+    if(HiScores.track) HiScores.track('hidden-words', function(){ return (typeof streak==='number')?streak:0; });   // not lost if they leave mid-run
     var _hsPrev=(typeof streak==='number')?streak:0;
     setInterval(function(){ var s=(typeof streak==='number')?streak:0; if(s<_hsPrev&&_hsPrev>0){ _hsBoard.submitIfHigh(_hsPrev); } _hsPrev=s; },250);
   }

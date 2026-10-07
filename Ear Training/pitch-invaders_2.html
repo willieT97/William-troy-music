@@ -100,6 +100,29 @@
   .start:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
   .start:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
 
+  /* the practice round's caption — sits over the top of the sky, where
+     nothing is happening, so the alien and the lanes stay in view */
+  .tut{
+    position:absolute; left:8px; right:8px; top:8px; text-align:left;
+    background:var(--paper); border:2.5px solid var(--ink);
+    box-shadow:3px 3px 0 var(--ink); padding:10px 12px;
+  }
+  .tut.hidden{ display:none; }
+  .tut p{ font-family:var(--body); font-size:.9rem; line-height:1.4; margin:0 0 8px; color:var(--ink); }
+  .tut-row{ display:flex; justify-content:space-between; align-items:center; gap:10px;
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .tut-skip{
+    font-family:var(--mono); font-weight:700; font-size:.7rem; letter-spacing:.06em; text-transform:uppercase;
+    padding:7px 10px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); cursor:pointer;
+  }
+  .tut-skip.go{ background:var(--blue); color:#fff; box-shadow:3px 3px 0 var(--ink); }
+  .tut-skip:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+  .howto{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
+    background:none; border:0; color:var(--muted); text-decoration:underline; cursor:pointer; padding:4px;
+  }
+  .howto:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
   .controls{ display:flex; gap:8px; margin:12px 0 8px; }
   .ctl{
     flex:1; font-family:var(--mono); font-size:.72rem; letter-spacing:.06em;
@@ -157,8 +180,14 @@
 
         <div class="overlay" id="startScreen">
           <h2>Pitch Invaders</h2>
-          <p>Each alien falls down the lane of its note — watch where C, D, E land. Tap the matching note to fire. As you climb, aliens cloak into a sonar blip and you go by ear — by level 10 it's ear only. Grab gift aliens for power-ups, clear a level clean for a bonus star. Boss waves play a run of notes — listen, then play it back one by one. Three misses ends it.</p>
+          <p>Every alien sings a note as it falls. Tap the name of the note you hear to shoot it down. Three that land and it's over.</p>
           <button class="start" id="startBtn">▶ Start</button>
+          <button class="howto" id="howBtn">How to play — a 30-second practice</button>
+        </div>
+
+        <div class="tut hidden" id="tut" aria-live="polite">
+          <p id="tutText"></p>
+          <div class="tut-row"><span id="tutStep"></span><button class="tut-skip" id="tutSkip">Skip ▸</button></div>
         </div>
 
         <div class="overlay banner hidden" id="levelScreen">
@@ -330,7 +359,7 @@
   }
 
   // ---- state --------------------------------------------------------
-  let state = 'start';   // 'start' | 'intro' | 'playing' | 'over'
+  let state = 'start';   // 'start' | 'tutorial' | 'intro' | 'playing' | 'over'
   let score, level, lives, combo, stars, invader, shots, particles, floats, last, cannonX;
   let levelKills, levelTarget, levelMisses, lastPerfect;
   let hiddenPlan = [], spawnIx = 0;
@@ -396,6 +425,7 @@
   }
 
   function guess(name){
+    if(state==='tutorial'){ tutGuess(name); return; }
     if(state!=='playing' || !invader || invader.doomed) return;
     const letter = name.toLowerCase();
     if(!poolForLevel(level).includes(letter)) return;   // inactive key
@@ -411,6 +441,7 @@
   }
 
   function onHit(){
+    if(invader.tut){ tutHit(); return; }
     const wasBoss = invader.boss, wasGift = invader.gift;
     const wasHidden = invader.invisible && !revealActive();
     if(wasHidden) reveals.push({ x:invader.x, y:invader.y, life:0.5 });  // shown only now, on interception
@@ -506,6 +537,100 @@
     document.getElementById('refBtn').disabled = false;
     document.getElementById('replayBtn').disabled = false;
     enterLevel();
+  }
+
+  /* ---- the practice round --------------------------------------------
+     Three aliens that hover instead of landing, so nothing can be lost
+     while someone works out what the game is asking. The first two show
+     the lanes; the third is cloaked, because going by ear is the whole
+     point and it is better met here than as a surprise on level 2.
+     Runs by itself the first time Start is pressed, and any time from
+     "How to play". Skip and the last step's button both start the game. */
+  const TUT_KEY = 'pi.tutorial.v1';
+  const TUT_Y = 250;                  // where a practice alien stops and waits
+  const TUT_STEPS = [
+    { letter:'c', hidden:false,
+      text:'Every alien sings its note as it drops. This one is a C — see, it is in the C lane. Tap C to shoot it down.' },
+    { letter:'e', hidden:false,
+      text:'Here is another. Listen, look which lane it is in, and tap that note.' },
+    { letter:'d', hidden:true,
+      text:'Further on, aliens cloak: no lane to look at, so you go by ear. Is it C, D or E? ♪ Reference plays C to compare, ↺ Replay plays the note again.' }
+  ];
+  let tutIx = 0, tutWrong = 0;
+  const tutSeen = () => { try { return !!localStorage.getItem(TUT_KEY); } catch(e){ return false; } };
+  const tutSay = t => { document.getElementById('tutText').textContent = t; };
+
+  function startTutorial(){
+    if(state!=='start' && state!=='over') return;
+    ensureAudio();
+    reset();
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('overScreen').classList.add('hidden');
+    document.getElementById('refBtn').disabled = false;
+    document.getElementById('replayBtn').disabled = false;
+    const skip = document.getElementById('tutSkip');
+    skip.textContent = 'Skip ▸'; skip.classList.remove('go');
+    document.getElementById('tut').classList.remove('hidden');
+    state = 'tutorial'; tutIx = 0;
+    tutSpawn();
+  }
+
+  function tutSpawn(){
+    const st = TUT_STEPS[tutIx], col = ALL_NOTES.indexOf(st.letter);
+    tutWrong = 0;
+    invader = {
+      letter:st.letter, key:fullKey(st.letter), name:st.letter.toUpperCase(), col,
+      x:colX(col), y:-SH, speed:0, doomed:false, invisible:st.hidden, gift:false, boss:false, tut:true
+    };
+    tutSay(st.text);
+    document.getElementById('tutStep').textContent = 'Practice ' + (tutIx+1) + ' of ' + TUT_STEPS.length;
+    playKey(invader.key);
+  }
+
+  function tutGuess(name){
+    if(!invader || invader.doomed) return;
+    if(!poolForLevel(1).includes(name.toLowerCase())) return;
+    if(name === invader.name){ invader.doomed = true; fire(true); return; }
+    fire(false); sfxMiss(); tutWrong++;
+    if(!invader.invisible){
+      tutSay('That was ' + name + '. The alien is in the ' + invader.name + ' lane — tap ' + invader.name + '.');
+    } else if(tutWrong >= 2){
+      tutSay('It is ' + invader.name + ' — one step up from C. Listen once more, then tap ' + invader.name + '.');
+    } else {
+      tutSay('Not ' + name + '. Listen again — is it the same as C, a little higher, or higher still?');
+    }
+    const key = invader.key;
+    setTimeout(() => { if(state==='tutorial' && invader && invader.key===key && !invader.doomed) playKey(key); }, 550);
+  }
+
+  function tutHit(){
+    if(invader.invisible) reveals.push({ x:invader.x, y:invader.y, life:0.5 });
+    explode(invader.x, invader.y, '#FF4E86');
+    sfxHit();
+    invader = null;
+    tutIx++;
+    setTimeout(() => {
+      if(state !== 'tutorial') return;            // skipped while the dust settled
+      if(tutIx < TUT_STEPS.length){ tutSpawn(); return; }
+      tutSay('That is the whole game. In the real thing they keep falling, and three that land ends it. Every fourth level a boss plays a run of notes for you to play back.');
+      document.getElementById('tutStep').textContent = 'Ready';
+      const skip = document.getElementById('tutSkip');
+      skip.textContent = '▶ Start the game'; skip.classList.add('go'); skip.focus();
+    }, 800);
+  }
+
+  function endTutorial(){
+    try { localStorage.setItem(TUT_KEY, '1'); } catch(e){}
+    document.getElementById('tut').classList.add('hidden');
+    startGame();
+  }
+
+  // Start: straight into the game for anyone who has done the practice
+  // (guarded: Enter on the focused button arrives as a key AND a click)
+  function begin(){ if(state!=='start') return; if(tutSeen()) startGame(); else startTutorial(); }
+
+  function updateTut(dt){
+    if(invader && !invader.doomed) invader.y += (TUT_Y - invader.y) * Math.min(1, dt*3);
   }
 
   function gameOver(){
@@ -654,6 +779,7 @@
     const dt = Math.min((t - last)/1000, 0.05); last = t;
     updateVisual(dt);
     if(state === 'playing') updatePlay(dt);
+    else if(state === 'tutorial') updateTut(dt);
     draw();
     requestAnimationFrame(loop);
   }
@@ -699,7 +825,9 @@
     b.addEventListener('click', () => guess(letter.toUpperCase()));
     pad.appendChild(b);
   });
-  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('startBtn').addEventListener('click', begin);
+  document.getElementById('howBtn').addEventListener('click', startTutorial);
+  document.getElementById('tutSkip').addEventListener('click', endTutorial);
   document.getElementById('againBtn').addEventListener('click', startGame);
   document.getElementById('refBtn').addEventListener('click', () => playKey(fullKey(REF_LETTER), 0.6));
   document.getElementById('replayBtn').addEventListener('click', () => {
@@ -708,7 +836,9 @@
   });
 
   window.addEventListener('keydown', e => {
-    if((state==='start' || state==='over') && (e.key==='Enter' || e.key===' ')){ startGame(); return; }
+    if(state==='start' && (e.key==='Enter' || e.key===' ')){ begin(); return; }
+    if(state==='over' && (e.key==='Enter' || e.key===' ')){ startGame(); return; }
+    if(state==='tutorial' && e.key==='Escape'){ endTutorial(); return; }
     const k = e.key.toUpperCase();
     if(ALL_NOTES.includes(e.key.toLowerCase())) guess(k);
     else if(k === 'R'){ if(invader){ invader.boss ? playSequence(invader.seq) : playKey(invader.key); } }
@@ -728,6 +858,7 @@
   var box=document.createElement('div');
   if(host && host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { document.body.appendChild(box); }
   var board=HiScores.mountBoard(box, GAME, {n:5, title:'High Scores', fixed:true});
+  if(HiScores.track) HiScores.track(GAME, function(){ return (typeof score==='number')?score:0; });   // not lost if they leave mid-run
   function sub(){ board.submitIfHigh((typeof score==='number')?score:0); }
   ['gameOver','win'].forEach(function(nm){
     if(typeof window[nm]==='function'){ var o=window[nm]; window[nm]=function(){ var r=o.apply(this,arguments); sub(); return r; }; }

@@ -634,6 +634,7 @@
   var box=document.createElement('div');
   if(host && host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { document.body.appendChild(box); }
   var board=HiScores.mountBoard(box, GAME, {n:5, title:'High Scores', fixed:true});
+  if(HiScores.track) HiScores.track(GAME, function(){ return (typeof score==='number')?score:0; });   // not lost if they leave mid-run
   function sub(){ board.submitIfHigh((typeof score==='number')?score:0); }
   ['gameOver','win'].forEach(function(nm){
     if(typeof window[nm]==='function'){ var o=window[nm]; window[nm]=function(){ var r=o.apply(this,arguments); sub(); return r; }; }

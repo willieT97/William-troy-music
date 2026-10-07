@@ -313,6 +313,7 @@
   var box=document.createElement('div');
   if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
   var board=HiScores.mountBoard(box, GAME, {n:5, title:'Bars Packed', fixed:true});
+  if(HiScores.track) HiScores.track(GAME, function(){ return (typeof solved==='number')?solved:0; });   // not lost if they leave mid-run
   var last=0, prev=0, timer=null, busy=false;
   async function record(){
     if(busy) return; var v=(typeof solved==='number')?solved:0;

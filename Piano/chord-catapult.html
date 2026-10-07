@@ -626,6 +626,7 @@
   var box=document.createElement('div');
   if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
   var board=HiScores.mountBoard(box, GAME, {n:5, title:'Chords Built', fixed:true});
+  if(HiScores.track) HiScores.track(GAME, function(){ return (typeof built==='number')?built:0; });   // not lost if they leave mid-run
   if(typeof failLevel==='function'){
     var _f=failLevel;
     failLevel=function(){ var r=_f.apply(this, arguments); board.submitIfHigh((typeof built==='number')?built:0); return r; };

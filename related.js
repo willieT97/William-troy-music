@@ -26,6 +26,61 @@
   if (window.top !== window.self) return;              // never inside an embed
   if (document.getElementById('ma-rel')) return;
 
+  /* ---------- a way back, at the top ----------
+     The game pages had no link out at all, so the only exit was the
+     browser's back button. This puts one small "← Arcade" in the top-left
+     corner of every page that carries this script. It names the hub the
+     visitor actually came from when that is known, and stays out of the way
+     on the few pages that already have their own way home near the top. */
+  (function backLink() {
+    if (document.getElementById('ma-back')) return;
+    var HUBS = { '': 'Arcade', 'index.html': 'Arcade', 'training.html': 'Training', 'create.html': 'Create',
+                 'dojo.html': 'Dojo', 'resources.html': 'Resources', 'start.html': 'Your plan' };
+    function hubOf(url) {
+      try {
+        var u = new URL(url, location.href);
+        if (u.origin !== location.origin) return null;
+        var p = u.pathname.replace(/^\/+/, '').toLowerCase();
+        return HUBS.hasOwnProperty(p) ? { name: HUBS[p], href: '/' + p + (p === 'start.html' ? u.hash : '') } : null;
+      } catch (e) { return null; }
+    }
+    var has = [].some.call(document.querySelectorAll('a[href]'), function (a) {
+      return hubOf(a.href) && a.getClientRects().length && a.getBoundingClientRect().top + window.scrollY < 200;
+    });
+    if (has) return;
+
+    var to = hubOf(document.referrer);
+    if (!to) {                                           // arrived cold: a course goes home to the Dojo
+      var T = window.MATools, here0 = decodeURIComponent(location.pathname).replace(/^\/+/, '').toLowerCase(), course = false;
+      if (T) T.CATALOGUE.forEach(function (x) {
+        if (x.dep === 3 && decodeURIComponent(x.h.split('?')[0]).toLowerCase() === here0) course = true;
+      });
+      to = course ? { name: 'Dojo', href: '/dojo.html' } : { name: 'Arcade', href: '/' };
+    }
+    var cs = getComputedStyle(document.body), m = String(cs.backgroundColor).match(/[\d.]+/g);
+    var dark = m && m.length >= 3 && !(m.length > 3 && parseFloat(m[3]) < 0.5) &&
+               (0.2126 * +m[0] + 0.7152 * +m[1] + 0.0722 * +m[2]) / 255 < 0.42;
+    var ink = dark ? '244,238,226' : '23,20,14';
+
+    var st = document.createElement('style');
+    st.textContent =
+      '#ma-back{position:absolute;top:10px;left:10px;z-index:50;display:inline-flex;align-items:center;gap:.4em;' +
+      'font:700 12px/1 "Space Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;' +
+      'color:rgb(' + ink + ');border:2px solid rgba(' + ink + ',.45);border-radius:999px;padding:8px 12px;' +
+      'background:rgba(' + ink + ',.05);}' +
+      '#ma-back:hover{border-color:rgb(' + ink + ');background:rgba(' + ink + ',.12);}' +
+      '#ma-back:focus-visible{outline:3px solid rgba(' + ink + ',.75);outline-offset:2px;}' +
+      '@media print{#ma-back{display:none;}}';
+    document.head.appendChild(st);
+
+    var a = document.createElement('a');
+    a.id = 'ma-back'; a.href = to.href; a.textContent = '\u2190 ' + to.name;
+    a.setAttribute('aria-label', 'Back to ' + to.name);
+    document.body.insertBefore(a, document.body.firstChild);
+    /* room for it: these pages centre a title hard against the top edge */
+    if (parseFloat(cs.paddingTop) < 52) document.body.style.paddingTop = '52px';
+  })();
+
   var M = window.MATools;
   if (!M) return;
 

@@ -383,6 +383,7 @@
   var box=document.createElement('div');
   if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
   var board=HiScores.mountBoard(box, GAME, {n:5, title:'Longest Streaks', fixed:true});
+  if(HiScores.track) HiScores.track(GAME, function(){ return (typeof streak==='number')?streak:0; });   // not lost if they leave mid-run
   var prev=(typeof streak==='number')?streak:0;
   setInterval(function(){
     var s=(typeof streak==='number')?streak:0;

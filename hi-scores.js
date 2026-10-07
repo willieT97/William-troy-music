@@ -102,6 +102,78 @@
     if (!r.ok) throw new Error('write ' + r.status);
   }
 
+  /* ---------- leaving mid-game ----------
+     Every game posts its score at one moment only: when a streak breaks, or
+     at game over. Walk away before that — the browser's back button, a link,
+     a closed tab — and the score was never sent at all. A good run is the
+     likeliest one to end that way.
+
+     So each game registers a reader with HiScores.track(). When the page is
+     hidden or left, whatever is still unposted is written to localStorage
+     (the only thing a closing page can do reliably), and the next arcade
+     page to open picks it up and runs the ordinary high-score check on it —
+     name prompt and all. Coming back to the same, still-running game simply
+     withdraws the note: nothing was lost, so nothing is owed. */
+  const PKEY = 'hiscore:pending';
+  const PENDING_MAX_AGE = 24 * 3600 * 1000;
+  const tracked = [];
+  const settled = {};                 // game → highest score already dealt with this visit
+  function settle(game, score) { if (!(settled[game] >= score)) settled[game] = score; }
+  function readPending() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}') || {}; } catch (_) { return {}; } }
+  function writePending(p) {
+    try { if (Object.keys(p).length) localStorage.setItem(PKEY, JSON.stringify(p)); else localStorage.removeItem(PKEY); } catch (_) {}
+  }
+  function stash() {
+    if (!tracked.length) return;
+    const p = readPending(); let changed = false;
+    tracked.forEach(t => {
+      let v = 0; try { v = Math.max(0, Math.round(+t.read() || 0)); } catch (_) {}
+      if (v > 0 && v > (settled[t.game] || 0)) {
+        const title = String(document.title || '').split(/\s+[—–|·]\s+/)[0].slice(0, 40);
+        p[t.game] = { score: v, title, at: Date.now() }; changed = true;
+      }
+    });
+    if (changed) writePending(p);
+  }
+  function unstash() {                 // back on the page it came from, game still running
+    if (!tracked.length) return;
+    const p = readPending(); let changed = false;
+    tracked.forEach(t => { if (p[t.game]) { delete p[t.game]; changed = true; } });
+    if (changed) writePending(p);
+  }
+  let collecting = false;
+  async function collect() {
+    if (collecting) return; collecting = true;
+    try {
+      const p = readPending();
+      for (const game of Object.keys(p)) {
+        const it = p[game];
+        const now = readPending(); delete now[game]; writePending(now);   // off the list first — never ask twice
+        const v = Math.max(0, Math.round(+(it && it.score) || 0));
+        if (!v || !(Date.now() - it.at < PENDING_MAX_AGE)) continue;
+        if (await HiScores.isHigh(game, v, 5)) {
+          const what = it.title || 'your last game';
+          const nm = await HiScores.enterName(HiScores.playerName(), 'You left ' + what + ' on ' + v + '.');
+          if (nm) await HiScores.submit(game, v, nm);
+        } else if (HiScores.accountName()) {
+          try { const b = await HiScores.myBest(game); if (b == null || v > b) await HiScores.submit(game, v, HiScores.accountName()); } catch (_) {}
+        }
+      }
+    } catch (_) {}
+    collecting = false;
+  }
+  if (typeof document !== 'undefined') {
+    global.addEventListener('pagehide', stash);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') stash(); else { unstash(); collect(); }
+    });
+    // pageshow also fires when the browser restores a page from its back/forward cache
+    // pageshow: a fresh load collects whatever is owed (this game's own included —
+    // the run that left it is gone); a page restored from the back/forward cache
+    // is the same run still going, so it withdraws its note instead
+    global.addEventListener('pageshow', e => { if (e.persisted) unstash(); setTimeout(collect, 1200); });   // a beat for the account to load
+  }
+
   // ---------- public API ----------
   const HiScores = {
     /** true when a real backend is wired up */
@@ -125,7 +197,9 @@
       score = Math.max(0, Math.round(+score || 0));
       try { localStorage.setItem('hiscore:name', name); } catch (_) {}
       localAdd(game, name, score);
+      settle(game, score);
       if (configured()) { try { await remoteAdd(game, name, score); } catch (_) {} }
+      try { document.dispatchEvent(new CustomEvent('hiscores:saved', { detail: { game, score } })); } catch (_) {}
       return { name, initials: name, score };
     },
 
@@ -174,7 +248,7 @@
 
     /** arcade-style name entry → Promise<string> ('' if cancelled).
         Signed-in players skip the prompt and post under their username. */
-    enterName(defaultName = '') {
+    enterName(defaultName = '', why = '') {
       const acct = this.accountName();
       if (acct) return Promise.resolve(acct);
       return new Promise(resolve => {
@@ -187,6 +261,7 @@
           'background:#F4EEE2;border:2.5px solid #17140E;box-shadow:8px 8px 0 #17140E;padding:22px 26px;text-align:center;max-width:340px;width:100%;');
         box.innerHTML =
           '<div style="font-family:Syne,sans-serif;font-weight:800;text-transform:uppercase;color:#2438C8;font-size:1.2rem;margin-bottom:4px">New high score!</div>' +
+          (why ? '<div style="font-family:Hanken Grotesk,sans-serif;font-size:.92rem;line-height:1.4;color:#17140E;margin-bottom:10px">' + esc(why) + '</div>' : '') +
           '<div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#6F6757;margin-bottom:14px">Enter your name</div>' +
           '<input id="hsName" type="text" maxlength="24" autocomplete="off" spellcheck="false" ' +
           'style="width:100%;box-sizing:border-box;font-family:Syne,sans-serif;font-weight:800;font-size:1.5rem;text-align:center;' +
@@ -204,6 +279,16 @@
         box.querySelector('#hsOk').addEventListener('click', done);
         window.addEventListener('keydown', onKey);
       });
+    },
+
+    /**
+     * Tell the module how to read a game's score *right now*, so a score
+     * still in play is not lost when the player walks away. See "leaving
+     * mid-game" below. `read` returns the number the game would post if it
+     * ended this instant (the live streak, the running score).
+     */
+    track(game, read) {
+      if (typeof read === 'function') tracked.push({ game: String(game), read });
     },
 
     /** back-compat alias */
@@ -266,6 +351,7 @@
       }
       async function submitIfHigh(value) {
         value = Math.max(0, Math.round(+value || 0));
+        settle(game, value);
         if (value > 0 && await self.isHigh(game, value, n)) {
           const nm = await self.enterName(self.playerName());
           if (nm) { await self.submit(game, value, nm); await refresh(value); return true; }
