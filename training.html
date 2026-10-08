@@ -74,6 +74,7 @@
     transition:transform .08s ease, box-shadow .08s ease; }
   @media (min-width:640px){ .card{ flex-basis:calc((100% - 22px) / 2); } }
   @media (min-width:980px){ .card{ flex-basis:calc((100% - 44px) / 3); } }
+  .card[hidden]{ display:none; }
   .card:hover{ transform:translate(-1px,-1px); box-shadow:6px 6px 0 rgba(23,20,14,.9); }
   .card:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 rgba(23,20,14,.9); }
   .card:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
@@ -123,6 +124,43 @@
   </header>
 
   <div class="cards">
+
+    <a class="card" href="melody-trainer_1.html">
+      <div class="art">
+        <svg viewBox="0 0 300 180" role="img" aria-label="Melody Trainer: a note on a stave beside a microphone with sound waves">
+          <!-- stave + note -->
+          <g stroke="#17140E" stroke-width="2">
+            <line x1="24" y1="58" x2="150" y2="58"/>
+            <line x1="24" y1="76" x2="150" y2="76"/>
+            <line x1="24" y1="94" x2="150" y2="94"/>
+            <line x1="24" y1="112" x2="150" y2="112"/>
+            <line x1="24" y1="130" x2="150" y2="130"/>
+          </g>
+          <ellipse cx="72" cy="103" rx="11" ry="8.5" transform="rotate(-18 72 103)" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
+          <line x1="81" y1="101" x2="81" y2="58" stroke="#17140E" stroke-width="2.5"/>
+          <!-- microphone -->
+          <rect x="196" y="46" width="34" height="62" rx="17" fill="#FF4E86" stroke="#17140E" stroke-width="3"/>
+          <g stroke="#17140E" stroke-width="1.6">
+            <line x1="201" y1="62" x2="225" y2="62"/>
+            <line x1="201" y1="74" x2="225" y2="74"/>
+            <line x1="201" y1="86" x2="225" y2="86"/>
+          </g>
+          <path d="M186 100 a27 27 0 0 0 54 0" fill="none" stroke="#17140E" stroke-width="3"/>
+          <line x1="213" y1="127" x2="213" y2="146" stroke="#17140E" stroke-width="3"/>
+          <line x1="197" y1="146" x2="229" y2="146" stroke="#17140E" stroke-width="3" stroke-linecap="round"/>
+          <!-- sound waves -->
+          <path d="M250 76 q10 12 0 24" fill="none" stroke="#1F9D55" stroke-width="3" stroke-linecap="round"/>
+          <path d="M262 66 q18 22 0 44" fill="none" stroke="#1F9D55" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="kick">Play by ear · reading</span>
+        <span class="mic">🎤 listens to your playing</span>
+        <h3>Melody Trainer</h3>
+        <p>Read a tune on the stave and play or sing it back — your mic listens, and the cursor only advances when you land the right pitch. Ukulele, guitar, banjo, piano or voice — and it comes loaded with 200+ real tunes: jigs, reels, fiddle tunes and trad jazz.</p>
+        <span class="go">Start training</span>
+      </div>
+    </a>
 
     <a class="card" href="phrasebook.html">
       <div class="art">
@@ -217,43 +255,6 @@
         <h3>Pitch Practice</h3>
         <p>Pure note ear training — no game. Hear a short sequence off a reference tonic and name what you heard. Pick the length, choose pentatonic up to fully chromatic, and stay in C or move through every key.</p>
         <span class="go">Train your ear</span>
-      </div>
-    </a>
-
-    <a class="card" href="melody-trainer_1.html">
-      <div class="art">
-        <svg viewBox="0 0 300 180" role="img" aria-label="Melody Trainer: a note on a stave beside a microphone with sound waves">
-          <!-- stave + note -->
-          <g stroke="#17140E" stroke-width="2">
-            <line x1="24" y1="58" x2="150" y2="58"/>
-            <line x1="24" y1="76" x2="150" y2="76"/>
-            <line x1="24" y1="94" x2="150" y2="94"/>
-            <line x1="24" y1="112" x2="150" y2="112"/>
-            <line x1="24" y1="130" x2="150" y2="130"/>
-          </g>
-          <ellipse cx="72" cy="103" rx="11" ry="8.5" transform="rotate(-18 72 103)" fill="#2438C8" stroke="#17140E" stroke-width="2.5"/>
-          <line x1="81" y1="101" x2="81" y2="58" stroke="#17140E" stroke-width="2.5"/>
-          <!-- microphone -->
-          <rect x="196" y="46" width="34" height="62" rx="17" fill="#FF4E86" stroke="#17140E" stroke-width="3"/>
-          <g stroke="#17140E" stroke-width="1.6">
-            <line x1="201" y1="62" x2="225" y2="62"/>
-            <line x1="201" y1="74" x2="225" y2="74"/>
-            <line x1="201" y1="86" x2="225" y2="86"/>
-          </g>
-          <path d="M186 100 a27 27 0 0 0 54 0" fill="none" stroke="#17140E" stroke-width="3"/>
-          <line x1="213" y1="127" x2="213" y2="146" stroke="#17140E" stroke-width="3"/>
-          <line x1="197" y1="146" x2="229" y2="146" stroke="#17140E" stroke-width="3" stroke-linecap="round"/>
-          <!-- sound waves -->
-          <path d="M250 76 q10 12 0 24" fill="none" stroke="#1F9D55" stroke-width="3" stroke-linecap="round"/>
-          <path d="M262 66 q18 22 0 44" fill="none" stroke="#1F9D55" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="body">
-        <span class="kick">Play by ear · reading</span>
-        <span class="mic">🎤 listens to your playing</span>
-        <h3>Melody Trainer</h3>
-        <p>Read a tune on the stave and play or sing it back — your mic listens, and the cursor only advances when you land the right pitch. Ukulele, guitar, banjo, piano or voice — and it comes loaded with 200+ real tunes: jigs, reels, fiddle tunes and trad jazz.</p>
-        <span class="go">Start training</span>
       </div>
     </a>
 
@@ -390,5 +391,19 @@
   </div>
 
 </div>
+
+<!-- Which cards show is decided in tools.js: a tool marked shelved there has
+     its card hidden here. The card itself stays in this file, ready to return. -->
+<script src="/tools.js"></script>
+<script>
+(function () {
+  var M = window.MATools; if (!M) return;
+  var off = {};
+  M.CATALOGUE.forEach(function (x) { if (x.shelved) off[decodeURIComponent(x.h.split('?')[0])] = 1; });
+  [].forEach.call(document.querySelectorAll('.cards .card'), function (c) {
+    if (off[decodeURIComponent(c.getAttribute('href'))]) c.hidden = true;
+  });
+})();
+</script>
 </body>
 </html>

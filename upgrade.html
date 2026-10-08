@@ -61,6 +61,7 @@
   .secsub{ text-align:center; color:var(--muted); font-size:.9rem; margin:0 0 22px; }
   .cards{ display:grid; gap:18px; grid-template-columns:1fr; }
   @media(min-width:680px){ .cards{ grid-template-columns:1fr 1fr 1fr; } }
+  .card[hidden]{ display:none; }
   .card{ border:2.5px solid var(--ink); background:#fff; border-radius:14px; box-shadow:6px 6px 0 var(--ink); padding:18px; display:flex; flex-direction:column; }
   .card.hl{ outline:3px solid var(--pink); outline-offset:3px; }
   .card h4{ font-family:var(--disp); font-weight:800; font-size:1.15rem; margin:0 0 4px; }
@@ -118,7 +119,8 @@
       <div class="cprice">$14.99</div>
       <button class="buy" data-product="course:gradus">Buy course</button>
     </div>
-    <div class="card" data-product="course:oldman">
+    <!-- Old Man and the C is shelved (see shelved:true in tools.js), so it is not advertised here either -->
+    <div class="card" data-product="course:oldman" hidden>
       <h4>Old Man and the C</h4>
       <p>Chart the fretboard, one port at a time. Port I is free while the deeper ports are being written.</p>
       <div class="cprice" style="color:var(--muted)">Free for now</div>

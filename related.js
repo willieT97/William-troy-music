@@ -119,7 +119,7 @@
     return s;
   }
 
-  var picks = M.CATALOGUE
+  var picks = (M.listed ? M.listed() : M.CATALOGUE)       // never point at a shelved tool
     .map(function (x) { return { x:x, s:near(x) }; })
     .filter(function (o) { return o.s > 0; })
     .sort(function (a, b) { return b.s - a.s; })

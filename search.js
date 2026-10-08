@@ -101,7 +101,7 @@
   function searchTools(q) {
     var nq = norm(q), words = nq.split(' ').filter(Boolean);
     if (!words.length || nq.length < 2) return [];   // one letter matches half the catalogue
-    return M.CATALOGUE.map(function (x) {
+    return (M.listed ? M.listed() : M.CATALOGUE).map(function (x) {
       var t = norm(x.t), d = norm(x.d), s = 0;
       if (t === nq) s += 100;
       else if (t.indexOf(nq) === 0) s += 60;

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>The Shelf — Music Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ====================================================================
+     THE SHELF — a teacher's list of every tool that has been taken off
+     the public menus (shelved:true in tools.js). Nothing here is deleted:
+     each page still lives at its address, and removing the flag puts it
+     back on the menus. Dressed like the Melody Trainer, as Practice is.
+     The gate is a courtesy, not a lock — the tools themselves are public
+     pages; this just keeps the list out of a student's way.
+     ==================================================================== */
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --green:#1F9D55; --muted:#6F6757; --inset:#FBF7EC;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,-apple-system,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.5;
+    min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:760px; margin:0 auto; padding:32px 20px 80px; }
+  header{ text-align:center; margin:6px 0 30px; }
+  .eyebrow{ display:inline-block; font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+    border:1.5px solid var(--ink); border-radius:99px; padding:4px 10px; margin-bottom:14px; }
+  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(34px,6.4vw,58px); line-height:1.02; letter-spacing:-.01em; margin:0;
+    text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
+  .lede{ max-width:56ch; margin:16px auto 0; }
+  .lede code{ font-family:var(--mono); font-size:.88em; background:var(--inset); border:1.5px solid var(--ink); border-radius:6px; padding:0 5px; }
+
+  .list{ display:grid; gap:14px; }
+  .item{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; text-decoration:none; color:var(--ink);
+    background:var(--paper); border:2px solid var(--ink); border-radius:14px; box-shadow:5px 5px 0 rgba(23,20,14,.9);
+    padding:16px 18px; transition:transform .08s ease, box-shadow .08s ease; }
+  .item:hover{ transform:translate(-1px,-1px); box-shadow:6px 6px 0 rgba(23,20,14,.9); }
+  .item:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+  .item .txt{ flex:1 1 300px; }
+  .item b{ display:block; font-family:var(--disp); font-weight:800; font-size:1.25rem; line-height:1.15; }
+  .item small{ display:block; font-size:.93rem; margin-top:4px; color:#4a453a; }
+  .item .go{ font-family:var(--mono); font-size:12.5px; font-weight:700; color:var(--paper); background:var(--blue);
+    border:2px solid var(--ink); border-radius:10px; padding:7px 13px; box-shadow:2px 2px 0 rgba(23,20,14,.9); white-space:nowrap; }
+  .note{ font-family:var(--mono); font-size:12.5px; color:var(--muted); text-align:center; margin:22px 0 0; }
+  .note a{ color:var(--blue); font-weight:700; text-decoration:none; }
+  .note a:hover{ text-decoration:underline; }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Teachers only</span>
+    <h1>The Shelf</h1>
+    <p class="lede">Tools taken off the public menus for now. Each one still works at its own address and can still be linked from a Rollbook note. To put one back, delete <code>shelved:true</code> from its row in <code>tools.js</code>.</p>
+  </header>
+
+  <div class="list" id="list" hidden></div>
+  <p class="note" id="msg">Checking your account…</p>
+  <p class="note"><a href="rollbook.html">&larr; back to the Rollbook</a></p>
+</div>
+
+<script src="/tools.js"></script>
+<script>
+(function () {
+  'use strict';
+  var list = document.getElementById('list'), msg = document.getElementById('msg'), M = window.MATools;
+
+  function draw() {
+    var A = window.MAAuth, teacher = !!(A && A.isTeacher && A.isTeacher());
+    list.hidden = !teacher;
+    if (!teacher) {
+      msg.hidden = false;
+      msg.textContent = (A && A.user && A.user()) ? 'This page is for teacher accounts.' : 'Sign in with a teacher account to see the shelf.';
+      return;
+    }
+    var rows = M ? M.CATALOGUE.filter(function (x) { return x.shelved; }) : [];
+    list.textContent = '';
+    rows.forEach(function (x) {
+      var a = document.createElement('a'); a.className = 'item'; a.href = '/' + M.href(x, { inst:'none' });
+      var t = document.createElement('span'); t.className = 'txt';
+      var b = document.createElement('b'); b.textContent = x.t;
+      var s = document.createElement('small'); s.textContent = x.d;
+      t.appendChild(b); t.appendChild(s);
+      var go = document.createElement('span'); go.className = 'go'; go.textContent = 'Open →';
+      a.appendChild(t); a.appendChild(go); list.appendChild(a);
+    });
+    msg.hidden = rows.length > 0;
+    msg.textContent = 'Nothing is shelved. Every tool is on the menus.';
+  }
+
+  function arm() {
+    if (window.MAAuth && window.MAAuth.onChange) window.MAAuth.onChange(draw);
+    else setTimeout(arm, 120);
+  }
+  arm();
+})();
+</script>
+</body>
+</html>

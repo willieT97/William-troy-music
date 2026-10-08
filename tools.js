@@ -25,6 +25,12 @@
           tab, with everything else behind "Show all". A number puts this row
           on that short list, in that position (1 first). Leave it off and
           the game is still on the page, just behind the button.
+      shelved  true takes a tool off every public menu — the section pages, the
+          start plan, the "I want to..." strip, search and "More like this" —
+          without touching the page itself, which keeps its address. Delete
+          the flag and it is back everywhere. Shelved tools are listed for
+          teachers on shelf.html, and the Rollbook can still link them: it
+          reads CATALOGUE, the menus read listed().
       hero  true on the one game in the banner above the tabs. It keeps its
           place on its own tab as well — the banner is an extra, not a move.
       mk  builds the href from the answers, for pages that take ?inst=
@@ -36,6 +42,7 @@
       forGoal(goal, answers) -> [...]  everything that serves one goal
       href(x, answers)       resolve a row's link
       remember() / forget()  the saved answers, shared across pages
+      listed()               the catalogue minus anything shelved
    ==================================================================== */
 (function () {
   'use strict';
@@ -206,7 +213,7 @@ var CATALOGUE = [
     d:'A steady click for practice and lessons — set the tempo, tap it in, pick the beats per bar, accented downbeat.' },
   { t:'Pitch Practice', h:'Ear%20Training/pitch-practice.html', w:10, dep:2, g:['ears'], lv:[2,3],
     d:'Pure ear training, no game. Hear a short run of notes off a home note and name what you heard.' },
-  { t:'Chorale Ear Trainer', h:'chorale-ears.html', w:-8, dep:2, g:['ears','chords'], lv:[3],
+  { t:'Chorale Ear Trainer', h:'chorale-ears.html', shelved:true, w:-8, dep:2, g:['ears','chords'], lv:[3],
     d:'Hear a few bars of real Bach and name the chords. What ears have been sharpened on for 300 years.' },
 
   { t:'Note Names', h:'note-names.html', w:20, dep:2, g:['read'], lv:[1],
@@ -217,7 +224,7 @@ var CATALOGUE = [
   { t:'Melody Trainer', h:'melody-trainer_1.html', w:15, dep:2, g:['tunes','read'], lv:[1,2,3], mic:true,
     fav:['gdae','voice'],
     d:'Read a tune on the stave and play or sing it back. The cursor only moves when you land the right note — and 200+ trad tunes come loaded.' },
-  { t:'Song Trainer', h:'song-trainer.html', dep:2, g:['tunes','chords'], lv:[1,2], fav:['uke','gtr'],
+  { t:'Song Trainer', h:'song-trainer.html', shelved:true, dep:2, g:['tunes','chords'], lv:[1,2], fav:['uke','gtr'],
     d:'Learn a song by its chords and strumming, play along in time, then dig into the theory behind it.' },
   { t:'Jam Track', h:'jam-track.html', w:10, dep:2, g:['tunes','rhythm','write'], lv:[2,3],
     d:'Write out a chord chart, pick a style and a tempo, and a band plays it back on a loop for you to play over.' },
@@ -242,15 +249,15 @@ var CATALOGUE = [
     d:'The grown-up studio: verses, choruses and bridges, any chord you like, and a drum beat you tap out yourself.' },
   { t:'Phrasebook', h:'phrasebook.html', dep:2, g:['write'], lv:[3],
     d:'Collect the licks you love in notation, then drill them through all twelve keys and every mode.' },
-  { t:'The Listening Lab', h:'listening-lab.html', w:8, dep:2, pro:true, g:['write'], lv:[3], mic:true,
+  { t:'The Listening Lab', h:'listening-lab.html', shelved:true, w:8, dep:2, pro:true, g:['write'], lv:[3], mic:true,
     d:'Solo over jazz and blues charts and the lab listens — your solo comes back written out and marked.' },
   { t:'The Charts', h:'gallery.html', w:-10, dep:2, g:['write'], lv:[1,2,3],
     d:'Listen to songs other people have built here, and vote your favourites up the charts.' },
 
   /* ---- depth 3 · a whole course ---- */
-  { t:'Old Man and the C', h:'Theory/old-man-and-the-c.html', dep:3, pro:false, g:['read'], lv:[1,2],
+  { t:'Old Man and the C', h:'Theory/old-man-and-the-c.html', shelved:true, dep:3, pro:false, g:['read'], lv:[1,2],
     d:'A seafaring note-reading tale. Read each note to reel it in and sail from the shallows out to deeper water.' },
-  { t:'The Fretboard Atlas', h:'Guitar/fretboard-atlas.html', dep:3, pro:true, g:['read'], lv:[1,2], i:['gtr'],
+  { t:'The Fretboard Atlas', h:'Guitar/fretboard-atlas.html', shelved:true, dep:3, pro:true, g:['read'], lv:[1,2], i:['gtr'],
     note:'Expedition I is free',
     d:'Set out across the guitar neck with an old mapmaker and chart where every note lives, string by string.' },
   { t:'Learning to Fly', h:'learning-to-fly.html', dep:3, pro:true, g:['write','ears'], lv:[2,3], mic:true,
@@ -272,6 +279,10 @@ var CATALOGUE = [
    whether it is pitched at your level. One stop from each depth, so
    the plan reads as a journey: something to play now, a real tool,
    and something to grow into. */
+/* everything still on the menus. CATALOGUE itself stays whole, for the
+   Rollbook and the shelf page. */
+function listed() { return CATALOGUE.filter(function (x) { return !x.shelved; }); }
+
 function score(x, a) {
   if (x.i && x.i.indexOf(a.inst) < 0) return -1;          // instrument-only, and not yours
   var s = 0;
@@ -291,7 +302,7 @@ function plan(a) {
   /* Only ever offer things that actually serve the goal they picked. If a
      depth has nothing to offer, the plan is simply shorter there and tops
      up from the rest — better than padding it with a near-miss. */
-  var ranked = CATALOGUE.map(function (x) { return { x:x, s:score(x, a) }; })
+  var ranked = listed().map(function (x) { return { x:x, s:score(x, a) }; })
                 .filter(function (o) { return o.s > 0 && o.x.g.indexOf(a.goal) >= 0; })
                 .sort(function (p, q) { return q.s - p.s; });
   var out = [], used = {};
@@ -338,7 +349,7 @@ function forGoal(goal, a) {
   a = a || {};
   var known = !!a.inst && a.inst !== 'none';
   var ans = { inst: known ? a.inst : 'none', goal: goal, lvl: a.lvl || 2 };
-  return CATALOGUE
+  return listed()
     .filter(function (x) {
       if (x.g.indexOf(goal) < 0) return false;
       if (x.i && !known) return false;
@@ -369,6 +380,6 @@ window.MATools = {
   GOAL_WORD:GOAL_WORD, INST_WORD:INST_WORD, LEVEL_WORD:LEVEL_WORD,
   CHORD_INST:CHORD_INST, FIND_INST:FIND_INST,
   score:score, plan:plan, forGoal:forGoal, href:href, corner:corner, LABELS:LABELS,
-  remember:remember, forget:forget
+  remember:remember, forget:forget, listed:listed
 };
 })();

@@ -64,6 +64,7 @@
   .cards{ display:grid; gap:24px; }
   @media(min-width:640px){ .cards{ grid-template-columns:1fr 1fr; } }
 
+  .card[hidden]{ display:none; }
   .card{ display:flex; flex-direction:column; text-decoration:none; color:var(--ink);
     border:3px solid var(--ink); background:#FBF7EE; box-shadow:9px 9px 0 var(--ink);
     overflow:hidden; transition:transform .14s ease, box-shadow .14s ease; }
@@ -277,5 +278,19 @@
   </div>
 
 </div>
+
+<!-- Which cards show is decided in tools.js: a course marked shelved there has
+     its card hidden here. The card itself stays in this file, ready to return. -->
+<script src="/tools.js"></script>
+<script>
+(function () {
+  var M = window.MATools; if (!M) return;
+  var off = {};
+  M.CATALOGUE.forEach(function (x) { if (x.shelved) off[decodeURIComponent(x.h.split('?')[0])] = 1; });
+  [].forEach.call(document.querySelectorAll('.cards .card'), function (c) {
+    if (off[decodeURIComponent(c.getAttribute('href'))]) c.hidden = true;
+  });
+})();
+</script>
 </body>
 </html>
