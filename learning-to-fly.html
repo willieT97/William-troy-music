@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Learning to Fly — The Dojo</title>
+<title>Learning to Fly — Courses</title>
 <meta name="description" content="Learn to improvise from the ground up — start with melodies you know and the major pentatonic scale. A Music Arcade course by William Troy.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -104,7 +104,7 @@
     <div class="exwrap" id="exwrap" hidden></div>
     <div class="nav"><button class="btn" id="prev">← Previous</button><div id="nextslot"></div></div>
   </div>
-  <div class="nav" style="border:0;padding-top:10px"><a href="dojo.html">← back to the Dojo</a><span></span></div>
+  <div class="nav" style="border:0;padding-top:10px"><a href="dojo.html">← back to Courses</a><span></span></div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -805,7 +805,7 @@
       { num:'3.6', title:'Mine the tune', teach:[
           { html:"Now I'll tell you where licks <em>really</em> come from. Nobody invents them out of thin air — you <b>mine them out of tunes</b>. Every tune you know is a seam of licks waiting for a shovel." },
           { html:"Take Old Joe: that run in bar six — <b>D E D C, B A G A</b> — dig it out of the tune and it stands on its own. Drop it anywhere the G chord lives and it sounds like you've been picking for forty years." },
-          { t:'qa', q:"Can I take licks from any tune?", a:"Any tune you can hum, cher— hm, that's Papa Sonny rubbing off on me. <em>Any tune at all.</em> Smart pickers write theirs down: there's a <b>Phrasebook</b> over in the Training hall for exactly that. Dig the lick below out of Old Joe, bend the ending, and it's yours." }
+          { t:'qa', q:"Can I take licks from any tune?", a:"Any tune you can hum, cher— hm, that's Papa Sonny rubbing off on me. <em>Any tune at all.</em> Smart pickers write theirs down: there's a <b>Phrasebook</b> over on the Practice page for exactly that. Dig the lick below out of Old Joe, bend the ending, and it's yours." }
         ], ex:{ type:'embellish', title:'Dig a lick from Old Joe', mel:OJLICK, bpm:100, pal:GPSET, sharp:true,
           embWin:'Dug from the tune, bent into your own — that’s how a lick bag gets filled. Jot it in your Phrasebook before it flies off! 🪕',
           desc:'Bar 1 is mined straight out of Old Joe Clark’s sixth bar. Then a breath — and the ending is yours: tap the three green notes anywhere in the G pentatonic. Keep the licks you like in your <a href="phrasebook.html">Phrasebook</a>.' } },
@@ -1146,7 +1146,7 @@
   function markDone(i){ if(i<0||i>=LESSONS.length) return; var k=LESSONS[i].num; if(!progress.done[k]){ progress.done[k]=true; saveProgress(); buildToc(); } }
   function entitled(){ return !!(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAccess(PRODUCT)); }
   function paywalled(i){ return i>=FREE_LESSONS && !entitled(); }
-  function openCoursePaywall(){ if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'This lesson is Pro', body:'Belt 1 is free. Go Pro to fly through the rest of the course — and unlock every Dojo course.', product:PRODUCT }); else location.href='/upgrade.html?highlight='+encodeURIComponent(PRODUCT); }
+  function openCoursePaywall(){ if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'This lesson is Pro', body:'Belt 1 is free. Go Pro to fly through the rest of the course — and unlock every course.', product:PRODUCT }); else location.href='/upgrade.html?highlight='+encodeURIComponent(PRODUCT); }
   function signedIn(){ return !!(window.MAAuth && MAAuth.user && MAAuth.user()); }
   var cloudReady=false;
   function cloudPush(){ if(signedIn() && cloudReady) MAAuth.progress.push(COURSE_ID, progress).catch(function(){}); }

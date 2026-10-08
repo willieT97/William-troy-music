@@ -34,8 +34,8 @@
      on the few pages that already have their own way home near the top. */
   (function backLink() {
     if (document.getElementById('ma-back')) return;
-    var HUBS = { '': 'Arcade', 'index.html': 'Arcade', 'training.html': 'Training', 'create.html': 'Create',
-                 'dojo.html': 'Dojo', 'resources.html': 'Resources', 'start.html': 'Your plan' };
+    var HUBS = { '': 'Arcade', 'index.html': 'Arcade', 'training.html': 'Practice', 'create.html': 'Create',
+                 'dojo.html': 'Courses', 'resources.html': 'Resources', 'start.html': 'Your plan' };
     function hubOf(url) {
       try {
         var u = new URL(url, location.href);
@@ -55,7 +55,7 @@
       if (T) T.CATALOGUE.forEach(function (x) {
         if (x.dep === 3 && decodeURIComponent(x.h.split('?')[0]).toLowerCase() === here0) course = true;
       });
-      to = course ? { name: 'Dojo', href: '/dojo.html' } : { name: 'Arcade', href: '/' };
+      to = course ? { name: 'Courses', href: '/dojo.html' } : { name: 'Arcade', href: '/' };
     }
     var cs = getComputedStyle(document.body), m = String(cs.backgroundColor).match(/[\d.]+/g);
     var dark = m && m.length >= 3 && !(m.length > 3 && parseFloat(m[3]) < 0.5) &&

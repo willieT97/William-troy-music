@@ -92,9 +92,9 @@
 <div class="wrap">
   <nav class="tabs" aria-label="Sections">
     <a href="index.html">Arcade</a>
-    <a href="dojo.html">Dojo</a>
+    <a href="dojo.html">Courses</a>
     <a href="resources.html">Resources</a>
-    <a href="training.html">Training</a>
+    <a href="training.html">Practice</a>
     <a href="create.html">Create</a>
   </nav>
 
@@ -205,7 +205,7 @@
         : 'If your teacher gives you a code, enter it here. Nothing is shared until you do.');
       host.appendChild(p);
       var ul=document.createElement('ul'); ul.className='shares';
-      [['Yes','which Dojo lessons and belts you\u2019ve finished'],
+      [['Yes','which course lessons and belts you\u2019ve finished'],
        ['Yes','your arcade high scores \u2014 those are on the public leaderboard anyway'],
        ['No','your songs, jam tracks and licks \u2014 they stay private'],
        ['No','your email address']].forEach(function(r){
@@ -332,7 +332,7 @@
         if(!got.length){ var e=el('div','empty','No scores under “'+uname+'” yet — go post some in the '); var a=el('a',null,'Arcade'); a.href='index.html'; e.appendChild(a); e.appendChild(document.createTextNode('!')); host.appendChild(e); }
         else{ var sc=el('div','statchips'); got.forEach(function(g){ var s=el('span','statchip'); s.appendChild(el('b',null,String(bests[g.id]))); s.appendChild(document.createTextNode(' '+g.label)); sc.appendChild(s); }); host.appendChild(sc); }
       }
-      host.appendChild(el('div','accnote','Belts and trophies come straight from your Dojo progress. High scores count plays made while signed in — they post to the leaderboard under your username.'));
+      host.appendChild(el('div','accnote','Belts and trophies come straight from your course progress. High scores count plays made while signed in — they post to the leaderboard under your username.'));
     }
     draw();
     var A=window.MAAuth||{};
@@ -391,13 +391,13 @@
     var A=window.MAAuth||{};
     if(A.isPro && A.isPro()){
       host.appendChild(el('div','planbadge','✦ Music Arcade Pro'));
-      host.appendChild(el('p','planline','Everything unlocked — every Dojo course and premium pack. Thank you for supporting Music Arcade! 🎉'));
+      host.appendChild(el('p','planline','Everything unlocked — every course and premium pack. Thank you for supporting Music Arcade! 🎉'));
       var m=el('a','btn','Manage subscription'); m.href='https://app.lemonsqueezy.com/my-orders'; m.target='_blank'; m.rel='noopener'; m.style.textDecoration='none'; m.style.display='inline-block'; host.appendChild(m);
     } else {
       host.appendChild(el('div','planbadge free','Free plan'));
       var owned=PRODUCTS.filter(function(p){ return A.owns && A.owns(p.id); });
       if(owned.length) host.appendChild(el('p','planline','You own: '+owned.map(function(p){ return p.label; }).join(', ')+'. Everything else is on the free plan.'));
-      else host.appendChild(el('p','planline','You’re on the free plan — arcade games, the first module of each Dojo course, and all the tools.'));
+      else host.appendChild(el('p','planline','You’re on the free plan — arcade games, the first module of each course, and all the tools.'));
       var g=el('a','btn pro','✦ Go Pro'); g.href='/upgrade.html'; host.appendChild(g);
     }
   }

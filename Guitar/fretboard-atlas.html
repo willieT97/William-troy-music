@@ -502,7 +502,7 @@ function entitled(){ return !!(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAc
 function paywalled(i){ return i >= FREE_LESSONS && !entitled(); }
 function openCoursePaywall(){
   if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'This expedition is Pro',
-    body:'Expedition I is free. Go Pro to chart the whole neck — and unlock every Dojo course.', product:PRODUCT });
+    body:'Expedition I is free. Go Pro to chart the whole neck — and unlock every course.', product:PRODUCT });
   else location.href = '/upgrade.html?highlight=' + encodeURIComponent(PRODUCT);
 }
 function signedIn(){ return !!(window.MAAuth && MAAuth.user && MAAuth.user()); }

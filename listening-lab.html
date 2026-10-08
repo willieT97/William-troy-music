@@ -23,6 +23,7 @@
   .tabs a{ font-weight:800; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; color:var(--ink);
     padding:9px 15px; border:2.5px solid var(--ink); border-radius:12px; background:var(--card); box-shadow:3px 3px 0 var(--ink); }
   .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+  .tabs a.cur{ background:var(--ink); color:var(--paper); }
   header.top{ text-align:center; margin-bottom:18px; }
   h1{ font-family:var(--disp); font-weight:800; font-size:clamp(1.9rem,6vw,2.8rem); margin:.2rem 0; letter-spacing:-.02em; }
   h1 .em{ color:var(--pink); }
@@ -72,9 +73,9 @@
 <div class="wrap">
   <nav class="tabs" aria-label="Sections">
     <a href="index.html">Arcade</a>
-    <a href="dojo.html">Dojo</a>
+    <a href="dojo.html">Courses</a>
     <a href="resources.html">Resources</a>
-    <a href="training.html">Training</a>
+    <a href="training.html" class="cur" aria-current="page">Practice</a>
     <a href="create.html">Create</a>
   </nav>
 
@@ -127,7 +128,7 @@
     <div id="recipes"></div>
   </div>
 
-  <div class="foot"><p><a href="training.html">&larr; Back to Training</a></p></div>
+  <div class="foot"><p><a href="training.html">&larr; Back to Practice</a></p></div>
 </div>
 
 <script>

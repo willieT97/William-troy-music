@@ -736,7 +736,7 @@ function entitled(){ return !!(window.MAAuth && MAAuth.hasAccess && MAAuth.hasAc
 function paywalled(i){ return i >= FREE_LESSONS && !entitled(); }
 function openCoursePaywall(){
   if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'This lesson is Pro',
-    body:'The Foundations (Module 0) is free. Go Pro to unlock the modes, the species — and every Dojo course.', product:PRODUCT });
+    body:'The Foundations (Module 0) is free. Go Pro to unlock the modes, the species — and every course.', product:PRODUCT });
   else location.href = '/upgrade.html?highlight=' + encodeURIComponent(PRODUCT);
 }
 

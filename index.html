@@ -53,9 +53,10 @@
   a{ color:inherit; }
   .wrap{ width:min(100% - 2.4rem, var(--maxw)); margin-inline:auto; }
 
-  header{ padding:clamp(1.8rem,4.5vw,3rem) 0 clamp(1.2rem,3vw,2rem); }
+  /* centred, like the title block on the Dojo, Training and Create pages */
+  header{ padding:clamp(1.8rem,4.5vw,3rem) 0 clamp(1.2rem,3vw,2rem); text-align:center; }
   .topline{
-    display:flex; align-items:center; gap:.6rem; margin-bottom:1.2rem;
+    display:flex; align-items:center; justify-content:center; gap:.6rem; margin-bottom:1.2rem;
     font-family:var(--pixel); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase;
   }
   .topline .dot{ width:11px; height:11px; border-radius:50%; }
@@ -71,9 +72,9 @@
   }
   .hero-sub{
     max-width:52ch; font-size:clamp(1.05rem,1rem + 0.4vw,1.28rem);
-    color:color-mix(in srgb, var(--paper) 85%, transparent); margin:0;
+    color:color-mix(in srgb, var(--paper) 85%, transparent); margin:0 auto;
   }
-  .hero-links{ display:flex; flex-wrap:wrap; gap:.4rem 1.6rem; margin-top:1.1rem; }
+  .hero-links{ display:flex; flex-wrap:wrap; justify-content:center; gap:.4rem 1.6rem; margin-top:1.1rem; }
   .hero-back, .hero-cta{
     display:inline-flex; align-items:center; gap:.5rem;
     font-family:var(--mono); font-size:.82rem; letter-spacing:.03em; text-decoration:none;
@@ -145,7 +146,7 @@
     line-height:1.5; color:var(--paper); }
 
   .tabs{ padding-top:1.4rem; }
-  .tabs-inner{ display:flex; gap:.5rem; flex-wrap:wrap;
+  .tabs-inner{ display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center;
     border-bottom:2px solid rgba(255,255,255,0.14); }
   .tabs a{
     font-family:var(--pixel); font-size:.56rem; letter-spacing:.06em; text-transform:uppercase;
@@ -386,9 +387,9 @@
 <nav class="tabs" aria-label="Sections">
   <div class="wrap tabs-inner">
     <a href="index.html" class="cur" aria-current="page">Arcade</a>
-    <a href="dojo.html">Dojo</a>
+    <a href="dojo.html">Courses</a>
     <a href="resources.html">Resources</a>
-    <a href="training.html">Training</a>
+    <a href="training.html">Practice</a>
     <a href="create.html">Create</a>
   </div>
 </nav>
@@ -1924,7 +1925,7 @@
     </div>
     <div class="wc-pane" id="wcParent" hidden>
       <p>Everything here runs free in the browser — no ads and nothing to install. A few tools listen through the microphone to hear your child play; they're marked with a 🎤 badge, and the browser always asks permission first.</p>
-      <p>An account is optional — it saves songs and course progress. The three Dojo courses are free to start, with the later modules part of a small Pro subscription. If your child's teacher uses this site, their lesson emails may link straight to pages here to practise between lessons.</p>
+      <p>An account is optional — it saves songs and course progress. The three courses are free to start, with the later modules part of a small Pro subscription. If your child's teacher uses this site, their lesson emails may link straight to pages here to practise between lessons.</p>
     </div>
     <div class="wc-pane" id="wcTeach" hidden>
       <p>There's a private <b>Rollbook</b> for teachers: a weekly timetable with lesson notes, and one-click parent emails that link to the exact pages you used in the lesson.</p>
@@ -1992,9 +1993,9 @@
   if (!band) return;
 
   var COURSES = [
-    { id:'learning-to-walk', t:'Learning to Walk', h:'learning-to-walk.html', total:25, k:'Dojo · walking bass', lk:'ltw.progress.v1' },
-    { id:'learning-to-fly',  t:'Learning to Fly',  h:'learning-to-fly.html',  total:43, k:'Dojo · improvisation', lk:'ltf.progress.v1' },
-    { id:'gradus',           t:'The Counterpoint Dojo', h:'Theory/gradus-shell.html', total:23, k:'Dojo · counterpoint', lk:'gradus.progress.v1' }
+    { id:'learning-to-walk', t:'Learning to Walk', h:'learning-to-walk.html', total:25, k:'Course · walking bass', lk:'ltw.progress.v1' },
+    { id:'learning-to-fly',  t:'Learning to Fly',  h:'learning-to-fly.html',  total:43, k:'Course · improvisation', lk:'ltf.progress.v1' },
+    { id:'gradus',           t:'The Counterpoint Dojo', h:'Theory/gradus-shell.html', total:23, k:'Course · counterpoint', lk:'gradus.progress.v1' }
   ];
   var STUDIOS = { songmaker:{ t:'Song Maker', h:'composer.html' },
                   songlab:  { t:'Song Lab',   h:'songlab.html' },
