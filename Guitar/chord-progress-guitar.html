@@ -278,8 +278,16 @@
   const chordMinLevel = labels => Math.max.apply(null, labels.map(l => activeLevelForIndex(unlockIndex[l])));
 
   const PROGRESSIONS = [
-    // level-1 core: C F G only
-    ['C','F','G'],['C','G','F'],['G','F','C'],['F','C','G'],['G','C','F'],['F','G','C'],
+    // level-1 core: C F G only. Every pair of opening chords appears three
+    // times, ending on each of the three chords in turn. With only the six
+    // orderings of C-F-G, the blank was always "the one you haven't heard
+    // yet", so it could be answered by elimination without listening.
+    ['C','F','G'],['C','F','C'],['C','F','F'],
+    ['C','G','F'],['C','G','C'],['C','G','G'],
+    ['F','C','G'],['F','C','F'],['F','C','C'],
+    ['F','G','C'],['F','G','F'],['F','G','G'],
+    ['G','C','F'],['G','C','G'],['G','C','C'],
+    ['G','F','C'],['G','F','G'],['G','F','F'],
     // simple (3)
     ['G','C','D'],['C','G','Am'],['Am','G','C'],['G','D','Em'],['Em','C','G'],
     ['C','Am','G'],['G','Em','C'],['C','D','G'],['Em','D','C'],['D','A','G'],
@@ -393,8 +401,23 @@
     playTimers.push(setTimeout(() => { document.getElementById('levelScreen').classList.add('hidden'); startRound(); }, 1600));
   }
 
+  /* The opening chords come from the written progressions, so a round still
+     sounds like music. The blank mostly does not: one time in three it is the
+     written ending, otherwise it is any chord unlocked so far. If the ending
+     always followed the list, a regular player could learn "these two are
+     always followed by that one" and answer without listening. The same
+     round is never dealt twice running. */
+  let lastRound = '';
   function makeProgression(){
-    progression = pickProgression(level).map(l => ({ label:l, frets:CHORDS[l].frets, midis:CHORDS[l].midis }));
+    const active = [...activeSet(level)];
+    let labels, sig, tries = 0;
+    do {
+      labels = pickProgression(level).slice();
+      if(Math.random() >= 1/3) labels[labels.length - 1] = pick(active);
+      sig = labels.join(' ');
+    } while(sig === lastRound && ++tries < 8);
+    lastRound = sig;
+    progression = labels.map(l => ({ label:l, frets:CHORDS[l].frets, midis:CHORDS[l].midis }));
     target = progression[progression.length - 1];
   }
 
