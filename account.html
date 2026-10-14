@@ -296,6 +296,7 @@
     DOJO.forEach(function(c){ state[c.id]=localProg(c.pkey); });
     try{ oldmanDone = localStorage.getItem('oldman.progress.v1')==='done'; }catch(e){}
     var licks=0; try{ licks=(JSON.parse(localStorage.getItem('wtm_phrasebook_v1'))||[]).length; }catch(e){}
+    try{ counts.scales=(JSON.parse(localStorage.getItem('wtm_pitchpractice_scales'))||['major:0']).length; }catch(e){ counts.scales=1; }
 
     function draw(){
       host.innerHTML='';
@@ -324,6 +325,7 @@
       chip(counts.songs,'songs written');
       chip(counts.jams,'jam tracks built');
       chip(licks,'licks in the Phrasebook','this device');
+      chip(counts.scales,'scales learned in Pitch Practice');
       host.appendChild(el('div','grouplbl','Arcade high scores'));
       if(!uname){ host.appendChild(el('div','empty','Set a username below — arcade scores you post while signed in go up under it, and your bests land here.')); }
       else if(bests===null){ host.appendChild(el('div','empty','Loading…')); }
@@ -337,6 +339,8 @@
     draw();
     var A=window.MAAuth||{};
     if(A.creations && A.creations.list){
+      A.creations.list('scales').then(function(rows){ var l=rows&&rows[0]&&rows[0].data&&rows[0].data.learned;
+        if(l && l.length>(counts.scales||0)){ counts.scales=l.length; draw(); } }).catch(function(){});
       A.creations.list('progress').then(function(rows){
         (rows||[]).forEach(function(r){ if(!r || !r.data) return;
           if(r.title==='oldman'){ if(r.data.done) oldmanDone=true; return; }

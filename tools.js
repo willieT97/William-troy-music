@@ -213,8 +213,8 @@ var CATALOGUE = [
     d:'Play a note and the needle shows how sharp or flat you are. Worth doing before anything else.' },
   { t:'Metronome', h:'metronome.html', feat:2, dep:2, g:['rhythm'], lv:[1,2,3],
     d:'A steady click for practice and lessons — set the tempo, tap it in, pick the beats per bar, accented downbeat.' },
-  { t:'Pitch Practice', h:'Ear%20Training/pitch-practice.html', w:10, dep:2, g:['ears'], lv:[2,3],
-    d:'Pure ear training, no game. Hear a short run of notes off a home note and name what you heard.' },
+  { t:'Pitch Practice', h:'Ear%20Training/pitch-practice.html', w:10, dep:2, g:['ears'], lv:[2,3], mic:true,
+    d:'Pure ear training, no game. Hear a short run of notes off a home note and name what you heard. Start in C major; play a new scale into the mic to unlock it.' },
   { t:'Chorale Ear Trainer', h:'chorale-ears.html', shelved:true, w:-8, dep:2, g:['ears','chords'], lv:[3],
     d:'Hear a few bars of real Bach and name the chords. What ears have been sharpened on for 300 years.' },
 

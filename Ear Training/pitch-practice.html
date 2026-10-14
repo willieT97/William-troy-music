@@ -48,6 +48,23 @@
   .chip{ font-family:var(--mono); font-size:.72rem; cursor:pointer; min-width:34px; text-align:center; padding:6px 8px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
   .chip.on{ background:var(--ink); color:var(--paper); box-shadow:2px 2px 0 var(--pink); }
   .chip:active{ transform:translate(2px,2px); box-shadow:none; }
+  /* learned-scale gate */
+  .lockrow{ margin-top:12px; font-family:var(--mono); font-size:.72rem; line-height:1.6; color:var(--muted); }
+  .lockrow.ok{ color:var(--green); }
+  .lockrow .lockbtn{ margin-top:8px; }
+  .lockbtns{ display:flex; flex-wrap:wrap; gap:12px; align-items:stretch; margin-top:8px; }
+  .lockbtns .lockbtn, .lockbtns .scalelink{ margin-top:0; display:flex; align-items:center; }
+  .unlock{ margin-top:12px; border:2.5px solid var(--ink); background:#FBF7EE; padding:12px 12px 10px; box-shadow:3px 3px 0 var(--ink); }
+  .unlock h3{ font-family:var(--disp); font-weight:800; font-size:1.05rem; margin:0 0 8px; }
+  .unlock .chips{ margin:4px 0 8px; }
+  .chip.got{ background:var(--green); border-color:var(--ink); color:#fff; box-shadow:2px 2px 0 var(--ink); }
+  .chip.next{ background:#FFC53D; box-shadow:2px 2px 0 var(--pink); }
+  .scalelink{ display:inline-block; margin-top:12px; text-decoration:none; }
+  .scalelink:hover{ background:var(--ink); color:var(--paper); }
+  .unlock .heard{ font-family:var(--mono); font-size:.7rem; color:var(--muted); }
+  .unlock .heard b{ color:var(--ink); font-size:.9rem; }
+  .unlock .msg{ font-size:.92rem; margin:6px 0 8px; }
+  .unlock .msg a{ color:var(--blue); font-weight:600; }
   .hintline{ font-family:var(--mono); font-size:.63rem; color:var(--muted); margin-top:8px; line-height:1.6; }
 
   .btn{ font-family:var(--mono); font-size:.76rem; letter-spacing:.05em; text-transform:uppercase; cursor:pointer;
@@ -116,8 +133,8 @@
         <option value="minpenta">Minor pentatonic</option>
         <option value="majblues">Major blues</option>
         <option value="minblues">Minor blues</option>
-        <option value="custom">Custom…</option>
-        <option value="chromatic">Chromatic</option>
+        <option value="custom">Custom… ✦ Pro</option>
+        <option value="chromatic">Chromatic ✦ Pro</option>
       </select>
       <div class="customrow" id="customRow" hidden>
         <div class="flabel" style="margin-top:12px">Custom notes — tap to include</div>
@@ -139,9 +156,18 @@
         <option value="9">A</option>
         <option value="10">B♭</option>
         <option value="11">B</option>
-        <option value="rand">Random — a new tonic each round</option>
+        <option value="rand">Random — any key you’ve learned</option>
       </select>
       <div class="hintline" id="keyHint"></div>
+      <div class="lockrow" id="lockRow"></div>
+      <div class="unlock" id="unlockBox" hidden>
+        <h3 id="unTitle">Play G major</h3>
+        <div class="flabel">Play up the scale, one note at a time — any octave</div>
+        <div class="chips" id="unChips"></div>
+        <div class="heard">mic hears <b id="unHeard">·</b></div>
+        <div class="msg" id="unMsg"></div>
+        <button class="btn" id="unCancel" type="button">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -257,6 +283,7 @@ function playRound(withRef){
 /* ===================== ROUND FLOW (auto-advancing) ===================== */
 function toggleRun(){ running ? stopRun() : startRun(); }
 function startRun(){
+  if(!canPractise()){ refreshLocks(); return; }
   if(poolOffsets().length < 2){ el('fb').textContent = 'Pick at least two notes first.'; el('fb').className = 'fb no'; return; }
   running = true; recent = []; prevTonic = null; lastKeyRoot = null;
   el('startBtn').innerHTML = '&#9209; Stop'; el('startBtn').classList.remove('blue'); el('startBtn').classList.add('ink');
@@ -281,7 +308,8 @@ function freshSeq(){                                  // …and not one of the l
 }
 function nextRound(force){
   if(!running) return;
-  if(tonicSel === 'rand'){ do { keyRoot = randInt(0,11); } while(keyRoot === prevTonic); prevTonic = keyRoot; }
+  if(!canPractise()){ stopRun(); refreshLocks(); return; }   // switched to a scale that isn't open mid-run
+  if(tonicSel === 'rand'){ const roots = learnedRoots(scaleKey); do { keyRoot = roots[randInt(0, roots.length-1)]; } while(roots.length > 1 && keyRoot === prevTonic); prevTonic = keyRoot; }
   else keyRoot = +tonicSel;
   const ref = !!force || keyRoot !== lastKeyRoot;   // tonic anchor: on Start, and whenever the tonic changes
   lastKeyRoot = keyRoot;
@@ -398,12 +426,191 @@ el('scaleSel').addEventListener('change', () => {
   el('customRow').hidden = scaleKey !== 'custom';
   if(scaleKey === 'custom') buildCustomRow();
   setKeyHint(); if(!running) buildPiano();           // applies next round if one's running
+  if(unlock) closeUnlock(); refreshLocks();
+  if(PRO_SCALES.includes(scaleKey) && !isPro()) openProWall();
 });
 el('tonicSel').addEventListener('change', () => {
   tonicSel = el('tonicSel').value;
   keyRoot = (tonicSel === 'rand') ? 0 : +tonicSel;   // preview tonic for the idle keyboard
   setKeyHint(); if(!running){ buildPiano(); if(scaleKey === 'custom') buildCustomRow(); }
+  if(unlock) closeUnlock(); refreshLocks();
 });
+
+/* ===================== LEARNED SCALES =====================
+   Only C major is open at first. Any other scale, in any key, opens once you
+   have played it into the microphone: up one octave, tonic to tonic, one note
+   at a time (any octave counts). What you have learned is kept on your account
+   (creations, kind 'scales') — or in this browser until you sign in, when it
+   is carried up. Custom and Chromatic can't be learned this way: they are Pro.
+   The listening is the Melody Trainer's: its autocorrelation detector and its
+   "on pitch for four frames running" rule. */
+const LKEY = 'wtm_pitchpractice_scales';
+const PRO_SCALES = ['custom','chromatic'];
+const SCALE_LABEL = { major:'major', minor:'minor', harmonic:'harmonic minor', majpenta:'major pentatonic',
+  minpenta:'minor pentatonic', majblues:'major blues', minblues:'minor blues', custom:'custom', chromatic:'chromatic' };
+const learned = new Set(['major:0']);
+try { (JSON.parse(localStorage.getItem(LKEY) || '[]') || []).forEach(k => learned.add(k)); } catch(e){}
+let cloudRow = null;
+const scaleName = (type, root) => KEY_NAMES[root] + ' ' + SCALE_LABEL[type];
+const isLearned = (type, root) => learned.has(type + ':' + root);
+const learnedRoots = type => { const r = []; for(let i=0; i<12; i++) if(isLearned(type, i)) r.push(i); return r; };
+const signedIn = () => !!(window.MAAuth && MAAuth.user && MAAuth.user());
+const isPro = () => !!(window.MAAuth && MAAuth.isPro && MAAuth.isPro());
+function canPractise(){
+  if(PRO_SCALES.includes(scaleKey)) return isPro();
+  if(tonicSel === 'rand') return learnedRoots(scaleKey).length > 0;
+  return isLearned(scaleKey, +tonicSel);
+}
+
+function saveLearned(){
+  try { localStorage.setItem(LKEY, JSON.stringify([...learned])); } catch(e){}
+  if(!signedIn()) return Promise.resolve(false);
+  return MAAuth.creations.save('scales', { id: cloudRow && cloudRow.id, title:'Learned scales', data:{ learned:[...learned] } })
+    .then(r => { cloudRow = r; return true; }).catch(() => false);
+}
+function loadFromAccount(){
+  if(!signedIn()) return;
+  MAAuth.creations.list('scales').then(rows => {
+    cloudRow = rows[0] || null;
+    const there = (cloudRow && cloudRow.data && cloudRow.data.learned) || [];
+    there.forEach(k => learned.add(k));
+    if(learned.size > there.length) saveLearned();          // learned on this device before signing in: carry it up
+    else try { localStorage.setItem(LKEY, JSON.stringify([...learned])); } catch(e){}
+    refreshLocks();
+  }).catch(() => {});
+}
+
+function refreshLocks(){
+  const ts = el('tonicSel'), pro = PRO_SCALES.includes(scaleKey);
+  [...ts.options].forEach(o => { if(o.value === 'rand') return; const r = +o.value;
+    o.textContent = KEY_NAMES[r] + (pro || isLearned(scaleKey, r) ? '' : '  🔒'); });
+  const row = el('lockRow'); row.className = 'lockrow'; row.innerHTML = '';
+  const add = (html) => { const d = document.createElement('div'); d.innerHTML = html; row.appendChild(d); return d; };
+  if(pro){
+    if(isPro()){ row.classList.add('ok'); add('✦ Pro — ' + (scaleKey === 'custom' ? 'pick any notes you like.' : 'all twelve notes.')); }
+    else { add('✦ ' + (scaleKey === 'custom' ? 'Custom notes are' : 'Chromatic is') + ' part of Music Arcade Pro.');
+      const b = document.createElement('button'); b.className = 'btn lockbtn'; b.type = 'button'; b.textContent = 'See Pro';
+      b.addEventListener('click', openProWall); row.appendChild(b); }
+  } else if(tonicSel === 'rand'){
+    const roots = learnedRoots(scaleKey);
+    if(roots.length){ row.classList.add('ok'); add('✓ Random across the keys you’ve learned: ' + roots.map(r => KEY_NAMES[r]).join(', ')); }
+    else add('🔒 You haven’t learned any ' + SCALE_LABEL[scaleKey] + ' scale yet. Pick a key and play it to unlock it.');
+  } else if(isLearned(scaleKey, +tonicSel)){
+    row.classList.add('ok'); add('✓ ' + scaleName(scaleKey, +tonicSel) + ' — learned');
+  } else {
+    add('🔒 ' + scaleName(scaleKey, +tonicSel) + ' is locked. Play it on your instrument, up one octave, and it’s yours.');
+    const b = document.createElement('button'); b.className = 'btn blue lockbtn'; b.type = 'button';
+    b.textContent = '🎤 Play ' + scaleName(scaleKey, +tonicSel) + ' to unlock';
+    b.addEventListener('click', startUnlock);
+    const btns = document.createElement('div'); btns.className = 'lockbtns'; btns.appendChild(b);
+    const link = scalesPageLink(scaleKey, +tonicSel); if(link) btns.appendChild(link);
+    row.appendChild(btns);
+  }
+  if(!running) el('startBtn').disabled = !canPractise();
+}
+/* A link to the same scale on the Scales page (find-the-note.html), one octave,
+   on the player's own instrument if the start quiz told us what they play. */
+const SCALES_PAGE_TYPE = { major:'major', minor:'minor', harmonic:'harmonicminor', majpenta:'majpent', minpenta:'minpent', minblues:'blues', majblues:'majblues' };
+function scalesPageLink(type, root){
+  const t = SCALES_PAGE_TYPE[type]; if(!t) return null;
+  let href = '../find-the-note.html?scale=' + t + '&root=' + root + '&octs=1';
+  try { const M = window.MATools, me = M && M.remember(); if(me && M.FIND_INST && M.FIND_INST[me.inst]) href += '&inst=' + M.FIND_INST[me.inst]; } catch(e){}
+  const a = document.createElement('a'); a.className = 'btn scalelink'; a.href = href; a.target = '_blank'; a.rel = 'noopener';
+  a.textContent = '↗ See ' + scaleName(type, root) + ' on the Scales page';
+  return a;
+}
+function openProWall(){
+  if(window.MAAuth && MAAuth.paywall) MAAuth.paywall({ title:'Custom and Chromatic are Pro',
+    body:'Every scale you play into the microphone is yours for free. Building your own note set, or drilling all twelve notes, is part of Music Arcade Pro.', product:'pro' });
+}
+
+/* ---- playing a scale to unlock it ---- */
+let unlock = null, micStream = null, analyser = null, micBuf = null;
+function autoCorrelate(buf, sr){                     // the Melody Trainer's detector, unchanged
+  let SIZE = buf.length, rms = 0;
+  for(let i=0;i<SIZE;i++) rms += buf[i]*buf[i];
+  rms = Math.sqrt(rms/SIZE);
+  if(rms < 0.008) return { freq:-1, rms };
+  let r1 = 0, r2 = SIZE-1; const thres = 0.2;
+  for(let i=0;i<SIZE/2;i++) if(Math.abs(buf[i])<thres){ r1=i; break; }
+  for(let i=1;i<SIZE/2;i++) if(Math.abs(buf[SIZE-i])<thres){ r2=SIZE-i; break; }
+  const b = buf.slice(r1,r2); SIZE = b.length;
+  if(SIZE < 128) return { freq:-1, rms };
+  const c = new Float32Array(SIZE);
+  for(let lag=0; lag<SIZE; lag++){ let sum = 0; for(let j=0;j<SIZE-lag;j++) sum += b[j]*b[j+lag]; c[lag] = sum; }
+  let d = 0; while(d < SIZE-1 && c[d] > c[d+1]) d++;
+  let maxval = -1, maxpos = -1;
+  for(let i=d;i<SIZE;i++){ if(c[i] > maxval){ maxval = c[i]; maxpos = i; } }
+  if(maxpos <= 0) return { freq:-1, rms };
+  let T0 = maxpos;
+  if(T0 > 0 && T0 < SIZE-1){ const x1=c[T0-1], x2=c[T0], x3=c[T0+1], a=(x1+x3-2*x2)/2, bb=(x3-x1)/2; if(a) T0 = T0 - bb/(2*a); }
+  const freq = sr/T0;
+  if(freq < 60 || freq > 1600) return { freq:-1, rms };
+  return { freq, rms };
+}
+function stopMic(){ if(micStream){ micStream.getTracks().forEach(t => t.stop()); micStream = null; } analyser = null; }
+function renderUnlock(){
+  const box = el('unChips'); box.innerHTML = '';
+  unlock.pcs.forEach((pc, i) => { const c = document.createElement('span');
+    c.className = 'chip' + (i < unlock.idx ? ' got' : i === unlock.idx ? ' next' : ''); c.textContent = nameForPc(pc); box.appendChild(c); });
+}
+async function startUnlock(){
+  if(running) stopRun();
+  const type = scaleKey, root = +tonicSel;
+  keyRoot = root;                                    // spell the notes for this key
+  unlock = { type, root, pcs: SCALES[type].map(o => (root + o) % 12).concat([root]), idx:0, streak:0, done:false };
+  el('unTitle').textContent = 'Play ' + scaleName(type, root);
+  el('unMsg').textContent = 'Allow the microphone when your browser asks…';
+  el('unHeard').textContent = '·';
+  el('unlockBox').hidden = false; el('lockRow').hidden = true;
+  const old = el('unlockBox').querySelector('.scalelink'); if(old) old.parentNode.remove();
+  const link = scalesPageLink(type, root);
+  if(link){ const d = document.createElement('div'); d.className = 'unlink'; d.appendChild(link); el('unMsg').before(d); }
+  renderUnlock();
+  try {
+    const ac = audio();
+    micStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+    analyser = ac.createAnalyser(); analyser.fftSize = 2048; micBuf = new Float32Array(analyser.fftSize);
+    ac.createMediaStreamSource(micStream).connect(analyser);
+  } catch(e){
+    el('unMsg').textContent = 'The microphone is blocked. Allow it for this page in your browser, then try again.';
+    return;
+  }
+  if(!unlock) { stopMic(); return; }               // cancelled while the browser was asking
+  el('unMsg').textContent = 'Listening. Start on ' + nameForPc(root) + ' and climb to the ' + nameForPc(root) + ' above.';
+  requestAnimationFrame(listenUnlock);
+}
+function listenUnlock(){
+  if(!unlock || unlock.done || !analyser) return;
+  requestAnimationFrame(listenUnlock);
+  analyser.getFloatTimeDomainData(micBuf);
+  const { freq, rms } = autoCorrelate(micBuf, actx.sampleRate);
+  if(freq <= 0){ unlock.streak = 0; return; }
+  const m = 69 + 12*Math.log2(freq/440);
+  el('unHeard').textContent = nameForPc(((Math.round(m) % 12) + 12) % 12);
+  let dSemi = (((m - unlock.pcs[unlock.idx]) % 12) + 12) % 12; if(dSemi > 6) dSemi -= 12;
+  if(Math.abs(dSemi*100) <= 45 && rms > 0.012){
+    if(++unlock.streak >= 4){ unlock.streak = 0; unlock.idx++; renderUnlock(); if(unlock.idx >= unlock.pcs.length) finishUnlock(); }
+  } else unlock.streak = 0;
+}
+function finishUnlock(){
+  unlock.done = true; stopMic();
+  const name = scaleName(unlock.type, unlock.root);
+  learned.add(unlock.type + ':' + unlock.root);
+  playTonic();
+  el('unMsg').textContent = '🎉 ' + name + ' learned — it’s open for practice. Saving…';
+  saveLearned().then(onAccount => {
+    const msg = el('unMsg');
+    if(onAccount){ msg.textContent = '🎉 ' + name + ' learned — saved to your account.'; }
+    else { msg.textContent = '🎉 ' + name + ' learned — saved in this browser. ';
+      const a = document.createElement('a'); a.href = '#'; a.textContent = 'Sign in to keep it on your account';
+      a.addEventListener('click', ev => { ev.preventDefault(); if(window.MAAuth && MAAuth.open) MAAuth.open('signin'); }); msg.appendChild(a); }
+    el('unCancel').textContent = 'Done';
+    refreshLocks();
+  });
+}
+function closeUnlock(){ unlock = null; stopMic(); el('unlockBox').hidden = true; el('lockRow').hidden = false; el('unCancel').textContent = 'Cancel'; refreshLocks(); }
+el('unCancel').addEventListener('click', closeUnlock);
 
 el('startBtn').addEventListener('click', toggleRun);
 el('againBtn').addEventListener('click', () => { if(seq.length) playSequence(); });
@@ -415,7 +622,13 @@ window.addEventListener('keydown', e => {
   else if(e.key === ' '){ e.preventDefault(); if(seq.length && running) playSequence(); }
   else if(e.key === 'Backspace'){ e.preventDefault(); undo(); }
 });
-setKeyHint(); renderStats(); buildPiano();
+setKeyHint(); renderStats(); buildPiano(); refreshLocks();
+// the account arrives a moment after the page: then load what has been learned, and whether this is a Pro account
+(function arm(){
+  if(window.MAAuth && MAAuth.onChange){ MAAuth.onChange(u => { if(u) loadFromAccount(); refreshLocks(); });
+    if(MAAuth.onEntitlements) MAAuth.onEntitlements(() => refreshLocks()); }
+  else setTimeout(arm, 150);
+})();
 </script>
 <!-- more like this, at the foot of the page -->
 <script src="/tools.js"></script>
