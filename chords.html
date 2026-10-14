@@ -122,7 +122,13 @@
     body{ background:#fff; }
     .wrap{ padding:0; max-width:none; }
     .chord{ box-shadow:none; border:1px solid #ccc; }
-    .sheet{ gap:8px 10px; }
+    /* Safari splits grid items across pages whatever break-inside says, so on
+       paper the cards become inline boxes: a line of them never splits, it
+       moves whole onto the next page. font-size:0 kills the gaps between them. */
+    .sheet{ display:block; font-size:0; }
+    .chord{ display:inline-block; vertical-align:top; font-size:1rem; width:calc((100% - 30px) / 4);
+      margin:0 10px 8px 0; page-break-inside:avoid; }
+    .chord:nth-child(4n){ margin-right:0; }
     @page{ margin:12mm; }
   }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }

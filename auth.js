@@ -385,6 +385,7 @@
   function injectStyles() {
     if (document.getElementById('maa-styles')) return;
     var css = '' +
+      '@media print{.maa-ctl,#wtm-cookie-bar{display:none!important;}}' +
       '.maa-ctl{position:fixed;top:10px;right:12px;z-index:9000;display:flex;gap:8px;align-items:center;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}' +
       '.maa-pro{cursor:pointer;text-decoration:none;border:2.5px solid #17140E;border-radius:999px;background:#FF4E86;color:#fff;font-weight:800;font-size:.8rem;line-height:1;padding:7px 12px;box-shadow:2px 2px 0 #17140E;white-space:nowrap;}' +
       '.maa-pro:active{transform:translate(2px,2px);box-shadow:none;}' +
