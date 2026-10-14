@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer data-chip="off"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Note Hopper — play the note, cross the river</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --green:#1E9E6A; --gold:#FFC53D;
+    --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(420px,100%); }
+
+  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
+  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
+  .mark::before{ left:8px; top:0; width:2px; height:18px; }
+  .mark::after{ top:8px; left:0; height:2px; width:18px; }
+  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
+  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
+
+  header{ text-align:center; margin-bottom:18px; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.55rem,5.5vw,2.35rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
+  }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:14px;
+  }
+
+  .hud{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .hud b{ color:var(--blue); }
+  .hud .stars{ color:var(--muted); }
+  .lives{ letter-spacing:2px; color:var(--pink); }
+
+  .screen{ position:relative; border:2.5px solid var(--ink); background:#FBF7EE; }
+  canvas{ display:block; width:100%; height:auto; }
+
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:safe center; text-align:center; overflow-y:auto;
+    background:rgba(244,238,226,.93); padding:20px; gap:14px;
+  }
+  .overlay.hidden{ display:none; }
+  .overlay h2{ font-family:var(--display); font-weight:800; text-transform:uppercase;
+    font-size:1.8rem; margin:0; color:var(--ink); letter-spacing:-.01em; }
+  .overlay p{ font-family:var(--mono); font-size:.74rem; color:var(--muted);
+    letter-spacing:.04em; margin:0; max-width:32ch; line-height:1.6; }
+  .overlay p.err{ color:var(--pink); font-weight:700; }
+  .overlay p.mic{ font-size:.68rem; }
+  .bigscore{ font-family:var(--mono); font-weight:700; font-size:1.1rem; color:var(--blue); }
+
+  /* level banner = lighter flash, no buttons */
+  .banner{ background:rgba(244,238,226,.6); pointer-events:none; }
+  .banner h2{ font-size:2.4rem; color:var(--blue); }
+  .banner .sub{ font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink); background:var(--paper); border:2px solid var(--ink);
+    padding:4px 10px; margin-top:6px; }
+
+  .start{
+    font-family:var(--body); font-weight:600; font-size:1.05rem; padding:13px 26px;
+    border:2.5px solid var(--ink); background:var(--blue); color:#fff; cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);
+  }
+  .start:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .start:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
+  .start:disabled{ opacity:.55; cursor:default; }
+
+  /* ---- what to play, and what the microphone is hearing ---- */
+  .listen{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .box{ border:2.5px solid var(--ink); background:#FBF7EE; padding:8px 10px 6px; text-align:center; box-shadow:3px 3px 0 var(--ink); }
+  .box .lbl{ display:block; font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .box b{ display:block; font-family:var(--display); font-weight:800; font-size:2.3rem; line-height:1.15; min-height:1.15em; }
+  .box.want{ background:var(--gold); }
+  .box.want .lbl{ color:var(--ink); }
+  .box.heard b{ color:var(--muted); }
+  .box.heard.ok b{ color:var(--green); }
+  .micline{ font-family:var(--mono); font-size:.68rem; letter-spacing:.04em; color:var(--muted); margin-top:10px; min-height:1.5em; }
+  .micline .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; background:#C4B79B; margin-right:7px; vertical-align:baseline; }
+  .micline.live .dot{ background:var(--green); animation:blink 1.6s infinite; }
+  .micline.err{ color:var(--pink); } .micline.err .dot{ background:var(--pink); }
+  @keyframes blink{ 50%{ opacity:.35; } }
+
+  /* the tap pad only exists in ?pad=1 practice mode (see the script) */
+  .pad{ display:none; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:10px; }
+  .pad.on{ display:grid; }
+  .key{
+    font-family:var(--mono); font-weight:700; font-size:clamp(.85rem,3.6vw,1.1rem);
+    aspect-ratio:1/1; border:2.5px solid var(--ink); background:var(--paper);
+    color:var(--ink); cursor:pointer; display:flex; align-items:center;
+    justify-content:center; box-shadow:3px 3px 0 var(--ink);
+  }
+  .key:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+
+  @media (max-width:380px){ .box b{ font-size:2rem; } .pad{ gap:4px; } }
+  @media (prefers-reduced-motion: reduce){ .micline.live .dot{ animation:none; } }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <span class="mark tl"></span><span class="mark tr"></span>
+    <span class="mark bl"></span><span class="mark br"></span>
+
+    <header>
+      <span class="title" data-text="Note Hopper">Note Hopper</span>
+      <div class="subtitle">play the note · hop the pad</div>
+    </header>
+
+    <div class="panel">
+      <div class="hud">
+        <div>lv <b id="level">1</b> · <b id="score">0</b> · <span class="stars" id="stars">★0</span></div>
+        <div>G major</div>
+        <div class="lives" id="lives">♥♥♥</div>
+      </div>
+
+      <div class="screen">
+        <canvas id="cv" width="360" height="480"></canvas>
+
+        <div class="overlay" id="startScreen">
+          <h2>Note Hopper</h2>
+          <p>Every lily pad is marked with a note from G major. Play that note on your instrument and the frog hops on — any octave counts. Take too long and the pad drifts away. Reach the far bank to finish.</p>
+          <button class="start" id="startBtn">🎤 Start</button>
+          <p class="mic" id="micNote">The game listens through your microphone. Your browser will ask first.</p>
+          <p class="err" id="micErr" hidden></p>
+        </div>
+
+        <div class="overlay banner hidden" id="levelScreen">
+          <h2 id="levelText">Level 1</h2>
+          <div class="sub" id="levelSub">notes: G A B</div>
+        </div>
+
+        <div class="overlay hidden" id="overScreen">
+          <h2>Game Over</h2>
+          <div class="bigscore" id="finalScore">Score 0 · Level 1</div>
+          <button class="start" id="againBtn">▶ Play again</button>
+        </div>
+      </div>
+
+      <div class="listen">
+        <div class="box want"><span class="lbl">play this</span><b id="want">·</b></div>
+        <div class="box heard" id="heardBox"><span class="lbl">mic hears</span><b id="heard">·</b></div>
+      </div>
+      <div class="micline" id="micline"><span class="dot"></span><span id="micText">Microphone off.</span></div>
+
+      <div class="pad" id="pad" aria-label="Note keys (practice mode)"></div>
+    </div>
+  </div>
+
+<script src="../hi-scores.js"></script>
+<script>
+/* ====================================================================
+   NOTE HOPPER — a river-crossing game played with a real instrument.
+
+   The frog starts on the near bank. Every lily pad across the water is
+   marked with a note from the scale: play that note and the frog hops
+   onto the pad, play the next and it hops again, and the last note lands
+   it on the far bank. The pad it is aiming for drifts with the current —
+   dither too long and it is carried out of reach, the frog leaps short,
+   and that is a life. A fresh pad with the same note floats in to retry.
+
+   The listening half is the Melody Trainer's (melody-trainer_1.html,
+   sections 8 and 9): the same autocorrelation pitch detector, the same
+   "on pitch for four frames running" test, the same fresh-attack rule.
+   Notes are matched by letter only, so any octave counts and any
+   instrument — or a voice — can play.
+
+   A wrong note costs nothing: microphones mishear, and the cursor in
+   the Melody Trainer simply waits too. The current is the pressure.
+
+   Add ?pad=1 to the address for a practice mode with on-screen keys
+   and no microphone. Scores made that way are not posted.
+
+   Tunable knobs are grouped just below.
+   ==================================================================== */
+
+  // ---- tunables -----------------------------------------------------
+  const SCALE_NAME = 'G major';
+  const SCALE = [7, 9, 11, 0, 2, 4, 6];        // G A B C D E F♯ as pitch classes, in scale order
+  const NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const START_LIVES = 3, MAX_LIVES = 5;
+  const HOP_POINTS = 10, BANK_POINTS = 50, CLEAN_BONUS = 100;
+
+  // the scale arrives a few notes at a time
+  const poolForLevel = lvl => lvl <= 1 ? SCALE.slice(0, 3) : lvl === 2 ? SCALE.slice(0, 5) : SCALE.slice();
+  // lily pads between the banks
+  const PADS_PER_LEVEL = [4, 4, 5, 6, 6, 7, 7, 8];
+  const padsForLevel = lvl => PADS_PER_LEVEL[Math.min(lvl, PADS_PER_LEVEL.length) - 1];
+  // seconds the next pad takes to drift out of reach. Level 1 is still water:
+  // find the notes first, race the current second.
+  const driftSecs = lvl => lvl <= 1 ? Infinity : Math.max(4.5, 13 - (lvl - 2) * 1.2);
+  const REACH = 64;                            // px a pad may drift before the jump is too long
+  // -------------------------------------------------------------------
+
+  const PRACTICE = /[?&]pad=1/.test(location.search);
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const BANK_H = 56, FAR_MIN = 72, HOP_SECS = 0.24;
+
+  const $ = id => document.getElementById(id);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const now = () => performance.now();
+
+  // ---- audio out ----------------------------------------------------
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; audioCtx = new AC(); }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  const pcFreq = (pc, oct) => 440 * Math.pow(2, ((oct + 1) * 12 + pc - 69) / 12);
+  function tone(freq, when, dur, vol, type){
+    const c = ensureAudio(), t = c.currentTime + (when || 0);
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+  }
+  // a short blip at the note just played — the Melody Trainer's "got it" sound
+  function sfxHop(pc){ tone(pcFreq(pc, 5), 0, 0.12, 0.12); tone(pcFreq(pc, 6), 0, 0.10, 0.07); }
+  function sfxSplash(){
+    const c = ensureAudio(), t = c.currentTime, dur = 0.45;
+    const buf = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate), d = buf.getChannelData(0);
+    for(let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const src = c.createBufferSource(); src.buffer = buf;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.24, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(lp).connect(g).connect(c.destination); src.start(t); src.stop(t + dur);
+    const o = c.createOscillator(), og = c.createGain();          // the plop
+    o.type = 'sine'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(110, t + 0.18);
+    og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.14, t + 0.01); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.connect(og).connect(c.destination); o.start(t); o.stop(t + 0.25);
+  }
+  function sfxHome(){ [[7,4],[11,4],[2,5],[7,5]].forEach((n, i) => tone(pcFreq(n[0], n[1]), i * 0.10, 0.16, 0.10, 'square')); }   // G B D G
+  function sfxOver(){ [[7,4],[4,4],[2,4],[7,3]].forEach((n, i) => tone(pcFreq(n[0], n[1]), i * 0.14, 0.22, 0.09, 'triangle')); }
+
+  // ---- the microphone: the Melody Trainer's detector, unchanged ------
+  function autoCorrelate(buf, sr){
+    let SIZE = buf.length;
+    let rms = 0;
+    for(let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+    rms = Math.sqrt(rms / SIZE);
+    if(rms < 0.008) return { freq:-1, rms };
+    let r1 = 0, r2 = SIZE - 1;
+    const thres = 0.2;
+    for(let i = 0; i < SIZE / 2; i++) if(Math.abs(buf[i]) < thres){ r1 = i; break; }
+    for(let i = 1; i < SIZE / 2; i++) if(Math.abs(buf[SIZE - i]) < thres){ r2 = SIZE - i; break; }
+    const b = buf.slice(r1, r2);
+    SIZE = b.length;
+    if(SIZE < 128) return { freq:-1, rms };
+    const c = new Float32Array(SIZE);
+    for(let lag = 0; lag < SIZE; lag++){
+      let sum = 0;
+      for(let j = 0; j < SIZE - lag; j++) sum += b[j] * b[j + lag];
+      c[lag] = sum;
+    }
+    let d = 0;
+    while(d < SIZE - 1 && c[d] > c[d + 1]) d++;
+    let maxval = -1, maxpos = -1;
+    for(let i = d; i < SIZE; i++){
+      if(c[i] > maxval){ maxval = c[i]; maxpos = i; }
+    }
+    if(maxpos <= 0) return { freq:-1, rms };
+    let T0 = maxpos;
+    if(T0 > 0 && T0 < SIZE - 1){
+      const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+      const a = (x1 + x3 - 2 * x2) / 2, bb = (x3 - x1) / 2;
+      if(a) T0 = T0 - bb / (2 * a);
+    }
+    const freq = sr / T0;
+    if(freq < 60 || freq > 1600) return { freq:-1, rms };
+    return { freq, rms };
+  }
+
+  let analyser = null, timeBuf = null, micOn = false;
+  let streak = 0, rmsSlow = 0.0001, rearm = false, armSilent = false, lastHeardAt = 0, shownHeard = -2;
+
+  async function startMic(){
+    const c = ensureAudio();
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no microphone support');
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+    });
+    const src = c.createMediaStreamSource(stream);
+    analyser = c.createAnalyser();
+    analyser.fftSize = 2048;
+    timeBuf = new Float32Array(analyser.fftSize);
+    src.connect(analyser);
+    micOn = true;
+  }
+
+  function setHeard(pc){
+    if(pc === shownHeard) return;
+    shownHeard = pc;
+    $('heard').textContent = pc < 0 ? '·' : NAMES[pc];
+    $('heardBox').classList.toggle('ok', pc >= 0 && state === 'playing' && pc === notes[pos + 1]);
+  }
+  function setMic(text, cls){ $('micText').textContent = text; $('micline').className = 'micline' + (cls ? ' ' + cls : ''); }
+
+  // one frame of listening
+  function listen(){
+    if(!micOn) return;
+    analyser.getFloatTimeDomainData(timeBuf);
+    const { freq, rms } = autoCorrelate(timeBuf, audioCtx.sampleRate);
+
+    /* After a splat the frog is put back and owed the same note again. A string
+       still ringing from last time must not walk it straight back under the
+       car, so the note has to be struck afresh (or follow a silence). */
+    const attack = rms > rmsSlow * 2.4 && rms > 0.03;
+    rmsSlow = rmsSlow * 0.9 + rms * 0.1;
+    if(rearm){
+      if(rms < 0.012) armSilent = true;
+      if(attack || (armSilent && rms > 0.02)){ rearm = false; armSilent = false; }
+    }
+
+    if(freq > 0){
+      const m = 69 + 12 * Math.log2(freq / 440);
+      setHeard(((Math.round(m) % 12) + 12) % 12);
+      lastHeardAt = now();
+      if(state === 'playing'){
+        let dSemi = (((m - notes[pos + 1]) % 12) + 12) % 12;      // any octave counts
+        if(dSemi > 6) dSemi -= 12;
+        const onPitch = Math.abs(dSemi * 100) <= 45 && rms > 0.012;
+        if(!rearm && onPitch){ if(++streak >= 4) hop(); }
+        else streak = 0;
+      } else streak = 0;
+    } else {
+      streak = 0;
+      if(now() - lastHeardAt > 220) setHeard(-1);
+    }
+  }
+
+  // ---- state --------------------------------------------------------
+  let state = 'start';   // 'start' | 'intro' | 'playing' | 'splash' | 'clear' | 'over'
+  let score = 0, level = 1, lives = START_LIVES, stars = 0, levelMisses = 0, lastClean = false;
+  let pads = [], notes = [], rowH = 48, farTop = 0, startX = W / 2, landX = W / 2;
+  let pos = -1;                          // -1 is the near bank; pads.length is the far bank
+  let frog = { fx: W / 2, fy: H - BANK_H / 2, tx: W / 2, ty: H - BANK_H / 2, t: 1 };
+  let floats = [], splash = null, flow = 0, last = 0;
+
+  const rowY = i => H - BANK_H - rowH * (i + 0.5);
+  // where the frog stands at position p
+  function spot(p){
+    if(p < 0) return { x: startX, y: H - BANK_H / 2 };
+    if(p >= pads.length) return { x: landX, y: farTop - 28 };
+    return { x: pads[p].x + pads[p].off, y: rowY(p) };
+  }
+  function placeFrog(p){ const s = spot(p); frog = { fx: s.x, fy: s.y, tx: s.x, ty: s.y, t: 1 }; }
+  function startHop(a, b){ frog = { fx: a.x, fy: a.y, tx: b.x, ty: b.y, t: 0 }; }
+
+  function buildLevel(){
+    const n = padsForLevel(level), pool = poolForLevel(level);
+    rowH = Math.floor(Math.min(70, (H - BANK_H - FAR_MIN) / n));      // few pads: a wide river, not a wide bank
+    farTop = H - BANK_H - rowH * n;
+    startX = W / 2;
+    pads = [];
+    let x = W / 2, side = Math.random() < 0.5 ? 1 : -1;
+    for(let i = 0; i < n; i++){
+      x = Math.max(80, Math.min(W - 80, x + side * (36 + Math.random() * 64)));    // a zigzag path across
+      side = -side;
+      let dir = i % 2 ? 1 : -1;                                                     // the current runs the other way on each line
+      if(x + dir * REACH > W - 24 || x + dir * REACH < 24) dir = -dir;
+      pads.push({ x, dir, off: 0, appear: 1, leaving: 0 });
+    }
+    landX = Math.max(70, Math.min(W - 70, x + (Math.random() < 0.5 ? -1 : 1) * (20 + Math.random() * 40)));
+    // one note per hop — onto each pad, then one more for the far bank — never the same note twice running
+    notes = []; let prev = -1;
+    for(let i = 0; i <= n; i++){ let k; do { k = pick(pool); } while(k === prev); notes.push(k); prev = k; }
+  }
+
+  function levelNote(lvl){
+    const names = a => a.map(pc => NAMES[pc]).join('  ');
+    if(lvl === 1) return 'notes: ' + names(poolForLevel(1)) + ' · still water';
+    const before = poolForLevel(lvl - 1), added = poolForLevel(lvl).filter(pc => before.indexOf(pc) < 0);
+    if(added.length) return 'new: ' + names(added) + (lvl === 2 ? ' · the pads drift now' : '');
+    return 'the current quickens';
+  }
+
+  function setWant(pc){ $('want').textContent = pc == null ? '·' : NAMES[pc]; shownHeard = -2; }
+
+  function reset(){
+    score = 0; level = 1; lives = START_LIVES; stars = 0; levelMisses = 0; lastClean = false;
+    floats = []; splash = null; updateHUD();
+  }
+
+  function enterLevel(){
+    state = 'intro';
+    buildLevel();
+    pos = -1; placeFrog(-1); levelMisses = 0; streak = 0; splash = null;
+    $('levelText').textContent = 'Level ' + level;
+    $('levelSub').textContent = (lastClean ? 'clean crossing +' + CLEAN_BONUS + ' · ' : '') + levelNote(level);
+    lastClean = false;
+    updateHUD(); setWant(null);
+    $('levelScreen').classList.remove('hidden');
+    setTimeout(() => {
+      $('levelScreen').classList.add('hidden');
+      state = 'playing'; rearm = true; armSilent = false;
+      setWant(notes[0]);
+    }, 1700);
+  }
+
+  function hop(){
+    streak = 0;
+    const from = spot(pos);
+    pos++;
+    const to = spot(pos);
+    startHop(from, to);
+    sfxHop(notes[pos]);
+    score += HOP_POINTS;
+    floats.push({ x: to.x + 30, y: to.y, text: '+' + HOP_POINTS, life: 0.8 });
+    updateHUD();
+    if(pos >= pads.length){ reachBank(); return; }
+    setWant(notes[pos + 1]);
+  }
+
+  // the pad drifted out of reach: the frog leaps anyway and falls short
+  function miss(){
+    state = 'splash'; lives--; levelMisses++; streak = 0;
+    const from = spot(pos), p = pads[pos + 1], to = { x: p.x + p.off, y: rowY(pos + 1) };
+    const short = { x: from.x + (to.x - from.x) * 0.7, y: from.y + (to.y - from.y) * 0.7 };
+    startHop(from, short);
+    p.leaving = 1;
+    setWant(null); updateHUD();
+    setTimeout(() => { splash = { x: short.x, y: short.y, t: 0 }; sfxSplash(); }, HOP_SECS * 1000);
+    setTimeout(() => {
+      splash = null;
+      if(lives <= 0){ gameOver(); return; }
+      placeFrog(pos);                                   // back on the pad it jumped from
+      p.off = 0; p.leaving = 0; p.appear = 0;           // and a fresh pad floats in, same note
+      rearm = true; armSilent = false;
+      state = 'playing'; setWant(notes[pos + 1]);
+    }, 1250);
+  }
+
+  function reachBank(){
+    state = 'clear'; setWant(null);
+    const clean = levelMisses === 0;
+    score += BANK_POINTS + (clean ? CLEAN_BONUS : 0);
+    if(clean) stars++;
+    lastClean = clean;
+    floats.push({ x: landX, y: farTop - 52, text: 'ACROSS +' + (BANK_POINTS + (clean ? CLEAN_BONUS : 0)), life: 1.4 });
+    level++; lives = Math.min(lives + 1, MAX_LIVES);
+    sfxHome(); updateHUD();
+    setTimeout(enterLevel, 1500);
+  }
+
+  function startGame(){
+    reset();
+    $('startScreen').classList.add('hidden');
+    $('overScreen').classList.add('hidden');
+    enterLevel();
+  }
+
+  let board = null;
+  function gameOver(){
+    state = 'over'; setWant(null);
+    sfxOver();
+    $('finalScore').textContent = 'Score ' + score + ' · Level ' + level + ' · ★' + stars;
+    $('overScreen').classList.remove('hidden');
+    if(board && !PRACTICE) board.submitIfHigh(score);
+  }
+
+  // Start asks for the microphone once, then it stays on for every game after
+  async function begin(){
+    if(state !== 'start' && state !== 'over') return;
+    ensureAudio();
+    if(!PRACTICE && !micOn){
+      const btns = [$('startBtn'), $('againBtn')];
+      btns.forEach(b => b.disabled = true);
+      $('micErr').hidden = true;
+      setMic('Waiting for the microphone…', '');
+      try {
+        await startMic();
+        setMic('Listening — play the gold note.', 'live');
+      } catch(e){
+        btns.forEach(b => b.disabled = false);
+        const msg = 'The microphone is blocked. Allow it for this page in your browser, then press Start again.';
+        $('micErr').textContent = msg; $('micErr').hidden = false;
+        setMic(msg, 'err');
+        return;
+      }
+      btns.forEach(b => b.disabled = false);
+    }
+    startGame();
+  }
+
+  // ---- update -------------------------------------------------------
+  function update(dt){
+    flow += dt;
+    if(frog.t < 1) frog.t = Math.min(1, frog.t + dt / HOP_SECS);
+    // the pad being aimed for drifts with the current
+    if(state === 'playing' && pos + 1 < pads.length && isFinite(driftSecs(level))){
+      const p = pads[pos + 1];
+      p.off += p.dir * (REACH / driftSecs(level)) * dt;
+      if(Math.abs(p.off) >= REACH) miss();
+    }
+    for(const p of pads){
+      if(p.leaving > 0){ p.off += p.dir * 70 * dt; p.leaving = Math.max(0, p.leaving - dt * 0.9); }
+      if(p.appear < 1) p.appear = Math.min(1, p.appear + dt * 2.2);
+    }
+    if(splash) splash.t += dt;
+    for(const f of floats){ f.y -= 30 * dt; f.life -= dt; }
+    floats = floats.filter(f => f.life > 0);
+  }
+
+  // ---- draw ---------------------------------------------------------
+  function rr(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function lily(x, y, r, dim){
+    ctx.fillStyle = dim ? '#A9D3B6' : '#7CC79A';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, -0.85, Math.PI * 2 - 1.35); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#17140E'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.strokeStyle = 'rgba(20,120,79,.45)'; ctx.lineWidth = 1;          // veins
+    for(let k = 0; k < 4; k++){ const a = 0.2 + k * 1.3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * r * 0.75, y + Math.sin(a) * r * 0.75); ctx.stroke(); }
+  }
+
+  function drawFrog(x, y, s){
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    ctx.fillStyle = '#14784F';                                        // legs and feet
+    ctx.fillRect(-15, 3, 6, 9);   ctx.fillRect(9, 3, 6, 9);
+    ctx.fillRect(-17, 10, 9, 3);  ctx.fillRect(8, 10, 9, 3);
+    ctx.fillRect(-14, -9, 5, 7);  ctx.fillRect(9, -9, 5, 7);
+    ctx.fillStyle = '#1E9E6A'; rr(-10, -11, 20, 23, 7); ctx.fill();   // body
+    ctx.strokeStyle = '#17140E'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#FBF7EE';                                        // eyes, looking across the river
+    ctx.fillRect(-9, -15, 7, 7); ctx.fillRect(2, -15, 7, 7);
+    ctx.strokeRect(-9, -15, 7, 7); ctx.strokeRect(2, -15, 7, 7);
+    ctx.fillStyle = '#17140E';
+    ctx.fillRect(-7, -14, 3, 3); ctx.fillRect(4, -14, 3, 3);
+    ctx.restore();
+  }
+
+  // the note painted on a pad (or the landing stone); urgency 0..1 turns its ring from gold to pink
+  function sign(x, y, label, next, urgency){
+    const w = label.length > 1 ? 32 : 24, h = 20, left = x - w / 2, top = y - h / 2;
+    if(next){
+      const ph = (now() / 650) % 1, u = urgency || 0;
+      const g = Math.round(197 - 119 * u), b = Math.round(61 + 73 * u);
+      ctx.strokeStyle = 'rgba(255,' + g + ',' + b + ',' + (0.95 * (1 - ph)).toFixed(3) + ')'; ctx.lineWidth = 2.5;
+      rr(left - 3 - ph * 8, top - 3 - ph * 8, w + 6 + ph * 16, h + 6 + ph * 16, 9); ctx.stroke();
+    }
+    ctx.fillStyle = next ? '#FFC53D' : '#F4EEE2'; rr(left, top, w, h, 5); ctx.fill();
+    ctx.strokeStyle = '#17140E'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#17140E'; ctx.font = '700 13px "Space Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y + 1);
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+
+  function grass(top, h){
+    ctx.fillStyle = '#BFE0C6'; ctx.fillRect(0, top, W, h);
+    ctx.fillStyle = 'rgba(20,120,79,.45)';
+    for(let x = 18; x < W; x += 50){ ctx.fillRect(x, top + h * 0.35, 2, 6); ctx.fillRect(x + 5, top + h * 0.35 + 2, 2, 5); ctx.fillRect(x + 26, top + h * 0.7, 2, 6); }
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    const live = state === 'playing' || state === 'splash';
+    const drifting = isFinite(driftSecs(level)) && state === 'playing';
+
+    // the river, and its current: dashes running along each line of pads
+    ctx.fillStyle = '#CFE0F3'; ctx.fillRect(0, farTop, W, H - BANK_H - farTop);
+    ctx.strokeStyle = 'rgba(36,56,200,.2)'; ctx.lineWidth = 1.5;
+    pads.forEach((p, i) => {
+      const y = rowY(i) + rowH * 0.38, shift = (((flow * 22 * p.dir) % 64) + 64) % 64;
+      for(let x = -64 + shift + (i % 2) * 30; x < W; x += 64){ ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 18, y); ctx.stroke(); }
+    });
+
+    // the banks: start at the bottom, finish at the top
+    grass(H - BANK_H, BANK_H);
+    ctx.fillStyle = '#17140E'; ctx.fillRect(0, H - BANK_H, W, 1.5);
+    grass(0, farTop);
+    ctx.fillStyle = '#17140E'; ctx.fillRect(0, farTop - 1.5, W, 1.5);
+    ctx.strokeStyle = '#14784F'; ctx.lineWidth = 2;                                 // reeds along the far bank
+    for(let x = 12; x < W; x += 34){ if(Math.abs(x - landX) < 30) continue; ctx.beginPath(); ctx.moveTo(x, farTop - 2); ctx.quadraticCurveTo(x - 4, farTop - 14, x + 2, farTop - 22); ctx.stroke(); }
+    // the landing stone on the far bank
+    if(pads.length){
+      ctx.fillStyle = '#D9D2C2'; ctx.beginPath(); ctx.ellipse(landX, farTop - 26, 26, 15, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#17140E'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    // the lily pads
+    const r = Math.min(24, rowH * 0.42);
+    pads.forEach((p, i) => {
+      const y = rowY(i), target = live && i === pos + 1;
+      if(target && drifting && Math.abs(p.off) > 2){                                // where it was: the gap it has drifted
+        ctx.setLineDash([4, 4]); ctx.strokeStyle = 'rgba(23,20,14,.3)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(p.x, y, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      }
+      ctx.globalAlpha = p.leaving > 0 ? p.leaving : p.appear;
+      lily(p.x + p.off, y, r * (0.55 + 0.45 * (p.leaving > 0 ? 1 : p.appear)), i < pos);
+      ctx.globalAlpha = 1;
+    });
+
+    // notes still to come; the one to play now is gold, and reddens as its pad drifts off
+    for(let i = pos + 1; i <= pads.length; i++){
+      if(notes[i] == null) continue;
+      const at = spot(i), next = live && i === pos + 1 && state === 'playing';
+      if(i < pads.length && (pads[i].leaving > 0 || pads[i].appear < 0.6)) continue;
+      sign(at.x, i < pads.length ? at.y : at.y + 2, NAMES[notes[i]], next, next && i < pads.length ? Math.abs(pads[i].off) / REACH : 0);
+    }
+
+    // the frog — mid-leap it rises and grows a little
+    if(!splash){
+      const t = frog.t, e = t < 1 ? t * (2 - t) : 1;
+      const x = frog.fx + (frog.tx - frog.fx) * e, y = frog.fy + (frog.ty - frog.fy) * e - Math.sin(Math.PI * t) * 16;
+      drawFrog(x, y, 1 + Math.sin(Math.PI * t) * 0.18);
+    } else {
+      for(let k = 0; k < 3; k++){                                                   // rings on the water
+        const rad = 6 + (splash.t * 40 + k * 9) % 34, a = Math.max(0, 0.8 - (rad - 6) / 40);
+        ctx.strokeStyle = 'rgba(36,56,200,' + a.toFixed(3) + ')'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(splash.x, splash.y, rad, rad * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      if(splash.t < 0.35){ ctx.fillStyle = '#FBF7EE'; for(let k = 0; k < 6; k++){ const a = Math.PI + k * Math.PI / 5; ctx.fillRect(splash.x + Math.cos(a) * 14, splash.y + Math.sin(a) * 14 - splash.t * 30, 3, 3); } }
+    }
+
+    // floating scores
+    ctx.font = '700 14px "Space Mono", monospace'; ctx.textAlign = 'center';
+    for(const f of floats){
+      ctx.globalAlpha = Math.min(1, f.life * 1.6);
+      const tw = ctx.measureText(f.text).width + 10;
+      ctx.fillStyle = '#F4EEE2'; ctx.fillRect(f.x - tw / 2, f.y - 13, tw, 18);
+      ctx.fillStyle = '#FF4E86'; ctx.fillText(f.text, f.x, f.y);
+    }
+    ctx.globalAlpha = 1; ctx.textAlign = 'start';
+  }
+
+  function loop(t){
+    const dt = Math.min((t - last) / 1000, 0.05); last = t;
+    listen();
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ---- HUD + input --------------------------------------------------
+  function updateHUD(){
+    $('score').textContent = score;
+    $('level').textContent = level;
+    $('stars').textContent = '★' + stars;
+    $('lives').textContent = '♥'.repeat(Math.max(0, lives)) || '—';
+  }
+
+  $('startBtn').addEventListener('click', begin);
+  $('againBtn').addEventListener('click', begin);
+
+  // practice mode: the seven notes as keys, on screen and on the keyboard (F is F♯)
+  function tapNote(pc){
+    setHeard(pc); lastHeardAt = now();
+    if(state === 'playing' && pc === notes[pos + 1]) hop();
+  }
+  if(PRACTICE){
+    const pad = $('pad'); pad.classList.add('on');
+    SCALE.forEach(pc => {
+      const b = document.createElement('button');
+      b.className = 'key'; b.textContent = NAMES[pc];
+      b.addEventListener('click', () => tapNote(pc));
+      pad.appendChild(b);
+    });
+    $('startBtn').textContent = '▶ Start';
+    $('micNote').textContent = 'Practice mode: tap the notes below. Scores are not posted.';
+    setMic('Practice mode — no microphone.', '');
+  }
+  window.addEventListener('keydown', e => {
+    if((e.key === 'Enter' || e.key === ' ') && (state === 'start' || state === 'over') && !document.getElementById('hsName')){ e.preventDefault(); begin(); return; }
+    if(PRACTICE){ const i = 'gabcdef'.indexOf(e.key.toLowerCase()); if(i >= 0 && e.key.length === 1) tapNote(SCALE[i]); }
+  });
+
+  // go — the river idles behind the start screen
+  (function attract(){ const keep = level; level = 5; buildLevel(); level = keep; notes = []; pos = -1; placeFrog(-1); })();
+  updateHUD();
+  requestAnimationFrame(loop);
+
+/* ---- leaderboard: side panel ---- */
+(function(){
+  if(typeof HiScores === 'undefined') return;
+  var GAME = 'note-hopper';
+  var host = document.querySelector('.stage');
+  var box = document.createElement('div');
+  if(host && host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { document.body.appendChild(box); }
+  board = HiScores.mountBoard(box, GAME, { n:5, title:'High Scores', fixed:true });
+  if(HiScores.track) HiScores.track(GAME, function(){ return PRACTICE ? 0 : score; });   // not lost if they leave mid-run
+})();
+</script>
+<!-- more like this, at the foot of the page -->
+<script src="/tools.js"></script>
+<script src="/related.js"></script>
+</body>
+</html>

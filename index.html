@@ -1674,6 +1674,51 @@
           </div>
         </a>
 
+        <a class="game" href="Theory/note-hopper.html" style="--accent:var(--green); --art-bg:#EAF0FB;">
+          <div class="game-art">
+            <svg viewBox="0 0 300 168" role="img" aria-label="Note Hopper: a frog crossing a river on lily pads, each marked with a note name">
+              <!-- far bank, river, near bank -->
+              <rect x="24" y="10" width="252" height="26" fill="#BFE0C6"/>
+              <rect x="24" y="36" width="252" height="96" fill="#CFE0F3"/>
+              <rect x="24" y="132" width="252" height="26" fill="#BFE0C6"/>
+              <line x1="24" y1="36" x2="276" y2="36" stroke="#17140E" stroke-width="1.5"/>
+              <line x1="24" y1="132" x2="276" y2="132" stroke="#17140E" stroke-width="1.5"/>
+              <g stroke="#2438C8" stroke-width="1.5" opacity="0.3">
+                <line x1="40" y1="60" x2="58" y2="60"/><line x1="104" y1="60" x2="122" y2="60"/><line x1="214" y1="60" x2="232" y2="60"/>
+                <line x1="62" y1="92" x2="80" y2="92"/><line x1="226" y1="92" x2="244" y2="92"/><line x1="40" y1="122" x2="58" y2="122"/><line x1="236" y1="122" x2="254" y2="122"/>
+              </g>
+              <!-- the landing stone on the far bank -->
+              <ellipse cx="188" cy="23" rx="20" ry="10" fill="#D9D2C2" stroke="#17140E" stroke-width="1.5"/>
+              <!-- lily pads, each with its note; the gold one is next and drifting -->
+              <g stroke="#17140E" stroke-width="1.5" fill="#7CC79A">
+                <path d="M174 54 L186 44 A18 18 0 1 0 190 52 Z"/>
+                <path d="M118 84 L130 74 A18 18 0 1 0 134 82 Z"/>
+                <path d="M160 116 L172 106 A18 18 0 1 0 176 114 Z"/>
+              </g>
+              <circle cx="146" cy="84" r="18" fill="none" stroke="#17140E" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.35"/>
+              <g font-family="'Space Mono',monospace" font-size="12" font-weight="700" text-anchor="middle">
+                <rect x="163" y="45" width="22" height="18" rx="4" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/><text x="174" y="58" fill="#17140E">D</text>
+                <rect x="107" y="75" width="22" height="18" rx="4" fill="#FFC53D" stroke="#17140E" stroke-width="2"/><text x="118" y="88" fill="#17140E">B</text>
+              </g>
+              <!-- the frog, on the pad it has just reached -->
+              <g transform="translate(160 117)">
+                <g fill="#14784F"><rect x="-15" y="3" width="6" height="8"/><rect x="9" y="3" width="6" height="8"/><rect x="-17" y="9" width="9" height="3"/><rect x="8" y="9" width="9" height="3"/><rect x="-14" y="-8" width="5" height="6"/><rect x="9" y="-8" width="5" height="6"/></g>
+                <rect x="-10" y="-10" width="20" height="21" rx="7" fill="#1E9E6A" stroke="#17140E" stroke-width="1.5"/>
+                <g fill="#FBF7EE" stroke="#17140E" stroke-width="1.5"><rect x="-9" y="-14" width="7" height="7"/><rect x="2" y="-14" width="7" height="7"/></g>
+                <g fill="#17140E"><rect x="-7" y="-13" width="3" height="3"/><rect x="4" y="-13" width="3" height="3"/></g>
+              </g>
+              <rect x="24" y="10" width="252" height="148" fill="none" stroke="#17140E" stroke-width="2.5"/>
+            </svg>
+          </div>
+          <div class="game-body">
+            <span class="tag">Find the note</span>
+            <span class="mic">🎤 listens to your playing</span>
+            <h3>Note Hopper</h3>
+            <p>A frog crosses the river on lily pads, each marked with a note from G major. Play that note on your own instrument and it hops on — any octave counts. Take too long and the pad drifts away.</p>
+            <span class="play">Play</span>
+          </div>
+        </a>
+
       </div>
     </div>
   </section>
@@ -1860,7 +1905,8 @@
       ['Theory/note-reading.html','note-reading','Note Reading'],
       ['Theory/apple-shot.html','apple-shot','Apple Shot'],
       ['Theory/hidden-words.html','hidden-words','Hidden Words'],
-      ['Theory/note-elevator.html','note-elevator','Note Elevator']
+      ['Theory/note-elevator.html','note-elevator','Note Elevator'],
+      ['Theory/note-hopper.html','note-hopper','Note Hopper']
     ]}
   ];
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
