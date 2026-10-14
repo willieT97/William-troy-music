@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>E Minor Scale on Tenor Banjo (GDAE) — notes &amp; fingering | Music Arcade</title>
+<!-- seo: written by seo.py — edit PAGES there, not here -->
+<link rel="canonical" href="https://themusicarcade.com/scales/tenor-banjo/e-minor-scale.html" />
+<meta property="og:site_name" content="The Music Arcade" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://themusicarcade.com/scales/tenor-banjo/e-minor-scale.html" />
+<meta property="og:title" content="E Minor Scale on Tenor Banjo (GDAE) — notes &amp; fingering | Music Arcade" />
+<meta property="og:description" content="The E minor scale on tenor banjo: E F♯ G A B C D. See every note on the neck, hear it, and print it — free." />
+<meta property="og:image" content="https://themusicarcade.com/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- /seo -->
+<meta name="description" content="The E minor scale on tenor banjo: E F♯ G A B C D. See every note on the neck, hear it, and print it — free." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F8; --ink:#2A3242; --muted:#6b7488; --line:#cfd6e2;
+    --blue:#2657C4; --blue-tint:#E3EBFB; --hi:#E6462F; --hi-tint:#FCE4DE;
+    --disp:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .wrap{ max-width:900px; margin:0 auto; padding:22px 16px 70px; }
+
+  .tabs{ display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--disp); font-weight:600; font-size:.82rem; text-decoration:none; color:var(--ink);
+    background:#fff; padding:8px 18px; border-radius:999px; box-shadow:0 3px 0 rgba(42,50,66,.12); transition:transform .12s; }
+  .tabs a:hover{ transform:translateY(-2px); }
+  .tabs a.cur{ background:var(--blue); color:#fff; box-shadow:0 3px 0 #1c48a3; }
+
+  header.top{ text-align:center; margin-bottom:6px; }
+  .kicker{ display:inline-block; font-family:var(--disp); font-weight:600; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--hi); background:var(--hi-tint); padding:5px 14px; border-radius:999px; }
+  h1{ font-family:var(--disp); font-weight:700; font-size:clamp(1.9rem,6vw,2.9rem); margin:.45rem 0 .2rem; }
+  .lede{ max-width:56ch; margin:.3rem auto 0; color:var(--muted); font-weight:600; }
+
+  /* instrument tabs */
+  .insttabs{ display:flex; justify-content:center; margin:20px 0 10px; }
+  .insttabs .seg{ display:inline-flex; flex-wrap:wrap; justify-content:center; background:#fff; border-radius:16px; padding:4px; box-shadow:0 2px 7px rgba(20,30,60,.12); }
+  .insttabs button{ border:none; background:transparent; font-family:var(--disp); font-weight:600; font-size:.92rem; padding:9px 20px; border-radius:12px; cursor:pointer; color:var(--muted); transition:color .15s; }
+  .insttabs button.on{ background:var(--ink); color:#fff; }
+
+  /* note picker + toolbar */
+  .picker{ display:flex; flex-direction:column; align-items:center; gap:9px; margin:14px 0 6px; }
+  .picker .plabel{ font-family:var(--disp); font-weight:600; font-size:.9rem; color:var(--ink); }
+  .notes{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+  .notes button{ font-family:var(--disp); font-weight:600; font-size:.9rem; min-width:40px; padding:8px 10px; border-radius:10px; cursor:pointer;
+    border:2px solid var(--line); background:#fff; color:var(--ink); transition:all .12s; }
+  .notes button:hover{ border-color:var(--ink); }
+  .notes button.on{ background:var(--hi); border-color:var(--hi); color:#fff; box-shadow:0 3px 0 #b5361f; }
+  .notes button.sharp{ color:var(--muted); }
+  .notes button.on.sharp{ color:#fff; }
+  .notes button.none{ min-width:0; color:var(--muted); font-size:.9rem; }
+  .notes button.none.on{ background:var(--ink); border-color:var(--ink); box-shadow:0 3px 0 #1a212c; }
+  .scalepick{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:6px 10px; border-radius:12px; border:2px solid transparent; }
+  .scalepick.active{ border-color:#2E77E6; background:#eaf2ff; }
+  .scalepick select{ font-family:var(--disp); font-weight:600; font-size:.88rem; padding:7px 10px; border:2px solid var(--line); border-radius:10px; background:#fff; cursor:pointer; }
+  .scalebtn{ font-family:var(--disp); font-weight:600; font-size:.85rem; cursor:pointer; border:2px solid #2E77E6; background:#2E77E6; color:#fff; padding:8px 16px; border-radius:10px; }
+  .scalebtn:active{ transform:translateY(1px); }
+  .degtoggle{ display:inline-flex; align-items:center; gap:6px; font-family:var(--body); font-weight:700; font-size:.82rem; color:var(--ink); cursor:pointer; }
+  .degtoggle input{ width:16px; height:16px; accent-color:#2E77E6; cursor:pointer; }
+  .pdfbtn{ font-family:var(--disp); font-weight:600; font-size:.84rem; cursor:pointer; border:none; color:#fff; background:var(--blue);
+    padding:9px 18px; border-radius:999px; box-shadow:0 3px 0 #1c48a3; }
+  .pdfbtn:active{ transform:translateY(3px); box-shadow:none; }
+
+  .rule{ border-top:1px solid var(--line); margin:14px 0 16px; }
+
+  .stage{ overflow-x:auto; padding-bottom:6px; }
+  .diagram{ background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); padding:22px 20px; display:inline-block; min-width:100%; text-align:center; }
+  .diagram svg{ display:block; margin:0 auto; }
+
+  /* piano case */
+  .pcase{ display:inline-block; background:linear-gradient(#414c5e,#2A3242); padding:14px 13px 13px; border-radius:12px 12px 9px 9px; box-shadow:0 10px 22px rgba(20,30,60,.28), inset 0 1px 0 rgba(255,255,255,.12); }
+  .pfelt{ height:7px; border-radius:4px; background:linear-gradient(#c0392b,#8f2a20); margin-bottom:11px; box-shadow:inset 0 1px 2px rgba(0,0,0,.35); }
+  .piano{ position:relative; }
+  .pkey{ position:absolute; cursor:pointer; padding:0; border:none; font-family:var(--mono); }
+  .pkey.white{ top:0; background:linear-gradient(#fff,#f2f4f7); border:1px solid #b9c2d0; border-radius:0 0 6px 6px; box-shadow:inset 0 -7px 10px rgba(0,0,0,.05); z-index:1;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px; font-size:.68rem; color:#8894a8; }
+  .pkey.black{ top:0; background:linear-gradient(#3b4453,#1e2530); border-radius:0 0 5px 5px; z-index:2; box-shadow:0 3px 5px rgba(0,0,0,.4), inset 0 -3px 3px rgba(255,255,255,.08);
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px; font-size:.58rem; color:#aeb7c6; }
+  .pkey.white.on{ background:linear-gradient(#fddcd5,#f9cabf); border-color:var(--hi); color:var(--hi); font-weight:700; }
+  .pkey.black.on{ background:linear-gradient(#ef5c46,#d13a24); color:#fff; font-weight:700; }
+  .pkey.white.scale{ background:linear-gradient(#dbe8fb,#c3d8f7); border-color:#2E77E6; color:#2E77E6; font-weight:700; }
+  .pkey.black.scale{ background:linear-gradient(#4f86e6,#2e63c4); color:#fff; font-weight:700; }
+  .pkey:active{ transform:translateY(1px); }
+
+  .tip{ font-family:var(--mono); font-size:.72rem; color:var(--muted); text-align:center; margin-top:14px; }
+  .tip b{ color:var(--ink); }
+  .backlink{ text-align:center; margin-top:8px; }
+  .backlink a{ font-family:var(--mono); font-weight:700; font-size:.74rem; color:#2E77E6; text-decoration:none; border-bottom:2px solid transparent; }
+  .backlink a:hover{ border-bottom-color:#2E77E6; }
+  .backlink:empty{ display:none; }
+  .foot{ margin-top:26px; text-align:center; font-family:var(--mono); font-size:.72rem; color:#6b6b6b; }
+  .foot a{ color:var(--blue); text-decoration:none; }
+  .foot a:hover{ text-decoration:underline; }
+
+  .about{ background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); padding:20px 22px; margin-top:22px; }
+  .about h2{ font-family:var(--disp); font-weight:700; font-size:1.2rem; margin:18px 0 4px; }
+  .about p{ margin:0 0 10px; }
+  .frets{ border-collapse:collapse; width:100%; margin-top:6px; }
+  .frets th{ text-align:left; font-family:var(--disp); font-weight:600; font-size:.9rem; white-space:nowrap; padding:7px 12px 7px 0; vertical-align:middle; }
+  .frets td{ padding:6px 0; display:flex; flex-wrap:wrap; gap:6px; }
+  .frets tr+tr{ border-top:1px solid var(--line); }
+  .frets span{ display:inline-flex; flex-direction:column; align-items:center; min-width:42px; padding:4px 6px; border-radius:9px;
+    background:var(--blue-tint); color:#1f5fbf; font-family:var(--disp); font-weight:600; }
+  .frets span.rt{ background:var(--hi-tint); color:var(--hi); }
+  .frets span i{ font-style:normal; font-family:var(--mono); font-size:.62rem; color:var(--muted); }
+  .sibs{ display:flex; flex-wrap:wrap; gap:8px; }
+  .sibs a{ font-family:var(--disp); font-weight:600; font-size:.9rem; text-decoration:none; color:var(--ink); background:#fff;
+    border:2px solid var(--line); border-radius:10px; padding:6px 12px; }
+  .sibs a:hover{ border-color:var(--ink); }
+  .morelinks{ display:flex; flex-direction:column; gap:6px; margin-top:16px !important; }
+  .morelinks a{ font-family:var(--mono); font-weight:700; font-size:.78rem; color:#2E77E6; text-decoration:none; }
+  .morelinks a:hover{ text-decoration:underline; }
+  @media print{ .about{ display:none; } }
+  /* print / PDF */
+  .printhead{ display:none; }
+  @media print{
+    @page{ size:landscape; margin:12mm; }
+    body{ background:#fff; }
+    .tabs,.insttabs,.picker,.rule,.tip,.foot,header.top{ display:none !important; }
+    .printhead{ display:block; text-align:center; margin:0 0 14px; }
+    .printhead h2{ font-family:var(--disp); font-weight:700; font-size:1.5rem; margin:0; color:#2A3242; }
+    .printhead p{ font-family:var(--mono); font-size:.82rem; color:#555; margin:5px 0 0; }
+    .wrap{ max-width:none; padding:0; }
+    .stage{ overflow:visible; }
+    .diagram{ box-shadow:none; border:1px solid #ddd; display:block; padding:16px; }
+    .diagram svg{ width:100% !important; height:auto !important; }
+    .pcase{ box-shadow:none; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="index.html">Arcade</a>
+    <a href="dojo.html">Courses</a>
+    <a href="resources.html" class="cur" aria-current="page">Resources</a>
+    <a href="training.html">Practice</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header class="top">
+    <span class="kicker">Scales · Tenor Banjo</span>
+    <h1>E Minor Scale on Tenor Banjo</h1>
+    <p class="lede">E F♯ G A B C D — every note of the E minor scale, drawn on the tenor banjo (tuned G D A E, Irish tuning). Tap any note to hear it.</p>
+  </header>
+
+  <div class="printhead" id="printhead"></div>
+
+  <div class="insttabs">
+    <div class="seg" id="insttabs">
+      <button data-inst="piano" class="on">Piano</button>
+      <button data-inst="guitar">Guitar</button>
+      <button data-inst="ukulele">Ukulele</button>
+      <button data-inst="bass">Bass</button>
+      <button data-inst="banjo">Banjo</button>
+    </div>
+  </div>
+
+  <div class="picker">
+    <span class="plabel">Find a note:</span>
+    <div class="notes" id="notes"></div>
+    <span class="plabel">…or show a scale:</span>
+    <div class="scalepick" id="scalepick">
+      <select id="scaleRoot"></select>
+      <select id="scaleType"></select>
+      <button class="scalebtn" id="scaleBtn">Show scale</button>
+      <label class="degtoggle"><input type="checkbox" id="degToggle"> scale degrees</label>
+    </div>
+    <div class="scalepick" id="viewpick">
+      <span class="plabel" style="margin:0">Show:</span>
+      <div class="notes" id="rangeBtns"></div>
+      <div class="notes" id="shapeBtns"></div>
+    </div>
+    <button class="pdfbtn" id="pdfBtn">🖨 Print</button>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="stage">
+    <div class="diagram" id="diagram"></div>
+  </div>
+
+  <p class="tip" id="tip"></p>
+  <p class="backlink" id="backlink"></p>
+
+  <section class="about">
+<p>The <b>E minor</b> scale has 7 notes: <b>E F♯ G A B C D</b>, then E again an octave up. This is the natural minor, the same notes as its relative major. Its key signature has 1 sharp (F♯).</p>
+<p>E minor — and its close cousin E dorian — is home to a great many jigs and reels, and it sits comfortably in open position.</p>
+<h2>Where the notes are, frets 0–7</h2><p>The E minor scale in first position on the tenor banjo, highest string at the top. Fret numbers under each note; the root, E, in red.</p><table class="frets"><tr><th>E string</th><td><span class="rt">E<i>open</i></span><span class="">F♯<i>2</i></span><span class="">G<i>3</i></span><span class="">A<i>5</i></span><span class="">B<i>7</i></span></td></tr><tr><th>A string</th><td><span class="">A<i>open</i></span><span class="">B<i>2</i></span><span class="">C<i>3</i></span><span class="">D<i>5</i></span><span class="rt">E<i>7</i></span></td></tr><tr><th>D string</th><td><span class="">D<i>open</i></span><span class="rt">E<i>2</i></span><span class="">F♯<i>4</i></span><span class="">G<i>5</i></span><span class="">A<i>7</i></span></td></tr><tr><th>G string</th><td><span class="">G<i>open</i></span><span class="">A<i>2</i></span><span class="">B<i>4</i></span><span class="">C<i>5</i></span><span class="">D<i>7</i></span></td></tr></table>
+<h2>More tenor banjo scales</h2><p class="sibs"><a href="scales/tenor-banjo/d-major-scale.html">D major</a><a href="scales/tenor-banjo/a-major-scale.html">A major</a><a href="scales/tenor-banjo/g-major-scale.html">G major</a><a href="scales/tenor-banjo/a-minor-scale.html">A minor</a></p>
+<p class="morelinks"><a href="find-the-note.html?scale=minor&amp;root=4&amp;inst=banjo">Open it in the full Scales page →</a><a href="chords.html?inst=banjo">Chords for tenor banjo →</a><a href="Banjo/what-note-banjo.html">Learn the notes on the neck: What Note? (banjo) →</a><a href="melody-trainer_1.html">Play session tunes in this key: Melody Trainer →</a></p>
+</section>
+
+  <div class="foot">
+    <p><a href="resources.html">&larr; Back to Resources</a></p>
+  </div>
+
+</div>
+
+<script src="/scales/pages.js"></script>
+<script>window.SCALE_PRESET={"inst": "banjo", "scale": "minor", "root": 4, "octs": 2, "shape": 1};</script>
+<script>
+(function(){
+  var NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  function disp(n){ return n.replace('#','♯'); }
+  var WHITE=[0,2,4,5,7,9,11];
+  function isBlack(pc){ return WHITE.indexOf(pc)<0; }
+
+  // ---- audio ----
+  var actx=null;
+  function ac(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+  function freq(m){ return 440*Math.pow(2,(m-69)/12); }
+  function playNote(m){ var a=ac(), o=a.createOscillator(), g=a.createGain(), t=a.currentTime;
+    o.type='triangle'; o.frequency.value=freq(m);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.95); }
+
+  // ---- instruments (strings top->bottom, low->high; open MIDI note) ----
+  var FRETS=12;
+  var INSTR={
+    guitar:{ label:'Guitar', tuning:'E A D G B E', pegR:5, strings:[{m:64},{m:59},{m:55},{m:50},{m:45},{m:40}] },
+    ukulele:{ label:'Ukulele', tuning:'G C E A', pegR:4, strings:[{m:69},{m:64},{m:60},{m:67}] },
+    bass:{ label:'Bass', tuning:'E A D G', pegR:6.5, strings:[{m:43},{m:38},{m:33},{m:28}] },
+    banjo:{ label:'Tenor Banjo', tuning:'G D A E (Irish)', pegR:5, openPos:true, strings:[{m:64},{m:57},{m:50},{m:43}] }
+  };
+  var MARKERS=[3,5,7,9,12];
+
+  var SCALES={
+    major:{name:'Major', iv:[0,2,4,5,7,9,11]},
+    minor:{name:'Minor', iv:[0,2,3,5,7,8,10]},
+    majpent:{name:'Major pentatonic', iv:[0,2,4,7,9]},
+    minpent:{name:'Minor pentatonic', iv:[0,3,5,7,10]},
+    blues:{name:'Minor blues', iv:[0,3,5,6,7,10]},
+    majblues:{name:'Major blues', iv:[0,2,3,4,7,9]},
+    dorian:{name:'Dorian', iv:[0,2,3,5,7,9,10]},
+    mixolydian:{name:'Mixolydian', iv:[0,2,4,5,7,9,10]},
+    harmonicminor:{name:'Harmonic minor', iv:[0,2,3,5,7,8,11]},
+    melodicminor:{name:'Melodic minor', iv:[0,2,3,5,7,9,11]},
+    phrygian:{name:'Phrygian', iv:[0,1,3,5,7,8,10]},
+    lydian:{name:'Lydian', iv:[0,2,4,6,7,9,11]},
+    locrian:{name:'Locrian', iv:[0,1,3,5,6,8,10]}
+  };
+  var DEGREES={0:'1',1:'♭2',2:'2',3:'♭3',4:'3',5:'4',6:'♭5',7:'5',8:'♭6',9:'6',10:'♭7',11:'7'};
+  // range: 'all' (every occurrence, the whole point of this page) | 1 | 2 octaves from the root.
+  // shape: on a neck, narrow those octaves to ONE hand position you could actually play.
+  var state={ inst:'piano', hi:{kind:'note', pc:0}, showDeg:false, range:'all', shape:false };
+  function scalePCs(root,type){ return (SCALES[type]||SCALES.major).iv.map(function(s){ return ((root+s)%12+12)%12; }); }
+  function narrowed(){ return state.hi.kind==='scale' && state.range!=='all'; }
+
+  /* ---- which strings a scale may run along ----
+     Strings are listed high-to-low, so the physical low-to-high order is the
+     array reversed. On a RE-ENTRANT ukulele that order doesn't ascend in pitch:
+     the 4th string G sounds above the C and E. A player runs scales on the
+     strings that do ascend and leaves the high G as a drone, so take the
+     longest ascending run. Guitar, bass and tenor banjo are unaffected. */
+  function runStrings(strings){
+    var phys=strings.map(function(o,i){ return {m:o.m, i:i}; }).reverse();
+    var best=[], cur=[phys[0]];
+    for(var k=1;k<phys.length;k++){
+      if(phys[k].m>cur[cur.length-1].m) cur.push(phys[k]);
+      else { if(cur.length>best.length) best=cur; cur=[phys[k]]; }
+    }
+    return (cur.length>best.length?cur:best);
+  }
+
+  /* ---- one fingering shape ----
+     A window of frets the hand can cover, inside which the whole run can be
+     played, climbing string by string and never going back down. Tightest hand
+     first, lowest window wins, and an open string is in reach from anywhere.
+     Returns [{si,fret,deg,midi}] in playing order, or null if it won't fit. */
+  function shapePath(strings, rootPc, iv, octs, openPos){
+    var run=runStrings(strings), FR=FRETS, lo=null;
+    run.forEach(function(st){ for(var f=0;f<=FR;f++){ var mm=st.m+f;
+      if(((mm%12)+12)%12===rootPc && (lo===null||mm<lo)) lo=mm; } });
+    if(lo===null) return null;
+    var pitches=[], degs=[];
+    for(var o=0;o<octs;o++) iv.forEach(function(v){ pitches.push(lo+o*12+v); degs.push(DEGREES[v%12]); });
+    pitches.push(lo+12*octs); degs.push('8');
+    /* Tenor banjo in trad isn't played in positions up the neck: everything
+       sits in open position (open strings and frets 0-5), moving to the next
+       string as soon as the note is there, and the high notes go on up the
+       E string. A note just out of reach takes the lowest fret it can. */
+    if(openPos){
+      var out=[], si=0;
+      for(var k=0;k<pitches.length;k++){
+        var placed=null, low=null;
+        for(var t=si;t<run.length;t++){
+          var f=pitches[k]-run[t].m;
+          if(f<0||f>FR) continue;
+          if(f<=5){ placed={t:t,f:f}; break; }
+          if(!low||f<low.f) low={t:t,f:f};
+        }
+        placed=placed||low;
+        if(!placed) return null;
+        si=placed.t;
+        out.push({si:run[placed.t].i, fret:placed.f, deg:degs[k], midi:pitches[k]});
+      }
+      return out;
+    }
+    function tryWindow(a,reach){
+      var out=[], si=0;
+      for(var k=0;k<pitches.length;k++){
+        var placed=null;
+        for(var t=si;t<run.length&&!placed;t++){
+          var f=pitches[k]-run[t].m;
+          if(f<0||f>FR) continue;
+          if(f===0||(f>=a&&f<=a+reach)) placed={t:t,f:f};
+        }
+        if(!placed) return null;
+        si=placed.t;
+        out.push({si:run[placed.t].i, fret:placed.f, deg:degs[k], midi:pitches[k]});
+      }
+      return out;
+    }
+    for(var reach=3;reach<=5;reach++)
+      for(var a=0;a+reach<=FR;a++){ var path=tryWindow(a,reach); if(path) return path; }
+    return null;
+  }
+
+  /* What the current view actually shows. Rebuilt on every render; null means
+     the page behaves exactly as it always has — every occurrence, by pitch class. */
+  var VIEW=null;
+  function buildView(){
+    VIEW=null;
+    if(!narrowed()) return;
+    var h=state.hi, rootPc=((h.root%12)+12)%12, iv=(SCALES[h.type]||SCALES.major).iv;
+    var octs=(state.range===2?2:1);
+    if(state.inst==='piano'){
+      var lo=48+rootPc, at={};
+      for(var o=0;o<octs;o++) iv.forEach(function(v){ at[lo+o*12+v]=DEGREES[v%12]; });
+      at[lo+12*octs]='8';
+      VIEW={kind:'piano', lo:lo, hi:lo+12*octs, at:at};
+      return;
+    }
+    var strings=INSTR[state.inst].strings;
+    var run=runStrings(strings), loR=null;
+    var ceiling=Math.max.apply(null, run.map(function(st){ return st.m+FRETS; }));
+    run.forEach(function(st){ for(var f=0;f<=FRETS;f++){ var mm=st.m+f;
+      if(((mm%12)+12)%12===rootPc && (loR===null||mm<loR)) loR=mm; } });
+    /* Two different failures, and they need different words. The run may simply
+       climb past the twelfth fret — no hand position anywhere could have held
+       it, so telling someone to shift their hand is useless advice. */
+    if(loR===null || loR+12*octs>ceiling){ VIEW={kind:'offneck'}; return; }
+    var runView={kind:'run', lo:loR, hi:loR+12*octs, rootPc:rootPc};
+    if(!state.shape){ VIEW=runView; return; }
+    var path=shapePath(strings, rootPc, iv, octs, INSTR[state.inst].openPos);
+    if(path){ var m={}; path.forEach(function(n){ m[n.si+':'+n.fret]=n.deg; });
+      VIEW={kind:'shape', at:m}; return; }
+    /* The run does fit the neck, it just won't sit under one hand. Keep the
+       octave narrowing they also asked for and drop only the shape. */
+    runView.noShape=true; VIEW=runView;
+  }
+  /* one note on the diagram -> how it should be drawn */
+  function noteAt(pc, midi, si, fret){
+    if(!VIEW||VIEW.kind==='offneck') return {st:styleFor(pc), lab:noteLabel(pc)};
+    var deg=null, on=false;
+    if(VIEW.kind==='shape'){ deg=VIEW.at[si+':'+fret]; on=(deg!==undefined); }
+    else if(VIEW.kind==='piano'){ deg=VIEW.at[midi]; on=(deg!==undefined); }
+    else { on=(midi>=VIEW.lo&&midi<=VIEW.hi&&scalePCs(state.hi.root,state.hi.type).indexOf(pc)>=0);
+      if(on) deg=(midi===VIEW.hi&&pc===VIEW.rootPc)?'8':DEGREES[((pc-state.hi.root)%12+12)%12]; }
+    if(!on) return {st:'', lab:disp(NAMES[pc])};
+    return {st:(deg==='1'||deg==='8')?'root':'scale',
+            lab:state.showDeg?deg:disp(NAMES[pc])};
+  }
+  function styleFor(pc){ var h=state.hi;
+    if(h.kind==='note') return pc===h.pc ? 'root' : '';
+    if(h.kind==='scale'){ var r=((h.root%12)+12)%12; if(pc===r) return 'root'; return scalePCs(h.root,h.type).indexOf(pc)>=0 ? 'scale' : ''; }
+    return ''; }
+  function noteLabel(pc){ if(state.showDeg && state.hi.kind==='scale' && styleFor(pc)) return DEGREES[((pc-state.hi.root)%12+12)%12]; return disp(NAMES[pc]); }
+
+  // ---- note / scale picker ----
+  var notesEl=document.getElementById('notes');
+  var scaleRoot=document.getElementById('scaleRoot'), scaleType=document.getElementById('scaleType'), scaleWrap=document.getElementById('scalepick');
+  var noneBtn=document.createElement('button'); noneBtn.className='none'; noneBtn.textContent='🚫'; noneBtn.title='Clear — show every note, no highlight';
+  noneBtn.addEventListener('click', function(){ setNone(); }); notesEl.appendChild(noneBtn);
+  NAMES.forEach(function(nm,pc){ var b=document.createElement('button'); b.className=(isBlack(pc)?'sharp':''); b.textContent=disp(nm); b.dataset.pc=pc;
+    b.addEventListener('click', function(){ setNote(pc); playNote(60+pc); }); notesEl.appendChild(b); });
+  NAMES.forEach(function(nm,pc){ var o=document.createElement('option'); o.value=pc; o.textContent=disp(nm); scaleRoot.appendChild(o); });
+  Object.keys(SCALES).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=SCALES[k].name; scaleType.appendChild(o); });
+  /* a scale with its own page under /scales/ (listed in /scales/pages.js by
+     scale-pages.py) opens that page when you pick it here */
+  function ownPage(inst, type, root){
+    var P=window.SCALE_PAGES, path=P && P[inst+'/'+type+'/'+(((root%12)+12)%12)];
+    if(!path || '/'+path===location.pathname) return false;
+    location.href='/'+path; return true; }
+  function applyScale(){ if(ownPage(state.inst, scaleType.value, +scaleRoot.value)) return;
+    setScale(+scaleRoot.value, scaleType.value); }
+  scaleRoot.addEventListener('change', applyScale); scaleType.addEventListener('change', applyScale);
+  document.getElementById('scaleBtn').addEventListener('click', function(){ ac(); applyScale(); });
+  document.getElementById('degToggle').addEventListener('change', function(){ state.showDeg=this.checked; render(); });
+  function syncPicker(){ var h=state.hi;
+    [].forEach.call(notesEl.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
+    if(h.kind==='none') noneBtn.classList.add('on');
+    else if(h.kind==='note'){ var b=notesEl.querySelector('button[data-pc="'+h.pc+'"]'); if(b) b.classList.add('on'); }
+    scaleWrap.classList.toggle('active', h.kind==='scale'); }
+  function setNote(pc){ state.hi={kind:'note', pc:pc}; syncPicker(); render(); }
+  function setScale(root,type){ state.hi={kind:'scale', root:root, type:type}; syncPicker(); render(); }
+
+  /* Narrowing is opt-in: the whole point of this page is "where does this live
+     on my instrument", so All stays the default and nothing changes until you
+     ask it to. One shape only means anything on a neck, so it hides on piano
+     and whenever the view isn't narrowed to an octave. */
+  var rangeBtnsEl=document.getElementById('rangeBtns'), shapeBtnsEl=document.getElementById('shapeBtns'),
+      viewPickEl=document.getElementById('viewpick');
+  [['all','All'],[1,'1 octave'],[2,'2 octaves']].forEach(function(pair){
+    var b=document.createElement('button'); b.textContent=pair[1]; b.dataset.range=pair[0];
+    b.addEventListener('click', function(){ state.range=pair[0]; render(); }); rangeBtnsEl.appendChild(b); });
+  [['','Every position'],['1','One shape']].forEach(function(pair){
+    var b=document.createElement('button'); b.textContent=pair[1]; b.dataset.shape=pair[0];
+    b.addEventListener('click', function(){ state.shape=!!pair[0]; render(); }); shapeBtnsEl.appendChild(b); });
+  function syncView(){
+    viewPickEl.style.display = state.hi.kind==='scale' ? '' : 'none';   // an octave of one note means nothing
+    shapeBtnsEl.style.display = (narrowed() && state.inst!=='piano') ? '' : 'none';
+    [].forEach.call(rangeBtnsEl.children, function(b){
+      b.classList.toggle('on', String(b.dataset.range)===String(state.range)); });
+    /* if the shape couldn't be drawn, don't leave "One shape" lit claiming it was */
+    var got = state.shape && !(VIEW&&(VIEW.noShape||VIEW.kind==='offneck'));
+    [].forEach.call(shapeBtnsEl.children, function(b){
+      b.classList.toggle('on', !!b.dataset.shape===got);
+      if(b.dataset.shape) b.textContent = (INSTR[state.inst]&&INSTR[state.inst].openPos) ? 'Open position' : 'One shape'; });
+  }
+  function setNone(){ state.hi={kind:'none'}; syncPicker(); render(); }
+  syncPicker();
+
+  // ---- instrument tabs ----
+  var tabs=document.getElementById('insttabs');
+  [].forEach.call(tabs.children, function(b){ b.addEventListener('click', function(){
+    if(state.hi.kind==='scale' && ownPage(b.dataset.inst, state.hi.type, state.hi.root)) return;
+    state.inst=b.dataset.inst;
+    [].forEach.call(tabs.children, function(x){ x.classList.toggle('on', x===b); }); render(); }); });
+
+  document.getElementById('pdfBtn').addEventListener('click', function(){ window.print(); });
+
+  // ---- rendering ----
+  var diagram=document.getElementById('diagram'), tip=document.getElementById('tip'), printhead=document.getElementById('printhead'), backlink=document.getElementById('backlink');
+  function render(){ buildView(); syncView();
+    if(state.inst==='piano') renderPiano(); else renderFretboard(INSTR[state.inst]); updateText(); }
+  function updateText(){
+    var h=state.hi, label = state.inst==='piano' ? 'Piano' : INSTR[state.inst].label;
+    var tuning = state.inst==='piano' ? '' : (' · '+INSTR[state.inst].tuning);
+    var narrow = (h.kind==='scale'&&VIEW&&VIEW.kind!=='offneck')
+      ? (VIEW.kind==='shape' ? ' — one fingering shape'
+                             : ' — '+(state.range===2?'two octaves':'one octave')) : '';
+    var title = (h.kind==='scale') ? ('The '+disp(NAMES[((h.root%12)+12)%12])+' '+SCALES[h.type].name+' scale on the '+label+narrow) : ('The chromatic scale on the '+label);
+    printhead.innerHTML='<h2>'+title+'</h2><p>Scales · themusicarcade'+tuning+'</p>';
+    backlink.innerHTML='';
+    if(h.kind==='none'){ tip.innerHTML='Every note is shown. Pick a note or a scale to highlight it — tap any key/fret to hear it.'; return; }
+    if(h.kind==='scale'){ var rn=disp(NAMES[((h.root%12)+12)%12]), extra=state.showDeg?' as <b>scale degrees</b> (1 = root)':'';
+      var what='', many=(state.range===2), Oct=many?'Two octaves':'One octave', oct=many?'two octaves':'one octave';
+      if(VIEW&&VIEW.kind==='offneck')
+        what=' — <b>'+Oct+' of '+rn+' climbs past the twelfth fret on the '+label.toLowerCase()+
+             ', so the whole neck is shown instead</b>';
+      else if(VIEW&&VIEW.kind==='shape')
+        what = INSTR[state.inst].openPos
+          ? ' — the way it’s played in trad: <b>open position</b>, the high notes carried on up the E string'
+          : ' — <b>one hand position</b>, root up to the octave, low string to high';
+      else if(VIEW&&VIEW.noShape)
+        what=' — <b>'+oct+'</b> from the lowest root you can reach. '+Oct+' won’t sit under one hand '+
+             'on the '+label.toLowerCase()+', so every position in that range is shown';
+      else if(VIEW)
+        what=' — <b>'+oct+'</b> from the lowest root you can reach';
+      tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+what+
+        ' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.';
+      // for the two diatonic scales the Circle of Fifths maps directly — offer a link back to that key
+      if(h.type==='major') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root%12)+12)%12)+'">See the key of '+rn+' major on the Circle of Fifths →</a>';
+      else if(h.type==='minor') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root+3)%12)+12)%12+'">See '+rn+' minor on the Circle of Fifths →</a>';
+      return; }
+    var n=disp(NAMES[h.pc]);
+    if(state.inst==='piano') tip.innerHTML='Every <b>'+n+'</b> on the keyboard is highlighted. Tap a key to hear it.';
+    else tip.innerHTML='Tuning: <b>'+INSTR[state.inst].tuning+'</b>. Every <b>'+n+'</b> on the '+INSTR[state.inst].label.toLowerCase()+' is highlighted — tap any fret to hear the note.';
+  }
+
+  function renderPiano(){
+    var lo=48, hi=72, W=38, BW=24, H=162, BH=102;
+    /* the drawn keyboard has to cover the run, or two octaves quietly becomes
+       one for every root but C. Snap out to whole white keys: starting on a
+       black one would hang half a key off the left edge with nothing under it. */
+    if(VIEW&&VIEW.kind==='piano'){
+      lo=VIEW.lo; hi=VIEW.hi;
+      while(isBlack(((lo%12)+12)%12)) lo--;
+      while(isBlack(((hi%12)+12)%12)) hi++;
+    }
+    var whites=[], blacks=[], wc=0;
+    for(var m=lo;m<=hi;m++){ var pc=m%12; if(!isBlack(pc)){ whites.push({m:m,pc:pc,x:wc*W}); wc++; } else { blacks.push({m:m,pc:pc,x:wc*W-BW/2}); } }
+    var totalW=wc*W;
+    var piano=document.createElement('div'); piano.className='piano'; piano.style.width=totalW+'px'; piano.style.height=H+'px';
+    whites.forEach(function(k){ var na=noteAt(k.pc,k.m); var st=na.st, lab=na.lab; var b=document.createElement('button'); b.className='pkey white'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=(W-1)+'px'; b.style.height=H+'px';
+      b.textContent=lab+((k.pc===0 && lab===disp(NAMES[0]))?(Math.floor(k.m/12)-1):''); b.title=disp(NAMES[k.pc]);
+      b.addEventListener('click', function(){ if(state.hi.kind!=='scale') setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
+    blacks.forEach(function(k){ var na=noteAt(k.pc,k.m); var st=na.st; var b=document.createElement('button'); b.className='pkey black'+(st==='root'?' on':st==='scale'?' scale':''); b.style.left=k.x+'px'; b.style.width=BW+'px'; b.style.height=BH+'px';
+      b.textContent=na.lab; b.title=disp(NAMES[k.pc]);
+      b.addEventListener('click', function(e){ e.stopPropagation(); if(state.hi.kind!=='scale') setNote(k.pc); playNote(k.m); }); piano.appendChild(b); });
+    var felt=document.createElement('div'); felt.className='pfelt'; felt.style.width=totalW+'px';
+    var cse=document.createElement('div'); cse.className='pcase'; cse.appendChild(felt); cse.appendChild(piano);
+    diagram.innerHTML=''; diagram.appendChild(cse);
+  }
+
+  function mix(a,b,t){ return 'rgb('+Math.round(a[0]+(b[0]-a[0])*t)+','+Math.round(a[1]+(b[1]-a[1])*t)+','+Math.round(a[2]+(b[2]-a[2])*t)+')'; }
+  function renderFretboard(inst){
+    var strings=inst.strings, n=strings.length;
+    var leftPad=10, openW=32, nutW=9, fretW=44, topPad=22, stringGap=32, neckTop=12, rightPad=12;
+    var openX=leftPad+openW/2, nutX=leftPad+openW, fbStart=nutX+nutW, fretEnd=fbStart+FRETS*fretW;
+    var neckH=topPad*2 + (n-1)*stringGap, totalW=fretEnd+rightPad, totalH=neckTop+neckH+30;
+    function sy(i){ return neckTop + topPad + i*stringGap; }
+    function fx(f){ return fbStart+(f-0.5)*fretW; }
+    function wireX(f){ return fbStart+f*fretW; }
+    function inlay(cx,cy){ return '<circle cx="'+cx+'" cy="'+cy+'" r="6" fill="#F1E7CC" stroke="#c9ad78" stroke-width="1"/>'; }
+
+    var s='<svg viewBox="0 0 '+totalW+' '+totalH+'" width="'+totalW+'" height="'+totalH+'" xmlns="http://www.w3.org/2000/svg" font-family="Space Mono, monospace">';
+    s+='<defs><linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFDEBA"/><stop offset="1" stop-color="#DBBE86"/></linearGradient></defs>';
+    // neck (fretboard) from the nut to fret 12
+    s+='<rect x="'+fbStart+'" y="'+neckTop+'" width="'+(fretEnd-fbStart)+'" height="'+neckH+'" rx="7" fill="url(#wood)" stroke="#c19a5e" stroke-width="1.5"/>';
+    for(var gi=0; gi<4; gi++){ var gy=neckTop+6+gi*(neckH/4)+(gi%2?3:0); s+='<line x1="'+fbStart+'" y1="'+gy+'" x2="'+fretEnd+'" y2="'+gy+'" stroke="#c8a86a" stroke-width="1" opacity="0.22"/>'; }
+    MARKERS.forEach(function(f){ if(f>FRETS) return; var cx=fx(f); if(f===12){ s+=inlay(cx, neckTop+neckH*0.30); s+=inlay(cx, neckTop+neckH*0.70); } else s+=inlay(cx, neckTop+neckH/2); });
+    for(var f=1; f<=FRETS; f++){ var wx=wireX(f); s+='<line x1="'+wx+'" y1="'+neckTop+'" x2="'+wx+'" y2="'+(neckTop+neckH)+'" stroke="#9fa6b2" stroke-width="3"/><line x1="'+(wx-0.9)+'" y1="'+neckTop+'" x2="'+(wx-0.9)+'" y2="'+(neckTop+neckH)+'" stroke="#e8ebf0" stroke-width="1"/>'; }
+    // nut
+    s+='<rect x="'+nutX+'" y="'+(neckTop-1)+'" width="'+nutW+'" height="'+(neckH+2)+'" rx="2" fill="#F5EEDA" stroke="#cdbf95" stroke-width="1"/>';
+    // strings run from the open column across the neck
+    strings.forEach(function(str,i){ var y=sy(i), t=i/Math.max(1,n-1), th=(3.5-t*2.2).toFixed(2), col=mix([176,138,72],[201,206,216],t);
+      s+='<line x1="'+openX+'" y1="'+y+'" x2="'+fretEnd+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+th+'"/>'; });
+    // open-string notes, before the first fret
+    strings.forEach(function(str,i){ var y=sy(i), pc=((str.m%12)+12)%12, na=noteAt(pc,str.m,i,0), st=na.st;
+      var fill=st==='root'?'#E6462F':st==='scale'?'#2E77E6':'#fff', stk=st==='root'?'#b5361f':st==='scale'?'#1f5fbf':'#cfd6e2', txt=st?'#fff':'#2A3242';
+      s+='<circle cx="'+openX+'" cy="'+y+'" r="11" fill="'+fill+'" stroke="'+stk+'" stroke-width="'+(st?1.5:2)+'"/>'
+        +'<text x="'+openX+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" font-weight="'+(st?700:600)+'" fill="'+txt+'">'+na.lab+'</text>'
+        +'<rect x="'+(openX-openW/2)+'" y="'+(y-14)+'" width="'+openW+'" height="28" fill="transparent" data-midi="'+str.m+'" data-pc="'+pc+'" style="cursor:pointer"/>'; });
+    // fretted notes (frets 1-12)
+    strings.forEach(function(str,i){ var y=sy(i);
+      for(var f2=1; f2<=FRETS; f2++){ var midi=str.m+f2, pc=((midi%12)+12)%12, x=fx(f2), na=noteAt(pc,midi,i,f2), st=na.st;
+        if(st){ s+='<circle cx="'+x+'" cy="'+y+'" r="12.5" fill="'+(st==='root'?'#E6462F':'#2E77E6')+'" stroke="'+(st==='root'?'#b5361f':'#1f5fbf')+'" stroke-width="1.5"/><text x="'+x+'" y="'+(y+3.9)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">'+na.lab+'</text>'; }
+        else { s+='<text x="'+x+'" y="'+(y+3.7)+'" text-anchor="middle" font-size="10.5" paint-order="stroke" stroke="#efdcae" stroke-width="2.6" stroke-linejoin="round" fill="#5a4423">'+na.lab+'</text>'; }
+        s+='<rect x="'+(x-fretW/2)+'" y="'+(y-15)+'" width="'+fretW+'" height="30" fill="transparent" data-midi="'+midi+'" data-pc="'+pc+'" style="cursor:pointer"/>';
+      } });
+    // fret numbers + open label
+    for(var fn=1; fn<=FRETS; fn++){ s+='<text x="'+fx(fn)+'" y="'+(neckTop+neckH+20)+'" text-anchor="middle" font-size="10" fill="#8894a8">'+fn+'</text>'; }
+    s+='<text x="'+openX+'" y="'+(neckTop+neckH+20)+'" text-anchor="middle" font-size="10" fill="#8894a8">open</text>';
+    s+='</svg>';
+    diagram.innerHTML=s;
+    var svg=diagram.querySelector('svg');
+    /* while a scale is up, a tap just sounds the note — switching to note mode
+       would throw away the scale, the octave and the shape on the very gesture
+       the tip invites you to make */
+    svg.addEventListener('click', function(e){ var t=e.target.closest('[data-midi]'); if(!t) return;
+      if(state.hi.kind!=='scale') setNote(+t.dataset.pc); playNote(+t.dataset.midi); });
+  }
+
+  // deep-link from the Circle of Fifths: ?scale=major&root=7 (or ?note=7, &inst=guitar)
+  (function(){
+    /* the scale pages under /scales/ (built by scale-pages.py from this file)
+       set window.SCALE_PRESET instead of using the address bar */
+    var P=window.SCALE_PRESET, url=new URLSearchParams(location.search),
+        q={ get:function(k){ return P ? (P[k]==null ? null : String(P[k])) : url.get(k); } },
+        inst=q.get('inst'), scale=q.get('scale'), root=q.get('root'), note=q.get('note');
+    if(inst && (inst==='piano' || INSTR[inst])){ state.inst=inst;
+      [].forEach.call(tabs.children, function(x){ x.classList.toggle('on', x.dataset.inst===inst); }); }
+    /* ?octs=1|2 and ?shape=1 — the rollbook links a logged scale straight to the
+       view the lesson meant, so a student opens it already narrowed down */
+    var octs=q.get('octs');
+    if(octs==='1'||octs==='2') state.range=+octs;
+    if(q.get('shape')==='1'){ state.shape=true; if(state.range==='all') state.range=1; }
+    if(scale && SCALES[scale] && root!==null){ var r=((+root)%12+12)%12; scaleRoot.value=r; scaleType.value=scale; setScale(r, scale); }
+    else if(note!==null){ setNote(((+note)%12+12)%12); }
+  })();
+
+  render();
+})();
+</script>
+<script>
+/* This page is about one scale on one instrument, and its heading and notes
+   say so. Changing the subject — instrument, key, scale, or picking a single
+   note — goes to that scale's own page if there is one, otherwise to the full
+   Scales page already set up. The view buttons, degrees and Print stay here. */
+(function(){
+  var PAGES = window.SCALE_PAGES || {}, P = window.SCALE_PRESET;
+  function range(){ var b = document.querySelector('#rangeBtns .on'); return b ? b.dataset.range : P.octs; }
+  function go(inst, scale, root, note){
+    var key = inst + '/' + scale + '/' + root;
+    if(note == null && PAGES[key]){ location.href = '/' + PAGES[key]; return; }
+    var q = '?inst=' + inst + (note != null ? '&note=' + note
+          : '&scale=' + scale + '&root=' + root + (range() === 'all' ? '' : '&octs=' + range()));
+    location.href = '/find-the-note.html' + q;
+  }
+  var rootSel = document.getElementById('scaleRoot'), typeSel = document.getElementById('scaleType');
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('#insttabs button, #notes button');
+    if(!t || t.classList.contains('on')) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(t.dataset.inst) go(t.dataset.inst, P.scale, P.root);
+    else if(t.dataset.pc != null) go(P.inst, null, null, t.dataset.pc);
+    else location.href = '/find-the-note.html?inst=' + P.inst;          // the clear button
+  }, true);
+  function picked(e){ e.stopImmediatePropagation(); go(P.inst, typeSel.value, +rootSel.value); }
+  rootSel.addEventListener('change', picked, true); typeSel.addEventListener('change', picked, true);
+})();
+</script>
+<!-- more like this, at the foot of the page -->
+<script src="/tools.js"></script>
+<script src="/related.js"></script>
+</body>
+</html>

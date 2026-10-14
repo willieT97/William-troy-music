@@ -185,6 +185,7 @@
 
 </div>
 
+<script src="/scales/pages.js"></script>
 <script>
 (function(){
   var NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -207,7 +208,7 @@
     guitar:{ label:'Guitar', tuning:'E A D G B E', pegR:5, strings:[{m:64},{m:59},{m:55},{m:50},{m:45},{m:40}] },
     ukulele:{ label:'Ukulele', tuning:'G C E A', pegR:4, strings:[{m:69},{m:64},{m:60},{m:67}] },
     bass:{ label:'Bass', tuning:'E A D G', pegR:6.5, strings:[{m:43},{m:38},{m:33},{m:28}] },
-    banjo:{ label:'Tenor Banjo', tuning:'G D A E (Irish)', pegR:5, strings:[{m:64},{m:57},{m:50},{m:43}] }
+    banjo:{ label:'Tenor Banjo', tuning:'G D A E (Irish)', pegR:5, openPos:true, strings:[{m:64},{m:57},{m:50},{m:43}] }
   };
   var MARKERS=[3,5,7,9,12];
 
@@ -254,7 +255,7 @@
      played, climbing string by string and never going back down. Tightest hand
      first, lowest window wins, and an open string is in reach from anywhere.
      Returns [{si,fret,deg,midi}] in playing order, or null if it won't fit. */
-  function shapePath(strings, rootPc, iv, octs){
+  function shapePath(strings, rootPc, iv, octs, openPos){
     var run=runStrings(strings), FR=FRETS, lo=null;
     run.forEach(function(st){ for(var f=0;f<=FR;f++){ var mm=st.m+f;
       if(((mm%12)+12)%12===rootPc && (lo===null||mm<lo)) lo=mm; } });
@@ -262,6 +263,27 @@
     var pitches=[], degs=[];
     for(var o=0;o<octs;o++) iv.forEach(function(v){ pitches.push(lo+o*12+v); degs.push(DEGREES[v%12]); });
     pitches.push(lo+12*octs); degs.push('8');
+    /* Tenor banjo in trad isn't played in positions up the neck: everything
+       sits in open position (open strings and frets 0-5), moving to the next
+       string as soon as the note is there, and the high notes go on up the
+       E string. A note just out of reach takes the lowest fret it can. */
+    if(openPos){
+      var out=[], si=0;
+      for(var k=0;k<pitches.length;k++){
+        var placed=null, low=null;
+        for(var t=si;t<run.length;t++){
+          var f=pitches[k]-run[t].m;
+          if(f<0||f>FR) continue;
+          if(f<=5){ placed={t:t,f:f}; break; }
+          if(!low||f<low.f) low={t:t,f:f};
+        }
+        placed=placed||low;
+        if(!placed) return null;
+        si=placed.t;
+        out.push({si:run[placed.t].i, fret:placed.f, deg:degs[k], midi:pitches[k]});
+      }
+      return out;
+    }
     function tryWindow(a,reach){
       var out=[], si=0;
       for(var k=0;k<pitches.length;k++){
@@ -308,7 +330,7 @@
     if(loR===null || loR+12*octs>ceiling){ VIEW={kind:'offneck'}; return; }
     var runView={kind:'run', lo:loR, hi:loR+12*octs, rootPc:rootPc};
     if(!state.shape){ VIEW=runView; return; }
-    var path=shapePath(strings, rootPc, iv, octs);
+    var path=shapePath(strings, rootPc, iv, octs, INSTR[state.inst].openPos);
     if(path){ var m={}; path.forEach(function(n){ m[n.si+':'+n.fret]=n.deg; });
       VIEW={kind:'shape', at:m}; return; }
     /* The run does fit the neck, it just won't sit under one hand. Keep the
@@ -342,7 +364,14 @@
     b.addEventListener('click', function(){ setNote(pc); playNote(60+pc); }); notesEl.appendChild(b); });
   NAMES.forEach(function(nm,pc){ var o=document.createElement('option'); o.value=pc; o.textContent=disp(nm); scaleRoot.appendChild(o); });
   Object.keys(SCALES).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=SCALES[k].name; scaleType.appendChild(o); });
-  function applyScale(){ setScale(+scaleRoot.value, scaleType.value); }
+  /* a scale with its own page under /scales/ (listed in /scales/pages.js by
+     scale-pages.py) opens that page when you pick it here */
+  function ownPage(inst, type, root){
+    var P=window.SCALE_PAGES, path=P && P[inst+'/'+type+'/'+(((root%12)+12)%12)];
+    if(!path || '/'+path===location.pathname) return false;
+    location.href='/'+path; return true; }
+  function applyScale(){ if(ownPage(state.inst, scaleType.value, +scaleRoot.value)) return;
+    setScale(+scaleRoot.value, scaleType.value); }
   scaleRoot.addEventListener('change', applyScale); scaleType.addEventListener('change', applyScale);
   document.getElementById('scaleBtn').addEventListener('click', function(){ ac(); applyScale(); });
   document.getElementById('degToggle').addEventListener('change', function(){ state.showDeg=this.checked; render(); });
@@ -374,14 +403,17 @@
     /* if the shape couldn't be drawn, don't leave "One shape" lit claiming it was */
     var got = state.shape && !(VIEW&&(VIEW.noShape||VIEW.kind==='offneck'));
     [].forEach.call(shapeBtnsEl.children, function(b){
-      b.classList.toggle('on', !!b.dataset.shape===got); });
+      b.classList.toggle('on', !!b.dataset.shape===got);
+      if(b.dataset.shape) b.textContent = (INSTR[state.inst]&&INSTR[state.inst].openPos) ? 'Open position' : 'One shape'; });
   }
   function setNone(){ state.hi={kind:'none'}; syncPicker(); render(); }
   syncPicker();
 
   // ---- instrument tabs ----
   var tabs=document.getElementById('insttabs');
-  [].forEach.call(tabs.children, function(b){ b.addEventListener('click', function(){ state.inst=b.dataset.inst;
+  [].forEach.call(tabs.children, function(b){ b.addEventListener('click', function(){
+    if(state.hi.kind==='scale' && ownPage(b.dataset.inst, state.hi.type, state.hi.root)) return;
+    state.inst=b.dataset.inst;
     [].forEach.call(tabs.children, function(x){ x.classList.toggle('on', x===b); }); render(); }); });
 
   document.getElementById('pdfBtn').addEventListener('click', function(){ window.print(); });
@@ -406,7 +438,9 @@
         what=' — <b>'+Oct+' of '+rn+' climbs past the twelfth fret on the '+label.toLowerCase()+
              ', so the whole neck is shown instead</b>';
       else if(VIEW&&VIEW.kind==='shape')
-        what=' — <b>one hand position</b>, root up to the octave, low string to high';
+        what = INSTR[state.inst].openPos
+          ? ' — the way it’s played in trad: <b>open position</b>, the high notes carried on up the E string'
+          : ' — <b>one hand position</b>, root up to the octave, low string to high';
       else if(VIEW&&VIEW.noShape)
         what=' — <b>'+oct+'</b> from the lowest root you can reach. '+Oct+' won’t sit under one hand '+
              'on the '+label.toLowerCase()+', so every position in that range is shown';
@@ -499,7 +533,11 @@
 
   // deep-link from the Circle of Fifths: ?scale=major&root=7 (or ?note=7, &inst=guitar)
   (function(){
-    var q=new URLSearchParams(location.search), inst=q.get('inst'), scale=q.get('scale'), root=q.get('root'), note=q.get('note');
+    /* the scale pages under /scales/ (built by scale-pages.py from this file)
+       set window.SCALE_PRESET instead of using the address bar */
+    var P=window.SCALE_PRESET, url=new URLSearchParams(location.search),
+        q={ get:function(k){ return P ? (P[k]==null ? null : String(P[k])) : url.get(k); } },
+        inst=q.get('inst'), scale=q.get('scale'), root=q.get('root'), note=q.get('note');
     if(inst && (inst==='piano' || INSTR[inst])){ state.inst=inst;
       [].forEach.call(tabs.children, function(x){ x.classList.toggle('on', x.dataset.inst===inst); }); }
     /* ?octs=1|2 and ?shape=1 — the rollbook links a logged scale straight to the
