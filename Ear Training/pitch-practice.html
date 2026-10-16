@@ -111,6 +111,12 @@
   .tile .n{ font-family:var(--disp); font-weight:800; font-size:1.5rem; line-height:1; }
   .tile .l{ font-family:var(--mono); font-size:.54rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:5px; }
 
+  .record{ display:flex; flex-wrap:wrap; justify-content:center; align-items:baseline; gap:6px 14px; margin:14px auto 0; max-width:560px;
+    font-family:var(--mono); font-size:.66rem; color:var(--muted); text-align:center; }
+  .record .rec-k{ letter-spacing:.14em; text-transform:uppercase; color:var(--pink); }
+  .record .rec-i b{ font-family:var(--disp); font-size:1rem; color:var(--ink); margin-right:3px; }
+  .record .rec-w{ flex-basis:100%; font-size:.6rem; }
+  .record a{ color:var(--blue); }
   .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:.7rem; color:var(--muted); }
   .foot a{ color:var(--blue); text-decoration:none; } .foot a:hover{ text-decoration:underline; }
   @media (prefers-reduced-motion: reduce){ .btn:active,.seg button:active,.pad button:active{ transform:none; } }
@@ -194,9 +200,10 @@
 
   <div class="score">
     <div class="tile"><div class="n" id="stStreak">0</div><div class="l">Streak</div></div>
-    <div class="tile"><div class="n" id="stBest">0</div><div class="l">Best streak</div></div>
+    <div class="tile"><div class="n" id="stBest">0</div><div class="l">Best ever</div></div>
     <div class="tile"><div class="n" id="stAcc">—</div><div class="l">Accuracy</div></div>
   </div>
+  <div class="record" id="record"></div>
 
   <div class="foot"><a href="../training.html">&larr; back to Practice</a></div>
 </div>
@@ -264,7 +271,8 @@ let customOffsets = new Set([0,2,4,5,7,9,11]);
 let tonicMidi = 60, seq = [], answer = [], checked = false;
 let running = false, pendingCheck = null, advanceT = null;
 let recent = [], prevTonic = null, lastKeyRoot = null;   // anti-repetition + last round's tonic
-let streak = 0, best = +(localStorage.getItem('wtm_pitchpractice_best')||0), correct = 0, total = 0;
+let streak = 0, best = 0, correct = 0, total = 0;   // best = best run ever, from your record (practice-scores.js)
+let record = null;
 
 const poolOffsets = () => scaleKey === 'custom' ? [...customOffsets].sort((a,b)=>a-b) : SCALES[scaleKey];
 const useFlats = () => FLAT_KEYS.includes(MINOR_SCALES.includes(scaleKey) ? (keyRoot+3)%12 : keyRoot);  // spell to the (relative) key
@@ -352,8 +360,8 @@ function check(){
   let right = 0; seq.forEach((off,i) => { if(answer[i] === pcOfOffset(off)) right++; });
   total += seq.length; correct += right;
   const perfect = right === seq.length;
-  if(perfect){ streak++; if(streak > best){ best = streak; localStorage.setItem('wtm_pitchpractice_best', best); } }
-  else streak = 0;
+  if(perfect) streak++; else streak = 0;
+  if(record){ record.round({ clean:perfect, notes:seq.length, right }); record.streak(streak); best = record.best(); }
   renderSlots(); renderStats();
   const fb = el('fb');
   if(perfect){ fb.textContent = `Perfect — all ${seq.length}. ${streak>=3?'🔥 ':''}Next one coming…`; fb.className = 'fb ok'; }
@@ -632,7 +640,14 @@ window.addEventListener('keydown', e => {
   else if(e.key === ' '){ e.preventDefault(); if(seq.length && running) playSequence(); }
   else if(e.key === 'Backspace'){ e.preventDefault(); undo(); }
 });
-setKeyHint(); renderStats(); buildPiano(); refreshLocks();
+/* your record, kept for good — the old browser-only best carries over */
+function openRecord(){
+  if(!window.PracticeScores){ setTimeout(openRecord, 100); return; }
+  record = PracticeScores.open('pitch-practice', el('record'));
+  try { const old = +(localStorage.getItem('wtm_pitchpractice_best')||0); if(old) record.streak(old); } catch(e){}
+  best = record.best(); renderStats();
+}
+setKeyHint(); renderStats(); buildPiano(); refreshLocks(); openRecord();
 // the account arrives a moment after the page: then load what has been learned, and whether this is a Pro account
 (function arm(){
   if(window.MAAuth && MAAuth.onChange){ MAAuth.onChange(u => { if(u) loadFromAccount(); refreshLocks(); });
@@ -641,6 +656,7 @@ setKeyHint(); renderStats(); buildPiano(); refreshLocks();
 })();
 </script>
 <!-- more like this, at the foot of the page -->
+<script src="/practice-scores.js"></script>
 <script src="/tools.js"></script>
 <script src="/related.js"></script>
 </body>

@@ -215,6 +215,8 @@ var CATALOGUE = [
     d:'A steady click for practice and lessons — set the tempo, tap it in, pick the beats per bar, accented downbeat.' },
   { t:'Pitch Practice', h:'Ear%20Training/pitch-practice.html', w:10, dep:2, g:['ears'], lv:[2,3], mic:true,
     d:'Pure ear training, no game. Hear a short run of notes off a home note and name what you heard. Start in C major; play a new scale into the mic to unlock it.' },
+  { t:'Play It Back', h:'Ear%20Training/play-it-back.html', w:10, dep:2, g:['ears','tunes'], lv:[1,2,3], mic:true,
+    d:'Hear a short phrase and play it back on your own instrument — the mic follows you note by note. The way tunes are learned by ear at a session.' },
   { t:'Chorale Ear Trainer', h:'chorale-ears.html', shelved:true, w:-8, dep:2, g:['ears','chords'], lv:[3],
     d:'Hear a few bars of real Bach and name the chords. What ears have been sharpened on for 300 years.' },
 

@@ -65,6 +65,7 @@ PAGES = {
     'Read a tune on the stave and play or sing it back into the mic — the cursor only moves when you hit the right note. 200+ Irish session tunes loaded.'),
   'Ear Training/pitch-practice.html': ('Pitch Practice — online ear training by scale | Music Arcade',
     'Pure ear training, no game: hear a short run of notes off a home note and name them. Start in C major and unlock new scales by playing them on your instrument.'),
+  'Ear Training/play-it-back.html': (None, None),   # title + description written in the page
   'tuner.html': ('Online tuner — chromatic, for any instrument | Music Arcade',
     'A free chromatic tuner in your browser. Play a note and the needle shows how sharp or flat you are — guitar, ukulele, banjo, fiddle, voice, anything.'),
   'metronome.html': ('Online metronome — free, with tap tempo | Music Arcade', None),
