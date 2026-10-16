@@ -26,6 +26,8 @@ from urllib.parse import quote
 SITE = 'https://themusicarcade.com/'
 NAME = 'The Music Arcade'
 IMAGE = SITE + 'og-image.png'
+# pages with a share picture of their own (shown when the link is posted on WhatsApp, Facebook…)
+IMAGES = { 'learn-banjo.html': 'learn-banjo-card.jpg' }
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 PAGES = {
@@ -236,7 +238,7 @@ def process(path, shelved):
               '<meta property="og:url" content="' + u + '" />',
               '<meta property="og:title" content="' + esc(cur_title) + '" />']
     if cur_desc: lines.append('<meta property="og:description" content="' + esc(cur_desc) + '" />')
-    lines += ['<meta property="og:image" content="' + IMAGE + '" />',
+    lines += ['<meta property="og:image" content="' + (SITE + IMAGES[path] if path in IMAGES else IMAGE) + '" />',
               '<meta name="twitter:card" content="summary_large_image" />']
   block = '\n'.join(lines) + '\n<!-- /seo -->'
 
