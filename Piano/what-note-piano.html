@@ -125,6 +125,13 @@
   .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
   .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
 
+  .diffrow{ flex-wrap:wrap; }
+  .keyrow{ display:flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px;
+    font-family:var(--mono); font-size:.72rem; color:var(--muted); }
+  .keyrow[hidden]{ display:none; }
+  .keyrow select{ font-family:var(--mono); font-size:.8rem; padding:6px 8px; border:2px solid var(--ink); background:var(--paper); color:var(--ink); cursor:pointer; }
+  .keyrow .scnotes{ letter-spacing:.06em; color:var(--ink); }
+
   .score{
     display:flex; justify-content:center; gap:clamp(16px,6vw,40px); margin-top:20px;
     font-family:var(--mono); font-size:.78rem; letter-spacing:.1em;
@@ -183,7 +190,13 @@
         <div class="seg" role="group" aria-label="Difficulty">
           <button id="easyBtn" aria-pressed="true">Naturals</button>
           <button id="hardBtn" aria-pressed="false">Chromatic</button>
+          <button id="scaleBtn" aria-pressed="false">Scale</button>
         </div>
+      </div>
+      <div class="keyrow" id="keyrow" hidden>
+        <label for="scaleSel">key:</label>
+        <select id="scaleSel"></select>
+        <span class="scnotes" id="scNotes"></span>
       </div>
     </div>
 
@@ -294,6 +307,22 @@
   const el = id => document.getElementById(id);
   const accidental = pc => !NATURAL.has(pc);
 
+  /* Scale mode: only the notes of one key come up, and the keys outside it
+     are greyed out. Spelled per key, so F major says B♭, not A♯.
+     ?scale=d-major picks one from a link. */
+  const SCALES = [
+    ['c-major','C major',0,[0,2,4,5,7,9,11]], ['g-major','G major',7,[0,2,4,5,7,9,11]],
+    ['d-major','D major',2,[0,2,4,5,7,9,11]], ['a-major','A major',9,[0,2,4,5,7,9,11]],
+    ['f-major','F major',5,[0,2,4,5,7,9,11]], ['a-minor','A minor',9,[0,2,3,5,7,8,10]],
+    ['e-minor','E minor',4,[0,2,3,5,7,8,10]], ['b-minor','B minor',11,[0,2,3,5,7,8,10]],
+    ['d-minor','D minor',2,[0,2,3,5,7,8,10]],
+  ];
+  const FLAT_KEYS = new Set(['f-major','d-minor']);
+  let scaleKey = 'c-major';
+  const scaleOf = k => SCALES.find(x => x[0]===k) || SCALES[0];
+  const inScale = pc => { const [, , r, iv] = scaleOf(scaleKey); return iv.indexOf((pc - r + 12) % 12) >= 0; };
+  const spellPC = pc => (diff==='scale' && FLAT_KEYS.has(scaleKey)) ? FLAT[pc] : SHARP[pc];
+
   let keyIdx=0, answerPC=0, diff='easy';
   let phase='idle', correct=0, streak=0, best=0;
 
@@ -309,7 +338,8 @@
     do{
       k = Math.floor(Math.random()*(OCTAVES*12));      // C4 .. B5
       pc = k % 12;
-    } while(diff==='easy' && accidental(pc));
+    } while((diff==='easy' && accidental(pc)) || (diff==='scale' && !inScale(pc)) ||
+            (k===keyIdx && phase!=='idle'));   // never the same spot twice running
     keyIdx=k; answerPC=pc;
   }
 
@@ -321,7 +351,7 @@
     if(reveal){
       lab.setAttribute('x', key.cx);
       lab.setAttribute('y', key.dotY+4);
-      lab.textContent = SHARP[answerPC];
+      lab.textContent = spellPC(answerPC);
       lab.style.display='';
     } else {
       lab.style.display='none';
@@ -353,7 +383,8 @@
     const right = (pc === answerPC);
     keyMap[answerPC].classList.add('correct');
     if(!right) keyMap[pc].classList.add('wrong');
-    const name = accidental(answerPC) ? SHARP[answerPC]+' / '+FLAT[answerPC] : SHARP[answerPC];
+    const name = !accidental(answerPC) ? SHARP[answerPC]
+               : diff==='scale' ? spellPC(answerPC) : SHARP[answerPC]+' / '+FLAT[answerPC];
     const where = LANDMARK[answerPC];
     if(right){
       correct++; streak++; best=Math.max(best,streak);
@@ -372,14 +403,28 @@
     diff=d;
     el('easyBtn').setAttribute('aria-pressed', d==='easy');
     el('hardBtn').setAttribute('aria-pressed', d==='hard');
-    document.querySelectorAll('.akey').forEach(b=> b.disabled = (d==='easy'));  // naturals = white keys only
+    el('scaleBtn').setAttribute('aria-pressed', d==='scale');
+    el('keyrow').hidden = (d!=='scale');
+    // naturals = white keys only; a scale = just its own keys
+    document.querySelectorAll('.nkey,.akey').forEach(b=>{ const pc=+b.dataset.pc;
+      b.disabled = d==='easy' ? b.matches('.akey') : d==='scale' ? !inScale(pc) : false; });
+    // black keys take the key's own spelling in scale mode, their usual label otherwise
+    document.querySelectorAll('.akey').forEach(b=>{ if(b.dataset.lab==null) b.dataset.lab=b.textContent;
+      b.textContent = d==='scale' ? spellPC(+b.dataset.pc) : b.dataset.lab; });
+    if(d==='scale'){ const [, , r, iv] = scaleOf(scaleKey);
+      el('scNotes').textContent = iv.map(v => spellPC((r+v)%12)).join(' '); }
+    try { localStorage.setItem('wtm_whatnote_piano', JSON.stringify({diff:d, scale:scaleKey})); } catch(e){}
   }
+  SCALES.forEach(([k, label]) => { const o=document.createElement('option'); o.value=k; o.textContent=label; el('scaleSel').appendChild(o); });
 
   // ---- wiring ----
   el('newBtn').addEventListener('click', newRound);
   el('hearBtn').addEventListener('click', () => { if(phase!=='idle') playNote(); });
   el('easyBtn').addEventListener('click', () => setDiff('easy'));
   el('hardBtn').addEventListener('click', () => setDiff('hard'));
+  // switching to a scale or a new key mid-question could leave a note outside it: deal a fresh one
+  el('scaleBtn').addEventListener('click', () => { setDiff('scale'); newRound(); });
+  el('scaleSel').addEventListener('change', function(){ scaleKey=this.value; setDiff('scale'); newRound(); });
   // keyboard: letter names pick naturals (tap the buttons for sharps); Enter = next; H = hear
   window.addEventListener('keydown', e => {
     const k = e.key.toUpperCase();
@@ -391,8 +436,15 @@
     if(e.key==='Enter' && (phase==='idle' || phase==='done')){ newRound(); }
   });
 
-  // start with naturals, and drop the first note in straight away
-  setDiff('easy');
+  // start where you left off (or as a link asks), else naturals; drop the first note in straight away
+  (function(){
+    let saved = {}; try { saved = JSON.parse(localStorage.getItem('wtm_whatnote_piano')||'{}')||{}; } catch(e){}
+    const want = new URLSearchParams(location.search).get('scale');
+    if(want && SCALES.some(x=>x[0]===want)){ saved = {diff:'scale', scale:want}; }
+    if(saved.scale && SCALES.some(x=>x[0]===saved.scale)) scaleKey = saved.scale;
+    el('scaleSel').value = scaleKey;
+    setDiff(['easy','hard','scale'].indexOf(saved.diff)>=0 ? saved.diff : 'easy');
+  })();
   newRound();
 
 /* ---- leaderboard: best streak ---- */

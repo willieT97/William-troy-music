@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Learn Tenor Banjo — a free step-by-step start for adult beginners | Music Arcade</title>
+<!-- seo: written by seo.py — edit PAGES there, not here -->
+<link rel="canonical" href="https://themusicarcade.com/learn-banjo.html" />
+<meta property="og:site_name" content="The Music Arcade" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://themusicarcade.com/learn-banjo.html" />
+<meta property="og:title" content="Learn Tenor Banjo — a free step-by-step start for adult beginners | Music Arcade" />
+<meta property="og:description" content="Never played? A free, step-by-step start on Irish tenor banjo (GDAE) from a banjo teacher: tune up, find the notes, your first scale, then your first session tunes." />
+<meta property="og:image" content="https://themusicarcade.com/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- /seo -->
+<meta name="description" content="Never played? A free, step-by-step start on Irish tenor banjo (GDAE) from a banjo teacher: tune up, find the notes, your first scale, then your first session tunes." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ====================================================================
+     LEARN TENOR BANJO — a starting plan for a grown-up beginner with no
+     teacher yet. It builds nothing new: each step points at tools the site
+     already has, in the order William starts a new adult student.
+     Dressed like the Practice hub (training.html), which follows the
+     Melody Trainer. The address people are given is /learn-banjo.
+     ==================================================================== */
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A; --green:#1F9D55;
+    --inset:#FBF7EC; --muted:#6F6757;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,-apple-system,sans-serif; --mono:'Space Mono',monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55;
+    min-height:100vh; overflow-x:hidden; position:relative; -webkit-font-smoothing:antialiased; }
+  body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:5; opacity:.05;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="180" height="180" filter="url(%23n)" opacity="0.55"/></svg>'); }
+  .blob{ position:fixed; width:46vw; height:46vw; max-width:560px; max-height:560px; border-radius:50%;
+    filter:blur(70px); mix-blend-mode:multiply; opacity:.16; pointer-events:none; z-index:0; }
+  .blob.b1{ background:var(--blue); top:-12%; left:-10%; animation:drift1 26s ease-in-out infinite alternate; }
+  .blob.b2{ background:var(--pink); bottom:-14%; right:-8%; animation:drift2 31s ease-in-out infinite alternate; }
+  @keyframes drift1{ to{ transform:translate(9vw,7vh) scale(1.12); } }
+  @keyframes drift2{ to{ transform:translate(-8vw,-6vh) scale(0.92); } }
+
+  .wrap{ max-width:760px; margin:0 auto; padding:32px 16px 70px; position:relative; z-index:1; }
+
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink); padding:8px 15px; border:2px solid var(--ink);
+    background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); transition:transform .08s, background .12s; }
+  .tabs a:hover{ background:#fff; }
+  .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+
+  header.top{ text-align:center; margin:6px 0 30px; }
+  .eyebrow{ display:inline-block; font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+    border:1.5px solid var(--ink); border-radius:99px; padding:4px 10px; background:var(--paper); margin-bottom:14px; }
+  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(34px,7vw,56px); line-height:1.02; letter-spacing:-.01em; margin:0;
+    text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
+  .lede{ max-width:54ch; margin:16px auto 0; font-size:1.06rem; }
+
+  .note{ background:var(--inset); border:2px solid var(--ink); border-radius:14px; box-shadow:5px 5px 0 var(--ink);
+    padding:16px 18px; margin:0 0 30px; }
+  .note p{ margin:0 0 8px; } .note p:last-child{ margin:0; }
+  .note .who{ font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+
+  .progress{ font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; text-align:center; margin:0 0 14px; }
+  .bar{ height:10px; border:2px solid var(--ink); border-radius:99px; background:var(--paper); overflow:hidden; margin:6px auto 0; max-width:320px; }
+  .bar i{ display:block; height:100%; width:0; background:var(--green); transition:width .25s; }
+
+  .step{ position:relative; background:var(--paper); border:2px solid var(--ink); border-radius:14px; box-shadow:5px 5px 0 var(--ink);
+    padding:18px 18px 16px 70px; margin:0 0 22px; }
+  .step .num{ position:absolute; left:16px; top:16px; width:40px; height:40px; border-radius:50%; border:2px solid var(--ink);
+    display:flex; align-items:center; justify-content:center; font-family:var(--disp); font-weight:800; font-size:20px; background:#fff; }
+  .step.done .num{ background:var(--green); color:#fff; }
+  .step h2{ font-family:var(--disp); font-weight:700; font-size:15px; letter-spacing:.1em; text-transform:uppercase; margin:2px 0 4px; }
+  .step .when{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
+  .step p{ margin:0 0 10px; }
+  .step ul{ margin:0 0 12px; padding-left:20px; } .step li{ margin:0 0 4px; }
+  .go{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0 12px; }
+  .go a{ font-family:var(--mono); font-weight:700; font-size:12.5px; text-decoration:none; color:var(--ink); background:#fff;
+    border:2px solid var(--ink); border-radius:10px; padding:8px 12px; box-shadow:3px 3px 0 var(--ink); transition:transform .08s; }
+  .go a:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+  .go a.main{ background:var(--blue); color:#fff; }
+  .tick{ display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px; letter-spacing:.06em; cursor:pointer; user-select:none; }
+  .tick input{ width:18px; height:18px; accent-color:var(--green); cursor:pointer; }
+
+  .lessons{ background:var(--ink); color:var(--paper); border-radius:14px; box-shadow:5px 5px 0 var(--pink); padding:22px 20px; margin:34px 0 0; text-align:center; }
+  .lessons h2{ font-family:var(--disp); font-weight:800; font-size:24px; margin:0 0 8px; }
+  .lessons p{ margin:0 auto 14px; max-width:50ch; }
+  .lessons a{ display:inline-block; font-family:var(--mono); font-weight:700; font-size:13px; text-decoration:none; color:var(--ink);
+    background:var(--paper); border:2px solid var(--paper); border-radius:10px; padding:10px 16px; box-shadow:3px 3px 0 var(--pink); }
+
+  .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); }
+  .foot a{ color:var(--blue); text-decoration:none; }
+  @media (max-width:520px){ .step{ padding:66px 16px 14px; } .step .num{ left:16px; top:14px; } }
+  @media (prefers-reduced-motion: reduce){ .blob{ animation:none; } *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="wrap">
+  <nav class="tabs" aria-label="Sections">
+    <a href="index.html">Arcade</a>
+    <a href="dojo.html">Courses</a>
+    <a href="resources.html">Resources</a>
+    <a href="training.html">Practice</a>
+    <a href="create.html">Create</a>
+  </nav>
+
+  <header class="top">
+    <span class="eyebrow">Tenor banjo · GDAE · from scratch</span>
+    <h1>Learn Tenor Banjo</h1>
+    <p class="lede">Never played a note? Here’s where to start — six steps from tuning up to your first session tunes, using free tools you can open right here. No sign-up needed.</p>
+  </header>
+
+  <div class="note">
+    <p class="who">From William</p>
+    <p>I teach tenor banjo and Irish trad, and this is the order I start a new adult student in. Take each step at your own pace — a week each is about right — and don’t rush past the slow bits. Ten or fifteen minutes a day does more than an hour on a Sunday.</p>
+    <p>You’ll need a tenor banjo tuned <b>G D A E</b> (the Irish tuning — the same notes as a fiddle or mandolin, an octave lower) and a plectrum. Some of the tools listen to you through the microphone, so a phone or laptop with a mic is ideal.</p>
+  </div>
+
+  <div class="progress"><span id="progText">0 of 6 steps done</span><div class="bar"><i id="progBar"></i></div></div>
+
+  <section class="step" data-step="1">
+    <div class="num">1</div>
+    <h2>Tune up, and hear when you’re out</h2>
+    <p class="when">Week one · every time you pick it up</p>
+    <p>Everything sounds wrong on a banjo that’s out of tune, so this comes first, every time. The four strings, low to high, are <b>G D A E</b>. Use the tuner to get each one right, then train your ear to hear it for yourself.</p>
+    <ul>
+      <li>Hold the plectrum between your thumb and the side of your first finger, with only a little of the tip showing. Keep it relaxed.</li>
+      <li>Pick down–up–down–up on one string, slowly and evenly, before you worry about anything else.</li>
+    </ul>
+    <div class="go">
+      <a class="main" href="tuner.html?inst=banjo">Tuner →</a>
+      <a href="Banjo/in-tune-banjo.html">In Tune? (banjo) →</a>
+      <a href="Banjo/out-of-tune-banjo.html">Out of Tune? (banjo) →</a>
+    </div>
+    <label class="tick"><input type="checkbox"> I can tune my banjo</label>
+  </section>
+
+  <section class="step" data-step="2">
+    <div class="num">2</div>
+    <h2>Find your way round the neck</h2>
+    <p class="when">Week one to two</p>
+    <p>Before tunes, get to know where the notes are. In first position almost everything you need is on the open strings and the first five frets. Play a note, say its name — the game below does the testing for you.</p>
+    <ul>
+      <li>A tenor banjo neck is long, so most trad players don’t use one finger per fret. Try your first finger on fret 2, middle finger on 3 or 4, and little finger on 5.</li>
+    </ul>
+    <div class="go">
+      <a class="main" href="Banjo/what-note-banjo.html">What Note? (banjo) →</a>
+      <a href="find-the-note.html?inst=banjo">Every note on the neck →</a>
+    </div>
+    <label class="tick"><input type="checkbox"> I can find the notes up to fret 5</label>
+  </section>
+
+  <section class="step" data-step="3">
+    <div class="num">3</div>
+    <h2>Your first scale: D major</h2>
+    <p class="when">Week two to three</p>
+    <p>D major is the key of more session tunes than any other, so it’s the scale to know first: open D string, then up across the A and E strings. Play it slowly with the metronome on about 60, evenly, down–up with the pick.</p>
+    <div class="go">
+      <a class="main" href="scales/tenor-banjo/d-major-scale.html">D major on tenor banjo →</a>
+      <a href="Banjo/what-note-banjo.html?scale=d-major">What Note? in D major →</a>
+      <a href="metronome.html">Metronome →</a>
+    </div>
+    <label class="tick"><input type="checkbox"> I can play D major up and down, in time</label>
+  </section>
+
+  <section class="step" data-step="4">
+    <div class="num">4</div>
+    <h2>Your first tune: a polka in D</h2>
+    <p class="when">Week three to five</p>
+    <p>Polkas are short, bouncy and sit right inside that D major scale — the classic first tunes. Open one in the Melody Trainer: it shows the tune on the stave and waits for you to play each note on your banjo before it moves on, so you can go as slowly as you need.</p>
+    <div class="go">
+      <a class="main" href="melody-trainer_1.html?tune=The%20Britches%20Full%20Of%20Stitches">The Britches Full of Stitches →</a>
+      <a href="melody-trainer_1.html?tune=John%20Ryan%27s">John Ryan’s Polka →</a>
+    </div>
+    <label class="tick"><input type="checkbox"> I can play a polka from start to finish</label>
+  </section>
+
+  <section class="step" data-step="5">
+    <div class="num">5</div>
+    <h2>A second key: G major, and a jig</h2>
+    <p class="when">Week five to seven</p>
+    <p>G major is the other big session key — the same idea as D, starting from the open G string. Then try your first jig: jigs go in threes (“di-dle-dy, di-dle-dy”), a new feel after the polkas.</p>
+    <div class="go">
+      <a class="main" href="scales/tenor-banjo/g-major-scale.html">G major on tenor banjo →</a>
+      <a href="melody-trainer_1.html?tune=The%20Kesh">The Kesh (jig) →</a>
+      <a href="melody-trainer_1.html?tune=The%20Stack%20Of%20Barley">The Stack of Barley (barndance) →</a>
+    </div>
+    <label class="tick"><input type="checkbox"> I can play a jig in G</label>
+  </section>
+
+  <section class="step" data-step="6">
+    <div class="num">6</div>
+    <h2>Keep your ears growing</h2>
+    <p class="when">From here on</p>
+    <p>Trad is learned by ear as much as off the page. A few minutes of ear training a day makes picking up tunes at a session far easier. When D and G feel at home, the minor keys come next — E minor and A minor turn up in a great many reels.</p>
+    <div class="go">
+      <a class="main" href="Ear%20Training/pitch-practice.html">Pitch Practice →</a>
+      <a href="scales/tenor-banjo/e-minor-scale.html">E minor →</a>
+      <a href="scales/tenor-banjo/a-minor-scale.html">A minor →</a>
+      <a href="chords.html?inst=banjo">Banjo chords →</a>
+    </div>
+    <label class="tick"><input type="checkbox"> I practise my ears most days</label>
+  </section>
+
+  <div class="lessons">
+    <h2>Want someone to hear you play?</h2>
+    <p>A tool can tell you the right note — a teacher can tell you why it doesn’t sound like the recording yet. If you’d like lessons, get in touch.</p>
+    <a href="https://williamtroymusic.com">Lessons with William →</a>
+  </div>
+
+  <div class="foot"><p><a href="resources.html">&larr; Back to Resources</a></p></div>
+</div>
+
+<script>
+/* Ticks are a convenience for the person working through the plan, kept on
+   this device only. If storage is blocked the page still works, it just
+   won't remember. */
+(function(){
+  var KEY = 'wtm_learnbanjo_done';
+  var done = {};
+  try { done = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){ done = {}; }
+  var steps = [].slice.call(document.querySelectorAll('.step'));
+  function paint(){
+    var n = 0;
+    steps.forEach(function(s){ var on = !!done[s.dataset.step]; s.classList.toggle('done', on);
+      s.querySelector('input').checked = on; if(on) n++; });
+    document.getElementById('progText').textContent = n + ' of ' + steps.length + ' steps done';
+    document.getElementById('progBar').style.width = (100 * n / steps.length) + '%';
+  }
+  steps.forEach(function(s){
+    s.querySelector('input').addEventListener('change', function(){
+      done[s.dataset.step] = this.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e){}
+      paint();
+    });
+  });
+  paint();
+})();
+</script>
+<script src="/tools.js"></script>
+<script src="/related.js"></script>
+</body>
+</html>

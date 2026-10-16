@@ -108,6 +108,23 @@
   .btn.primary.on{ background:var(--pink); }
   .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
 
+  /* instrument picker + the strings of the chosen instrument */
+  .insts{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:0 0 12px; }
+  .insts button{ font-family:var(--mono); font-size:.72rem; letter-spacing:.04em; cursor:pointer; padding:7px 10px;
+    border:2px solid var(--ink); background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
+  .insts button:active{ transform:translate(2px,2px); box-shadow:none; }
+  .insts button.on{ background:var(--ink); color:var(--paper); box-shadow:2px 2px 0 var(--pink); }
+  .strings{ display:flex; gap:8px; justify-content:center; margin:0 0 14px; min-height:0; }
+  .strings:empty{ display:none; }
+  .strings button{ font-family:var(--display); font-weight:800; font-size:1.15rem; min-width:46px; padding:6px 8px 4px; cursor:pointer;
+    border:2.5px solid var(--ink); background:#FBF7EE; color:var(--ink); box-shadow:3px 3px 0 var(--ink); line-height:1.05; }
+  .strings button small{ display:block; font-family:var(--mono); font-weight:400; font-size:.58rem; color:var(--muted); }
+  .strings button.near{ background:#E4E8FB; }
+  .strings button.lock{ outline:3px solid var(--blue); outline-offset:2px; }
+  .strings button.ok{ background:var(--green); color:#fff; } .strings button.ok small{ color:#e6f5ec; }
+  .stringhint{ text-align:center; font-family:var(--mono); font-size:.64rem; color:var(--muted); margin:-6px 0 12px; }
+  .stringhint:empty{ display:none; }
+
   @media (prefers-reduced-motion:reduce){ *{ transition:none!important; } }
 </style>
 </head>
@@ -122,6 +139,9 @@
     </header>
 
     <div class="panel">
+      <div class="insts" id="insts" role="group" aria-label="Instrument"></div>
+      <div class="strings" id="strings"></div>
+      <div class="stringhint" id="stringhint"></div>
       <div class="readout">
         <div class="note" id="note">&mdash;</div>
         <div class="cents" id="cents">&nbsp;</div>
@@ -166,6 +186,21 @@
   const K = 0.9;                 // MPM peak-pick threshold (fraction of global max)
   const IN_TUNE_CENTS = 5;       // |cents| within this reads "in tune"
   const SMOOTH = 5;              // median window for the displayed frequency
+
+  /* Pick an instrument and the tuner fixes to its strings: whatever you play
+     is measured against the nearest string's own note, so it reads "D string,
+     12¢ flat" rather than naming whatever chromatic note is closest. Tap a
+     string to hold the tuner on it (and hear the note); tap again to let go.
+     Strings are listed low to high as a player names them; midi numbers. */
+  const INSTRUMENTS = {
+    chromatic: { label:'Chromatic', strings:null },
+    banjo:   { label:'Banjo',   sub:'tenor banjo · G D A E (Irish)', strings:[43,50,57,64] },
+    ukulele: { label:'Ukulele', sub:'ukulele · G C E A', strings:[67,60,64,69] },
+    guitar:  { label:'Guitar',  sub:'guitar · E A D G B E', strings:[40,45,50,55,59,64] },
+    violin:  { label:'Violin',  sub:'violin / fiddle · G D A E', strings:[55,62,69,76] },
+    cello:   { label:'Cello',   sub:'cello · C G D A', strings:[36,43,50,57] },
+  };
+  let inst = 'chromatic', locked = null, nearIdx = -1;
 
   const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const noteName = midi => NOTES[(midi%12+12)%12] + (Math.floor(midi/12) - 1);
@@ -301,7 +336,26 @@
 
   function render(){
     const noteEl = el('note'), centsEl = el('cents'), hzEl = el('hz'), meterEl = el('meter');
-    if(hasReading && ring.length){
+    const strs = INSTRUMENTS[inst].strings;
+    if(hasReading && ring.length && strs){
+      const f = median(ring);
+      // nearest string by pitch, unless one is held
+      let best = 0, bestAbs = Infinity;
+      strs.forEach((m, i) => { const d = Math.abs(1200*Math.log2(f/midiFreq(m))); if(d < bestAbs){ bestAbs = d; best = i; } });
+      const i = locked != null ? locked : best;
+      const m = strs[i], ref = midiFreq(m), cents = 1200*Math.log2(f/ref);
+      const inTune = Math.abs(cents) <= IN_TUNE_CENTS;
+      noteEl.innerHTML = NOTES[m%12] + '<span class="oct">' + (Math.floor(m/12)-1) + '</span>';
+      noteEl.className = 'note ' + (inTune ? 'intune' : 'lit');
+      const c = Math.round(cents);
+      centsEl.textContent = Math.abs(c) > 50 ? (c < 0 ? 'way flat — tune up ↑' : 'way sharp — tune down ↓')
+                          : inTune ? 'in tune' : (c>0?'+':'') + c + '¢  ' + (c < 0 ? 'tune up ↑' : 'tune down ↓');
+      centsEl.className = 'cents' + (inTune ? ' intune' : '');
+      hzEl.textContent = f.toFixed(1) + ' Hz   ·   ' + noteName(m) + ' string = ' + ref.toFixed(1) + ' Hz';
+      targetCents = Math.max(-50, Math.min(50, cents));
+      meterEl.classList.toggle('intune', inTune);
+      markStrings(i, inTune);
+    } else if(hasReading && ring.length){
       const f = median(ring);
       const n = freqToNote(f);
       const inTune = Math.abs(n.cents) <= IN_TUNE_CENTS;
@@ -314,7 +368,9 @@
       targetCents = Math.max(-50, Math.min(50, n.cents));
       meterEl.classList.toggle('intune', inTune);
     } else {
-      noteEl.innerHTML = '&mdash;'; noteEl.className = 'note';
+      noteEl.innerHTML = (strs && locked != null) ? NOTES[strs[locked]%12] + '<span class="oct">' + (Math.floor(strs[locked]/12)-1) + '</span>' : '&mdash;';
+      noteEl.className = 'note';
+      if(strs) markStrings(-1, false);
       centsEl.textContent = ''; centsEl.className = 'cents';
       hzEl.textContent = '';
       targetCents = 0; meterEl.classList.remove('intune');
@@ -326,6 +382,52 @@
   // ---- wiring ----
   el('micBtn').addEventListener('click', () => { if(!micSrc) startMic(); });
   el('testBtn').addEventListener('click', testTone);
+
+  function midiFreq(m){ return 440 * Math.pow(2, (m-69)/12); }
+
+  function markStrings(i, ok){
+    [].forEach.call(el('strings').children, (b, k) => {
+      b.classList.toggle('near', k === i); b.classList.toggle('ok', k === i && ok); });
+  }
+
+  // a reference note for the string you're tuning — through the speakers only, not into the detector
+  function playRef(m){
+    ensureCtx();
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+    o.type = 'triangle'; o.frequency.value = midiFreq(m);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t+0.03);
+    g.gain.setValueAtTime(0.22, t+1.2); g.gain.exponentialRampToValueAtTime(0.0001, t+1.6);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+1.65);
+  }
+
+  function setInst(k){
+    if(!INSTRUMENTS[k]) k = 'chromatic';
+    inst = k; locked = null; nearIdx = -1;
+    try { localStorage.setItem('wtm_tuner_inst', k); } catch(e){}
+    [].forEach.call(el('insts').children, b => b.classList.toggle('on', b.dataset.k === k));
+    const I = INSTRUMENTS[k], box = el('strings'); box.innerHTML = '';
+    document.querySelector('.subtitle').textContent = I.strings ? I.sub : 'chromatic · any instrument';
+    el('stringhint').textContent = I.strings ? 'Play any string — or tap one to hold the tuner on it and hear the note.' : '';
+    (I.strings || []).forEach((m, i) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.innerHTML = NOTES[m%12] + '<small>' + noteName(m) + '</small>';
+      b.title = noteName(m) + ' — tap to hold the tuner on this string';
+      b.addEventListener('click', () => {
+        locked = (locked === i) ? null : i;
+        [].forEach.call(box.children, (x, j) => x.classList.toggle('lock', j === locked));
+        if(locked != null) playRef(m);
+      });
+      box.appendChild(b);
+    });
+  }
+  Object.keys(INSTRUMENTS).forEach(k => {
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.textContent = INSTRUMENTS[k].label;
+    b.addEventListener('click', () => setInst(k)); el('insts').appendChild(b);
+  });
+  // ?inst=banjo from the banjo start page and the games; otherwise the last one you used
+  let startInst = new URLSearchParams(location.search).get('inst');
+  if(!INSTRUMENTS[startInst]){ try { startInst = localStorage.getItem('wtm_tuner_inst'); } catch(e){ startInst = null; } }
+  setInst(startInst || 'chromatic');
 
   // idle needle render so the meter isn't blank before starting
   render();

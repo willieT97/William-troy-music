@@ -45,6 +45,8 @@ PAGES = {
     'Play the songs other people built in the Music Arcade song makers, and vote your favourites up the charts.'),
   'upgrade.html': ('Go Pro — Music Arcade', 'Unlock every course and practice pack on the Music Arcade.'),
 
+  'learn-banjo.html': (None, None),   # title + description written in the page itself
+
   # ---- reference + theory ----
   'chords.html': ('Chord charts for piano, guitar & tenor banjo — printable | Music Arcade',
     'Every major and minor chord drawn out for piano, guitar or Irish tenor banjo (GDAE). Beginner, intermediate and full circle-of-fifths sets, made to print.'),
