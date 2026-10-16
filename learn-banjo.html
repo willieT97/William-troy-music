@@ -7,13 +7,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Learn Tenor Banjo — a free step-by-step start for adult beginners | Music Arcade</title>
+<title>Beginner Banjo — learn Irish tenor banjo from scratch, free | Music Arcade</title>
 <!-- seo: written by seo.py — edit PAGES there, not here -->
 <link rel="canonical" href="https://themusicarcade.com/learn-banjo.html" />
 <meta property="og:site_name" content="The Music Arcade" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://themusicarcade.com/learn-banjo.html" />
-<meta property="og:title" content="Learn Tenor Banjo — a free step-by-step start for adult beginners | Music Arcade" />
+<meta property="og:title" content="Beginner Banjo — learn Irish tenor banjo from scratch, free | Music Arcade" />
 <meta property="og:description" content="Never played? A free, step-by-step start on Irish tenor banjo (GDAE) from a banjo teacher: tune up, learn D major, play your first polka and a slow waltz, then the notes on the neck." />
 <meta property="og:image" content="https://themusicarcade.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -21,106 +21,155 @@
 <meta name="description" content="Never played? A free, step-by-step start on Irish tenor banjo (GDAE) from a banjo teacher: tune up, learn D major, play your first polka and a slow waltz, then the notes on the neck." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
 <style>
   /* ====================================================================
-     LEARN TENOR BANJO — a starting plan for a grown-up beginner with no
+     BEGINNER BANJO — a starting plan for a grown-up beginner with no
      teacher yet. It builds nothing new: each step points at tools the site
      already has, in the order William starts a new adult student.
-     Dressed like the Practice hub (training.html), which follows the
-     Melody Trainer. The address people are given is /learn-banjo.
+     Dressed as a handwritten page on parchment (William's choice) — its own
+     look, not the Practice hub's. Caveat for headings, Patrick Hand for the
+     reading text. The address people are given stays /learn-banjo.
      ==================================================================== */
   :root{
-    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A; --green:#1F9D55;
-    --inset:#FBF7EC; --muted:#6F6757;
-    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,-apple-system,sans-serif; --mono:'Space Mono',monospace;
+    --parch:#F1E3C2; --parch-hi:#F8EDD3; --parch-lo:#E2CC9C;
+    --ink:#3B2716; --ink-soft:#6A4E33; --rust:#A4472B; --green:#3E6B3A; --blue:#2F4F7A;
+    --hand:'Patrick Hand','Comic Sans MS',cursive; --script:'Caveat','Patrick Hand',cursive;
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
-  body{ background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55;
-    min-height:100vh; overflow-x:hidden; position:relative; -webkit-font-smoothing:antialiased; }
-  body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:5; opacity:.05;
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="180" height="180" filter="url(%23n)" opacity="0.55"/></svg>'); }
-  .blob{ position:fixed; width:46vw; height:46vw; max-width:560px; max-height:560px; border-radius:50%;
-    filter:blur(70px); mix-blend-mode:multiply; opacity:.16; pointer-events:none; z-index:0; }
-  .blob.b1{ background:var(--blue); top:-12%; left:-10%; animation:drift1 26s ease-in-out infinite alternate; }
-  .blob.b2{ background:var(--pink); bottom:-14%; right:-8%; animation:drift2 31s ease-in-out infinite alternate; }
-  @keyframes drift1{ to{ transform:translate(9vw,7vh) scale(1.12); } }
-  @keyframes drift2{ to{ transform:translate(-8vw,-6vh) scale(0.92); } }
+  body{ color:var(--ink); font-family:var(--hand); font-size:19px; line-height:1.5; min-height:100vh; overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    background-color:var(--parch);
+    /* parchment: a warm centre, foxed and darker toward the edges, with a few soft stains */
+    background-image:
+      radial-gradient(ellipse at 50% 40%, rgba(255,250,235,.55) 0%, rgba(255,250,235,0) 60%),
+      radial-gradient(ellipse at 12% 18%, rgba(160,110,50,.14) 0%, rgba(160,110,50,0) 32%),
+      radial-gradient(ellipse at 88% 72%, rgba(150,95,40,.16) 0%, rgba(150,95,40,0) 30%),
+      radial-gradient(ellipse at 70% 8%,  rgba(170,120,60,.10) 0%, rgba(170,120,60,0) 26%),
+      radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(110,70,25,.30) 100%);
+    background-attachment:fixed; }
+  /* paper texture, three layers: a fine gritty grain (the tooth of the paper),
+     faint fibres running across it, and a slow blotchy mottling, all in
+     sepia and multiplied onto the parchment colour */
+  body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:0; mix-blend-mode:multiply; opacity:.55;
+    background-image:
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="g"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 0.42  0 0 0 0 0.28  0 0 0 0 0.12  0 0 0 1.05 -0.2"/></filter><rect width="180" height="180" filter="url(%23g)"/></svg>'),
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><filter id="f"><feTurbulence type="fractalNoise" baseFrequency="0.02 0.25" numOctaves="3" seed="8"/><feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0 0.14  0 0 0 0.6 -0.32"/></filter><rect width="400" height="400" filter="url(%23f)"/></svg>'),
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="700" height="700"><filter id="m"><feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="4" seed="21"/><feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.33  0 0 0 0 0.12  0 0 0 0.75 -0.22"/></filter><rect width="700" height="700" filter="url(%23m)"/></svg>');
+  }
 
-  .wrap{ max-width:760px; margin:0 auto; padding:32px 16px 70px; position:relative; z-index:1; }
+  .wrap{ max-width:760px; margin:0 auto; padding:30px 16px 70px; position:relative; z-index:1; }
 
-  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
-  .tabs a{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
-    text-decoration:none; color:var(--ink); padding:8px 15px; border:2px solid var(--ink);
-    background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); transition:transform .08s, background .12s; }
-  .tabs a:hover{ background:#fff; }
-  .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--hand); font-size:17px; text-decoration:none; color:var(--ink); padding:4px 14px;
+    border:1.8px solid var(--ink-soft); border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; background:rgba(255,248,230,.5); }
+  .tabs a:hover{ background:rgba(255,248,230,.95); }
+  .tabs a.cur{ background:var(--ink); color:var(--parch-hi); border-color:var(--ink); }
 
-  header.top{ text-align:center; margin:6px 0 30px; }
-  .eyebrow{ display:inline-block; font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase;
-    border:1.5px solid var(--ink); border-radius:99px; padding:4px 10px; background:var(--paper); margin-bottom:14px; }
-  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(34px,7vw,56px); line-height:1.02; letter-spacing:-.01em; margin:0;
-    text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
-  .lede{ max-width:54ch; margin:16px auto 0; font-size:1.06rem; }
+  header.top{ text-align:center; margin:4px 0 26px; }
+  h1{ font-family:var(--script); font-weight:700; font-size:clamp(56px,13vw,96px); line-height:.95; margin:0; color:var(--ink);
+    transform:rotate(-1.5deg); text-shadow:1px 1px 0 rgba(255,250,235,.6); }
+  /* The title is drawn stroke by stroke as the page opens, like a pen
+     writing it (Vara.js, script below). Until the drawing is ready the words
+     sit there invisibly so the layout doesn't jump; if the library can't
+     load, they simply show in Caveat. */
+  /* the words stay in the h1 for search engines and screen readers, hidden from view */
+  h1 .ttl-text{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  h1.plain .ttl-text{ position:static; width:auto; height:auto; overflow:visible; clip:auto; }
+  h1 .ttl-pen{ display:block; width:min(560px,92vw); margin:0 auto; min-height:clamp(60px,15vw,96px); }
+  h1.plain .ttl-pen{ display:none; }
+  h1 .ttl-pen svg{ display:block; overflow:visible; }
+  .uline{ display:block; width:62%; max-width:430px; height:12px; margin:2px auto 0; overflow:visible; }
+  .uline path{ fill:none; stroke:var(--rust); stroke-width:3; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1; }
+  .uline.on path{ transition:stroke-dashoffset .55s ease-out; stroke-dashoffset:0; }
+  @media (prefers-reduced-motion: reduce){ .uline path{ stroke-dashoffset:0; } }
+  .lede{ max-width:52ch; margin:16px auto 0; font-size:21px; }
 
-  .note{ background:var(--inset); border:2px solid var(--ink); border-radius:14px; box-shadow:5px 5px 0 var(--ink);
-    padding:16px 18px; margin:0 0 30px; }
+  /* Every box is a torn sheet of white paper laid on the parchment: an ink
+     outline with rips and a folded corner, a heavy black shadow, and a strip of
+     a second, hatched sheet peeking out behind — drawn by the script at the
+     bottom to the box's exact size, and torn differently for each box. */
+  .note,.step,.lessons{ position:relative; isolation:isolate; }
+  svg.paper{ position:absolute; z-index:-1; pointer-events:none; overflow:visible; }
+  /* a note pinned to the page */
+  .note{ padding:18px 22px; margin:0 0 38px; transform:rotate(.4deg); }
   .note p{ margin:0 0 8px; } .note p:last-child{ margin:0; }
-  .note .who{ font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  .note .who{ font-family:var(--script); font-size:28px; font-weight:700; color:var(--rust); margin-bottom:2px; }
 
-  .progress{ font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; text-align:center; margin:0 0 14px; }
-  .bar{ height:10px; border:2px solid var(--ink); border-radius:99px; background:var(--paper); overflow:hidden; margin:6px auto 0; max-width:320px; }
+  .progress{ font-family:var(--hand); font-size:18px; text-align:center; margin:0 0 16px; color:var(--ink-soft); }
+  .bar{ height:12px; border:1.8px solid var(--ink-soft); border-radius:99px 40px 99px 40px; background:rgba(255,248,230,.6); overflow:hidden; margin:6px auto 0; max-width:320px; }
   .bar i{ display:block; height:100%; width:0; background:var(--green); transition:width .25s; }
 
-  .step{ position:relative; background:var(--paper); border:2px solid var(--ink); border-radius:14px; box-shadow:5px 5px 0 var(--ink);
-    padding:18px 18px 16px 70px; margin:0 0 22px; }
-  .step .num{ position:absolute; left:16px; top:16px; width:40px; height:40px; border-radius:50%; border:2px solid var(--ink);
-    display:flex; align-items:center; justify-content:center; font-family:var(--disp); font-weight:800; font-size:20px; background:#fff; }
-  .step.done .num{ background:var(--green); color:#fff; }
-  .step h2{ font-family:var(--disp); font-weight:700; font-size:15px; letter-spacing:.1em; text-transform:uppercase; margin:2px 0 4px; }
-  .step .when{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
+  .step{ padding:18px 20px 16px 76px; margin:0 0 36px; }
+  .step:nth-of-type(odd){ transform:rotate(-.25deg); } .step:nth-of-type(even){ transform:rotate(.3deg); }
+  .step .num{ position:absolute; left:16px; top:12px; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+    font-family:var(--script); font-weight:700; font-size:34px; color:var(--rust);
+    border:2px solid var(--rust); border-radius:50% 46% 52% 48% / 48% 52% 46% 50%; }
+  .step.done .num{ background:var(--green); border-color:var(--green); color:var(--parch-hi); }
+  .step h2{ font-family:var(--script); font-weight:700; font-size:32px; line-height:1.05; margin:0 0 2px; color:var(--ink); }
+  .step .when{ font-size:16px; color:var(--ink-soft); margin:0 0 8px; font-style:italic; }
   .step p{ margin:0 0 10px; }
-  .step ul{ margin:0 0 12px; padding-left:20px; } .step li{ margin:0 0 4px; }
+  .step ul{ margin:0 0 12px; padding-left:22px; } .step li{ margin:0 0 4px; }
+  .step b{ color:var(--rust); font-weight:400; text-decoration:underline; text-decoration-color:rgba(164,71,43,.35); text-underline-offset:3px; }
   .go{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0 12px; }
-  .go a{ font-family:var(--mono); font-weight:700; font-size:12.5px; text-decoration:none; color:var(--ink); background:#fff;
-    border:2px solid var(--ink); border-radius:10px; padding:8px 12px; box-shadow:3px 3px 0 var(--ink); transition:transform .08s; }
-  .go a:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
-  .go a.main{ background:var(--blue); color:#fff; }
-  .tick{ display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px; letter-spacing:.06em; cursor:pointer; user-select:none; }
-  .tick input{ width:18px; height:18px; accent-color:var(--green); cursor:pointer; }
+  .go a{ font-family:var(--hand); font-size:18px; text-decoration:none; color:var(--ink); background:rgba(255,248,230,.85);
+    border:1.8px solid var(--ink); border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; padding:5px 14px;
+    transition:transform .1s; }
+  .go a:hover{ transform:rotate(-1deg) translateY(-1px); background:#fffaf0; }
+  .go a.main{ background:var(--ink); color:var(--parch-hi); }
+  .go a.main:hover{ background:#2a1b0e; }
+  /* the teacher's red-pen nudge under the tick box, on the step you're on */
+  .nudge{ display:flex; align-items:flex-start; gap:2px; margin:-2px 0 0 4px; color:var(--rust); pointer-events:none;
+    font-family:var(--script); font-weight:700; font-size:25px; line-height:1; transform:rotate(-2deg); transform-origin:left; }
+  .nudge svg{ flex:none; width:58px; height:36px; overflow:visible; }
+  .nudge path{ fill:none; stroke:var(--rust); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:1; stroke-dashoffset:1; animation:nudgepen .5s .25s ease-out forwards; }
+  .nudge span{ margin-top:18px; opacity:0; animation:nudgein .35s .65s ease-out forwards; }
+  @keyframes nudgepen{ to{ stroke-dashoffset:0; } }
+  @keyframes nudgein{ to{ opacity:1; } }
+  .step.done .nudge{ display:none; }
+  @media (prefers-reduced-motion: reduce){ .nudge path{ animation:none; stroke-dashoffset:0; } .nudge span{ animation:none; opacity:1; } }
+  .tick{ display:inline-flex; align-items:center; gap:9px; font-size:18px; cursor:pointer; user-select:none; color:var(--ink-soft); }
+  .tick input{ width:19px; height:19px; accent-color:var(--green); cursor:pointer; }
 
-  .lessons{ background:var(--ink); color:var(--paper); border-radius:14px; box-shadow:5px 5px 0 var(--pink); padding:22px 20px; margin:34px 0 0; text-align:center; }
-  .lessons h2{ font-family:var(--disp); font-weight:800; font-size:24px; margin:0 0 8px; }
+  .lessons{ padding:22px; margin:40px 0 0; text-align:center; transform:rotate(-.4deg); }
+  .lessons h2{ font-family:var(--script); font-weight:700; font-size:36px; margin:0 0 6px; color:var(--rust); }
   .lessons p{ margin:0 auto 14px; max-width:50ch; }
-  .lessons a{ display:inline-block; font-family:var(--mono); font-weight:700; font-size:13px; text-decoration:none; color:var(--ink);
-    background:var(--paper); border:2px solid var(--paper); border-radius:10px; padding:10px 16px; box-shadow:3px 3px 0 var(--pink); }
+  .lessons a{ display:inline-block; font-family:var(--hand); font-size:19px; text-decoration:none; color:var(--parch-hi); background:var(--rust);
+    border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; padding:7px 18px; }
 
-  .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); }
+  .step[hidden]{ display:none; }
+  .step.arrive{ animation:arrive .6s ease-out; }
+  @keyframes arrive{ from{ opacity:0; transform:translateY(18px) rotate(-1.2deg); } }
+  .tocome{ text-align:center; font-family:var(--script); font-size:26px; color:var(--ink-soft); margin:-8px 0 10px; }
+  .tocome[hidden]{ display:none; }
+  .foot{ margin-top:30px; text-align:center; font-size:17px; color:var(--ink-soft); }
   .foot a{ color:var(--blue); text-decoration:none; }
-  @media (max-width:520px){ .step{ padding:66px 16px 14px; } .step .num{ left:16px; top:14px; } }
-  @media (prefers-reduced-motion: reduce){ .blob{ animation:none; } *{ transition:none !important; } }
+  /* the shared footers/chips from other scripts keep their own look; just let them sit on the paper */
+  @media (max-width:520px){ body{ font-size:18px; } .step{ padding:62px 15px 14px; } .step .num{ left:15px; top:12px; } }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } .step.arrive{ animation:none; } }
+  @media print{ body{ background:#fff; } body::before{ display:none; } .tabs,.progress,.tick{ display:none; } .step,.note,.lessons{ transform:none; } }
 </style>
 </head>
 <body>
-<div class="blob b1"></div><div class="blob b2"></div>
 <div class="wrap">
   <nav class="tabs" aria-label="Sections">
     <a href="index.html">Arcade</a>
-    <a href="dojo.html">Courses</a>
+    <a href="dojo.html" class="cur" aria-current="page">Courses</a>
     <a href="resources.html">Resources</a>
     <a href="training.html">Practice</a>
     <a href="create.html">Create</a>
   </nav>
 
   <header class="top">
-    <span class="eyebrow">Tenor banjo · GDAE · from scratch</span>
-    <h1>Learn Tenor Banjo</h1>
+    <h1 id="ttl"><span class="ttl-text">Beginner Banjo</span><span class="ttl-pen" id="ttlPen" aria-hidden="true"></span></h1>
+    <svg class="uline" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 8 C 60 2, 120 11, 180 5 S 270 3, 297 7"/></svg>
     <p class="lede">Never played a note? Here’s where to start — seven steps from tuning up to your first session tunes, using free tools you can open right here. No sign-up needed.</p>
   </header>
 
   <div class="note">
-    <p class="who">From William</p>
+    <p class="who">A note from William</p>
     <p>I teach tenor banjo and Irish trad, and this is the order I start a new adult student in. Take each step at your own pace — a week each is about right — and don’t rush past the slow bits. Ten or fifteen minutes a day does more than an hour on a Sunday.</p>
     <p>You’ll need a tenor banjo tuned <b>G D A E</b> (the Irish tuning — the same notes as a fiddle or mandolin, an octave lower) and a plectrum. Some of the tools listen to you through the microphone, so a phone or laptop with a mic is ideal.</p>
   </div>
@@ -228,16 +277,139 @@
     <label class="tick"><input type="checkbox"> I play back a phrase by ear most days</label>
   </section>
 
+  <p class="tocome" id="toCome" hidden></p>
+
   <div class="lessons">
     <h2>Want someone to hear you play?</h2>
     <p>A tool can tell you the right note — a teacher can tell you why it doesn’t sound like the recording yet. If you’d like lessons, get in touch.</p>
     <a href="https://williamtroymusic.com">Lessons with William →</a>
   </div>
 
-  <div class="foot"><p><a href="resources.html">&larr; Back to Resources</a></p></div>
+  <div class="foot"><p><a href="dojo.html">&larr; Back to Courses</a></p></div>
 </div>
 
 <script>
+/* ---- torn paper sheets behind each box ----
+   A seeded random tear per box (so each looks different, but the same every
+   visit), redrawn whenever the box changes size. */
+(function(){
+  const NS = 'http://www.w3.org/2000/svg', INK = '#1d140c', PAD = 16;
+  function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  // one edge from a to b, wobbling a little, with rips cut into it
+  function edge(a, b, r, rips){
+    const pts = [], len = Math.hypot(b[0]-a[0], b[1]-a[1]), n = Math.max(2, Math.round(len/16));
+    const ux = (b[0]-a[0])/len, uy = (b[1]-a[1])/len, nx = -uy, ny = ux;   // along, and inward (for a clockwise sheet)
+    const at = rips.map(() => 0.15 + r()*0.7).sort();
+    let k = 0;
+    for(let i=1; i<=n; i++){
+      const t = i/n;
+      if(k < at.length && t >= at[k]){                // a rip: in, a jagged flick, back out
+        const d = 7 + r()*9, w = 6 + r()*8, x = a[0]+ux*len*at[k], y = a[1]+uy*len*at[k];
+        pts.push([x - ux*w*.5, y - uy*w*.5]);
+        pts.push([x + nx*d*.55 - ux*w*.15, y + ny*d*.55 - uy*w*.15]);
+        pts.push([x + nx*d + ux*w*.25, y + ny*d + uy*w*.25]);
+        pts.push([x + nx*d*.35 + ux*w*.35, y + ny*d*.35 + uy*w*.35]);
+        pts.push([x + ux*w*.6, y + uy*w*.6]);
+        k++;
+      }
+      const j = (r()-.5)*2.4;
+      pts.push([a[0]+(b[0]-a[0])*t + nx*j, a[1]+(b[1]-a[1])*t + ny*j]);
+    }
+    return pts;
+  }
+  const P = pts => 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L') + ' Z';
+  function draw(box, seed){
+    const r = rng(seed), W = box.offsetWidth, H = box.offsetHeight;
+    let svg = box.querySelector(':scope > svg.paper');
+    if(!svg){ svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'paper'); svg.setAttribute('aria-hidden', 'true'); box.prepend(svg); }
+    svg.setAttribute('width', W + PAD*2); svg.setAttribute('height', H + PAD*2);
+    svg.style.left = -PAD + 'px'; svg.style.top = -PAD + 'px';
+    const j = () => (r()-.5)*5, o = PAD;
+    let tl = [o+j(), o+j()], tr = [o+W+j(), o+j()], br = [o+W+j(), o+H+j()], bl = [o+j(), o+H+j()];
+    // a folded corner on one of the top corners, now and then
+    const fold = r() < .7 ? (r() < .5 ? 'tl' : 'tr') : null, fs = 14 + r()*10;
+    const top = [], right = [], bottom = [], left = [];
+    const topRips = [0,0].slice(0, 1 + (r() < .45 ? 1 : 0)), sideRip = r() < .4 ? [0] : [];
+    let start = tl, end = tr;
+    if(fold === 'tl') start = [tl[0]+fs, tl[1]];
+    if(fold === 'tr') end = [tr[0]-fs, tr[1]];
+    const pts = [];
+    if(fold === 'tl') pts.push([tl[0], tl[1]+fs]);
+    pts.push(start, ...edge(start, end, r, topRips));
+    if(fold === 'tr') pts.push([tr[0], tr[1]+fs]);
+    pts.push(...edge(fold === 'tr' ? [tr[0], tr[1]+fs] : tr, br, r, r() < .5 ? sideRip : []));
+    pts.push(...edge(br, bl, r, r() < .3 ? [0] : []));
+    pts.push(...edge(bl, fold === 'tl' ? [tl[0], tl[1]+fs] : tl, r, r() < .5 ? [] : sideRip));
+    // the shadow: heavy and wedge-shaped, falling to one side and below
+    const side = r() < .5 ? -1 : 1, sx = side*(5 + r()*4);
+    const shadow = pts.map(p => { const f = (p[1]-o)/H; return [p[0] + sx*(.25 + .75*f), p[1] + 3 + 9*f]; });
+    // a second sheet behind, showing as a hatched strip on the other side
+    const back = pts.map(p => { const f = (p[1]-o)/H; return [p[0] - side*(4 + 4*f), p[1] + 2 - 3*f]; });
+    const id = 'h' + seed;
+    let s = '<defs><pattern id="' + id + '" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(' + (30 + r()*30).toFixed(0) + ')">' +
+            '<rect width="6" height="6" fill="#fff"/><path d="M0 3 H6" stroke="' + INK + '" stroke-width="1.6" stroke-dasharray="2 1.5"/></pattern></defs>';
+    s += '<path d="' + P(shadow) + '" fill="' + INK + '"/>';
+    s += '<path d="' + P(back) + '" fill="url(#' + id + ')" stroke="' + INK + '" stroke-width="1"/>';
+    s += '<path d="' + P(pts) + '" fill="#FFFEF9" stroke="' + INK + '" stroke-width="2.4" stroke-linejoin="round"/>';
+    if(fold){                                        // the folded-over flap
+      const c = fold === 'tl' ? tl : tr, sg = fold === 'tl' ? 1 : -1;
+      const a = [c[0] + sg*fs, c[1]], b = [c[0], c[1] + fs], tip = [c[0] + sg*fs*.85, c[1] + fs*.85];
+      s += '<path d="' + P([a, tip, b]) + '" fill="#ECE6DA" stroke="' + INK + '" stroke-width="2" stroke-linejoin="round"/>';
+    }
+    svg.innerHTML = s;
+  }
+  const boxes = [...document.querySelectorAll('.note, .step, .lessons')];
+  const seeds = boxes.map((b, i) => 7919 * (i + 3));
+  const redraw = () => boxes.forEach((b, i) => draw(b, seeds[i]));
+  redraw();
+  if(window.ResizeObserver){ let q = 0; const ro = new ResizeObserver(() => { cancelAnimationFrame(q); q = requestAnimationFrame(redraw); });
+    boxes.forEach(b => ro.observe(b)); }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);   // the handwriting font changes the heights
+})();
+
+/* The title is drawn the way a pen writes it: each stroke traced in order
+   by Vara.js (MIT) with its Satisfy single-line handwriting font, then the
+   underline. Reduced motion, or no library: the words just show (Caveat). */
+(function(){
+  const h = document.getElementById('ttl'), pen = document.getElementById('ttlPen'), line = document.querySelector('.uline');
+  const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FONTS = {                                   // ?pen=shadows to compare
+    satisfy: 'https://cdn.jsdelivr.net/npm/vara@1.4.1/fonts/Satisfy/SatisfySL.json',
+    shadows: 'https://cdn.jsdelivr.net/npm/vara@1.4.1/fonts/Shadows-Into-Light/shadows-into-light.json',
+  };
+  const font = FONTS[new URLSearchParams(location.search).get('pen')] || FONTS.satisfy;
+  let done = false;
+  function plain(){ if(done) return; done = true; pen.innerHTML = ''; h.classList.add('plain'); line.classList.add('on'); }
+  if(still){ plain(); return; }
+  const giveUp = setTimeout(plain, 3500);           // library or font too slow: show the words
+  function draw(){
+    if(done || !window.Vara){ plain(); return; }
+    const w = pen.clientWidth, size = Math.max(36, Math.min(68, w / 7.4));
+    try {
+      const v = new Vara('#ttlPen', font, [{ text:'Beginner Banjo', duration:2600, letterSpacing:{ j:-9, global:0 } }],
+        { fontSize:size, strokeWidth:2.2, color:'#3B2716', textAlign:'center' });
+      v.ready(() => { clearTimeout(giveUp); done = true; seatLine(); });
+      v.animationEnd(() => line.classList.add('on'));
+    } catch(e){ plain(); }
+  }
+  /* The drawing's box leaves room for the tails of g and j, so the line would
+     sit far below the writing. Seat it just under the baseline instead — the
+     bottom of the ordinary letters — and let the tails cross it. */
+  function seatLine(){
+    const bottoms = [...pen.querySelectorAll('svg g g')].map(x => x.getBoundingClientRect().bottom).filter(b => b > 0).sort((a,b) => a-b);
+    if(!bottoms.length) return;
+    const base = bottoms[Math.floor(bottoms.length/2)];          // the median letter: no tail
+    const top = line.getBoundingClientRect().top;
+    const now = parseFloat(getComputedStyle(line).marginTop) || 0;
+    line.style.marginTop = (now + (base + 10 - top)) + 'px';
+  }
+  const sc = document.createElement('script');
+  sc.src = 'https://cdn.jsdelivr.net/npm/vara@1.4.1/lib/vara.min.js';
+  sc.onload = draw; sc.onerror = plain;
+  document.head.appendChild(sc);
+})();
+
 /* Ticks are a convenience for the person working through the plan, kept on
    this device only. If storage is blocked the page still works, it just
    won't remember. */
@@ -246,21 +418,40 @@
   var done = {};
   try { done = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){ done = {}; }
   var steps = [].slice.call(document.querySelectorAll('.step'));
-  function paint(){
-    var n = 0;
+  /* One sheet at a time: a step only appears once every step before it is
+     ticked off, so the page shows up to the first one you haven't finished. */
+  function paint(revealed){
+    var n = 0, open = 0;
     steps.forEach(function(s){ var on = !!done[s.dataset.step]; s.classList.toggle('done', on);
       s.querySelector('input').checked = on; if(on) n++; });
+    while(open < steps.length && done[steps[open].dataset.step]) open++;   // steps before the first unfinished one
+    steps.forEach(function(s, i){
+      var show = i <= open, was = !s.hidden;
+      s.hidden = !show;
+      if(show && !was && revealed){ s.classList.add('arrive'); setTimeout(function(){ s.classList.remove('arrive'); }, 700);
+        setTimeout(function(){ s.scrollIntoView({ behavior:'smooth', block:'center' }); }, 120); }
+    });
+    var left = steps.length - Math.min(open + 1, steps.length), tc = document.getElementById('toCome');
+    tc.hidden = left === 0;
+    tc.textContent = left === 1 ? 'One more step to come — tick this one off when you’ve got it.'
+                                : left + ' more steps to come — tick this one off when you’ve got it.';
     document.getElementById('progText').textContent = n + ' of ' + steps.length + ' steps done';
     document.getElementById('progBar').style.width = (100 * n / steps.length) + '%';
   }
+  // a red-pen arrow up to each tick box: "tick when you're done!" (hidden once it is)
+  steps.forEach(function(s){
+    var n = document.createElement('div'); n.className = 'nudge'; n.setAttribute('aria-hidden', 'true');
+    n.innerHTML = '<svg viewBox="0 0 58 36"><path pathLength="1" d="M56 30 C 36 35, 16 27, 11 -5 M11 -5 L5 5 M11 -5 L17 3"/></svg><span>tick when you’re done!</span>';
+    s.querySelector('.tick').after(n);
+  });
   steps.forEach(function(s){
     s.querySelector('input').addEventListener('change', function(){
       done[s.dataset.step] = this.checked;
       try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e){}
-      paint();
+      paint(this.checked);
     });
   });
-  paint();
+  paint(false);
 })();
 </script>
 <script src="/tools.js"></script>

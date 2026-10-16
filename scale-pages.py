@@ -178,7 +178,7 @@ def build(template, inst, scale, root):
   links = [f'<a href="find-the-note.html?scale={scale}&amp;root={root}&amp;inst={inst}">Open it in the full Scales page →</a>',
            f'<a href="chords.html?inst={"banjo" if inst == "banjo" else inst}">Chords for {esc(iname.lower())} →</a>']
   if inst == 'banjo':
-    links.insert(0, '<a href="learn-banjo.html">New to the banjo? A step-by-step start →</a>')
+    links.insert(0, '<a href="learn-banjo.html">New to the banjo? Start with Beginner Banjo →</a>')
     links.append('<a href="Banjo/what-note-banjo.html">Learn the notes on the neck: What Note? (banjo) →</a>')
     links.append('<a href="melody-trainer_1.html">Play session tunes in this key: Melody Trainer →</a>')
   sibs = [(i, sc, r) for i, sc, r in BUILD if i == inst and (sc, r) != (scale, root)]

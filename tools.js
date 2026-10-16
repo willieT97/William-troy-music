@@ -264,6 +264,8 @@ var CATALOGUE = [
   { t:'The Fretboard Atlas', h:'Guitar/fretboard-atlas.html', shelved:true, dep:3, pro:true, g:['read'], lv:[1,2], i:['gtr'],
     note:'Expedition I is free',
     d:'Set out across the guitar neck with an old mapmaker and chart where every note lives, string by string.' },
+  { t:'Beginner Banjo', h:'learn-banjo.html', pro:false, w:6, dep:3, g:['tunes','ears'], lv:[1], i:['gdae'],
+    d:'Never played? Seven steps for a grown-up starting Irish tenor banjo from nothing — tune up, a first scale, the Britches and a slow waltz, then playing back by ear.' },
   { t:'Learning to Fly', h:'learning-to-fly.html', dep:3, pro:true, g:['write','ears'], lv:[2,3], mic:true,
     note:'First belt is free',
     d:'A whole course in making it up as you go — from tunes you already know, out to soloing over a groove on your own instrument.' },
