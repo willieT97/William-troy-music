@@ -502,7 +502,7 @@
         <button data-o="Trad jazz">Jazz</button>
         <button data-o="Beginner">Folk</button>
       </div>
-      <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search tunes — name or type…" aria-label="Search tunes" autocomplete="off">
+      <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search — name, type or key (G, D mix…)" aria-label="Search tunes" autocomplete="off">
       <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
       <details class="pastewrap" hidden>
         <summary>Paste your own ABC</summary>
@@ -1847,6 +1847,48 @@ const typeLabel = t => TYPE_PLURAL[t] || (t.charAt(0).toUpperCase()+t.slice(1)+"
    account on sign-in. The big button both opens the mic and says what a
    full play-through will do: add the tune, or play it again.
    ============================================================ */
+/* ---- keys and modes, for searching by key ----
+   A tune's K: field ("Dmixolydian", "Gmaj", "A minor", "Bb"…) becomes
+   { tonic, mode, parent }: parent = the major key with the same notes, so
+   D mixolydian, A dorian and E minor all belong to G major. */
+const KEY_PC = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
+const MAJOR_NAME = ["C","D♭","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
+const MODES = { major:0, dorian:2, phrygian:4, lydian:5, mixolydian:7, minor:9, locrian:11 };
+function modeOf(w){
+  w = (w||"").toLowerCase();
+  if(!w || w.startsWith("maj") || w.startsWith("ion")) return "major";
+  if(w === "m" || w.startsWith("min") || w.startsWith("aeo")) return "minor";
+  for(const m of ["dorian","phrygian","lydian","mixolydian","locrian"]) if(w.startsWith(m.slice(0,3))) return m;
+  return null;
+}
+function parseKey(str){
+  const m = String(str||"").trim().match(/^([A-Ga-g])\s*([#b♯♭]?)\s*([A-Za-z]*)$/);
+  if(!m) return null;
+  const mode = modeOf(m[3]); if(!mode) return null;
+  const acc = m[2] === "#" || m[2] === "♯" ? 1 : m[2] === "b" || m[2] === "♭" ? -1 : 0;
+  const pc = (KEY_PC[m[1].toUpperCase()] + acc + 12) % 12;
+  const tonic = m[1].toUpperCase() + (acc > 0 ? "♯" : acc < 0 ? "♭" : "");
+  return { pc, tonic, mode, parent:(pc - MODES[mode] + 12) % 12 };
+}
+function keyLabel(k){
+  if(!k) return "";
+  return k.tonic + " " + k.mode + (k.mode === "major" ? "" : " (" + MAJOR_NAME[k.parent] + ")");
+}
+// is the search box asking for a key? "G", "G major", "Bb", "D mix", "A dorian", "Em"…
+function keyQuery(q){
+  const m = q.trim().match(/^(?:key of\s+|in\s+)?([a-g])\s*([#b♯♭]?)\s*([a-z]*)$/i);
+  if(!m) return null;
+  if(m[3] && !modeOf(m[3])) return null;               // "gold", "dancing" are words, not keys
+  const k = parseKey(m[1] + m[2] + (m[3] || ""));
+  if(k) k.any = !m[3];                                  // a bare "G": G in any mode
+  return k;
+}
+function keyMatch(t, kq){                               // 2 = in that key, 1 = same notes, 0 = no
+  const k = t.kp; if(!k || !kq) return 0;
+  if(k.pc === kq.pc && (kq.any || k.mode === kq.mode)) return 2;
+  return k.parent === kq.parent ? 1 : 0;
+}
+
 const BOOK_LK = "wtm_tunebook";
 let originFilter = "";                       // "" = every tradition
 const passesFilter = t => !originFilter || (t && t.origin === originFilter);
@@ -1883,7 +1925,9 @@ function syncBookBtn(){
 function renderBook(q){
   const box = $("tuneList");
   const libOf = e => LIBRARY.find(t => tuneKey(t.name) === tuneKey(e.name));
-  const items = Object.keys(BOOK).map(k => BOOK[k]).filter(e => (!originFilter || passesFilter(libOf(e))) && (!q || e.name.toLowerCase().includes(q)))
+  const kq = keyQuery(q || "");
+  const items = Object.keys(BOOK).map(k => BOOK[k]).filter(e => (!originFilter || passesFilter(libOf(e))) &&
+      (!q || (kq ? keyMatch(libOf(e) || {}, kq) > 0 : e.name.toLowerCase().includes(q))))
     .sort((a,b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
   if(!items.length){ box.innerHTML = '<div class="none">' + (q || originFilter ? "No tunes in your tunebook match that." :
     "Your tunebook is empty. Pick a tune, press “Add to my tunebook”, and play it all the way through — it’ll be kept here.") + "</div>"; return; }
@@ -1906,13 +1950,34 @@ document.querySelector(".booktabs").addEventListener("click", ev => {
   const b = ev.target.closest("button"); if(!b) return;
   view = b.dataset.view;
   document.querySelectorAll(".booktabs button").forEach(x => { const on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on); });
-  $("tuneSearch").placeholder = view === "book" ? "Search your tunebook…" : "Search tunes — name or type…";
+  $("tuneSearch").placeholder = view === "book" ? "Search your tunebook — name or key…" : "Search — name, type or key (G, D mix…)";
   renderTuneList($("tuneSearch").value);
 });
+
+function originTag(t){
+  const oc = t.origin==="American fiddle" ? "am" : t.origin==="Irish session" ? "ir" : t.origin==="Trad jazz" ? "jz" : t.origin==="Beginner" ? "be" : "";
+  const ol = oc==="am" ? "Bluegrass" : oc==="ir" ? "Irish" : oc==="jz" ? "Jazz" : oc==="be" ? "Folk" : "";
+  return oc ? ' <span class="otag '+oc+'">'+ol+'</span>' : "";
+}
+function tuneRow(t, ot){
+  return '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+(ot||"")+'</span><span class="tk">'+escHtml(t.kp ? keyLabel(t.kp) : (t.key||""))+"</span></div>";
+}
+// searching by key: the tunes in that key first, then the ones that use the same notes
+function renderByKey(kq){
+  const box = $("tuneList"), exact = [], same = [];
+  LIBRARY.forEach(t => { if(!passesFilter(t)) return; const m = keyMatch(t, kq); if(m === 2) exact.push(t); else if(m === 1) same.push(t); });
+  const name = kq.any ? kq.tonic : kq.tonic + " " + kq.mode, parent = MAJOR_NAME[kq.parent] + " major";
+  let h = "";
+  if(exact.length){ h += '<div class="grp">In ' + escHtml(name) + " · " + exact.length + "</div>"; exact.forEach(t => h += tuneRow(t, originTag(t))); }
+  if(same.length){ h += '<div class="grp">Same notes as ' + escHtml(parent) + " · " + same.length + "</div>"; same.forEach(t => h += tuneRow(t, originTag(t))); }
+  box.innerHTML = h || '<div class="none">No tunes in ' + escHtml(name) + (originFilter ? " with that filter" : "") + ".</div>";
+}
 
 function renderTuneList(q){
   if(view === "book") return renderBook((q||"").trim().toLowerCase());
   const box = $("tuneList"); q = (q||"").trim().toLowerCase();
+  const kq = keyQuery(q);
+  if(kq) return renderByKey(kq);
   const items = LIBRARY.filter(t => passesFilter(t) && (!q || t.name.toLowerCase().includes(q) || t.type.includes(q) || (t.origin||"").toLowerCase().includes(q)));
   if(!items.length){ box.innerHTML = '<div class="none">No tunes match that' + (originFilter ? " filter" : " search") + '.</div>'; return; }
   const groups = {}; items.forEach(t => { (groups[t.type] = groups[t.type] || []).push(t); });
@@ -1924,10 +1989,8 @@ function renderTuneList(q){
   order.forEach(type=>{
     h += '<div class="grp">'+typeLabel(type)+" · "+groups[type].length+"</div>";
     groups[type].forEach(t=>{
-      const oc = t.origin==="American fiddle" ? "am" : t.origin==="Irish session" ? "ir" : t.origin==="Trad jazz" ? "jz" : t.origin==="Beginner" ? "be" : "";
-      const ol = oc==="am" ? "Bluegrass" : oc==="ir" ? "Irish" : oc==="jz" ? "Jazz" : oc==="be" ? "Folk" : "";
-      const ot = oc ? ' <span class="otag '+oc+'">'+ol+'</span>' : "";
-      h += '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+ot+'</span><span class="tk">'+escHtml(t.key||"")+"</span></div>";
+      const ot = originTag(t);
+      h += tuneRow(t, ot);
     });
   });
   box.innerHTML = h;
@@ -1957,7 +2020,8 @@ async function loadLibrary(){
       let txt; try{ txt = await (await fetch("tunes/" + file + bust)).text(); }catch(e){ continue; }
       splitBundle(txt).forEach(block=>{
         if(!/^X:/m.test(block)) return;
-        LIBRARY.push({ name:abcField(block,"T")||"Untitled", type:(abcField(block,"R")||"other").toLowerCase(), origin:abcField(block,"O")||"Irish session", key:abcField(block,"K"), abc:block });
+        const K = abcField(block,"K");
+        LIBRARY.push({ name:abcField(block,"T")||"Untitled", type:(abcField(block,"R")||"other").toLowerCase(), origin:abcField(block,"O")||"Irish session", key:K, kp:parseKey(K), abc:block });
       });
     }
   }catch(e){ /* no manifest (e.g. offline) — the examples still show */ }
