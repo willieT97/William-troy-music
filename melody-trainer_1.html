@@ -93,7 +93,12 @@
   .tunehead h2{ margin-bottom:0; line-height:1.3; }
   .tunehead .meta{ margin-top:6px; }
   .tunehead .seg{ margin-bottom:0; }
-  .tunehead .namestoggle{ display:inline-flex; margin:8px 0 0; }
+  .tunehead .namestoggle{ display:inline-flex; margin:0; }
+  .headtools{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:8px; }
+  .tablink{ font-family:'Space Mono',monospace; font-size:12px; font-weight:700; text-decoration:none; color:var(--ink);
+    border:2px solid var(--ink); border-radius:99px; padding:3px 11px; box-shadow:2px 2px 0 rgba(23,20,14,.9); background:var(--paper); }
+  .tablink:hover{ background:#fff; }
+  .tablink[hidden]{ display:none; }
   h1{
     font-family:'Syne',sans-serif;
     font-weight:800;
@@ -182,10 +187,14 @@
   .bookmsg{ font-weight:600; margin-top:6px; }
   .bookmsg a{ color:var(--blue); }
   .transport{ display:inline-flex; gap:8px; }
+  /* the "see how it's played" box: heading with its own play/stop/repeat */
+  .fbhead{ display:flex; justify-content:space-between; align-items:center; gap:10px 16px; flex-wrap:wrap; margin-bottom:10px; }
+  .fbhead h2{ margin-bottom:0; }
   button.ib{ width:42px; height:42px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
   button.ib svg{ width:20px; height:20px; fill:var(--ink); }
   button.ib svg.ln{ fill:none; stroke:var(--ink); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
   button.ib.on{ background:var(--ink); } button.ib.on svg{ fill:var(--paper); }
+  button.ib.on svg.ln{ fill:none; stroke:var(--paper); }
   .lp{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:26px; align-items:center; }
   .lp .tuner{ grid-template-columns:1fr; gap:10px; }
   .lp .meter{ width:100%; }
@@ -491,7 +500,10 @@
         <div>
           <h2 id="tuneTitle">Twinkle, Twinkle</h2>
           <div class="meta" id="tuneMeta"></div>
-          <label class="toggle namestoggle"><input type="checkbox" id="showNames" checked> show note names</label>
+          <div class="headtools">
+            <label class="toggle namestoggle"><input type="checkbox" id="showNames" checked> show note names</label>
+            <a class="tablink" id="tabLink" href="#" target="_blank" rel="noopener" hidden>See tab ↗</a>
+          </div>
         </div>
       <div class="seg" role="group" aria-label="Choose your instrument">
         <button data-inst="uke" class="on">Ukulele</button>
@@ -600,7 +612,14 @@
   </div>
 
   <div class="card">
-    <h2>On the <span id="fbInst">ukulele</span></h2>
+    <div class="fbhead">
+      <h2>See how it’s played on the <span id="fbInst">ukulele</span></h2>
+      <span class="transport" role="group" aria-label="Watch the tune">
+        <button class="ib" id="fbPlay" title="Play the tune and watch the fingering" aria-label="Play the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+        <button class="ib" id="fbStop" title="Stop" aria-label="Stop the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="1.5"/></svg></button>
+        <button class="ib" id="fbLoop" title="Repeat: keep playing the tune round and round" aria-label="Repeat" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" class="ln"><path d="M4 11V9a3 3 0 0 1 3-3h12"/><path d="M16 3l3 3-3 3"/><path d="M20 13v2a3 3 0 0 1-3 3H5"/><path d="M8 21l-3-3 3-3"/></svg></button>
+      </span>
+    </div>
     <div class="fbmeta" id="fbLabel"></div>
     <div id="fbBox"></div>
   </div>
@@ -753,10 +772,11 @@ function parseABC(src){
   /* ---- strip what we don't support (with honest warnings) ---- */
   if(/\{[^}]*\}/.test(s)){ w1("grace","Grace notes stripped."); s = s.replace(/\{[^}]*\}/g,""); }
   s = s.replace(/![^!\s][^!]*!/g,"").replace(/\+[a-z]+\+/g,"");
-  if(/(\||\[)\s*[12]/.test(s)) w1("end","1st/2nd ending markers ignored — both endings play in sequence.");
-  s = s.replace(/(\||\[)\s*([12])([\s,.-]*)/g, (m,p)=> p==="|" ? "|" : "");
+  if(/(\||\[)\s*[12]/.test(s)) w1("end","1st/2nd endings are shown; the cursor plays both, one after the other.");
+  /* 1st/2nd endings: keep where they start (\u0001 / \u0002) so the stave can draw the brackets */
+  s = s.replace(/(\||\[)\s*([12])([\s,.-]*)/g, (m,p,n)=> (p==="|" ? "|" : "") + (n==="1" ? "\u0001" : "\u0002"));
   s = s.replace(/\[(?:[A-Za-z]):[^\]]*\]/g, m => /^\[K:/i.test(m) ? m : "");  /* keep inline [K:] key changes */
-  if(/\|:|:\|/.test(s)) w1("rep","Repeat marks treated as plain barlines — the tune plays once through.");
+  if(/\|:|:\|/.test(s)) w1("rep","Repeats are shown on the stave; the cursor goes through the tune once.");
 
   const baseUnits = (Lnum/Lden) * meterDen;   /* default note, in 1/den units */
   const unitsPerBar = meterNum;
@@ -764,6 +784,11 @@ function parseABC(src){
   const notes = [];
   let onset = 0, bar = 0, measureAcc = {}, pendingBroken = 0;
   let tripletLeft = 0, pendingChord = null;
+  /* what the barlines are, for drawing: ends[bar] = 'rep' | 'double' | 'final',
+     starts = bars that open a repeat, endings = [{n, from, to}] brackets */
+  const REPS = { ends:{}, starts:{}, endings:[] };
+  let openEnding = null;
+  const closeEnding = to => { if(openEnding){ openEnding.to = Math.max(openEnding.from, to); REPS.endings.push(openEnding); openEnding = null; } };
   let curKey = key;   /* tracks inline [K:] changes; header `key` drives the scale display */
 
   const S = s;
@@ -877,11 +902,33 @@ function parseABC(src){
       k++; continue;
     }
 
+    /* the start of a 1st or 2nd ending (marked above) */
+    if(ch==="\u0001" || ch==="\u0002"){
+      closeEnding(bar - 1);
+      openEnding = { n: ch==="\u0001" ? 1 : 2, from: bar, to: bar };
+      k++; continue;
+    }
+
     /* barlines: any run of | : ] [ */
     if(ch==="|" || ch===":" || ch==="]" || ch==="["){
       let j = k;
       while(j < S.length && /[|:\]\[]/.test(S[j])) j++;
+      const tok = S.slice(k, j);
+      const endBar = onset > 1e-6 ? bar : bar - 1;          // the bar this line closes
       if(onset > 1e-6){ bar++; onset = 0; measureAcc = {}; }
+      const isRepEnd = /:\|/.test(tok) || /^:/.test(tok) || tok === "::";
+      if(endBar >= 0){
+        if(isRepEnd) REPS.ends[endBar] = "rep";
+        else if(/\|\]/.test(tok) || /\]$/.test(tok)) REPS.ends[endBar] = "final";
+        else if(/\|\|/.test(tok)) REPS.ends[endBar] = "double";
+      }
+      if(/\|:/.test(tok) || tok === "::" || /:\|:/.test(tok)) REPS.starts[bar] = true;
+      if(openEnding && endBar >= openEnding.from){
+        const len1 = (REPS.endings.find(e=>e.n===1) || {});
+        if(openEnding.n === 1 && isRepEnd) closeEnding(endBar);
+        else if(openEnding.n === 2 && (isRepEnd || /\|\||\]|\|:/.test(tok) ||
+                (len1.to !== undefined && endBar - openEnding.from >= len1.to - len1.from))) closeEnding(endBar);
+      }
       k = j;
       continue;
     }
@@ -934,12 +981,14 @@ function parseABC(src){
     }
   }
 
+  closeEnding(nBars - 1);
   return {
     title: title || "Untitled",
     key,
     meter: {num: meterNum, den: meterDen},
     notes,
     nBars,
+    repeats: REPS,
     warnings: warn
   };
 }
@@ -1037,6 +1086,7 @@ const SVG_W = 840;
 const SYS_GAP = 108, SYS_TOP0 = 34;
 let NOTES_X0 = 86;
 let BAR_W = 0;
+let REPEATS = { ends:{}, starts:{}, endings:[] };   // barline kinds + 1st/2nd endings, from parseABC
 
 const CLEF_PATH = "M 13.5 49 C 9.5 48.4 8 45 10 42.6 C 12 40.4 15.4 41.6 15.6 44.6 "+
   "C 15.9 40 15.2 33 15.2 28 C 15.2 18 17 12 21 6.5 C 23.8 2.6 24 -3 20.6 -5 "+
@@ -1103,7 +1153,9 @@ function buildScore(){
 
   function noteX(t){
     const sysBar = t.bar % SYS_BARS;
-    return NOTES_X0 + sysBar*BAR_W + 16 + (t.beat / barSum[t.bar]) * (BAR_W - 32);
+    // leave room for repeat dots at either end of a bar
+    const padL = REPEATS.starts[t.bar] ? 10 : 0, padR = REPEATS.ends[t.bar] === "rep" ? 8 : 0;
+    return NOTES_X0 + sysBar*BAR_W + 16 + padL + (t.beat / barSum[t.bar]) * (BAR_W - 32 - padL - padR);
   }
 
   /* label baseline clears the lowest notehead */
@@ -1132,15 +1184,33 @@ function buildScore(){
     s += `<text x="${tsx}" y="${top+16}" font-family="'Space Mono',monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">${METER.num}</text>`;
     s += `<text x="${tsx}" y="${top+37}" font-family="'Space Mono',monospace" font-size="17" font-weight="700" fill="#17140E" text-anchor="middle">${METER.den}</text>`;
     const sysBarCount = Math.min(SYS_BARS, NBARS - sys*SYS_BARS);
+    const vline = (x, w) => `<line x1="${x}" y1="${top}" x2="${x}" y2="${top+40}" stroke="#17140E" stroke-width="${w}"/>`;
+    const dots = x => `<circle cx="${x}" cy="${top+15}" r="2.2" fill="#17140E"/><circle cx="${x}" cy="${top+25}" r="2.2" fill="#17140E"/>`;
     for(let b=1;b<=sysBarCount;b++){
-      const x = NOTES_X0 + b*BAR_W;
-      s += `<line x1="${x}" y1="${top}" x2="${x}" y2="${top+40}" stroke="#17140E" stroke-width="1.4"/>`;
+      const x = NOTES_X0 + b*BAR_W, barIdx = sys*SYS_BARS + b - 1;
+      let kind = REPEATS.ends[barIdx];
+      if(!kind && barIdx === NBARS-1) kind = "final";
+      if(kind === "rep"){ s += dots(x-11) + vline(x-6, 1.2) + vline(x, 4); }
+      else if(kind === "final"){ s += vline(x-5, 1.2) + vline(x, 4); }
+      else if(kind === "double"){ s += vline(x-4, 1.2) + vline(x, 1.2); }
+      else s += vline(x, 1.4);
     }
-    if(sys === nSys-1){
-      const xEnd = NOTES_X0 + sysBarCount*BAR_W;
-      s += `<line x1="${xEnd-5}" y1="${top}" x2="${xEnd-5}" y2="${top+40}" stroke="#17140E" stroke-width="1.2"/>`;
-      s += `<line x1="${xEnd}" y1="${top}" x2="${xEnd}" y2="${top+40}" stroke="#17140E" stroke-width="4"/>`;
+    // repeat starts: thick-thin-dots at the start of the bar
+    for(let b=0;b<sysBarCount;b++){
+      const barIdx = sys*SYS_BARS + b;
+      if(!REPEATS.starts[barIdx]) continue;
+      const x = NOTES_X0 + b*BAR_W + (b === 0 ? 2 : 0);
+      if(b === 0 || REPEATS.ends[barIdx-1] !== "rep") s += vline(x, 4);
+      s += vline(x+6, 1.2) + dots(x+11);
     }
+    // 1st / 2nd ending brackets above the stave (split where they cross a line break)
+    REPEATS.endings.forEach(e => {
+      const a = Math.max(e.from, sys*SYS_BARS), z = Math.min(e.to, sys*SYS_BARS + sysBarCount - 1);
+      if(a > z) return;
+      const x0 = NOTES_X0 + (a % SYS_BARS)*BAR_W + 3, x1 = NOTES_X0 + (z % SYS_BARS + 1)*BAR_W - 6, y = top - 20;
+      s += `<path d="M${x0} ${a === e.from ? top-6 : y} L${x0} ${y} L${x1} ${y}${z === e.to && e.n === 1 ? ` L${x1} ${top-6}` : ""}" fill="none" stroke="#17140E" stroke-width="1.3"/>`;
+      if(a === e.from) s += `<text x="${x0+5}" y="${y+12}" font-family="'Space Mono',monospace" font-size="11" font-weight="700" fill="#17140E">${e.n}.</text>`;
+    });
   }
 
   /* ---- plan beams per bar ---- */
@@ -1508,6 +1578,21 @@ function renderScale(){
   $("scaleBox").innerHTML = s;
 }
 
+/* "See tab": the tunes with a page of their own (tune-pages.py writes
+   tunes/pages.json) get a link to it, opened at the tab for the instrument
+   you're on. Piano has no tab, so no link. */
+let TUNE_PAGES = null;
+const TAB_ANCHOR = { banjo:"banjo", violin:"fiddle", guitar:"guitar", uke:"uke" };
+fetch("tunes/pages.json?t=" + Date.now()).then(r => r.ok ? r.json() : {}).then(j => { TUNE_PAGES = j || {}; updateTabLink(); }).catch(() => { TUNE_PAGES = {}; });
+function updateTabLink(){
+  const a = $("tabLink"); if(!a) return;
+  let page = null;
+  if(TUNE_PAGES) for(const n in TUNE_PAGES) if(tuneKey(n) === tuneKey(TITLE)){ page = TUNE_PAGES[n]; break; }
+  const anchor = TAB_ANCHOR[inst];
+  a.hidden = !(page && anchor);
+  if(page && anchor){ a.href = page + "#" + anchor; a.title = "Tab for " + INSTRUMENTS[inst].label + " — opens the tune's page"; }
+}
+
 function setInstrument(k){
   inst = k;
   document.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("on", b.dataset.inst===k));
@@ -1516,6 +1601,8 @@ function setInstrument(k){
   refreshUI();
   renderScale();
   if(pinned !== null) renderFretboard(pinned);
+  updateTabLink();
+  if(new URLSearchParams(location.search).get("tune")) setTuneAddress(new URLSearchParams(location.search).get("tune"), false);
 }
 
 /* ============================================================
@@ -1527,9 +1614,11 @@ let demoVoices = [];   // oscillators scheduled by a running demo, so Stop can s
 let demoPos = 0;       // where a paused demo picks up again (note index); 0 = from the top
 const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>', PAUSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1"/><rect x="13.8" y="5" width="4.2" height="14" rx="1"/></svg>';
 function showPlaying(on){
-  const b = $("tuneBtn"); b.innerHTML = on ? PAUSE_ICON : PLAY_ICON; b.classList.toggle("on", on);
-  b.title = on ? "Pause" : (demoPos ? "Carry on playing" : "Play the tune"); b.setAttribute("aria-label", b.title);
+  ["tuneBtn","fbPlay"].forEach(id => { const b = $(id); if(!b) return;
+    b.innerHTML = on ? PAUSE_ICON : PLAY_ICON; b.classList.toggle("on", on);
+    b.title = on ? "Pause" : (demoPos ? "Carry on playing" : "Play the tune"); b.setAttribute("aria-label", b.title); });
 }
+let demoLoop = false;   // "Repeat" in the see-how-it's-played box: go round again at the end
 
 function ensureCtx(){
   if(!audioCtx){
@@ -1761,7 +1850,7 @@ function playTune(){
     at += t.d*spu;
     ms += t.d*spu*1000;
   });
-  demoTimers.push(setTimeout(stopTune, ms + 300));             // played to the end: next play starts from the top
+  demoTimers.push(setTimeout(() => { stopTune(); if(demoLoop) playTune(); }, ms + 300));   // the end: from the top next time (straight away on Repeat)
 }
 
 
@@ -1818,6 +1907,7 @@ function installTune(parsed){
   KEY = parsed.key;
   TITLE = parsed.title;
   NBARS = parsed.nBars;
+  REPEATS = parsed.repeats || { ends:{}, starts:{}, endings:[] };
   TOTAL = TUNE.length;
   SCALE = scaleFromKey(KEY);
 
@@ -1839,6 +1929,7 @@ function installTune(parsed){
   refreshUI();
   renderScale();
   syncBookBtn();
+  if(typeof updateTabLink === "function") updateTabLink();
 }
 
 function loadFromTextarea(){
@@ -1859,6 +1950,12 @@ $("micBtn").addEventListener("click", startMic);
 $("tuneBtn").addEventListener("click", playTune);
 $("resetBtn").addEventListener("click", reset);
 $("stopBtn").addEventListener("click", stopTune);
+$("fbPlay").addEventListener("click", playTune);
+$("fbStop").addEventListener("click", stopTune);
+$("fbLoop").addEventListener("click", function(){
+  demoLoop = !demoLoop; this.classList.toggle("on", demoLoop); this.setAttribute("aria-pressed", demoLoop);
+  this.title = demoLoop ? "Repeat is on — the tune keeps going round" : "Repeat: keep playing the tune round and round";
+});
 
 /* ---- print the current tune as a plain notation sheet (Save-as-PDF to keep it) ---- */
 function printTune(){
@@ -2097,6 +2194,7 @@ $("tuneList").addEventListener("click", e=>{
     return;
   }
   const row = e.target.closest(".tunerow"); if(!row || +row.dataset.i < 0) return;
+  setTuneAddress(LIBRARY[+row.dataset.i].name, true);
   loadTuneObj(LIBRARY[+row.dataset.i], row);
 });
 $("tuneSearch").addEventListener("input", e=> renderTuneList(e.target.value));
@@ -2143,6 +2241,27 @@ function loadAddedTunes(){
 /* ?tune=<name> — the Rollbook links here when a lesson logged a tune from the library.
    Matched loosely (case, "The", punctuation) so a name typed by hand still lands. */
 const tuneKey = s => String(s||"").toLowerCase().replace(/^the\s+/,"").replace(/[^a-z0-9]+/g," ").trim();
+/* Each tune has its own address: picking one puts ?tune=<name> (and the
+   instrument) in the address bar, so it can be bookmarked or sent to a
+   student, and Back steps to the tune before. */
+function setTuneAddress(name, push){
+  const q = new URLSearchParams(location.search);
+  q.set("tune", name);
+  if(inst && inst !== "uke") q.set("inst", inst === "violin" ? "fiddle" : inst); else q.delete("inst");
+  const url = location.pathname + "?" + q.toString().replace(/\+/g, "%20") + location.hash;
+  if(url === location.pathname + location.search + location.hash) return;
+  try { history[push ? "pushState" : "replaceState"]({ tune:name }, "", url); } catch(e){}
+}
+window.addEventListener("popstate", () => {
+  const want = new URLSearchParams(location.search).get("tune");
+  const i = want ? LIBRARY.findIndex(t => tuneKey(t.name) === tuneKey(want)) : -1;
+  if(i < 0) return;
+  let w = new URLSearchParams(location.search).get("inst"); if(w === "fiddle") w = "violin";
+  if(w && INSTRUMENTS[w] && w !== inst) setInstrument(w);
+  const row = $("tuneList").querySelector('.tunerow[data-i="'+i+'"]');
+  loadTuneObj(LIBRARY[i], row);
+});
+
 function openRequestedTune(){
   const want = new URLSearchParams(location.search).get("tune");
   if(!want) return;

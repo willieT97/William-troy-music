@@ -257,7 +257,7 @@ def main():
   files = subprocess.run(['git', 'ls-files', '*.html'], cwd=ROOT, capture_output=True, text=True).stdout.splitlines()
   files = [f.strip('"') for f in files if not f.startswith(SKIP_DIRS)]
   # pages made by scale-pages.py count even before they are committed
-  for d, _, fs in os.walk(os.path.join(ROOT, 'scales')):
+  for d, _, fs in list(os.walk(os.path.join(ROOT, 'scales'))) + list(os.walk(os.path.join(ROOT, 'tunes'))):
     files += [os.path.relpath(os.path.join(d, f), ROOT) for f in fs if f.endswith('.html')]
   files = sorted(set(files))
   done, urls = 0, []
