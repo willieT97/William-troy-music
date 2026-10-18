@@ -153,7 +153,8 @@ CSS = """
     padding:8px 15px; border:2px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); }
   .tabs a.cur{ background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--green); }
   .crumbs{ font-family:var(--mono); font-size:12px; margin-bottom:10px; } .crumbs a{ color:var(--blue); text-decoration:none; }
-  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(34px,6.4vw,54px); line-height:1.02; margin:0;
+  /* "Sheet Music & Tab Directory" on one line, scaled to fit; phones get two lines at a readable size */
+  h1{ font-family:var(--disp); font-weight:800; font-size:min(36px, calc((100vw - 40px) / 24)); white-space:nowrap; line-height:1.02; margin:0;
     text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
   .facts{ font-family:var(--mono); font-size:13px; margin:10px 0 0; }
   .lede{ max-width:64ch; margin:12px 0 18px; }
@@ -168,8 +169,8 @@ CSS = """
   .mtb-t{ grid-column:1; font-size:15px; opacity:.95; }
   .mtb-go{ grid-column:2; grid-row:1 / span 2; font-family:var(--mono); font-weight:700; font-size:14px; background:var(--paper); color:var(--ink);
     border:2px solid var(--ink); border-radius:10px; padding:10px 14px; white-space:nowrap; box-shadow:3px 3px 0 var(--ink); }
+  @media (max-width:600px){ h1{ font-size:27px; white-space:normal; } }
   @media (max-width:640px){ .mtbanner{ grid-template-columns:1fr; } .mtb-go{ grid-column:1; grid-row:auto; justify-self:start; margin-top:8px; } }
-  .playk{ font-family:var(--mono); font-size:12px; opacity:.75; }
   .play{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 24px; }
   .play a{ font-family:var(--mono); font-weight:700; font-size:13px; text-decoration:none; border:2px solid var(--ink); border-radius:10px;
     padding:9px 14px; box-shadow:3px 3px 0 var(--ink); color:var(--ink); background:var(--paper); }
@@ -256,17 +257,13 @@ def build_page(t, lib, built):
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
   <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › Session tunes › {esc(name)}</div>
-  <h1><span class="sr">{esc(name)} — </span>Sheet Music &amp; Tab</h1>
+  <h1><span class="sr">{esc(name)} — </span>Sheet Music &amp; Tab Directory</h1>
 
   <a class="mtbanner" href="{mt}">
     <span class="mtb-k">▶ Learn it in the Melody Trainer</span>
     <span class="mtb-t">See every note of {esc(name)} on your banjo, fiddle, mandolin, guitar, ukulele or piano — then play along: the music listens and waits for you.</span>
     <span class="mtb-go">Open {esc(name)} →</span>
   </a>
-  <div class="play">
-    <span class="playk">Or open it straight on:</span>
-    <a href="{mt}&amp;inst=banjo">tenor banjo</a><a href="{mt}&amp;inst=fiddle">fiddle</a><a href="{mt}&amp;inst=mandolin">mandolin</a><a href="{mt}&amp;inst=guitar">guitar</a><a href="{mt}&amp;inst=uke">ukulele</a>
-  </div>
 
   <p class="lede">{esc(name)} is a {esc(ttype)} in {esc(key["label"])}, played at Irish sessions everywhere. Below: the sheet music, the notes
   as letter names, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele.</p>

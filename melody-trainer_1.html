@@ -506,12 +506,12 @@
           </div>
         </div>
       <div class="seg" role="group" aria-label="Choose your instrument">
-        <button data-inst="uke" class="on">Ukulele</button>
-        <button data-inst="guitar">Guitar</button>
-        <button data-inst="banjo">Tenor banjo</button>
+        <button data-inst="guitar" class="on">Guitar</button>
+        <button data-inst="banjo">Tenor Banjo</button>
         <button data-inst="violin">Fiddle</button>
         <button data-inst="mandolin">Mandolin</button>
         <button data-inst="piano">Piano</button>
+        <button data-inst="uke">Ukulele</button>
       </div>
       </div>
       <div id="scoreBox" class="names"></div>
@@ -614,7 +614,7 @@
 
   <div class="card">
     <div class="fbhead">
-      <h2>See how it’s played on the <span id="fbInst">ukulele</span></h2>
+      <h2>See how it’s played on the <span id="fbInst">guitar</span></h2>
       <span class="transport" role="group" aria-label="Watch the tune">
         <button class="ib" id="fbPlay" title="Play the tune and watch the fingering" aria-label="Play the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
         <button class="ib" id="fbStop" title="Stop" aria-label="Stop the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="1.5"/></svg></button>
@@ -1050,7 +1050,8 @@ const $ = id => document.getElementById(id);
 let TUNE = [], METER = {num:4,den:4}, KEY = null, TITLE = "", NBARS = 0;
 let SCALE = null;
 let TOTAL = 0, PPRE = [0], PLAYABLE_TOTAL = 0;
-let inst = "uke";
+const DEFAULT_INST = "guitar";      // the first button; ?inst= picks another
+let inst = DEFAULT_INST;
 let pinned = null;
 
 const INSTRUMENTS = {
@@ -2249,7 +2250,7 @@ const tuneKey = s => String(s||"").toLowerCase().replace(/^the\s+/,"").replace(/
 function setTuneAddress(name, push){
   const q = new URLSearchParams(location.search);
   q.set("tune", name);
-  if(inst && inst !== "uke") q.set("inst", inst === "violin" ? "fiddle" : inst); else q.delete("inst");
+  if(inst && inst !== DEFAULT_INST) q.set("inst", inst === "violin" ? "fiddle" : inst); else q.delete("inst");
   const url = location.pathname + "?" + q.toString().replace(/\+/g, "%20") + location.hash;
   if(url === location.pathname + location.search + location.hash) return;
   try { history[push ? "pushState" : "replaceState"]({ tune:name }, "", url); } catch(e){}
