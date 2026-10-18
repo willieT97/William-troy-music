@@ -82,6 +82,17 @@ def titlecase(s):
     m = re.match(r"^(.*),\s*(The|A|An)$", s)
     return (m.group(2) + " " + m.group(1)) if m else s
 
+# the anthology's chord font: ¨ = flat, € = flat (in 7b5 / 7b9), & = sharp,
+# º = diminished, ŒŠ„ = the major-7 triangle. Long text notes above the stave are dropped.
+CHORD_GLYPHS = [("Œ„Š", "maj"), ("¨", "♭"), ("€", "♭"), ("&", "♯"), ("º", "°")]
+def fix_chords(line):
+    def one(m):
+        c = m.group(1)
+        if len(c) > 30: return ""                       # a paragraph of history, not a chord
+        for a, b in CHORD_GLYPHS: c = c.replace(a, b)
+        return '"' + c + '"'
+    return re.sub(r'"([^"]*)"', one, line)
+
 def clean(abc, n, ttype):
     T = C = M = L = K = None; body = []; inbody = False
     for ln in abc.split("\n"):
@@ -95,6 +106,7 @@ def clean(abc, n, ttype):
         if not inbody: continue
         if re.match(r"^[a-zA-Z]:", ln): continue
         ln = re.sub(r"\s*%\s*\d+\s*$", "", ln).replace("$", " ").rstrip()
+        ln = fix_chords(ln)
         if ln.strip(): body.append(ln)
     if not body: return None
     hdr = [f"X:{n}", f"T:{titlecase(T or 'Untitled')}", "O:Beginner", f"R:{ttype}",

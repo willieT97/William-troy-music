@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer></script>
+<meta charset="UTF-8">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Memphis Blues — Sheet Music &amp; Tab (banjo, mandolin, fiddle, guitar)</title>
+<!-- seo: written by seo.py — edit PAGES there, not here -->
+<link rel="canonical" href="https://themusicarcade.com/tunes/memphis-blues.html" />
+<meta property="og:site_name" content="The Music Arcade" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://themusicarcade.com/tunes/memphis-blues.html" />
+<meta property="og:title" content="Memphis Blues — Sheet Music &amp; Tab (banjo, mandolin, fiddle, guitar)" />
+<meta property="og:description" content="Memphis Blues, an intermediate blues in F major: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
+<meta property="og:image" content="https://themusicarcade.com/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- /seo -->
+<meta name="description" content="Memphis Blues, an intermediate blues in F major: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "MusicComposition",
+ "name": "Memphis Blues",
+ "genre": "Traditional jazz and blues",
+ "musicalKey": "F major",
+ "inLanguage": "en",
+ "description": "Memphis Blues, an intermediate blues in F major: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.",
+ "composer": {
+  "@type": "Organization",
+  "name": "Traditional"
+ }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A; --green:#1F9D55; --inset:#FBF7EC;
+    --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,sans-serif; --mono:'Space Mono',monospace; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:1240px; margin:0 auto; padding:28px 16px 70px; }
+  /* the page on the left, Load a tune on the right (below, on phones) */
+  .layout{ display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:22px; align-items:start; margin-top:16px; }
+  .layout .main > .mtbanner{ margin-top:0; }
+  .loadcard{ position:sticky; top:14px; margin:0; }
+  @media (max-width:980px){ .layout{ grid-template-columns:1fr; } .loadcard{ position:static; } }
+  /* Load a tune — as in the Melody Trainer */
+  .booktabs{ display:flex; margin:0 0 10px; border:2px solid var(--ink); border-radius:10px; overflow:hidden; }
+  .booktabs button{ flex:1; border:0; padding:8px 6px; font-family:var(--mono); font-weight:700; font-size:12px; background:var(--paper); color:var(--ink); cursor:pointer; }
+  .booktabs button + button{ border-left:2px solid var(--ink); }
+  .booktabs button.on{ background:var(--ink); color:var(--paper); }
+  .filters{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+  .filters button{ font-family:var(--mono); font-weight:700; padding:5px 10px; font-size:11.5px; border:2px solid var(--ink); border-radius:99px;
+    background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 rgba(23,20,14,.9); cursor:pointer; }
+  .filters button.on{ background:var(--ink); color:var(--paper); }
+  .tunesearch{ width:100%; font-family:var(--body); font-size:14px; padding:9px 12px; border:2px solid var(--ink); border-radius:10px; background:#fffdf7; margin:0 0 10px; }
+  .tunelist{ max-height:min(60vh,520px); overflow-y:auto; border:2px solid var(--ink); border-radius:8px; background:#fffdf7; }
+  .tunelist .grp{ position:sticky; top:0; font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--paper); background:var(--ink); padding:5px 12px; }
+  .tunelist .tunerow{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:8px 12px; color:var(--ink); text-decoration:none; border-top:1px solid rgba(23,20,14,.08); }
+  .tunelist .tunerow:hover{ background:#efe7d3; }
+  .tunelist .tunerow .tn{ font-weight:600; font-size:14px; }
+  .tunelist .tunerow .tk{ font-family:var(--mono); font-size:11px; color:#8a8577; white-space:nowrap; }
+  .tunelist .otag{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:1px 6px 0; border-radius:99px; border:1.5px solid var(--ink); white-space:nowrap; }
+  .tunelist .otag.ir{ background:#dde4ff; color:#2438C8; } .tunelist .otag.am{ background:#ffe6c9; color:#a8542a; }
+  .tunelist .otag.jz{ background:#e9ddf6; color:#6b3fa0; } .tunelist .otag.be{ background:#d8efdd; color:#1f7a45; }
+  .tunelist .tunerow.cur{ background:var(--blue); color:var(--paper); } .tunelist .tunerow.cur .tk{ color:rgba(244,238,226,.85); }
+  .tunelist .tunerow.cur .otag{ border-color:var(--paper); background:transparent; color:var(--paper); }
+  .tunelist .none{ padding:14px 12px; font-family:var(--mono); font-size:12px; color:#8a8577; }
+  .dirlink{ display:block; margin-top:10px; font-family:var(--mono); font-size:12px; font-weight:700; color:var(--blue); text-decoration:none; }
+  .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
+  .tabs a{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:var(--ink);
+    padding:8px 15px; border:2px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); }
+  .tabs a.cur{ background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--green); }
+  .crumbs{ font-family:var(--mono); font-size:12px; margin-bottom:10px; } .crumbs a{ color:var(--blue); text-decoration:none; }
+  /* "Sheet Music & Tab Directory" on one line, scaled to fit; phones get two lines at a readable size */
+  h1{ font-family:var(--disp); font-weight:800; font-size:min(36px, calc((100vw - 40px) / 24)); white-space:nowrap; line-height:1.02; margin:0;
+    text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
+  .facts{ font-family:var(--mono); font-size:13px; margin:10px 0 0; }
+  .lede{ max-width:64ch; margin:12px 0 18px; }
+  /* the heading reads "Sheet Music & Tab"; the tune's name is in it for search engines and screen readers,
+     and on screen in the sheet music box below */
+  .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  /* the way into the Melody Trainer, right at the top */
+  .mtbanner{ display:grid; grid-template-columns:1fr auto; gap:4px 18px; align-items:center; text-decoration:none; color:#fff;
+    background:var(--blue); border:2.5px solid var(--ink); border-radius:16px; box-shadow:6px 6px 0 var(--ink); padding:16px 20px; margin:16px 0 12px; }
+  .mtbanner:hover{ transform:translate(-1px,-1px); box-shadow:7px 7px 0 var(--ink); }
+  .mtb-k{ font-family:var(--disp); font-weight:800; font-size:clamp(19px,3vw,24px); grid-column:1; }
+  .mtb-t{ grid-column:1; font-size:15px; opacity:.95; }
+  .mtb-go{ grid-column:2; grid-row:1 / span 2; font-family:var(--mono); font-weight:700; font-size:14px; background:var(--paper); color:var(--ink);
+    border:2px solid var(--ink); border-radius:10px; padding:10px 14px; white-space:nowrap; box-shadow:3px 3px 0 var(--ink); }
+  @media (max-width:600px){ h1{ font-size:27px; white-space:normal; } }
+  @media (max-width:640px){ .mtbanner{ grid-template-columns:1fr; } .mtb-go{ grid-column:1; grid-row:auto; justify-self:start; margin-top:8px; } }
+  .play{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 24px; }
+  .play a{ font-family:var(--mono); font-weight:700; font-size:13px; text-decoration:none; border:2px solid var(--ink); border-radius:10px;
+    padding:9px 14px; box-shadow:3px 3px 0 var(--ink); color:var(--ink); background:var(--paper); }
+  .play a.main{ background:var(--blue); color:#fff; font-size:14px; padding:11px 18px; }
+  .card{ background:var(--paper); border:2px solid var(--ink); border-radius:14px; box-shadow:5px 5px 0 rgba(23,20,14,.9); padding:18px; margin:0 0 22px; }
+  .card h2{ font-family:var(--disp); font-weight:700; font-size:15px; text-transform:uppercase; letter-spacing:.1em; margin:0 0 4px; }
+  .card .sub{ font-family:var(--mono); font-size:12px; opacity:.75; margin:0 0 12px; }
+  #stave svg{ max-width:100%; }
+  .letters{ font-family:var(--mono); font-size:15px; line-height:2; margin:0; white-space:pre-wrap; }
+  pre.tab{ font-family:var(--mono); font-size:13px; line-height:1.35; margin:0 0 12px; overflow-x:auto; background:var(--inset);
+    border:1.5px solid rgba(23,20,14,.25); border-radius:8px; padding:10px 12px; }
+  .note{ font-size:14px; opacity:.85; margin:6px 0 0; }
+  .about .aboutline{ margin:0 0 10px; font-size:16.5px; }
+  .about .mynote{ margin:0 0 12px; padding:10px 12px; border-left:4px solid var(--pink); background:#fff5f8; border-radius:6px; }
+  .facts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px 18px; margin:0; }
+  .facts dt{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; opacity:.7; }
+  .facts dd{ margin:2px 0 0; font-weight:600; }
+  .lettersh{ font-family:var(--disp); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.1em; margin:18px 0 2px; }
+  details.inst{ border-top:1.5px solid rgba(23,20,14,.2); padding:6px 0; }
+  details.inst summary{ cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px; padding:6px 0; }
+  details.inst summary::-webkit-details-marker{ display:none; }
+  details.inst summary::before{ content:'▸'; font-family:var(--mono); transition:transform .15s; }
+  details.inst[open] summary::before{ transform:rotate(90deg); }
+  details.inst h3{ font-family:var(--disp); font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:.08em; margin:0; }
+  .rel{ display:flex; flex-wrap:wrap; gap:8px; } .rel a{ font-weight:600; text-decoration:none; color:var(--ink); border:2px solid var(--ink);
+    border-radius:10px; padding:6px 11px; background:#fffdf7; } .rel a:hover{ background:#fff; }
+  .credit{ font-size:13px; opacity:.8; } .credit a{ color:var(--blue); }
+  .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:12px; } .foot a{ color:var(--blue); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="tabs" aria-label="Sections">
+    <a href="index.html">Arcade</a><a href="dojo.html">Courses</a><a href="resources.html">Resources</a>
+    <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
+  </nav>
+  <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Tune directory</a> › Memphis Blues</div>
+  <h1><span class="sr">Memphis Blues — </span>Sheet Music &amp; Tab Directory</h1>
+  <div class="layout"><div class="main">
+
+  <a class="mtbanner" href="melody-trainer_1.html?tune=Memphis%20Blues">
+    <span class="mtb-k">▶ Learn it in the Melody Trainer</span>
+    <span class="mtb-t">See every note of Memphis Blues on your banjo, fiddle, mandolin, guitar, ukulele or piano — then play along: the music listens and waits for you.</span>
+    <span class="mtb-go">Open Memphis Blues →</span>
+  </a>
+
+  <section class="card about"><h2>About Memphis Blues</h2>
+    <p class="aboutline">Memphis Blues is a blues in F major — intermediate, running from C to f and staying in first position on banjo, mandolin and fiddle.</p>
+    
+    <dl class="facts">
+      <div><dt>Type</dt><dd>Blues, each usually played twice</dd></div>
+      <div><dt>Key</dt><dd>F major · 4/4</dd></div>
+      <div><dt>Range</dt><dd>C to f · first position</dd></div>
+      <div><dt>Notes used</dt><dd>C C♯ D♭ D D♯ E F♭ F F♯ G G♯ A♭ A B♭ C♭ B</dd></div>
+      <div><dt>Level</dt><dd>Intermediate</dd></div>
+    </dl>
+  </section>
+
+  <section class="card"><h2>Memphis Blues — sheet music</h2><p class="sub">F major · 4/4</p>
+    <div id="stave" aria-label="Sheet music for Memphis Blues"></div>
+    <noscript><p class="note">Turn on JavaScript to see the sheet music.</p></noscript>
+    <h3 class="lettersh">The notes</h3>
+    <p class="sub">Letter names, bar by bar · capitals up to C in the third space, lower case from the D on the 4th line</p>
+    <p class="letters">C C♭ B♭ B♭ C G | C C♭ B♭ B♭ C G | F A G♯ A A G♯ A | F A G♯ A A G♯ A
+C C♭ B♭ B♭ C G | C C♭ B♭ B♭ C G | A A A A A A A | A A A A A A A
+D E F♯ D E F♯ D E | F♯ D E F♯ F♯ D E F♯ | G A B G A B G A | B G A B B G A B
+C C♭ B♭ B♭ C G | C C♭ B♭ B♭ C G | F F A C | F F C D D♯
+E C B♭ B♭ C B♭ G | G♯ A G♯ A F D | F A C | F d d♯ e
+f C♯ d d B♭ G F | D F G B♭ B♭ C C♯ d | f C♯ d d B♭ | A♭ A♭ d C♯ d
+f f♭ e e B♭ | C♯ d C♯ d B♭ G | B♭ | B♭ B♭ B♭
+d d♭ C C C | C♯ d C♯ d B♭ G | B♭ d f d B♭ G F | B♭ d e e
+B♭</p>
+  </section>
+
+  <div class="play"><a class="main" href="melody-trainer_1.html?tune=Memphis%20Blues">▶ Play along in the Melody Trainer</a></div>
+
+  <section class="card tabs-card" id="tab"><h2>Memphis Blues — tab</h2>
+    <p class="sub">Tenor banjo · mandolin · fiddle · guitar · ukulele — tap one to open it</p>
+<details class="inst" id="banjo"><summary><h3>Memphis Blues — Tenor banjo tab</h3></summary><p class="sub">G D A E (Irish tuning) · open position</p><pre class="tab">E|-------------|-------------|---------------|---------------|
+A|-3-2-1-1-3---|-3-2-1-1-3---|---0---0-0---0-|---0---0-0---0-|
+D|-----------5-|-----------5-|-3---6-----6---|-3---6-----6---|
+G|-------------|-------------|---------------|---------------|</pre><pre class="tab">E|-------------|-------------|---------------|---------------|
+A|-3-2-1-1-3---|-3-2-1-1-3---|-0-0-0-0-0-0-0-|-0-0-0-0-0-0-0-|
+D|-----------5-|-----------5-|---------------|---------------|
+G|-------------|-------------|---------------|---------------|</pre><pre class="tab">E|-----------------|-----------------|-----------------|-----------------|
+A|-----------------|-----------------|---0-2---0-2---0-|-2---0-2-2---0-2-|
+D|-0-2-4-0-2-4-0-2-|-4-0-2-4-4-0-2-4-|-5-----5-----5---|---5-------5-----|
+G|-----------------|-----------------|-----------------|-----------------|</pre><pre class="tab">E|-------------|-------------|---------|-----------|
+A|-3-2-1-1-3---|-3-2-1-1-3---|-----0---|-----------|
+D|-----------5-|-----------5-|-3-3-----|-3-3---0-1-|
+G|-------------|-------------|-------5-|-----5-----|</pre><pre class="tab">E|---------------|-------------|-------|-------0-|
+A|---3-1-1-3-1---|---0---0-----|---0---|---5-6---|
+D|-2-----------5-|-6---6---3-0-|-3-----|-3-------|
+G|---------------|-------------|-----5-|---------|</pre><pre class="tab">E|-1-------------|-----------------|-1---------|-----------|
+A|---4-5-5-1-----|-------1-1-3-4-5-|---4-5-5-1-|-----5-4-5-|
+D|-----------5-3-|-0-3-5-----------|-----------|-6-6-------|
+G|---------------|-----------------|-----------|-----------|</pre><pre class="tab">E|-1-0-0-0---|-------------|---|-------|
+A|---------1-|-4-5-4-5-1---|-1-|-1-1-1-|
+D|-----------|-----------5-|---|-------|
+G|-----------|-------------|---|-------|</pre><pre class="tab">E|-----------|-------------|-----1---------|-----0-0-|
+A|-5-4-3-3-3-|-4-5-4-5-1---|-1-5---5-1-----|-1-5-----|
+D|-----------|-----------5-|-----------5-3-|---------|
+G|-----------|-------------|---------------|---------|</pre><pre class="tab">E|---|
+A|-1-|
+D|---|
+G|---|</pre><p class="note">Numbers are frets. Tenor banjo sounds an octave below the written notes.</p></details>
+<details class="inst" id="mandolin"><summary><h3>Memphis Blues — Mandolin tab</h3></summary><p class="sub">G D A E · open position</p><pre class="tab">E|-------------|-------------|---------------|---------------|
+A|-3-2-1-1-3---|-3-2-1-1-3---|---0---0-0---0-|---0---0-0---0-|
+D|-----------5-|-----------5-|-3---6-----6---|-3---6-----6---|
+G|-------------|-------------|---------------|---------------|</pre><pre class="tab">E|-------------|-------------|---------------|---------------|
+A|-3-2-1-1-3---|-3-2-1-1-3---|-0-0-0-0-0-0-0-|-0-0-0-0-0-0-0-|
+D|-----------5-|-----------5-|---------------|---------------|
+G|-------------|-------------|---------------|---------------|</pre><pre class="tab">E|-----------------|-----------------|-----------------|-----------------|
+A|-----------------|-----------------|---0-2---0-2---0-|-2---0-2-2---0-2-|
+D|-0-2-4-0-2-4-0-2-|-4-0-2-4-4-0-2-4-|-5-----5-----5---|---5-------5-----|
+G|-----------------|-----------------|-----------------|-----------------|</pre><pre class="tab">E|-------------|-------------|---------|-----------|
+A|-3-2-1-1-3---|-3-2-1-1-3---|-----0---|-----------|
+D|-----------5-|-----------5-|-3-3-----|-3-3---0-1-|
+G|-------------|-------------|-------5-|-----5-----|</pre><pre class="tab">E|---------------|-------------|-------|-------0-|
+A|---3-1-1-3-1---|---0---0-----|---0---|---5-6---|
+D|-2-----------5-|-6---6---3-0-|-3-----|-3-------|
+G|---------------|-------------|-----5-|---------|</pre><pre class="tab">E|-1-------------|-----------------|-1---------|-----------|
+A|---4-5-5-1-----|-------1-1-3-4-5-|---4-5-5-1-|-----5-4-5-|
+D|-----------5-3-|-0-3-5-----------|-----------|-6-6-------|
+G|---------------|-----------------|-----------|-----------|</pre><pre class="tab">E|-1-0-0-0---|-------------|---|-------|
+A|---------1-|-4-5-4-5-1---|-1-|-1-1-1-|
+D|-----------|-----------5-|---|-------|
+G|-----------|-------------|---|-------|</pre><pre class="tab">E|-----------|-------------|-----1---------|-----0-0-|
+A|-5-4-3-3-3-|-4-5-4-5-1---|-1-5---5-1-----|-1-5-----|
+D|-----------|-----------5-|-----------5-3-|---------|
+G|-----------|-------------|---------------|---------|</pre><pre class="tab">E|---|
+A|-1-|
+D|---|
+G|---|</pre><p class="note">Numbers are frets. Same strings as the fiddle, so the same notes fall in the same places.</p></details>
+<details class="inst" id="fiddle"><summary><h3>Memphis Blues — fiddle fingering</h3></summary><p class="sub">G D A E · first position — finger numbers</p><pre class="tab">E|-----------------|-----------------|------------------|------------------|
+A|-L2-1-L1-L1-L2---|-L2-1-L1-L1-L2---|----0----0-0----0-|----0----0-0----0-|
+D|---------------3-|---------------3-|-L2---H3-----H3---|-L2---H3-----H3---|
+G|-----------------|-----------------|------------------|------------------|</pre><pre class="tab">E|-----------------|-----------------|---------------|---------------|
+A|-L2-1-L1-L1-L2---|-L2-1-L1-L1-L2---|-0-0-0-0-0-0-0-|-0-0-0-0-0-0-0-|
+D|---------------3-|---------------3-|---------------|---------------|
+G|-----------------|-----------------|---------------|---------------|</pre><pre class="tab">E|-----------------|-----------------|-----------------|-----------------|
+A|-----------------|-----------------|---0-1---0-1---0-|-1---0-1-1---0-1-|
+D|-0-1-2-0-1-2-0-1-|-2-0-1-2-2-0-1-2-|-3-----3-----3---|---3-------3-----|
+G|-----------------|-----------------|-----------------|-----------------|</pre><pre class="tab">E|-----------------|-----------------|-----------|--------------|
+A|-L2-1-L1-L1-L2---|-L2-1-L1-L1-L2---|-------0---|--------------|
+D|---------------3-|---------------3-|-L2-L2-----|-L2-L2---0-L1-|
+G|-----------------|-----------------|---------3-|-------3------|</pre><pre class="tab">E|--------------------|----------------|--------|---------0-|
+A|---L2-L1-L1-L2-L1---|----0----0------|----0---|----3-H3---|
+D|-1----------------3-|-H3---H3---L2-0-|-L2-----|-L2--------|
+G|--------------------|----------------|------3-|-----------|</pre><pre class="tab">E|-L1---------------|---------------------|-L1----------|-------------|
+A|----2-3-3-L1------|--------L1-L1-L2-2-3-|----2-3-3-L1-|-------3-2-3-|
+D|-------------3-L2-|-0-L2-3--------------|-------------|-H3-H3-------|
+G|------------------|---------------------|-------------|-------------|</pre><pre class="tab">E|-L1-0-0-0----|--------------|----|----------|
+A|----------L1-|-2-3-2-3-L1---|-L1-|-L1-L1-L1-|
+D|-------------|------------3-|----|----------|
+G|-------------|--------------|----|----------|</pre><pre class="tab">E|--------------|--------------|------L1-----------|------0-0-|
+A|-3-2-L2-L2-L2-|-2-3-2-3-L1---|-L1-3----3-L1------|-L1-3-----|
+D|--------------|------------3-|--------------3-L2-|----------|
+G|--------------|--------------|-------------------|----------|</pre><pre class="tab">E|----|
+A|-L1-|
+D|----|
+G|----|</pre><p class="note">0 = open string · 1–4 = finger · L = low (half step back), H = high.</p></details>
+<details class="inst" id="guitar"><summary><h3>Memphis Blues — Guitar tab</h3></summary><p class="sub">E A D G B E · open position</p><pre class="tab">e|-------------|-------------|---------------|---------------|
+B|-1-0-----1---|-1-0-----1---|---------------|---------------|
+G|-----3-3---0-|-----3-3---0-|---2-1-2-2-1-2-|---2-1-2-2-1-2-|
+D|-------------|-------------|-3-------------|-3-------------|
+A|-------------|-------------|---------------|---------------|
+E|-------------|-------------|---------------|---------------|</pre><pre class="tab">e|-------------|-------------|---------------|---------------|
+B|-1-0-----1---|-1-0-----1---|---------------|---------------|
+G|-----3-3---0-|-----3-3---0-|-2-2-2-2-2-2-2-|-2-2-2-2-2-2-2-|
+D|-------------|-------------|---------------|---------------|
+A|-------------|-------------|---------------|---------------|
+E|-------------|-------------|---------------|---------------|</pre><pre class="tab">e|-----------------|-----------------|-----------------|-----------------|
+B|-----------------|-----------------|-----0-----0-----|-0-----0-0-----0-|
+G|-----------------|-----------------|-0-2---0-2---0-2-|---0-2-----0-2---|
+D|-0-2-4-0-2-4-0-2-|-4-0-2-4-4-0-2-4-|-----------------|-----------------|
+A|-----------------|-----------------|-----------------|-----------------|
+E|-----------------|-----------------|-----------------|-----------------|</pre><pre class="tab">e|-------------|-------------|---------|-----------|
+B|-1-0-----1---|-1-0-----1---|---------|-----------|
+G|-----3-3---0-|-----3-3---0-|-----2---|-----------|
+D|-------------|-------------|-3-3-----|-3-3---0-1-|
+A|-------------|-------------|-------3-|-----3-----|
+E|-------------|-------------|---------|-----------|</pre><pre class="tab">e|---------------|-------------|-------|-------0-|
+B|---1-----1-----|-------------|-------|---3-4---|
+G|-----3-3---3-0-|-1-2-1-2-----|---2---|---------|
+D|-2-------------|---------3-0-|-3-----|-3-------|
+A|---------------|-------------|-----3-|---------|
+E|---------------|-------------|-------|---------|</pre><pre class="tab">e|-1-------------|-----------------|-1---------|-----------|
+B|---2-3-3-------|-----------1-2-3-|---2-3-3---|-----3-2-3-|
+G|---------3-0---|-----0-3-3-------|---------3-|-1-1-------|
+D|-------------3-|-0-3-------------|-----------|-----------|
+A|---------------|-----------------|-----------|-----------|
+E|---------------|-----------------|-----------|-----------|</pre><pre class="tab">e|-1-0-0-0---|-------------|---|-------|
+B|-----------|-2-3-2-3-----|---|-------|
+G|---------3-|---------3-0-|-3-|-3-3-3-|
+D|-----------|-------------|---|-------|
+A|-----------|-------------|---|-------|
+E|-----------|-------------|---|-------|</pre><pre class="tab">e|-----------|-------------|-----1---------|-----0-0-|
+B|-3-2-1-1-1-|-2-3-2-3-----|---3---3-------|---3-----|
+G|-----------|---------3-0-|-3-------3-0---|-3-------|
+D|-----------|-------------|-------------3-|---------|
+A|-----------|-------------|---------------|---------|
+E|-----------|-------------|---------------|---------|</pre><pre class="tab">e|---|
+B|---|
+G|-3-|
+D|---|
+A|---|
+E|---|</pre><p class="note">Numbers are frets; the bottom line is the low E string.</p></details>
+<details class="inst" id="uke"><summary><h3>Memphis Blues — Ukulele tab</h3></summary><p class="sub">G C E A (high G) · open position</p><pre class="tab">A|-3-2-1-1-3---|-3-2-1-1-3---|---0---0-0---0-|---0---0-0---0-|
+E|-------------|-------------|-1-------------|-1-------------|
+C|-------------|-------------|---------------|---------------|
+G|-----------0-|-----------0-|-----1-----1---|-----1-----1---|</pre><pre class="tab">A|-3-2-1-1-3---|-3-2-1-1-3---|-0-0-0-0-0-0-0-|-0-0-0-0-0-0-0-|
+E|-------------|-------------|---------------|---------------|
+C|-------------|-------------|---------------|---------------|
+G|-----------0-|-----------0-|---------------|---------------|</pre><pre class="tab">A|-----------------|-----------------|---0-2---0-2---0-|-2---0-2-2---0-2-|
+E|---0-2---0-2---0-|-2---0-2-2---0-2-|-----------------|-----------------|
+C|-2-----2-----2---|---2-------2-----|-----------------|-----------------|
+G|-----------------|-----------------|-0-----0-----0---|---0-------0-----|</pre><pre class="tab">A|-3-2-1-1-3---|-3-2-1-1-3---|-----0---|-----------|
+E|-------------|-------------|-1-1-----|-1-1-------|
+C|-------------|-------------|-------0-|-----0-2-3-|
+G|-----------0-|-----------0-|---------|-----------|</pre><pre class="tab">A|---3-1-1-3-1---|---0---0-----|---0---|---5-6-7-|
+E|-0-------------|---------1---|-1-----|-1-------|
+C|---------------|-----------2-|-----0-|---------|
+G|-------------0-|-1---1-------|-------|---------|</pre><pre class="tab">A|-8-4-5-5-1-----|-------1-1-3-4-5-|-8-4-5-5-1-|-----5-4-5-|
+E|-------------1-|---1-------------|-----------|-----------|
+C|---------------|-2---------------|-----------|-----------|
+G|-----------0---|-----0-----------|-----------|-1-1-------|</pre><pre class="tab">A|-8-7-7-7-1-|-4-5-4-5-1---|-1-|-1-1-1-|
+E|-----------|-------------|---|-------|
+C|-----------|-------------|---|-------|
+G|-----------|-----------0-|---|-------|</pre><pre class="tab">A|-5-4-3-3-3-|-4-5-4-5-1---|-1-5-8-5-1-----|-1-5-7-7-|
+E|-----------|-------------|-------------1-|---------|
+C|-----------|-------------|---------------|---------|
+G|-----------|-----------0-|-----------0---|---------|</pre><pre class="tab">A|-1-|
+E|---|
+C|---|
+G|---|</pre><p class="note">Numbers are frets; the top line is the A string, the bottom line the high G.</p></details>
+  </section>
+  <section class="card"><h2>More bluess and tunes like it</h2>
+    <div class="rel"><a href="tunes/aunt-hagars-blues.html">Aunt Hagar&#x27;s Blues</a><a href="tunes/wang-wang-blues.html">Wang Wang Blues</a><a href="tunes/st-louis-blues.html">St. Louis Blues</a><a href="tunes/beale-street-blues.html">Beale Street Blues</a><a href="tunes/yellow-dog-blues.html">Yellow Dog Blues</a><a href="tunes/dallas-blues.html">Dallas Blues</a><a href="tunes/tishomingo-blues.html">Tishomingo Blues</a><a href="tunes/wabash-blues.html">Wabash Blues</a></div>
+  </section>
+
+  <p class="credit">This melody comes from <i>The Public Domain Song Anthology</i> (David Berger &amp; Chuck Israels), released CC0. The song is in the public domain. Tabs and letter names worked out by The Music Arcade.</p>
+  </div>
+  <aside class="card loadcard" id="tuneBrowser" data-current="Memphis Blues" aria-label="Load a tune">
+    <h2>Load a tune</h2>
+    <div class="booktabs" role="tablist" aria-label="Which tunes">
+      <button role="tab" data-view="all" class="on" aria-selected="true">All tunes</button>
+      <button role="tab" data-view="book" aria-selected="false">My tunebook <span id="tbBookCount"></span></button>
+    </div>
+    <div class="filters" role="group" aria-label="Filter by tradition">
+      <button data-o="" class="on">All</button><button data-o="Irish session">Irish</button><button data-o="American fiddle">Bluegrass</button>
+      <button data-o="Trad jazz">Jazz</button><button data-o="Beginner">Folk</button>
+    </div>
+    <input type="text" class="tunesearch" placeholder="Search — name, type or key (G, D mix…)" aria-label="Search tunes" autocomplete="off">
+    <div class="tunelist" aria-label="Tune library"><div class="none">Loading tunes…</div></div>
+    <a class="dirlink" href="tunes/">Whole directory →</a>
+  </aside>
+  </div>
+  <div class="foot"><a href="melody-trainer_1.html">&larr; Melody Trainer</a></div>
+</div>
+<script type="text/plain" id="abcSrc">M:4/4
+L:1/8
+C:W. C. Handy
+K:F
+&quot;C7&quot;&quot;^Gm7&quot;&quot;^Verse&quot; z c _cB-&quot;^C7&quot; B=c G2 |&quot;^Gm7&quot; z c _cB-&quot;^C7&quot; B=c G2 |&quot;F&quot; FA^GA- AG A2 |
+ FA^GA- AG&quot;F#dim&quot; A2 |&quot;C7&quot;&quot;^Gm7&quot; z c _cB-&quot;^C7&quot; B=c =G2 |&quot;C7&quot;&quot;^Gm7&quot; z c _cB-&quot;^C7&quot; B=c&quot;Em7b5&quot; G2 |
+&quot;A&quot;&quot;^A7&quot; A&quot;Dm/A&quot;A&quot;Adim&quot;A&quot;A7&quot;A- A&quot;Adim&quot;A&quot;A7&quot; A2 |&quot;A&quot; A&quot;Dm/A&quot;A&quot;Adim&quot;A&quot;A7&quot;A- A&quot;Adim&quot;A&quot;A7&quot; A2 |
+&quot;D7&quot; DE^FD EFDE |  ^FDEF- FDEF |&quot;G7&quot; GA=BG ABGA | =BGAB- BGAB | &quot;C7&quot;&quot;^Gm7&quot; z c _c_B-&quot;^C7&quot; B=c G2 |
+&quot;^Gm7&quot; z c _cB-&quot;^C7&quot; B=c G2 |&quot;F&quot; F4- F A2 =C |  F4- FC&quot;F#dim&quot;D^D |&quot;C7&quot; E c2 B- BcBG |
+&quot;F&quot; ^GAGA&quot;Bb&quot;&quot;^B♭7&quot; F D3 | &quot;F&quot; F6 AC | F4&quot;F7&quot; z d ^de |:[K:Bb]&quot;Bb&quot;&quot;^Chorus&quot; f2 ^cd- dBGF |
+&quot;Bb&quot; DFGB- B=c^cd | f2 ^cd- d2 B2 |&quot;Bb7&quot; _A4- Ad^cd | &quot;Eb&quot; f _f2 e- e3 B | ^cdcd B G3 |&quot;Bb&quot; B8 |
+ B4- B3 B |&quot;F7&quot; d _d2 c- c3 c |&quot;Eb&quot; ^c=dcd B G3 |1 &quot;Bb&quot;&quot;^B♭&quot; B2&quot;^B°&quot; df&quot;^Cm7&quot; (dB)&quot;^F7&quot;(GF) |
+&quot;^B♭&quot;&quot;^E°&quot; B4&quot;^B♭/F&quot; z d e=e :|2&quot;Bb&quot; B8 | z8 |]</script>
+<script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
+<script>
+  /* draw the sheet music from the tune's ABC (abcjs, MIT licence) */
+  (function(){
+    var src = document.getElementById('abcSrc').textContent;
+    var t = document.createElement('textarea'); t.innerHTML = src; src = t.value;   // undo the HTML escaping
+    if(window.ABCJS) ABCJS.renderAbc('stave', src, { responsive:'resize', paddingtop:0, paddingbottom:0, staffwidth:820 });
+  })();
+  /* #banjo, #fiddle… (the Melody Trainer's "See tab") opens that instrument's tab and scrolls to it */
+  (function(){
+    function openHash(){
+      var d = location.hash && document.getElementById(location.hash.slice(1));
+      if(d && d.tagName === 'DETAILS'){ d.open = true; setTimeout(function(){ d.scrollIntoView({ block:'start' }); }, 50); }
+    }
+    openHash(); window.addEventListener('hashchange', openHash);
+  })();
+</script>
+<script src="/tunes/tune-browser.js"></script>
+<script src="/tools.js"></script>
+<script src="/related.js"></script>
+</body>
+</html>

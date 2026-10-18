@@ -28,8 +28,29 @@ NAT = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11}
 MODES = {'major': 0, 'dorian': 2, 'phrygian': 4, 'lydian': 5, 'mixolydian': 7, 'minor': 9, 'locrian': 11}
 MAJOR_FIFTHS = {0: 0, 7: 1, 2: 2, 9: 3, 4: 4, 11: 5, 6: 6, 1: -5, 8: -4, 3: -3, 10: -2, 5: -1}
 MAJOR_NAME = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B']
+# each collection: how to describe a tune from it, and where its settings came from
+ORIGIN = {
+  'Irish session':   {'label': 'Irish session tunes', 'adj': 'Irish', 'genre': 'Irish traditional music',
+                      'credit': lambda t: f'This setting is a community transcription from <a href="https://thesession.org/tunes/{esc(t["id"])}" rel="nofollow noopener" target="_blank">thesession.org</a>. The tune itself is traditional.'},
+  'American fiddle': {'label': 'Bluegrass & old-time fiddle tunes', 'adj': 'old-time fiddle', 'genre': 'American old-time and bluegrass fiddle music',
+                      'credit': lambda t: 'This traditional setting comes from <a href="https://www.jimsrootsandblues.com" rel="nofollow noopener" target="_blank">Jim’s Roots &amp; Blues</a>. The tune itself is traditional.'},
+  'Trad jazz':       {'label': 'Trad jazz & blues', 'adj': 'trad jazz', 'genre': 'Traditional jazz and blues',
+                      'credit': lambda t: 'This melody comes from <i>The Public Domain Song Anthology</i> (David Berger &amp; Chuck Israels), released CC0. The song is in the public domain.'},
+  'Beginner':        {'label': 'Folk songs, carols & children’s songs', 'adj': 'folk', 'genre': 'Folk songs',
+                      'credit': lambda t: 'This melody comes from <i>The Public Domain Song Anthology</i> (David Berger &amp; Chuck Israels), released CC0. The song is in the public domain.'},
+}
+ORIGIN_ORDER = ['Irish session', 'American fiddle', 'Trad jazz', 'Beginner']
+
 TYPE_WORD = {'reel': 'reel', 'jig': 'jig', 'slip jig': 'slip jig', 'hornpipe': 'hornpipe', 'polka': 'polka',
-             'slide': 'slide', 'waltz': 'waltz', 'barndance': 'barndance', 'march': 'march', 'slow air': 'slow air'}
+             'slide': 'slide', 'waltz': 'waltz', 'barndance': 'barndance', 'march': 'march', 'slow air': 'slow air',
+             'nursery': 'nursery rhyme', 'folk': 'folk song', 'carol': 'carol', 'spiritual': 'spiritual',
+             'blues': 'blues', 'jazz': 'jazz tune', 'rag': 'rag'}
+def describe(t, ttype):
+    """'Irish jig', 'old-time fiddle reel', 'trad jazz rag', 'folk song', 'nursery rhyme'…"""
+    o = t['origin']
+    if o == 'Beginner': return ttype
+    if o == 'Trad jazz': return ttype if ttype in ('blues', 'rag') else 'trad jazz tune' if ttype == 'jazz tune' else 'trad jazz ' + ttype
+    return ORIGIN.get(o, ORIGIN['Irish session'])['adj'] + ' ' + ttype
 
 # instrument -> (heading, open strings low->high as WRITTEN pitch, fret limit for "open position")
 # tenor banjo and guitar sound an octave below the written note, so their strings are written an octave up
@@ -127,15 +148,22 @@ def place(strings, midi, maxf):
     near = [c for c in cand if c[0] <= maxf]
     return min(near or cand)                  # lowest fret: open strings first, then up the top string
 
+def tab_shift(inst, bars):
+    """12 if the tune goes below this instrument's lowest string (some songs and
+    jazz tunes do) — the tab is then played an octave up; else 0."""
+    low = min(n['midi'] for b in bars for n in b)
+    return 12 if low < min(INSTR[inst][2]) else 0          # min: the ukulele's high G string is listed first
+
 def tab_lines(inst, bars, per_line=4):
     _, _, strings, maxf = INSTR[inst]
     names = list(STRING_NAMES[inst])
+    up = tab_shift(inst, bars)
     out = []
     for li in range(0, len(bars), per_line):
         rows = [names[si] + '|' for si in range(len(strings))]
         for bar in bars[li:li + per_line]:
             for n in bar:
-                p = place(strings, n['midi'], maxf)
+                p = place(strings, n['midi'] + up, maxf)
                 cell = '?' if p is None else (FIDDLE_FINGER.get(p[0], str(p[0])) if inst == 'fiddle' else str(p[0]))
                 w = len(cell) + 1
                 for si in range(len(strings)):
@@ -182,11 +210,10 @@ def tune_facts(t, key, bars):
     return {'lo': trad_name(lo), 'hi': trad_name(hi), 'span': span, 'parts': parts, 'has_rep': has_rep, 'bars': nb,
             'first_pos': first_pos, 'off': len(off), 'used': used, 'level': level}
 
-def intro(name, ttype, key, f):
-    bits = []
-    if f['parts']: bits.append(f'{NUM.get(f["parts"], f["parts"])}-part {ttype}')
-    else: bits.append(ttype)
-    s = f'{name} is a {bits[0]} in {key["label"]}'
+def intro(name, what, key, f):
+    phrase = f'{NUM.get(f["parts"], f["parts"])}-part {what}' if f['parts'] else what
+    art = 'an' if phrase[0].lower() in 'aeiou' else 'a'
+    s = f'{name} is {art} {phrase} in {key["label"]}'
     if key['mode'] != 'major': s += f' (it uses the notes of {key["parent_name"]})'
     s += f' — {f["level"]}'
     s += (f', running from {f["lo"]} to {f["hi"]}' + (' and staying in first position on banjo, mandolin and fiddle.' if f['first_pos'] else '.'))
@@ -198,7 +225,35 @@ CSS = """
     --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,sans-serif; --mono:'Space Mono',monospace; }
   *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
   body{ background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
-  .wrap{ max-width:900px; margin:0 auto; padding:28px 16px 70px; }
+  .wrap{ max-width:1240px; margin:0 auto; padding:28px 16px 70px; }
+  /* the page on the left, Load a tune on the right (below, on phones) */
+  .layout{ display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:22px; align-items:start; margin-top:16px; }
+  .layout .main > .mtbanner{ margin-top:0; }
+  .loadcard{ position:sticky; top:14px; margin:0; }
+  @media (max-width:980px){ .layout{ grid-template-columns:1fr; } .loadcard{ position:static; } }
+  /* Load a tune — as in the Melody Trainer */
+  .booktabs{ display:flex; margin:0 0 10px; border:2px solid var(--ink); border-radius:10px; overflow:hidden; }
+  .booktabs button{ flex:1; border:0; padding:8px 6px; font-family:var(--mono); font-weight:700; font-size:12px; background:var(--paper); color:var(--ink); cursor:pointer; }
+  .booktabs button + button{ border-left:2px solid var(--ink); }
+  .booktabs button.on{ background:var(--ink); color:var(--paper); }
+  .filters{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+  .filters button{ font-family:var(--mono); font-weight:700; padding:5px 10px; font-size:11.5px; border:2px solid var(--ink); border-radius:99px;
+    background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 rgba(23,20,14,.9); cursor:pointer; }
+  .filters button.on{ background:var(--ink); color:var(--paper); }
+  .tunesearch{ width:100%; font-family:var(--body); font-size:14px; padding:9px 12px; border:2px solid var(--ink); border-radius:10px; background:#fffdf7; margin:0 0 10px; }
+  .tunelist{ max-height:min(60vh,520px); overflow-y:auto; border:2px solid var(--ink); border-radius:8px; background:#fffdf7; }
+  .tunelist .grp{ position:sticky; top:0; font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--paper); background:var(--ink); padding:5px 12px; }
+  .tunelist .tunerow{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:8px 12px; color:var(--ink); text-decoration:none; border-top:1px solid rgba(23,20,14,.08); }
+  .tunelist .tunerow:hover{ background:#efe7d3; }
+  .tunelist .tunerow .tn{ font-weight:600; font-size:14px; }
+  .tunelist .tunerow .tk{ font-family:var(--mono); font-size:11px; color:#8a8577; white-space:nowrap; }
+  .tunelist .otag{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:1px 6px 0; border-radius:99px; border:1.5px solid var(--ink); white-space:nowrap; }
+  .tunelist .otag.ir{ background:#dde4ff; color:#2438C8; } .tunelist .otag.am{ background:#ffe6c9; color:#a8542a; }
+  .tunelist .otag.jz{ background:#e9ddf6; color:#6b3fa0; } .tunelist .otag.be{ background:#d8efdd; color:#1f7a45; }
+  .tunelist .tunerow.cur{ background:var(--blue); color:var(--paper); } .tunelist .tunerow.cur .tk{ color:rgba(244,238,226,.85); }
+  .tunelist .tunerow.cur .otag{ border-color:var(--paper); background:transparent; color:var(--paper); }
+  .tunelist .none{ padding:14px 12px; font-family:var(--mono); font-size:12px; color:#8a8577; }
+  .dirlink{ display:block; margin-top:10px; font-family:var(--mono); font-size:12px; font-weight:700; color:var(--blue); text-decoration:none; }
   .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
   .tabs a{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:var(--ink);
     padding:8px 15px; border:2px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); }
@@ -262,7 +317,8 @@ def build_page(t, lib, built, notes_by_name=None):
     mt = 'melody-trainer_1.html?tune=' + quote(name)
     keytxt = key['label'] + ('' if key['mode'] == 'major' else ' (the notes of ' + key['parent_name'] + ')')
     title = f'{name} — Sheet Music & Tab (banjo, mandolin, fiddle, guitar)'
-    desc = (f'{name}, a {f["level"].replace("one for the more experienced", "more advanced")} Irish {ttype} in {key["label"]}: '
+    what = describe(t, ttype)
+    desc = (f'{name}, {"an" if f["level"].startswith(("intermediate", "one")) else "a"} {f["level"].replace("one for the more experienced", "more advanced")} {what} in {key["label"]}: '
             f'sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.')
     letters = '\n'.join(' | '.join(' '.join(trad_name(n) for n in bar) for bar in bars[i:i + 4]) for i in range(0, len(bars), 4))
     abc_render = '\n'.join(ln for ln in t['abc'].split('\n') if not re.match(r'^[TXOR]:', ln))
@@ -278,6 +334,7 @@ def build_page(t, lib, built, notes_by_name=None):
     for inst, (h, sub, _, _) in INSTR.items():
         # each instrument folds away; a link like #banjo (the Melody Trainer's "See tab") opens that one
         tabs = tab_lines(inst, bars)
+        if tab_shift(inst, bars): sub = sub + ' · played an octave up, as the tune dips below the lowest string'
         extra = ('<p class="note">0 = open string · 1–4 = finger · L = low (half step back), H = high.</p>' if inst == 'fiddle' else
                  '<p class="note">Numbers are frets. Tenor banjo sounds an octave below the written notes.</p>' if inst == 'banjo' else
                  '<p class="note">Numbers are frets; the bottom line is the low E string.</p>' if inst == 'guitar' else
@@ -285,7 +342,7 @@ def build_page(t, lib, built, notes_by_name=None):
                  '<p class="note">Numbers are frets. Same strings as the fiddle, so the same notes fall in the same places.</p>')
         sections += (f'<details class="inst" id="{inst}"><summary><h3>{esc(name)} — {esc(h.lower() if inst == "fiddle" else h)}</h3></summary>'
                      f'<p class="sub">{esc(sub)}</p>' + ''.join(f'<pre class="tab">{esc(x)}</pre>' for x in tabs) + extra + '</details>\n')
-    jsonld = {"@context": "https://schema.org", "@type": "MusicComposition", "name": name, "genre": "Irish traditional music",
+    jsonld = {"@context": "https://schema.org", "@type": "MusicComposition", "name": name, "genre": ORIGIN.get(t['origin'], ORIGIN['Irish session'])['genre'],
               "musicalKey": key['label'], "inLanguage": "en", "description": desc,
               "composer": {"@type": "Organization", "name": "Traditional"}}
     return f'''<!DOCTYPE html>
@@ -314,8 +371,9 @@ def build_page(t, lib, built, notes_by_name=None):
     <a href="index.html">Arcade</a><a href="dojo.html">Courses</a><a href="resources.html">Resources</a>
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
-  <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Session tunes</a> › {esc(name)}</div>
+  <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Tune directory</a> › {esc(name)}</div>
   <h1><span class="sr">{esc(name)} — </span>Sheet Music &amp; Tab Directory</h1>
+  <div class="layout"><div class="main">
 
   <a class="mtbanner" href="{mt}">
     <span class="mtb-k">▶ Learn it in the Melody Trainer</span>
@@ -324,7 +382,7 @@ def build_page(t, lib, built, notes_by_name=None):
   </a>
 
   <section class="card about"><h2>About {esc(name)}</h2>
-    <p class="aboutline">{esc(intro(name, ttype, key, f))}</p>
+    <p class="aboutline">{esc(intro(name, what, key, f))}</p>
     {('<p class="mynote"><b>From William:</b> ' + esc(mynote) + '</p>') if mynote else ''}
     <dl class="facts">
       <div><dt>Type</dt><dd>{esc(ttype.capitalize())}{(', ' + NUM.get(f['parts'], str(f['parts'])) + ' parts') if f['parts'] else ''}{', each usually played twice' if f['has_rep'] else ''}</dd></div>
@@ -352,9 +410,23 @@ def build_page(t, lib, built, notes_by_name=None):
     <div class="rel">{"".join(f'<a href="{link(x)}">{esc(x["name"])}</a>' for x in rel)}</div>
   </section>
 
-  <p class="credit">This setting of {esc(name)} is a community transcription from
-  <a href="https://thesession.org/tunes/{esc(t["id"])}" rel="nofollow noopener" target="_blank">thesession.org</a>.
-  The tune itself is traditional. Tabs and letter names worked out by The Music Arcade.</p>
+  <p class="credit">{ORIGIN.get(t['origin'], ORIGIN['Irish session'])['credit'](t)} Tabs and letter names worked out by The Music Arcade.</p>
+  </div>
+  <aside class="card loadcard" id="tuneBrowser" data-current="{esc(name)}" aria-label="Load a tune">
+    <h2>Load a tune</h2>
+    <div class="booktabs" role="tablist" aria-label="Which tunes">
+      <button role="tab" data-view="all" class="on" aria-selected="true">All tunes</button>
+      <button role="tab" data-view="book" aria-selected="false">My tunebook <span id="tbBookCount"></span></button>
+    </div>
+    <div class="filters" role="group" aria-label="Filter by tradition">
+      <button data-o="" class="on">All</button><button data-o="Irish session">Irish</button><button data-o="American fiddle">Bluegrass</button>
+      <button data-o="Trad jazz">Jazz</button><button data-o="Beginner">Folk</button>
+    </div>
+    <input type="text" class="tunesearch" placeholder="Search — name, type or key (G, D mix…)" aria-label="Search tunes" autocomplete="off">
+    <div class="tunelist" aria-label="Tune library"><div class="none">Loading tunes…</div></div>
+    <a class="dirlink" href="tunes/">Whole directory →</a>
+  </aside>
+  </div>
   <div class="foot"><a href="melody-trainer_1.html">&larr; Melody Trainer</a></div>
 </div>
 <script type="text/plain" id="abcSrc">{esc(abc_render)}</script>
@@ -375,6 +447,7 @@ def build_page(t, lib, built, notes_by_name=None):
     openHash(); window.addEventListener('hashchange', openHash);
   }})();
 </script>
+<script src="/tunes/tune-browser.js"></script>
 <script src="/tools.js"></script>
 <script src="/related.js"></script>
 </body>
@@ -384,28 +457,36 @@ def build_page(t, lib, built, notes_by_name=None):
 TYPE_ORDER = ['reel', 'jig', 'slip jig', 'hornpipe', 'polka', 'slide', 'barndance', 'march', 'slow air', 'waltz']
 PLURAL = {'slip jig': 'Slip jigs', 'slow air': 'Slow airs', 'march': 'Marches'}
 def build_index(lib, names):
-    """tunes/index.html — the Sheet Music & Tab Directory: every tune page, by type."""
+    """tunes/index.html — the Sheet Music & Tab Directory: every tune page, by tradition then type."""
     rows = {}
     for nm in names:
         t = next((x for x in lib if x['name'] == nm), None)
         if not t: continue
         key = parse_key(t['key']); f = tune_facts(t, key, notes_by_bar(t['abc'], key))
-        rows.setdefault(t['type'], []).append((t, key, f))
-    order = sorted(rows, key=lambda ty: (TYPE_ORDER.index(ty) if ty in TYPE_ORDER else 99, ty))
+        rows.setdefault(t['origin'], {}).setdefault(t['type'], []).append((t, key, f))
     lvl = {'beginner-friendly': ('beg', 'Beginner'), 'intermediate': ('int', 'Intermediate'), 'one for the more experienced': ('adv', 'Advanced')}
+    TORD = TYPE_ORDER + ['nursery', 'folk', 'carol', 'spiritual', 'blues', 'jazz', 'rag']
+    PL = dict(PLURAL, nursery='Nursery rhymes', folk='Folk songs', carol='Carols', spiritual='Spirituals', blues='Blues', jazz='Jazz tunes', rag='Rags')
     body = ''
-    for ty in order:
-        items = sorted(rows[ty], key=lambda r: re.sub(r'^the\s+', '', r[0]['name'].lower()))
-        body += f'<section class="grp" data-type="{esc(ty)}"><h2>{esc(PLURAL.get(ty, ty.capitalize() + "s"))} <span>{len(items)}</span></h2><ul>'
-        for t, key, f in items:
-            c, l = lvl[f['level']]
-            body += (f'<li data-k="{esc((t["name"] + " " + key["label"] + " " + key["parent_name"] + " " + l).lower())}">'
-                     f'<a href="tunes/{slug(t["name"])}.html">{esc(t["name"])}</a>'
-                     f'<span class="k">{esc(key["label"])}</span><span class="lv {c}">{l}</span></li>')
-        body += '</ul></section>\n'
+    for o in sorted(rows, key=lambda o: ORIGIN_ORDER.index(o) if o in ORIGIN_ORDER else 9):
+        oc = ORIGIN.get(o, ORIGIN['Irish session'])
+        body += f'<section class="trad" id="{slug(oc["label"])}"><h2 class="tradh">{esc(oc["label"])} <span>{sum(len(v) for v in rows[o].values())}</span></h2>\n'
+        for ty in sorted(rows[o], key=lambda ty: (TORD.index(ty) if ty in TORD else 99, ty)):
+            items = sorted(rows[o][ty], key=lambda r: re.sub(r'^the\s+', '', r[0]['name'].lower()))
+            body += f'<section class="grp" data-type="{esc(ty)}"><h3>{esc(PL.get(ty, ty.capitalize() + "s"))} <span>{len(items)}</span></h3><ul>'
+            for t, key, f in items:
+                c, l = lvl[f['level']]
+                body += (f'<li data-k="{esc((t["name"] + " " + key["label"] + " " + key["parent_name"] + " " + l + " " + oc["label"]).lower())}">'
+                         f'<a href="tunes/{slug(t["name"])}.html">{esc(t["name"])}</a>'
+                         f'<span class="k">{esc(key["label"])}</span><span class="lv {c}">{l}</span></li>')
+            body += '</ul></section>\n'
+        body += '</section>\n'
+    jump = ' · '.join(f'<a href="tunes/#{slug(ORIGIN[o]["label"])}">{esc(ORIGIN[o]["label"])}</a>' for o in ORIGIN_ORDER if o in rows)
+    rows = {k: v for o in rows.values() for k, v in o.items()}   # for the count below
     n = sum(len(v) for v in rows.values())
-    title = 'Sheet Music & Tab Directory — Irish session tunes | Music Arcade'
-    desc = (f'Sheet music, note names and tab for {n} Irish session tunes — reels, jigs, hornpipes, polkas and more — '
+    n = len(names)
+    title = 'Sheet Music & Tab Directory — Irish, bluegrass, jazz & folk tunes | Music Arcade'
+    desc = (f'Sheet music, note names and tab for {n} tunes — Irish session tunes, bluegrass fiddle tunes, trad jazz & blues and folk songs — '
             'for tenor banjo, mandolin, fiddle, guitar and ukulele. Free, with a play-along.')
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -424,15 +505,18 @@ def build_index(lib, names):
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>{CSS}
   .search{{ width:100%; font-family:var(--body); font-size:16px; padding:11px 14px; border:2px solid var(--ink); border-radius:10px; background:#fffdf7; margin:0 0 20px; }}
-  .grp h2{{ font-family:var(--disp); font-weight:700; font-size:15px; text-transform:uppercase; letter-spacing:.1em; margin:22px 0 8px; }}
-  .grp h2 span{{ font-family:var(--mono); font-weight:400; opacity:.6; }}
+  .tradh{{ font-family:var(--disp); font-weight:800; font-size:24px; margin:34px 0 4px; padding-top:6px; border-top:3px solid var(--ink); }}
+  .tradh span{{ font-family:var(--mono); font-weight:400; font-size:14px; opacity:.6; }}
+  .jump{{ font-family:var(--mono); font-size:12.5px; margin:-6px 0 16px; }} .jump a{{ color:var(--blue); text-decoration:none; }}
+  .grp h3{{ font-family:var(--disp); font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:.1em; margin:18px 0 8px; }}
+  .grp h3 span{{ font-family:var(--mono); font-weight:400; opacity:.6; }}
   .grp ul{{ list-style:none; padding:0; margin:0; columns:2 300px; column-gap:24px; }}
   .grp li{{ display:flex; align-items:baseline; gap:8px; padding:5px 0; border-bottom:1px solid rgba(23,20,14,.12); break-inside:avoid; }}
   .grp li a{{ flex:1; font-weight:600; color:var(--ink); text-decoration:none; }} .grp li a:hover{{ color:var(--blue); text-decoration:underline; }}
   .grp .k{{ font-family:var(--mono); font-size:11.5px; opacity:.7; white-space:nowrap; }}
   .lv{{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; border:1.5px solid var(--ink); border-radius:99px; padding:0 6px; white-space:nowrap; }}
   .lv.beg{{ background:#d8efdd; }} .lv.int{{ background:#fff2c2; }} .lv.adv{{ background:#fde0e6; }}
-  .grp.empty{{ display:none; }} li.hide{{ display:none; }}
+  .grp.empty, .trad.empty{{ display:none; }} li.hide{{ display:none; }}
 </style>
 </head>
 <body>
@@ -441,18 +525,21 @@ def build_index(lib, names):
     <a href="index.html">Arcade</a><a href="dojo.html">Courses</a><a href="resources.html">Resources</a>
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
-  <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › Session tunes</div>
+  <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › Tune directory</div>
   <h1>Sheet Music &amp; Tab Directory</h1>
   <a class="mtbanner" href="melody-trainer_1.html">
     <span class="mtb-k">▶ Learn them in the Melody Trainer</span>
     <span class="mtb-t">Pick any tune and see every note on your banjo, fiddle, mandolin, guitar, ukulele or piano — then play along: the music listens and waits for you.</span>
     <span class="mtb-go">Open the Melody Trainer →</span>
   </a>
-  <p class="lede">{n} of the most-played Irish session tunes, each with its sheet music, the notes as letter names, and tab for tenor banjo,
-  mandolin, fiddle, guitar and ukulele. Search by name, key (try “D major” or “A dorian”) or level.</p>
+  <p class="lede">{n} tunes, each with its sheet music, the notes as letter names, and tab for tenor banjo, mandolin, fiddle, guitar and
+  ukulele. Search by name, key (try “D major” or “A dorian”) or level.</p>
+  <p class="jump">{jump}</p>
   <input class="search" id="q" type="search" placeholder="Search tunes — name, key or level…" aria-label="Search tunes">
 {body}
-  <p class="credit">Settings from <a href="https://thesession.org" rel="nofollow noopener" target="_blank">thesession.org</a>; the tunes are traditional.</p>
+  <p class="credit">Irish settings from <a href="https://thesession.org" rel="nofollow noopener" target="_blank">thesession.org</a>; bluegrass settings
+  from <a href="https://www.jimsrootsandblues.com" rel="nofollow noopener" target="_blank">Jim’s Roots &amp; Blues</a>; jazz and folk melodies from
+  <i>The Public Domain Song Anthology</i> (CC0). Every tune here is traditional or in the public domain.</p>
   <div class="foot"><a href="melody-trainer_1.html">&larr; Melody Trainer</a></div>
 </div>
 <script>
@@ -464,6 +551,7 @@ def build_index(lib, names):
       g.querySelectorAll('li').forEach(function(li){{ var ok = !q || li.dataset.k.indexOf(q) >= 0; li.classList.toggle('hide', !ok); if(ok) shown++; }});
       g.classList.toggle('empty', !shown);
     }});
+    document.querySelectorAll('.trad').forEach(function(s){{ s.classList.toggle('empty', !s.querySelector('.grp:not(.empty)')); }});
   }});
 </script>
 <script src="/tools.js"></script>
@@ -474,7 +562,7 @@ def build_index(lib, names):
 
 def main():
     lib = library()
-    names = [t['name'] for t in lib if t['origin'] == 'Irish session'] if '--all' in sys.argv else BUILD
+    names = [t['name'] for t in lib if t['origin'] in ORIGIN] if '--all' in sys.argv else BUILD
     built = set(names)
     # the list the Melody Trainer reads to know which tunes have a page ("See tab")
     existing = {}

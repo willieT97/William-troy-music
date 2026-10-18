@@ -70,6 +70,17 @@ def dtype(title, meter):
     if "waltz" in t or meter == "3/4": return "waltz"
     return "jazz"
 
+# the anthology's chord font: ¨ = flat, € = flat (in 7b5 / 7b9), & = sharp,
+# º = diminished, ŒŠ„ = the major-7 triangle. Long text notes above the stave are dropped.
+CHORD_GLYPHS = [("Œ„Š", "maj"), ("¨", "♭"), ("€", "♭"), ("&", "♯"), ("º", "°")]
+def fix_chords(line):
+    def one(m):
+        c = m.group(1)
+        if len(c) > 30: return ""                       # a paragraph of history, not a chord
+        for a, b in CHORD_GLYPHS: c = c.replace(a, b)
+        return '"' + c + '"'
+    return re.sub(r'"([^"]*)"', one, line)
+
 def clean(abc, n):
     T = C = M = L = K = None; body = []; inbody = False
     for ln in abc.split("\n"):
@@ -83,6 +94,7 @@ def clean(abc, n):
         if not inbody: continue
         if re.match(r"^[a-zA-Z]:", ln): continue
         ln = re.sub(r"\s*%\s*\d+\s*$", "", ln).replace("$", " ").rstrip()
+        ln = fix_chords(ln)
         if ln.strip(): body.append(ln)
     if not body: return None
     title = titlecase(T or "Untitled"); meter = M or "4/4"

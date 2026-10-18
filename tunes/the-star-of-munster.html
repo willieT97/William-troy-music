@@ -15,11 +15,11 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://themusicarcade.com/tunes/the-star-of-munster.html" />
 <meta property="og:title" content="The Star Of Munster — Sheet Music &amp; Tab (banjo, mandolin, fiddle, guitar)" />
-<meta property="og:description" content="The Star Of Munster, a intermediate Irish reel in A dorian: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
+<meta property="og:description" content="The Star Of Munster, an intermediate Irish reel in A dorian: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
 <meta property="og:image" content="https://themusicarcade.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <!-- /seo -->
-<meta name="description" content="The Star Of Munster, a intermediate Irish reel in A dorian: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
+<meta name="description" content="The Star Of Munster, an intermediate Irish reel in A dorian: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -28,7 +28,7 @@
  "genre": "Irish traditional music",
  "musicalKey": "A dorian",
  "inLanguage": "en",
- "description": "The Star Of Munster, a intermediate Irish reel in A dorian: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.",
+ "description": "The Star Of Munster, an intermediate Irish reel in A dorian: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.",
  "composer": {
   "@type": "Organization",
   "name": "Traditional"
@@ -43,7 +43,35 @@
     --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,sans-serif; --mono:'Space Mono',monospace; }
   *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
   body{ background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
-  .wrap{ max-width:900px; margin:0 auto; padding:28px 16px 70px; }
+  .wrap{ max-width:1240px; margin:0 auto; padding:28px 16px 70px; }
+  /* the page on the left, Load a tune on the right (below, on phones) */
+  .layout{ display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:22px; align-items:start; margin-top:16px; }
+  .layout .main > .mtbanner{ margin-top:0; }
+  .loadcard{ position:sticky; top:14px; margin:0; }
+  @media (max-width:980px){ .layout{ grid-template-columns:1fr; } .loadcard{ position:static; } }
+  /* Load a tune — as in the Melody Trainer */
+  .booktabs{ display:flex; margin:0 0 10px; border:2px solid var(--ink); border-radius:10px; overflow:hidden; }
+  .booktabs button{ flex:1; border:0; padding:8px 6px; font-family:var(--mono); font-weight:700; font-size:12px; background:var(--paper); color:var(--ink); cursor:pointer; }
+  .booktabs button + button{ border-left:2px solid var(--ink); }
+  .booktabs button.on{ background:var(--ink); color:var(--paper); }
+  .filters{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+  .filters button{ font-family:var(--mono); font-weight:700; padding:5px 10px; font-size:11.5px; border:2px solid var(--ink); border-radius:99px;
+    background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 rgba(23,20,14,.9); cursor:pointer; }
+  .filters button.on{ background:var(--ink); color:var(--paper); }
+  .tunesearch{ width:100%; font-family:var(--body); font-size:14px; padding:9px 12px; border:2px solid var(--ink); border-radius:10px; background:#fffdf7; margin:0 0 10px; }
+  .tunelist{ max-height:min(60vh,520px); overflow-y:auto; border:2px solid var(--ink); border-radius:8px; background:#fffdf7; }
+  .tunelist .grp{ position:sticky; top:0; font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--paper); background:var(--ink); padding:5px 12px; }
+  .tunelist .tunerow{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:8px 12px; color:var(--ink); text-decoration:none; border-top:1px solid rgba(23,20,14,.08); }
+  .tunelist .tunerow:hover{ background:#efe7d3; }
+  .tunelist .tunerow .tn{ font-weight:600; font-size:14px; }
+  .tunelist .tunerow .tk{ font-family:var(--mono); font-size:11px; color:#8a8577; white-space:nowrap; }
+  .tunelist .otag{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:1px 6px 0; border-radius:99px; border:1.5px solid var(--ink); white-space:nowrap; }
+  .tunelist .otag.ir{ background:#dde4ff; color:#2438C8; } .tunelist .otag.am{ background:#ffe6c9; color:#a8542a; }
+  .tunelist .otag.jz{ background:#e9ddf6; color:#6b3fa0; } .tunelist .otag.be{ background:#d8efdd; color:#1f7a45; }
+  .tunelist .tunerow.cur{ background:var(--blue); color:var(--paper); } .tunelist .tunerow.cur .tk{ color:rgba(244,238,226,.85); }
+  .tunelist .tunerow.cur .otag{ border-color:var(--paper); background:transparent; color:var(--paper); }
+  .tunelist .none{ padding:14px 12px; font-family:var(--mono); font-size:12px; color:#8a8577; }
+  .dirlink{ display:block; margin-top:10px; font-family:var(--mono); font-size:12px; font-weight:700; color:var(--blue); text-decoration:none; }
   .tabs{ display:flex; gap:8px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
   .tabs a{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:var(--ink);
     padding:8px 15px; border:2px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); }
@@ -103,8 +131,9 @@
     <a href="index.html">Arcade</a><a href="dojo.html">Courses</a><a href="resources.html">Resources</a>
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
-  <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Session tunes</a> › The Star Of Munster</div>
+  <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Tune directory</a> › The Star Of Munster</div>
   <h1><span class="sr">The Star Of Munster — </span>Sheet Music &amp; Tab Directory</h1>
+  <div class="layout"><div class="main">
 
   <a class="mtbanner" href="melody-trainer_1.html?tune=The%20Star%20Of%20Munster">
     <span class="mtb-k">▶ Learn it in the Melody Trainer</span>
@@ -113,7 +142,7 @@
   </a>
 
   <section class="card about"><h2>About The Star Of Munster</h2>
-    <p class="aboutline">The Star Of Munster is a two-part reel in A dorian (it uses the notes of G major) — intermediate, running from D to b and staying in first position on banjo, mandolin and fiddle.</p>
+    <p class="aboutline">The Star Of Munster is a two-part Irish reel in A dorian (it uses the notes of G major) — intermediate, running from D to b and staying in first position on banjo, mandolin and fiddle.</p>
     
     <dl class="facts">
       <div><dt>Type</dt><dd>Reel, two parts, each usually played twice</dd></div>
@@ -235,9 +264,23 @@ G|------------------|-----------------|</pre><p class="note">Numbers are frets; 
     <div class="rel"><a href="tunes/the-banshee.html">The Banshee</a><a href="tunes/the-gravel-walks.html">The Gravel Walks</a><a href="tunes/the-sally-gardens.html">The Sally Gardens</a><a href="tunes/the-congress.html">The Congress</a><a href="tunes/miss-mcleods.html">Miss McLeod&#x27;s</a><a href="tunes/the-humours-of-tulla.html">The Humours Of Tulla</a><a href="tunes/the-foxhunters.html">The Foxhunters</a><a href="tunes/the-dunmore-lasses.html">The Dunmore Lasses</a></div>
   </section>
 
-  <p class="credit">This setting of The Star Of Munster is a community transcription from
-  <a href="https://thesession.org/tunes/197" rel="nofollow noopener" target="_blank">thesession.org</a>.
-  The tune itself is traditional. Tabs and letter names worked out by The Music Arcade.</p>
+  <p class="credit">This setting is a community transcription from <a href="https://thesession.org/tunes/197" rel="nofollow noopener" target="_blank">thesession.org</a>. The tune itself is traditional. Tabs and letter names worked out by The Music Arcade.</p>
+  </div>
+  <aside class="card loadcard" id="tuneBrowser" data-current="The Star Of Munster" aria-label="Load a tune">
+    <h2>Load a tune</h2>
+    <div class="booktabs" role="tablist" aria-label="Which tunes">
+      <button role="tab" data-view="all" class="on" aria-selected="true">All tunes</button>
+      <button role="tab" data-view="book" aria-selected="false">My tunebook <span id="tbBookCount"></span></button>
+    </div>
+    <div class="filters" role="group" aria-label="Filter by tradition">
+      <button data-o="" class="on">All</button><button data-o="Irish session">Irish</button><button data-o="American fiddle">Bluegrass</button>
+      <button data-o="Trad jazz">Jazz</button><button data-o="Beginner">Folk</button>
+    </div>
+    <input type="text" class="tunesearch" placeholder="Search — name, type or key (G, D mix…)" aria-label="Search tunes" autocomplete="off">
+    <div class="tunelist" aria-label="Tune library"><div class="none">Loading tunes…</div></div>
+    <a class="dirlink" href="tunes/">Whole directory →</a>
+  </aside>
+  </div>
   <div class="foot"><a href="melody-trainer_1.html">&larr; Melody Trainer</a></div>
 </div>
 <script type="text/plain" id="abcSrc">M:4/4
@@ -264,6 +307,7 @@ K:Adorian
     openHash(); window.addEventListener('hashchange', openHash);
   })();
 </script>
+<script src="/tunes/tune-browser.js"></script>
 <script src="/tools.js"></script>
 <script src="/related.js"></script>
 </body>
