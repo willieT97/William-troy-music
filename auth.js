@@ -217,6 +217,29 @@
         .then(function (r) { if (r.error) throw r.error; return r.data.signedUrl; }); }); }
   };
 
+  /* ---- tunes added to the Melody Trainer library (supabase-tunes.sql) ----
+     Stored as ABC. Who sees a tune is the row's visibility — 'private' (its
+     owner), 'students' (owner + linked students) or 'public' (everyone, even
+     signed out) — and RLS enforces it; only teachers may pick the last two. */
+  window.MAAuth.tunes = {
+    // everything this visitor may see; signed out = just the public ones
+    list: function () { return ensureSb().then(function () {
+      return sb.from('added_tunes').select('id,owner_id,title,type,origin,key,abc,visibility,created_at')
+        .order('created_at', { ascending: true })
+        .then(function (r) { if (r.error) throw r.error;
+          return (r.data || []).map(function (t) { t.mine = !!(user && t.owner_id === user.id); return t; }); }); }); },
+    add: function (t) { return ensureSb().then(needUser).then(function () {
+      return sb.from('added_tunes').insert({
+        owner_id: user.id, title: String(t.title || '').slice(0, 120), type: String(t.type || 'other'),
+        origin: String(t.origin || 'Other'), key: String(t.key || ''), abc: String(t.abc || ''),
+        visibility: t.visibility || 'private'
+      }).select('id,owner_id,title,type,origin,key,abc,visibility,created_at').single()
+        .then(function (r) { if (r.error) throw r.error; r.data.mine = true; return r.data; }); }); },
+    remove: function (id) { return ensureSb().then(needUser).then(function () {
+      return sb.from('added_tunes').delete().eq('id', id).eq('owner_id', user.id)
+        .then(function (r) { if (r.error) throw r.error; return true; }); }); }
+  };
+
   // ---- keyed progress (one creations row per course, kind 'progress', title = course id) ----
   window.MAAuth.progress = (function () {
     var ids = {};   // course id -> creations row id (remembered for the session so pushes update, not duplicate)

@@ -142,6 +142,25 @@
   .booktabs button + button{ border-left:2px solid var(--ink); }
   .booktabs button.on{ background:var(--ink); color:var(--paper); }
   .booktabs #bookCount{ opacity:.75; }
+  /* + Add a tune */
+  .addtoggle{ width:100%; margin-top:10px; font-size:12.5px; }
+  .addpanel{ margin-top:10px; border-top:2px dashed var(--ink); padding-top:10px; }
+  .addpanel .flabel{ font-family:'Space Mono',monospace; font-size:11px; opacity:.8; margin-bottom:6px; }
+  .addpanel textarea{ width:100%; height:110px; font-family:'Space Mono',monospace; font-size:11px; border:2px solid var(--ink); border-radius:8px; padding:8px; background:#fffdf7; }
+  .addpanel input[type=file]{ font-size:12px; margin:6px 0 4px; max-width:100%; }
+  .addrow{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; align-items:center; }
+  .addrow label{ font-family:'Space Mono',monospace; font-size:11.5px; display:flex; flex-direction:column; gap:3px; flex:1 1 120px; }
+  .addrow input[type=text], .addrow select{ font-family:'Hanken Grotesk',system-ui,sans-serif; font-size:14px; padding:7px 9px; border:2px solid var(--ink); border-radius:8px; background:#fffdf7; }
+  .addrow button{ flex:1 1 auto; font-size:12px; padding:8px 10px; }
+  .addvis{ border:2px solid var(--ink); border-radius:8px; padding:6px 10px 8px; margin:8px 0; }
+  .addvis legend{ font-family:'Space Mono',monospace; font-size:11px; padding:0 4px; }
+  .addvis label{ display:flex; align-items:center; gap:7px; font-size:13.5px; margin:4px 0; }
+  .addvis label.off{ opacity:.45; }
+  .addnote{ font-family:'Space Mono',monospace; font-size:10.5px; opacity:.75; margin-top:4px; }
+  .tunelist .otag.mine{ background:#fff2c2; color:#7a5a00; }
+  .tunelist .rm{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--pink); margin-left:8px; cursor:pointer; text-decoration:underline; }
+  .tunelist .tunerow.cur .rm{ color:var(--paper); }
+
   /* quick filters by tradition (the O: field of each tune) */
   .filters{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
   .filters button{ padding:5px 10px; font-size:11.5px; border-radius:99px; box-shadow:2px 2px 0 rgba(23,20,14,.9); }
@@ -504,6 +523,39 @@
       </div>
       <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search — name, type or key (G, D mix…)" aria-label="Search tunes" autocomplete="off">
       <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
+      <button class="addtoggle" id="addToggle" type="button">+ Add a tune</button>
+      <div class="addpanel" id="addPanel" hidden>
+        <div class="flabel">Paste MusicXML or ABC — or choose a file (.musicxml, .mxl, .xml, .abc)</div>
+        <textarea id="addSrc" spellcheck="false" placeholder="&lt;?xml … score-partwise …   or   X:1 T:… K:G …"></textarea>
+        <input type="file" id="addFile" accept=".musicxml,.mxl,.xml,.abc,.txt">
+        <div class="addrow">
+          <label>Name <input type="text" id="addTitle" maxlength="120" placeholder="Tune name"></label>
+        </div>
+        <div class="addrow">
+          <label>Type <select id="addType">
+            <option value="reel">Reel</option><option value="jig">Jig</option><option value="slip jig">Slip jig</option>
+            <option value="hornpipe">Hornpipe</option><option value="polka">Polka</option><option value="slide">Slide</option>
+            <option value="waltz">Waltz</option><option value="barndance">Barndance</option><option value="march">March</option>
+            <option value="slow air">Slow air</option><option value="folk">Song</option><option value="other" selected>Other</option>
+          </select></label>
+          <label>Tradition <select id="addOrigin">
+            <option value="Irish session">Irish</option><option value="American fiddle">Bluegrass</option>
+            <option value="Trad jazz">Jazz</option><option value="Beginner">Folk</option><option value="Other" selected>Other</option>
+          </select></label>
+        </div>
+        <fieldset class="addvis">
+          <legend>Who can see it</legend>
+          <label><input type="radio" name="addVis" value="private" checked> Only me</label>
+          <label><input type="radio" name="addVis" value="students"> Me and my students</label>
+          <label><input type="radio" name="addVis" value="public"> Everyone</label>
+          <div class="addnote" id="addVisNote"></div>
+        </fieldset>
+        <div class="addrow">
+          <button type="button" id="addPreview">Preview on the stave</button>
+          <button type="button" class="primary" id="addSave" disabled>Save to the library</button>
+        </div>
+        <div class="statusline" id="addStatus"><span class="dot"></span><span id="addStatusText">Paste or choose a tune, then preview it.</span></div>
+      </div>
       <details class="pastewrap" hidden>
         <summary>Paste your own ABC</summary>
         <textarea id="abcIn" spellcheck="false" aria-label="ABC notation input"></textarea>
@@ -589,6 +641,7 @@
   </div>
 </div>
 
+<script src="/musicxml-to-abc.js"></script>
 <script>
 "use strict";
 
@@ -1960,7 +2013,13 @@ function originTag(t){
   return oc ? ' <span class="otag '+oc+'">'+ol+'</span>' : "";
 }
 function tuneRow(t, ot){
-  return '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+(ot||"")+'</span><span class="tk">'+escHtml(t.kp ? keyLabel(t.kp) : (t.key||""))+"</span></div>";
+  let extra = "";
+  if(t.added && t.added.mine){
+    const v = t.added.visibility;
+    extra = ' <span class="otag mine">' + (v === "public" ? "added · everyone" : v === "students" ? "added · students" : "added · only me") + "</span>" +
+            '<span class="rm" data-rm="' + escHtml(t.added.id) + '" title="Remove this tune from the library">remove</span>';
+  }
+  return '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+(ot||"")+extra+'</span><span class="tk">'+escHtml(t.kp ? keyLabel(t.kp) : (t.key||""))+"</span></div>";
 }
 // searching by key: the tunes in that key first, then the ones that use the same notes
 function renderByKey(kq){
@@ -2006,6 +2065,14 @@ function loadTuneObj(t, row){
   if(row) row.classList.add("cur");
 }
 $("tuneList").addEventListener("click", e=>{
+  const rm = e.target.closest("[data-rm]");
+  if(rm){
+    e.stopPropagation();
+    const t = LIBRARY[+rm.closest(".tunerow").dataset.i];
+    if(!t || !confirm("Remove “" + t.name + "” from the library? This can’t be undone.")) return;
+    MAAuth.tunes.remove(rm.dataset.rm).then(() => loadAddedTunes()).catch(err => alert("Couldn’t remove it: " + (err.message || err)));
+    return;
+  }
   const row = e.target.closest(".tunerow"); if(!row || +row.dataset.i < 0) return;
   loadTuneObj(LIBRARY[+row.dataset.i], row);
 });
@@ -2026,6 +2093,29 @@ async function loadLibrary(){
     }
   }catch(e){ /* no manifest (e.g. offline) — the examples still show */ }
   renderTuneList("");
+  loadAddedTunes();
+}
+/* ---- tunes people have added (supabase-tunes.sql via MAAuth.tunes) ----
+   Public ones for everybody; a signed-in visitor also gets their own and,
+   for a linked student, their teacher's "students" tunes. Re-read on
+   sign-in/out, since what you may see changes. */
+function addedRow(r){
+  return { name:r.title, type:(r.type||"other").toLowerCase(), origin:r.origin||"Other", key:r.key||"",
+           kp:searchKey(r.key), abc:r.abc, added:{ id:r.id, visibility:r.visibility, mine:!!r.mine } };
+}
+let addedLoaded = 0;
+function loadAddedTunes(){
+  const go = () => {
+    if(!(window.MAAuth && MAAuth.tunes)) return setTimeout(go, 200);
+    const ticket = ++addedLoaded;
+    MAAuth.tunes.list().then(rows => {
+      if(ticket !== addedLoaded) return;
+      for(let i = LIBRARY.length-1; i >= 0; i--) if(LIBRARY[i].added) LIBRARY.splice(i, 1);
+      rows.forEach(r => LIBRARY.push(addedRow(r)));
+      renderTuneList($("tuneSearch").value);
+    }).catch(() => {});                    // table not set up yet, or offline: the built-in library still works
+  };
+  go();
 }
 /* ?tune=<name> — the Rollbook links here when a lesson logged a tune from the library.
    Matched loosely (case, "The", punctuation) so a name typed by hand still lands. */
@@ -2046,10 +2136,88 @@ function openRequestedTune(){
 }
 
 loadLibrary().then(openRequestedTune);
+/* ---- + Add a tune ----
+   Paste or pick MusicXML (converted to ABC here, musicxml-to-abc.js) or ABC,
+   preview it on the stave above, then save it with a choice of who sees it.
+   Anyone signed in can keep tunes for themselves; "my students" and
+   "everyone" are for teacher accounts (the database checks this too). */
+let addParsed = null, addAbc = "";
+function addStatus(msg, cls){ const s = $("addStatus"); s.className = "statusline" + (cls ? " " + cls : ""); $("addStatusText").textContent = msg; }
+function syncAddPanel(){
+  const signed = !!(window.MAAuth && MAAuth.user && MAAuth.user()), teacher = signed && MAAuth.isTeacher && MAAuth.isTeacher();
+  $("addToggle").textContent = signed ? ($("addPanel").hidden ? "+ Add a tune" : "× Close") : "+ Add a tune (sign in)";
+  document.querySelectorAll('input[name="addVis"]').forEach(r => {
+    const locked = r.value !== "private" && !teacher;
+    r.disabled = locked; r.closest("label").classList.toggle("off", locked);
+    if(locked && r.checked) document.querySelector('input[name="addVis"][value="private"]').checked = true;
+  });
+  $("addVisNote").textContent = teacher ? "“My students” means the students linked to you in the Rollbook."
+                                        : "Sharing with students or everyone is for teacher accounts.";
+}
+$("addToggle").addEventListener("click", () => {
+  if(!(window.MAAuth && MAAuth.user && MAAuth.user())){ if(window.MAAuth && MAAuth.open) MAAuth.open("signin"); return; }
+  $("addPanel").hidden = !$("addPanel").hidden; syncAddPanel();
+});
+function addRead(text, filename){
+  addParsed = null; addAbc = ""; $("addSave").disabled = true;
+  text = String(text || "").trim();
+  if(!text){ addStatus("Paste or choose a tune first.", "err"); return; }
+  let abc = text, note = [];
+  if(text.startsWith("<")){
+    const c = MusicXMLtoABC.convert(text);
+    if(c.error){ addStatus(c.error, "err"); return; }
+    abc = c.abc; note = c.warnings;
+  } else if(!/^K:/m.test(text)){ addStatus("That isn’t MusicXML, and as ABC it has no K: (key) line.", "err"); return; }
+  const parsed = parseABC(abc);
+  if(parsed.error){ addStatus(parsed.error, "err"); return; }
+  if(!$("addTitle").value.trim()){
+    const t = parsed.title && parsed.title !== "Untitled" ? parsed.title : (filename || "").replace(/\.[^.]+$/, "");
+    $("addTitle").value = t;
+  }
+  addParsed = parsed; addAbc = abc;
+  installTune(parsed);
+  ($("tuneTitle").closest(".card") || $("tuneTitle")).scrollIntoView({ block:"start", behavior:"smooth" });
+  $("addSave").disabled = false;
+  addStatus("Previewing above: " + PLAYABLE_TOTAL + " notes, " + NBARS + " bars, " + KEY.label + "." + (note.length ? " " + note.join(" ") : "") + " Check it, then save.", "live");
+}
+$("addPreview").addEventListener("click", () => addRead($("addSrc").value));
+$("addFile").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  addStatus("Reading " + f.name + "…");
+  MusicXMLtoABC.readFile(f).then(text => { $("addSrc").value = text; addRead(text, f.name); })
+    .catch(err => addStatus(err.message || "Couldn’t read that file.", "err"));
+});
+$("addSave").addEventListener("click", () => {
+  if(!addParsed) return;
+  const title = $("addTitle").value.trim();
+  if(!title){ addStatus("Give the tune a name.", "err"); return; }
+  // store the ABC with the chosen name, type and tradition in its headers
+  const type = $("addType").value, origin = $("addOrigin").value;
+  let abc = addAbc.replace(/^T:.*$/m, "T:" + title);
+  if(!/^T:/m.test(abc)) abc = abc.replace(/^(X:.*\n)?/, m => (m || "X:1\n") + "T:" + title + "\n");
+  abc = abc.replace(/^R:.*\n/m, "").replace(/^O:.*\n/m, "").replace(/^(T:.*\n)/m, "$1R:" + type + "\nO:" + origin + "\n");
+  const kLine = (abc.match(/^K:(.*)$/m) || [,""])[1].trim();
+  const visibility = (document.querySelector('input[name="addVis"]:checked') || {}).value || "private";
+  $("addSave").disabled = true; addStatus("Saving…");
+  MAAuth.tunes.add({ title, type, origin, key:kLine, abc, visibility }).then(row => {
+    addStatus("✓ Saved — “" + title + "” is in the library" + (visibility === "public" ? " for everyone." : visibility === "students" ? " for you and your students." : ", just for you."), "live");
+    $("addSrc").value = ""; $("addTitle").value = ""; $("addFile").value = ""; addParsed = null;
+    loadAddedTunes();
+  }).catch(err => {
+    $("addSave").disabled = false;
+    const m = String(err && (err.message || err));
+    addStatus(/added_tunes/.test(m) && /exist|relation|schema/i.test(m)
+      ? "The tunes table isn’t set up yet — run supabase-tunes.sql in Supabase first."
+      : "Couldn’t save: " + m, "err");
+  });
+});
+
+syncAddPanel();
+
 // the tunebook: this device straight away, the account once it's known (and again on sign-in/out)
 loadBook();
 (function armBook(){
-  if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(() => loadBook());
+  if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(() => { loadBook(); syncAddPanel(); loadAddedTunes(); });
   else setTimeout(armBook, 200);
 })();
 
