@@ -160,6 +160,8 @@
   .booktabs #bookCount{ opacity:.75; }
   /* + Add a tune */
   .addtoggle{ width:100%; margin-top:10px; font-size:12.5px; }
+  .dirlink{ display:block; margin-top:10px; font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--blue); text-decoration:none; }
+  .dirlink:hover{ text-decoration:underline; }
   .addpanel{ margin-top:10px; border-top:2px dashed var(--ink); padding-top:10px; }
   .addpanel .flabel{ font-family:'Space Mono',monospace; font-size:11px; opacity:.8; margin-bottom:6px; }
   .addpanel textarea{ width:100%; height:110px; font-family:'Space Mono',monospace; font-size:11px; border:2px solid var(--ink); border-radius:8px; padding:8px; background:#fffdf7; }
@@ -532,6 +534,7 @@
       </div>
       <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search — name, type or key (G, D mix…)" aria-label="Search tunes" autocomplete="off">
       <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
+      <a class="dirlink" href="tunes/">Sheet music &amp; tab directory →</a>
       <button class="addtoggle" id="addToggle" type="button">+ Add a tune</button>
       <div class="addpanel" id="addPanel" hidden>
         <div class="flabel">Paste MusicXML or ABC — or choose a file (.musicxml, .mxl, .xml, .abc)</div>

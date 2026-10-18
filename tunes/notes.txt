@@ -1,0 +1,6 @@
+# Your own notes for the tune pages — one tune per line:   Tune name | your note
+# Then run:  python3 tune-pages.py --all && python3 seo.py   (and commit & push)
+# The note shows on that tune's page as "From William: …". Leave a tune out, or
+# leave the note blank, and the page simply has no note. Lines starting with # are ignored.
+#
+# The Kesh | A great first jig — watch the C♯ near the end of the B part.
