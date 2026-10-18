@@ -253,6 +253,26 @@
             .sort(function (a, b) { return (a.at < b.at ? 1 : (a.at > b.at ? -1 : 0)); });
         });
       },
+      // fold in tunes kept on this device before signing in (the Melody Trainer's
+      // tunebook): per tune, the higher play count, the earliest first date and
+      // the latest last date win, so nothing is counted twice. Saves only if changed.
+      merge: function (local) {
+        local = local || {};
+        return load().then(function (tunes) {
+          var changed = false;
+          Object.keys(local).forEach(function (k) {
+            var a = tunes[k], b = local[k]; if (!b || !b.name) return;
+            if (!a) { tunes[k] = b; changed = true; return; }
+            var m = { name: a.name || b.name, count: Math.max(a.count || 0, b.count || 0),
+                      first: (a.first && b.first) ? (a.first < b.first ? a.first : b.first) : (a.first || b.first),
+                      at: (a.at || '') > (b.at || '') ? a.at : b.at };
+            if (m.count !== a.count || m.first !== a.first || m.at !== a.at) { tunes[k] = m; changed = true; }
+          });
+          if (!changed) return tunes;
+          return window.MAAuth.creations.save('melodydone', { id: rowId, title: 'melody-trainer', data: { tunes: tunes } })
+            .then(function (row) { if (row && row.id) rowId = row.id; return tunes; });
+        });
+      },
       // record one completion; dedupes by name, bumps a play count, stamps the date
       record: function (name) {
         name = String(name || '').trim();

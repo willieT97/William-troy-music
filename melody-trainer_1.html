@@ -136,6 +136,21 @@
   .topgrid > .loadcard{ grid-area:load; }
   .topgrid > .listen{ grid-area:listen; }
   .loadcard .tunelist{ max-height:440px; }
+  /* All tunes | My tunebook */
+  .booktabs{ display:flex; gap:0; margin:0 0 10px; border:2px solid var(--ink); border-radius:10px; overflow:hidden; }
+  .booktabs button{ flex:1; border:0; border-radius:0; box-shadow:none; padding:8px 6px; font-size:12px; background:var(--paper); }
+  .booktabs button + button{ border-left:2px solid var(--ink); }
+  .booktabs button.on{ background:var(--ink); color:var(--paper); }
+  .booktabs #bookCount{ opacity:.75; }
+  /* quick filters by tradition (the O: field of each tune) */
+  .filters{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+  .filters button{ padding:5px 10px; font-size:11.5px; border-radius:99px; box-shadow:2px 2px 0 rgba(23,20,14,.9); }
+  .filters button.on{ background:var(--ink); color:var(--paper); }
+  .tunelist .tunerow .bk{ font-family:'Space Mono',monospace; font-size:11px; color:#8a8577; white-space:nowrap; }
+  .tunelist .tunerow.cur .bk{ color:rgba(244,238,226,.85); }
+  .tunelist .tunerow.gone{ opacity:.55; cursor:default; }
+  .bookmsg{ font-weight:600; margin-top:6px; }
+  .bookmsg a{ color:var(--blue); }
   .transport{ display:inline-flex; gap:8px; }
   button.ib{ width:42px; height:42px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
   button.ib svg{ width:20px; height:20px; fill:var(--ink); }
@@ -476,7 +491,17 @@
 
     <div class="card loadcard">
       <h2>Load a tune</h2>
-      <div class="fbmeta"><b>Beginner</b> folk songs &amp; carols, <b>Irish session</b>, <b>American fiddle</b> and <b>trad jazz &amp; blues</b> tunes — search by name, type or tradition, or paste your own ABC. Ornaments are stripped; repeats play once through.</div>
+      <div class="booktabs" role="tablist" aria-label="Which tunes">
+        <button role="tab" data-view="all" class="on" aria-selected="true">All tunes</button>
+        <button role="tab" data-view="book" aria-selected="false">My tunebook <span id="bookCount"></span></button>
+      </div>
+      <div class="filters" id="tuneFilters" role="group" aria-label="Filter by tradition">
+        <button data-o="" class="on">All</button>
+        <button data-o="Irish session">Irish</button>
+        <button data-o="American fiddle">Bluegrass</button>
+        <button data-o="Trad jazz">Jazz</button>
+        <button data-o="Beginner">Folk</button>
+      </div>
       <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search tunes — name or type…" aria-label="Search tunes" autocomplete="off">
       <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
       <details class="pastewrap" hidden>
@@ -511,7 +536,7 @@
       </div>
       <div class="lp-right">
         <div class="controls">
-          <button class="primary" id="micBtn">Enable microphone</button>
+          <button class="primary" id="micBtn">Add to my tunebook</button>
           <span class="transport" role="group" aria-label="Tune playback">
             <button class="ib" id="tuneBtn" title="Play the tune" aria-label="Play the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
             <button class="ib" id="stopBtn" title="Stop" aria-label="Stop the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="1.5"/></svg></button>
@@ -520,7 +545,7 @@
           </span>
           <label class="toggle"><input type="checkbox" id="anyOct" checked> any octave counts</label>
         </div>
-        <div class="statusline" id="status"><span class="dot"></span><span id="statusText">Microphone off — enable it to start playing.</span></div>
+        <div class="statusline" id="status"><span class="dot"></span><span id="statusText">Press “Add to my tunebook”, then play the tune all the way through.</span></div>
       </div>
       </div>
     </div>
@@ -559,6 +584,7 @@
     <div id="confettiBox"></div>
     <h2>TUNE<br>COMPLETE</h2>
     <p id="doneMsg">Every note, in order, by ear and hand.<br>That's the whole pipeline working.</p>
+    <p id="bookMsg" class="bookmsg"></p>
     <button class="good" id="againBtn">Play it again</button>
   </div>
 </div>
@@ -1517,8 +1543,7 @@ async function startMic(){
   timeBuf = new Float32Array(analyser.fftSize);
   src.connect(analyser);
   state.micOn = true;
-  $("micBtn").textContent = "Mic is live";
-  $("micBtn").disabled = true;
+  syncBookBtn();
   setStatus("Listening. Play the ringed note.", "live");
   requestAnimationFrame(loop);
 }
@@ -1677,8 +1702,14 @@ function reset(){
 function finish(){
   setStatus("Tune complete.", "live");
   $("doneMsg").innerHTML = `All ${PLAYABLE_TOTAL} notes of “${TITLE}”,<br>in order, by ear and hand.`;
-  // remember it on the player's account (silent if signed out or offline)
-  try { if(window.MAAuth && MAAuth.user && MAAuth.user() && MAAuth.melody) MAAuth.melody.record(TITLE).catch(function(){}); } catch(e){}
+  // into the tunebook: on the account when signed in, on this device otherwise
+  const e = recordBook(TITLE), msg = $("bookMsg");
+  msg.textContent = e.count > 1 ? `In your tunebook — played ${e.count} times now.` : "✓ Added to your tunebook.";
+  if(!signedIn()){ msg.appendChild(document.createTextNode(" Kept on this device — "));
+    const a = document.createElement("a"); a.href = "#"; a.textContent = "sign in to keep it everywhere";
+    a.addEventListener("click", ev => { ev.preventDefault(); if(window.MAAuth && MAAuth.open) MAAuth.open("signin"); });
+    msg.appendChild(a); msg.appendChild(document.createTextNode(".")); }
+  afterBook();
   const box = $("confettiBox");
   box.innerHTML = "";
   const cols = ["#2438C8","#FF4E86","#E0922A","#1F9D55"];
@@ -1731,6 +1762,7 @@ function installTune(parsed){
   buildScore();
   refreshUI();
   renderScale();
+  syncBookBtn();
 }
 
 function loadFromTextarea(){
@@ -1808,10 +1840,81 @@ const TYPE_ORDER  = {nursery:0.1,folk:0.2,carol:0.3,spiritual:0.4,reel:1,jig:2,"
 const TYPE_PLURAL = {nursery:"Nursery rhymes",folk:"Folk songs",carol:"Carols",spiritual:"Spirituals",reel:"Reels",jig:"Jigs","slip jig":"Slip jigs",hornpipe:"Hornpipes",polka:"Polkas",slide:"Slides",air:"Slow airs",waltz:"Waltzes",barndance:"Barndances",strathspey:"Strathspeys",march:"Marches",mazurka:"Mazurkas","three-two":"Three-twos",blues:"Blues",jazz:"Jazz",rag:"Rags",example:"Examples"};
 const typeLabel = t => TYPE_PLURAL[t] || (t.charAt(0).toUpperCase()+t.slice(1)+"s");
 
+/* ============================================================
+   TUNEBOOK — the tunes you've played all the way through.
+   Signed in: the account's 'melodydone' row (MAAuth.melody, also listed
+   on the account page). Signed out: this device, carried up to the
+   account on sign-in. The big button both opens the mic and says what a
+   full play-through will do: add the tune, or play it again.
+   ============================================================ */
+const BOOK_LK = "wtm_tunebook";
+let originFilter = "";                       // "" = every tradition
+const passesFilter = t => !originFilter || (t && t.origin === originFilter);
+let BOOK = {}, view = "all";
+const bookKey = n => String(n||"").trim().toLowerCase().replace(/\s+/g," ");
+const signedIn = () => !!(window.MAAuth && MAAuth.user && MAAuth.user());
+function bookLocal(){ try { return JSON.parse(localStorage.getItem(BOOK_LK) || "{}") || {}; } catch(e){ return {}; } }
+function keepLocal(){ try { localStorage.setItem(BOOK_LK, JSON.stringify(BOOK)); } catch(e){} }
+function loadBook(){
+  BOOK = Object.assign({}, bookLocal());
+  afterBook();
+  if(signedIn() && MAAuth.melody && MAAuth.melody.merge)
+    MAAuth.melody.merge(bookLocal()).then(t => { BOOK = t || {}; keepLocal(); afterBook(); }).catch(()=>{});
+}
+function recordBook(name){
+  const k = bookKey(name), now = new Date().toISOString();
+  const e = BOOK[k] || { name, count:0, first:now };
+  e.name = name; e.count = (e.count||0) + 1; e.at = now; BOOK[k] = e; keepLocal(); afterBook();
+  if(signedIn() && MAAuth.melody) MAAuth.melody.record(name).then(r => { if(r){ BOOK[k] = r; keepLocal(); afterBook(); } }).catch(()=>{});
+  return e;
+}
+function inBook(name){ return !!BOOK[bookKey(name)]; }
+function afterBook(){
+  const n = Object.keys(BOOK).length;
+  $("bookCount").textContent = n ? "(" + n + ")" : "";
+  syncBookBtn();
+  if(view === "book") renderTuneList($("tuneSearch").value);
+}
+function syncBookBtn(){
+  const b = $("micBtn"), have = inBook(TITLE);
+  if(state.micOn){ b.disabled = true; b.textContent = have ? "In my tunebook ✓ · listening" : "Listening — play it through"; }
+  else { b.disabled = false; b.textContent = have ? "In my tunebook ✓ · play again" : "Add to my tunebook"; }
+}
+function renderBook(q){
+  const box = $("tuneList");
+  const libOf = e => LIBRARY.find(t => tuneKey(t.name) === tuneKey(e.name));
+  const items = Object.keys(BOOK).map(k => BOOK[k]).filter(e => (!originFilter || passesFilter(libOf(e))) && (!q || e.name.toLowerCase().includes(q)))
+    .sort((a,b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  if(!items.length){ box.innerHTML = '<div class="none">' + (q || originFilter ? "No tunes in your tunebook match that." :
+    "Your tunebook is empty. Pick a tune, press “Add to my tunebook”, and play it all the way through — it’ll be kept here.") + "</div>"; return; }
+  let h = '<div class="grp">My tunebook · ' + items.length + "</div>";
+  items.forEach(e => {
+    const i = LIBRARY.findIndex(t => tuneKey(t.name) === tuneKey(e.name));
+    let when = ""; try { when = new Date(e.first || e.at).toLocaleDateString(undefined, { day:"numeric", month:"short" }); } catch(_){}
+    h += '<div class="tunerow' + (i < 0 ? " gone" : "") + '" data-i="' + i + '"><span class="tn">' + escHtml(e.name) + '</span><span class="bk">' +
+         (e.count > 1 ? "×" + e.count + " · " : "") + (when ? "since " + when : "") + "</span></div>";
+  });
+  box.innerHTML = h;
+}
+$("tuneFilters").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if(!b) return;
+  originFilter = b.dataset.o;
+  [...$("tuneFilters").children].forEach(x => x.classList.toggle("on", x === b));
+  renderTuneList($("tuneSearch").value);
+});
+document.querySelector(".booktabs").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if(!b) return;
+  view = b.dataset.view;
+  document.querySelectorAll(".booktabs button").forEach(x => { const on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on); });
+  $("tuneSearch").placeholder = view === "book" ? "Search your tunebook…" : "Search tunes — name or type…";
+  renderTuneList($("tuneSearch").value);
+});
+
 function renderTuneList(q){
+  if(view === "book") return renderBook((q||"").trim().toLowerCase());
   const box = $("tuneList"); q = (q||"").trim().toLowerCase();
-  const items = LIBRARY.filter(t => !q || t.name.toLowerCase().includes(q) || t.type.includes(q) || (t.origin||"").toLowerCase().includes(q));
-  if(!items.length){ box.innerHTML = '<div class="none">No tunes match that search.</div>'; return; }
+  const items = LIBRARY.filter(t => passesFilter(t) && (!q || t.name.toLowerCase().includes(q) || t.type.includes(q) || (t.origin||"").toLowerCase().includes(q)));
+  if(!items.length){ box.innerHTML = '<div class="none">No tunes match that' + (originFilter ? " filter" : " search") + '.</div>'; return; }
   const groups = {}; items.forEach(t => { (groups[t.type] = groups[t.type] || []).push(t); });
   const order = Object.keys(groups).sort((a,b)=>{
     const oa = a==="example" ? 99 : (TYPE_ORDER[a]||50), ob = b==="example" ? 99 : (TYPE_ORDER[b]||50);
@@ -1822,7 +1925,7 @@ function renderTuneList(q){
     h += '<div class="grp">'+typeLabel(type)+" · "+groups[type].length+"</div>";
     groups[type].forEach(t=>{
       const oc = t.origin==="American fiddle" ? "am" : t.origin==="Irish session" ? "ir" : t.origin==="Trad jazz" ? "jz" : t.origin==="Beginner" ? "be" : "";
-      const ol = oc==="am" ? "American" : oc==="ir" ? "Irish" : oc==="jz" ? "Jazz" : oc==="be" ? "Beginner" : "";
+      const ol = oc==="am" ? "Bluegrass" : oc==="ir" ? "Irish" : oc==="jz" ? "Jazz" : oc==="be" ? "Folk" : "";
       const ot = oc ? ' <span class="otag '+oc+'">'+ol+'</span>' : "";
       h += '<div class="tunerow" data-i="'+LIBRARY.indexOf(t)+'"><span class="tn">'+escHtml(t.name)+ot+'</span><span class="tk">'+escHtml(t.key||"")+"</span></div>";
     });
@@ -1840,7 +1943,7 @@ function loadTuneObj(t, row){
   if(row) row.classList.add("cur");
 }
 $("tuneList").addEventListener("click", e=>{
-  const row = e.target.closest(".tunerow"); if(!row) return;
+  const row = e.target.closest(".tunerow"); if(!row || +row.dataset.i < 0) return;
   loadTuneObj(LIBRARY[+row.dataset.i], row);
 });
 $("tuneSearch").addEventListener("input", e=> renderTuneList(e.target.value));
@@ -1879,6 +1982,12 @@ function openRequestedTune(){
 }
 
 loadLibrary().then(openRequestedTune);
+// the tunebook: this device straight away, the account once it's known (and again on sign-in/out)
+loadBook();
+(function armBook(){
+  if(window.MAAuth && MAAuth.onChange) MAAuth.onChange(() => loadBook());
+  else setTimeout(armBook, 200);
+})();
 
 /* boot with Twinkle */
 $("abcIn").value = PRESETS[0].abc;

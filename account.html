@@ -143,7 +143,7 @@
     </div>
 
     <div class="card">
-      <h2>Melody Trainer <span class="sub">— tunes you’ve played all the way through</span></h2>
+      <h2>My tunebook <span class="sub">— tunes you’ve played all the way through in the Melody Trainer</span></h2>
       <div id="melodydone"></div>
     </div>
 
@@ -375,11 +375,11 @@
   function renderMelody(){
     var host=document.getElementById('melodydone'); if(!host) return; host.innerHTML='';
     var A=window.MAAuth;
-    if(!(A && A.melody && A.melody.list)){ host.appendChild(el('div','empty','Play a tune through in the Melody Trainer and it’ll show here.')); return; }
+    if(!(A && A.melody && A.melody.list)){ host.appendChild(el('div','empty','Press “Add to my tunebook” in the Melody Trainer and play a tune all the way through — it’ll be kept here.')); return; }
     host.appendChild(el('div','empty','Loading…'));
     A.melody.list().then(function(tunes){
       host.innerHTML='';
-      if(!tunes.length){ host.appendChild(el('div','empty','No tunes finished yet — the Melody Trainer will list them here once you play one all the way through.')); return; }
+      if(!tunes.length){ host.appendChild(el('div','empty','Your tunebook is empty. In the Melody Trainer, press “Add to my tunebook” and play a tune all the way through.')); return; }
       tunes.forEach(function(t){
         var row=el('div','item');
         row.appendChild(el('span','inm', t.name || 'Untitled'));
@@ -387,7 +387,7 @@
         try{ when=new Date(t.at).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}); }catch(e){}
         var meta=(t.count>1? '×'+t.count+' · ':'') + (when||'');
         if(meta) row.appendChild(el('span','meta', meta));
-        var go=el('a','mini','Play'); go.href='melody-trainer_1.html'; row.appendChild(go);
+        var go=el('a','mini','Play'); go.href='melody-trainer_1.html?tune='+encodeURIComponent(t.name||''); row.appendChild(go);
         host.appendChild(row);
       });
     }).catch(function(){ host.innerHTML=''; host.appendChild(el('div','empty','Couldn’t load your tunes just now.')); });
