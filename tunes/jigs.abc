@@ -193,3 +193,161 @@ K:Gmajor
  gfg age|dBG AGE|DGG FGA|BGG G2:|
  |:d|edd gdd|edd gdd|e2 e gfg|edB A2 d|
  gfg age|dBG AGE|DGG FGA|BGG G2:|
+
+X:256
+T:The Mist Covered Mountain
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Adorian
+|:G|EAA ABd|e2 A AGE|~G3 GAB|dBA GED|
+ EAA ABd|e2A AGE|efg dBG|BAG A2:|
+ a|age a2b|age edB|AGE G2A|BAB GED|
+ age a2b|age edB|AGE G2A|BAG A3|
+ age a2b|age edB|AGE G2A|BAB GED|
+ EDE G2A|BAG ABd|efg dBG|BAG A2||
+
+X:67
+T:The Monaghan
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Eminor
+|:BGE F2E|BGE FGA|BGE F2E|AFD FGA|
+ GBE F2E|BGE FGA|d^cd ABG|FDF AGF:|
+ |:EGB efg|fed edB|EGB dBG|FDF AGF|
+ EGB efg|fed edB|d^cd ABG|FDF AGF:|
+ |:g2e efe|gfg bge|g2e efe|fdf afd|
+ g2e efe|gfg bge|d^cd ABG|FDF AGF:|
+ |:EGB edB|dBG AFD|EGB dBG|FDF AGF|
+ EGB GBd|Beg efg|d^cd ABG|FDF AGF:|
+
+X:793
+T:Jimmy Ward's
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Gmajor
+|:G3 GAB|AGE GED|GGG AGE|GED DEF|
+ G3 GAB|AGE GAB|cBA BGE|1 DED DEF:|2 DED D2B||
+ |:cBA BAG|ABA AGB|cBA BGE|DED GAB|
+ cBA BAG|ABA ABc|dcB AGE|1 GED D2B:|2 GED DEF||G6||
+
+X:88
+T:The Rolling Waves
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Dmajor
+|:FEF DED|D2d cAG|FEF FED|A2F GFE|
+ FEF DED|D2d cAG|FAF GBG|A2F GFE:|
+ D2d cAd|cAd cAG|FEF cAd|A2F GFE|
+ D2d cAd|fed cAG|FAF GBG|A2F GFE:|
+
+X:582
+T:Haste To The Wedding
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Dmajor
+|:AFA Agf|ede fdB|AFA dAF|EFE EFG|
+ AFA Agf|ede fdB|A2g faf|ded d3:|
+ |:afa afa|bgb bgb|afa agf|ede efg|
+ a3 f3|ede fdB|A2g faf|ded d3:|
+
+X:307
+T:Saddle The Pony
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Gmajor
+|:D|GBA G2B|def gdB|GBA G2B|AFD AFD|
+ GBA G2B|def gfg|efe dBA|BGG G2:|
+ |:d|efe edB|def gfg|efe edB|dBA ABd|
+ efe edB|def gfg|efe dBA|BGG G2:|
+
+X:381
+T:I Buried My Wife And Danced On Her Grave
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Dmixolydian
+|:DDD F2G|AdB cAF|GGG BAG|FFF GEA|
+ DDD F2G|AdB cAF|GGG BAG|AFD D2A:|
+ |:d2e fed|faf gfe|d2e fed|dcA dcA|
+ d2e fed|faf gfe|dcA BAG|AFD D3:|
+
+X:107
+T:The Athol Highlanders
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Amajor
+|:e2e ecA|ecA Bcd|e2e ecA|Bcd cBA|
+ e2e ecA|ecA Bcd|eae fed|cdB A3:|
+ Ace Ace|Adf Adf|Ace Ace|Bcd c2B|
+ Ace Ace|Adf Adf|eae fed|cdB A3:|
+ |:a2a aec|a2a aec|a2a aec|Bcd cBA|
+ a2a aec|a2a aec|eae fed|cdB A3:|
+ c2c cBA|d2d fed|c2c cBA|=G2=G BA=G|
+ c2c cBA|d2d fed|eae fed|cdB A3:|
+
+X:447
+T:The Rose In The Heather
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Dmajor
+|:D2F EDB,|DFA BAF|ABd ede|fdB AFE|
+ ~F3 EFE|DFA Bcd|edB AFE|FDD D3:|
+ |:fdB ABd|faa afd|~g3 fed|Bee ede|fdB ABd|
+ faa afa|baf gfe|1 fdd d2e:|2 fdB AFE||
+ ~F3 EFE|DFA BAF|ABd ede|fdB AFE|
+ D2F EDB,|DFA BAF|AdB AFE|1 FDD D3:|2 FDD D2e||
+ |:fdB AFA|dfa afd|~g3 fed|Bee ede|
+ fdB AFA|dfa afa|baf gfe|1 fdd d2e:|2 fdB AFE||
+
+X:544
+T:Garrett Barry's
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Gmajor
+A|:DEF ~G3|AGE c2A|dcA d2e|fed cAG|
+ ~F3 GFG|AGE (3Bcd e|dcA GEA|DED D2 A:|
+ |:dcA d2e|fed (3efg e|dcA c2d|efd ecA|
+ dAA d2e|fed (3efg e|dcA GEA|DED D2 A:|
+
+X:56
+T:The Old Favourite
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Gmajor
+|:B3 BAB|dBA G2B|ded d2 B|ded B2A|
+ B3 BAB|dBA G2B|ded cBA|G3 GAA:|
+ |:g2e f2d|ege d2B|ded d2 B|ded B2d|g2e f2d|
+ ege d2B|1 dge dBA|G3 GBd:|2 dge dge|dge dBA||
+
+X:89
+T:The Rambling Pitchfork
+R:jig
+O:Irish session
+M:6/8
+L:1/8
+K:Dmajor
+|:F2F AFF|dFF AFF|G2G ABc|ded cAG|
+ FEF AFF|dFF AFF|GFG BAG|FDD D3:|
+ |:d2e fed|ecA ABc|dcd fed|faf gfe|
+ d2e fed|ecA BAF|GFG BAG|FDD D3:|

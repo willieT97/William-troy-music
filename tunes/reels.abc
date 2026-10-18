@@ -282,3 +282,234 @@ K:Gmajor
  G2 BG AGBG|B2 BA B2 d2|e2 ef edef|gfed BcBA:|
  |:G2 gf edeg|B2 BA BcBA|G2 gf edeg|a2 ag aeef|
  g2 gf edeg|BcBA B2 d2|edef edef|gfed BcBA:|
+
+X:221
+T:The Earl's Chair
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Dmajor
+|:B2Bd BAFA|B2Bd BAFA|AF (3FFF DF (3FFF|AFdB AFEF|
+ B2Bd BAFA|B2Bd BAFA|AFAB dcdf|edef d3z:|
+ |:e2ec d2Bd|efec dFAB|e2ec d3e|fedB ADFA|
+ e2ef eB (3BBB|gB (3BBB defg|afbf afef|gedB ADFA:|
+
+X:517
+T:The Pigeon On The Gate
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Edorian
+|:dc|BE ~E2 BEdE|BE ~E2 dBAF|D2 (3FED ADFE|DEFA BAFA|
+ BE ~E2 BEdE|BE ~E2 B2 AF|D2 FA dfec|dBAF E2:|
+ FA|Beed efed|(3Bcd ef gedB|Addc d3 B|A2 FE DEFA|
+ Beed efed|(3Bcd ef g2 fg|af (3gfe fd ec|dBAF E2:|
+
+X:589
+T:Julia Delaney's
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Ddorian
+|:dcAG ~F2EF|~E2 DE FD D2|dcAG FGAA|Addc d2 fe:|
+ |:f2fe fagf|ecgc acgc|f2fe fagf|edcG Add2:|
+
+X:141
+T:The Humours Of Tulla
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Gmajor
+|:G2DG EGDE|G2BG AGEF|G2DG EGDG|(3EFG AB c2BA:|
+ |:dBAB GB~B2|dB~B2 c2Bc|dBAB GBAB|(3EFG AB c2Bc:|
+
+X:511
+T:The Foxhunters
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Gmajor
+|:d2BG d2BG|d2BG AGEG|d2BG dGBG|AcBG AGEG:|
+ |:D~D2B BAGE|DGBG AGEG|D~D2B BAGB|AcBG AGEG:|
+ |:gedB GABd|gdBd eaaf|gedB GABG|ABcd eA~A2:|
+ |:dggf ~g2ge|dggd egdB|dggf ~g2gd|egdB AGAB:|
+ |:G2BG dGBG|GABG AGAB|~G2BG dGBd|egdB AGAB:|
+
+X:636
+T:The Otter's Holt
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Bminor
+e|:fBBA FEFB|(3ABA FB ABde|fBBA FEFA|(3Bcd cA Bcde|
+ fBBA FEFB|(3ABA FB ABde|faaf effe|1 dBBA ~B3e:|2 dBAF B3c||
+ d2 fd Adfa|bfaf effe|(3ddd fd Adfa|bfaf egfe|
+ defd Adfa|bfaf efde|fBBA FEFA|(3Bcd cA B3c|
+ ~d3f a2 fa|(3baf af effe|d2 fd adfa|bfaf effe|
+ dcdf a2 fa|(3baf af effe|fBBA FEFA|(3Bcd cA ~B3e||
+
+X:462
+T:The Dunmore Lasses
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Eminor
+|:~E3F ~G3A|Be~e2 Be~e2|~E3F G2BG|A2BA GEFD|
+ ~E3F ~G3A|Beed ~e3f|(3.g.f.e fd eBdB|AcBA GEFD:|
+ g2eg fedc|Be~e2 Be~e2|g2eg fedB|AcBA GE~E2|
+ g2eg fedc|Beed ~e3f|(3.g.f.e fd eBdB|AcBA GEE2:|
+
+X:543
+T:The Ships Are Sailing
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Edorian
+|:Beed BcdB|AD (3FED A,D (3FED|~E3F GFGA|Beef gfed|
+ Beed BcdB|AD (3FED A,D (3FED|~E3F GFGA|Beed e3z:|
+ ~g3a bgeg|~f3g afdf|gfga bgaf|gefd e2 de|
+ gfga bgeg|fefg afdf|g2bg f2af|edef gfed:|
+
+X:518
+T:MacLeod's Farewell
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Dmajor
+|:DE|F2BF AFEF|D2 DE FABd|e2 fd efdB|ABde dBAG|
+ F2BF AFEF|D2 DE FABd|e2fd efdB|1 ABde d2:|2 ABde d3||
+ B|A3 f edfd|A3 f edfd|ABdA BdAB|dBAF E2 DE|
+ F2BF AFEF|D2DE FABd|e2fd efdB|1 ABde d3:|2 ABde d2||
+
+X:560
+T:The Tarbolton
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Edorian
+|:D|Eeed e2 BA|GBAF GFEF|Dddc d2 AF|GBAG FDDF|
+ Eeed efge|fedf edBA|GABG FGA=c|BGAF GE E:|
+ gfef (3gfe be|gebe gfef|d2 fd adfd|ABAG FDDF|
+ (3GGG BG (3FFF AF|Eeef gfed|B2 dB AGFA|BGAF GE E:|
+
+X:222
+T:The Man Of The House
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Eminor
+|:E2BE GABG|E2BE FDAD|E2BE GABc|1 dBcA BGED:|2 dBcA BGE2||
+ e2ge f2af|gfed edBd|e2ge f2af|gfed Beed|
+ efge fgaf|gfed efga|bgaf gfed|edBA GEED||
+
+X:86
+T:Rakish Paddy
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Adorian
+|:c4 c2 AB|cBAG Ec c2|Add^c defe|dcAG FGAB|
+ c4 c2 AB|cBAG EDCE|DEFG ABcA|dcAG F2 D2:|
+ |:eg g2 ag g2|eg g2 ed^cd|ea a2 ba a2|ea a2 egdg|
+ eg g2 ag g2|fed^c defg|afge fde^c|dcAG F2 D2:|
+
+X:114
+T:The Teetotaller's
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Gmajor
+|:G2 GF GABc|dBeB dBAc|BEED EFGA|BGAF GFED|
+ G2 GF GABc|dBeB dBAc|BEED EFGA|BGAF G4:|
+ |:Beed e2ef|gfaf gfed|B^cde d2ef|gfaf gfed|
+ Beed e2ef|gfaf gfed|BEED EFGA|BGAF G4:|
+
+X:87
+T:Rolling In The Ryegrass
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Dmajor
+|:A2AB AFDF|G2BG dGBG|ABAF DFAF|GBAG E2D2:|
+ |:ABde f2fd|g2ge fedB|ABde fefa|gfdf e2d2:|
+
+X:399
+T:The Sligo Maid
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Adorian
+|:A2BA (3B^cd ef|gedB AGEF|G2BG dGBG|DEGA BAdB|
+ A2BA (3B^cd ef|gedB AGEG|B3G A2GE|DEGA BAA2:|
+ |:eaag a2ga|bgaf gfed|eggf g2ge|dega bgag|
+ eaag a2ga|bgaf gfed|eg (3gfg edBA|dBgB BAA2:|
+
+X:430
+T:Sporting Paddy
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Gmajor
+EAAB GABG|EAAB G2ED|EAA2 GABd|edge dBAG|
+ EAAB GABG|EAAB G2ED|EAA2 GABd|edge d2ef||
+ geee gede|geee a2ba|gee2 ged2|efge d2ef|
+ geee gede|geee a2ga|bgab gabg|efge dBAG||
+
+X:646
+T:Frank's
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Amajor
+|Ac BA F2 AF|EF AB cA Bc|d3 f ec Ae|fa ec (3Bcd cB|
+ Ac BA F2 AF|EF AB cA Bc|d3 f ec Ac|BA GB A2 (3EFG|
+ Ac BA F2 AF|EF AB cA Bc|d2 df ec Ae|fa ec (3Bcd cB|
+ Ac BA EF AF|EF AB cA Bc|df (3fff ec Ac|BA GB Ae fg||
+ aA Ag AA fA|ef fe cA Bc|d3 f ec Ac|Bc de fe (3efg|
+ aA Ag AA fA|ef fe cA Bc|df (3fff ec Ac|BA GB Ae fg|
+ aA Ag AA fA|e f2 e cA Bc|d3 f eA ce|fa ec (3Bcd cB|
+ Ac BA F3 A|EF AB cA Bc|d3 f ec Ac|BA GB A4||
+
+X:115
+T:Over The Moor To Maggie
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Gmajor
+|:DE|G2GA B2Bd|efge dBAG|EAAG ABAG|EAAG AcBA|
+ GFGA BABd|efge dBAG|DGGF GBAG|EDEF G2:|
+ |:ga|b2bg a2af|g2ge fedB|eaag abag|eaag a2 ga|
+ b2bg a2af|g2ge fedB|dggf gbag|edef g2:|
+ |:cd|e2ec d2dB|c2cA BAGD|EAAG ABAG|EAAG ABcd|
+ e2ec d2dB|c2cA BAGE|DGGF GBAG|EDEF G2:|
+
+X:432
+T:The Maids Of Mount Kisco
+R:reel
+O:Irish session
+M:4/4
+L:1/8
+K:Adorian
+|:EA~A2 BA~A2|EA~A2 BGAG|EG~G2 AG~G2|EG~G2 EGDG|
+ EA~A2 BAAG|EA~A2 BABd|efge afge|1 dBGB ~A3G:|2 dBGB A2dB||
+ |:~A3B dBAB|G2BG DGBG|~A3B dGBd|1 e~g3 gedB:|2 edge d2 Bd||
+ |:ea~a2 bgaf|gfed GABd|ea~a2 bgaf|gede g2eg|
+ ~a3f ~g3e|dedB GABd|eA~A2 efge|1 dBGB A2 Bd:|2 dBGB ~A3G||

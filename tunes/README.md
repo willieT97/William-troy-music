@@ -94,3 +94,11 @@ load — they don't stop a tune from working.
 - `R:` type (`reel`, `jig`, `slip jig`, `hornpipe`, `polka`, `slide`, `waltz`…)
   — how the picker groups tunes.
 - `M:` / `L:` / `K:` — meter, unit note length, key.
+
+## Adding more popular tunes without losing any
+
+`python3 tunes/add-popular.py [N]` looks at thesession.org's top N (default
+100) and **appends** only the tunes the library doesn't have yet — it never
+rewrites a bundle, so tunes that have slipped down the chart stay. Modern
+compositions still in copyright (e.g. Ashokan Farewell) are kept out via the
+`COMPOSED` list at the top of the script. Then run `sh tunes/build-manifest.sh`.
