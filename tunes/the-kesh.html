@@ -8,7 +8,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>The Kesh — sheet music, notes &amp; tab (banjo, mandolin, fiddle)</title>
+<title>The Kesh — Sheet Music &amp; Tab (banjo, mandolin, fiddle, guitar)</title>
+<!-- seo: written by seo.py — edit PAGES there, not here -->
+<link rel="canonical" href="https://themusicarcade.com/tunes/the-kesh.html" />
+<meta property="og:site_name" content="The Music Arcade" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://themusicarcade.com/tunes/the-kesh.html" />
+<meta property="og:title" content="The Kesh — Sheet Music &amp; Tab (banjo, mandolin, fiddle, guitar)" />
+<meta property="og:description" content="The Kesh, an Irish jig in G major: sheet music with repeats, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Then play along in the Melody Trainer." />
+<meta property="og:image" content="https://themusicarcade.com/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- /seo -->
 <meta name="description" content="The Kesh, an Irish jig in G major: sheet music with repeats, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Then play along in the Melody Trainer." />
 <script type="application/ld+json">
 {
@@ -43,6 +53,19 @@
     text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
   .facts{ font-family:var(--mono); font-size:13px; margin:10px 0 0; }
   .lede{ max-width:64ch; margin:12px 0 18px; }
+  /* the heading reads "Sheet Music & Tab"; the tune's name is in it for search engines and screen readers,
+     and on screen in the sheet music box below */
+  .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  /* the way into the Melody Trainer, right at the top */
+  .mtbanner{ display:grid; grid-template-columns:1fr auto; gap:4px 18px; align-items:center; text-decoration:none; color:#fff;
+    background:var(--blue); border:2.5px solid var(--ink); border-radius:16px; box-shadow:6px 6px 0 var(--ink); padding:16px 20px; margin:16px 0 12px; }
+  .mtbanner:hover{ transform:translate(-1px,-1px); box-shadow:7px 7px 0 var(--ink); }
+  .mtb-k{ font-family:var(--disp); font-weight:800; font-size:clamp(19px,3vw,24px); grid-column:1; }
+  .mtb-t{ grid-column:1; font-size:15px; opacity:.95; }
+  .mtb-go{ grid-column:2; grid-row:1 / span 2; font-family:var(--mono); font-weight:700; font-size:14px; background:var(--paper); color:var(--ink);
+    border:2px solid var(--ink); border-radius:10px; padding:10px 14px; white-space:nowrap; box-shadow:3px 3px 0 var(--ink); }
+  @media (max-width:640px){ .mtbanner{ grid-template-columns:1fr; } .mtb-go{ grid-column:1; grid-row:auto; justify-self:start; margin-top:8px; } }
+  .playk{ font-family:var(--mono); font-size:12px; opacity:.75; }
   .play{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 24px; }
   .play a{ font-family:var(--mono); font-weight:700; font-size:13px; text-decoration:none; border:2px solid var(--ink); border-radius:10px;
     padding:9px 14px; box-shadow:3px 3px 0 var(--ink); color:var(--ink); background:var(--paper); }
@@ -75,10 +98,20 @@
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
   <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › Session tunes › The Kesh</div>
-  <h1>The Kesh</h1>
-  <p class="facts">Irish jig · G major · 6/8</p>
-  <p class="lede">The Kesh is a jig in G major, played at Irish sessions everywhere. Here it is as sheet music and as
-  letter names — and the Melody Trainer will show you where every note is on your instrument and wait for you while you play it.</p>
+  <h1><span class="sr">The Kesh — </span>Sheet Music &amp; Tab</h1>
+
+  <a class="mtbanner" href="melody-trainer_1.html?tune=The%20Kesh">
+    <span class="mtb-k">▶ Learn it in the Melody Trainer</span>
+    <span class="mtb-t">See every note of The Kesh on your banjo, fiddle, mandolin, guitar, ukulele or piano — then play along: the music listens and waits for you.</span>
+    <span class="mtb-go">Open The Kesh →</span>
+  </a>
+  <div class="play">
+    <span class="playk">Or open it straight on:</span>
+    <a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=banjo">tenor banjo</a><a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=fiddle">fiddle</a><a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=mandolin">mandolin</a><a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=guitar">guitar</a><a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=uke">ukulele</a>
+  </div>
+
+  <p class="lede">The Kesh is a jig in G major, played at Irish sessions everywhere. Below: the sheet music, the notes
+  as letter names, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele.</p>
 
   <section class="card"><h2>The Kesh — sheet music</h2><p class="sub">G major · 6/8</p>
     <div id="stave" aria-label="Sheet music for The Kesh"></div>
@@ -91,10 +124,7 @@ B B d d | e g e d B A | B B d B G | A B A A G A
 B A B d C♯ d | e g e d B d | g f♯ g a g a | b g g g</p>
   </section>
 
-  <div class="play">
-    <a class="main" href="melody-trainer_1.html?tune=The%20Kesh">▶ Play along in the Melody Trainer</a>
-    <a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=banjo">on banjo</a><a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=fiddle">on fiddle</a><a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=guitar">on guitar</a><a href="melody-trainer_1.html?tune=The%20Kesh&amp;inst=uke">on ukulele</a>
-  </div>
+  <div class="play"><a class="main" href="melody-trainer_1.html?tune=The%20Kesh">▶ Play along in the Melody Trainer</a></div>
 
   <section class="card tabs-card" id="tab"><h2>The Kesh — tab</h2>
     <p class="sub">Tenor banjo · mandolin · fiddle · guitar · ukulele — tap one to open it</p>

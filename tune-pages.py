@@ -157,6 +157,19 @@ CSS = """
     text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
   .facts{ font-family:var(--mono); font-size:13px; margin:10px 0 0; }
   .lede{ max-width:64ch; margin:12px 0 18px; }
+  /* the heading reads "Sheet Music & Tab"; the tune's name is in it for search engines and screen readers,
+     and on screen in the sheet music box below */
+  .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  /* the way into the Melody Trainer, right at the top */
+  .mtbanner{ display:grid; grid-template-columns:1fr auto; gap:4px 18px; align-items:center; text-decoration:none; color:#fff;
+    background:var(--blue); border:2.5px solid var(--ink); border-radius:16px; box-shadow:6px 6px 0 var(--ink); padding:16px 20px; margin:16px 0 12px; }
+  .mtbanner:hover{ transform:translate(-1px,-1px); box-shadow:7px 7px 0 var(--ink); }
+  .mtb-k{ font-family:var(--disp); font-weight:800; font-size:clamp(19px,3vw,24px); grid-column:1; }
+  .mtb-t{ grid-column:1; font-size:15px; opacity:.95; }
+  .mtb-go{ grid-column:2; grid-row:1 / span 2; font-family:var(--mono); font-weight:700; font-size:14px; background:var(--paper); color:var(--ink);
+    border:2px solid var(--ink); border-radius:10px; padding:10px 14px; white-space:nowrap; box-shadow:3px 3px 0 var(--ink); }
+  @media (max-width:640px){ .mtbanner{ grid-template-columns:1fr; } .mtb-go{ grid-column:1; grid-row:auto; justify-self:start; margin-top:8px; } }
+  .playk{ font-family:var(--mono); font-size:12px; opacity:.75; }
   .play{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 24px; }
   .play a{ font-family:var(--mono); font-weight:700; font-size:13px; text-decoration:none; border:2px solid var(--ink); border-radius:10px;
     padding:9px 14px; box-shadow:3px 3px 0 var(--ink); color:var(--ink); background:var(--paper); }
@@ -189,7 +202,7 @@ def build_page(t, lib, built):
     name = t['name']
     mt = 'melody-trainer_1.html?tune=' + quote(name)
     keytxt = key['label'] + ('' if key['mode'] == 'major' else ' (the notes of ' + key['parent_name'] + ')')
-    title = f'{name} — sheet music, notes & tab (banjo, mandolin, fiddle)'
+    title = f'{name} — Sheet Music & Tab (banjo, mandolin, fiddle, guitar)'
     desc = (f'{name}, an Irish {ttype} in {key["label"]}: sheet music with repeats, the notes as letters, and tab for tenor banjo, '
             f'mandolin, fiddle, guitar and ukulele. Then play along in the Melody Trainer.')
     letters = '\n'.join(' | '.join(' '.join(trad_name(n) for n in bar) for bar in bars[i:i + 4]) for i in range(0, len(bars), 4))
@@ -243,10 +256,20 @@ def build_page(t, lib, built):
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
   <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › Session tunes › {esc(name)}</div>
-  <h1>{esc(name)}</h1>
-  <p class="facts">Irish {esc(ttype)} · {esc(keytxt)} · {esc(t["meter"])}</p>
-  <p class="lede">{esc(name)} is a {esc(ttype)} in {esc(key["label"])}, played at Irish sessions everywhere. Here it is as sheet music and as
-  letter names — and the Melody Trainer will show you where every note is on your instrument and wait for you while you play it.</p>
+  <h1><span class="sr">{esc(name)} — </span>Sheet Music &amp; Tab</h1>
+
+  <a class="mtbanner" href="{mt}">
+    <span class="mtb-k">▶ Learn it in the Melody Trainer</span>
+    <span class="mtb-t">See every note of {esc(name)} on your banjo, fiddle, mandolin, guitar, ukulele or piano — then play along: the music listens and waits for you.</span>
+    <span class="mtb-go">Open {esc(name)} →</span>
+  </a>
+  <div class="play">
+    <span class="playk">Or open it straight on:</span>
+    <a href="{mt}&amp;inst=banjo">tenor banjo</a><a href="{mt}&amp;inst=fiddle">fiddle</a><a href="{mt}&amp;inst=mandolin">mandolin</a><a href="{mt}&amp;inst=guitar">guitar</a><a href="{mt}&amp;inst=uke">ukulele</a>
+  </div>
+
+  <p class="lede">{esc(name)} is a {esc(ttype)} in {esc(key["label"])}, played at Irish sessions everywhere. Below: the sheet music, the notes
+  as letter names, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele.</p>
 
   <section class="card"><h2>{esc(name)} — sheet music</h2><p class="sub">{esc(keytxt)} · {esc(t["meter"])}</p>
     <div id="stave" aria-label="Sheet music for {esc(name)}"></div>
@@ -256,10 +279,7 @@ def build_page(t, lib, built):
     <p class="letters">{esc(letters)}</p>
   </section>
 
-  <div class="play">
-    <a class="main" href="{mt}">▶ Play along in the Melody Trainer</a>
-    <a href="{mt}&amp;inst=banjo">on banjo</a><a href="{mt}&amp;inst=fiddle">on fiddle</a><a href="{mt}&amp;inst=guitar">on guitar</a><a href="{mt}&amp;inst=uke">on ukulele</a>
-  </div>
+  <div class="play"><a class="main" href="{mt}">▶ Play along in the Melody Trainer</a></div>
 
   <section class="card tabs-card" id="tab"><h2>{esc(name)} — tab</h2>
     <p class="sub">Tenor banjo · mandolin · fiddle · guitar · ukulele — tap one to open it</p>

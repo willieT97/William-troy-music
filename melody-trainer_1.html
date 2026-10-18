@@ -491,7 +491,7 @@
 
   <header>
     <h1>Melody Trainer</h1>
-    <p class="lede">Pick a tune and it shows you how to play it on your banjo, fiddle, guitar, ukulele or piano — every note on the stave, and right where it sits on your instrument. Then play along: the music listens, and waits for you.</p>
+    <p class="lede">Pick a tune and it shows you how to play it on your banjo, fiddle, mandolin, guitar, ukulele or piano — every note on the stave, and right where it sits on your instrument. Then play along: the music listens, and waits for you.</p>
   </header>
 
   <div class="topgrid">
@@ -510,6 +510,7 @@
         <button data-inst="guitar">Guitar</button>
         <button data-inst="banjo">Tenor banjo</button>
         <button data-inst="violin">Fiddle</button>
+        <button data-inst="mandolin">Mandolin</button>
         <button data-inst="piano">Piano</button>
       </div>
       </div>
@@ -634,7 +635,7 @@
     <h2 id="howtoH">How it works</h2>
     <ol>
       <li><b>Pick a tune.</b> 260+ Irish session, bluegrass, jazz and folk tunes, searchable by name or key.</li>
-      <li><b>See how to play it.</b> Each note on the stave with its letter name, and where it is on your banjo, fiddle, guitar, ukulele or piano.</li>
+      <li><b>See how to play it.</b> Each note on the stave with its letter name, and where it is on your banjo, fiddle, mandolin, guitar, ukulele or piano.</li>
       <li><b>Play along.</b> Turn on the mic and the music waits on each note until you play it. Finish the tune and it goes into your tunebook.</li>
     </ol>
   </section>
@@ -1056,6 +1057,7 @@ const INSTRUMENTS = {
   uke:   {label:"ukulele",     tuning:[67,60,64,69],       names:["G","C","E","A"],          shift:0,   clef8:false},
   guitar:{label:"guitar",      tuning:[40,45,50,55,59,64], names:["E","A","D","G","B","E"],  shift:-12, clef8:true},
   banjo: {label:"tenor banjo", tuning:[43,50,57,64],       names:["G","D","A","E"],          shift:-12, clef8:true},
+  mandolin:{label:"mandolin",  tuning:[55,62,69,76],       names:["G","D","A","E"],          shift:0,   clef8:false},
   violin:{label:"fiddle",      tuning:[55,62,69,76],       names:["G","D","A","E"],          shift:0,   clef8:false, fretless:true},
   piano: {label:"piano",       keyboard:true,              shift:0,   clef8:false}
 };
@@ -1582,7 +1584,7 @@ function renderScale(){
    tunes/pages.json) get a link to it, opened at the tab for the instrument
    you're on. Piano has no tab, so no link. */
 let TUNE_PAGES = null;
-const TAB_ANCHOR = { banjo:"banjo", violin:"fiddle", guitar:"guitar", uke:"uke" };
+const TAB_ANCHOR = { banjo:"banjo", violin:"fiddle", mandolin:"mandolin", guitar:"guitar", uke:"uke" };
 fetch("tunes/pages.json?t=" + Date.now()).then(r => r.ok ? r.json() : {}).then(j => { TUNE_PAGES = j || {}; updateTabLink(); }).catch(() => { TUNE_PAGES = {}; });
 function updateTabLink(){
   const a = $("tabLink"); if(!a) return;
