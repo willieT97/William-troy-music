@@ -63,8 +63,8 @@ PAGES = {
   'rhythm-zoo.html': ('Rhythm Zoo — note values for kids, as animals | Music Arcade', None),
 
   # ---- practice tools ----
-  'melody-trainer_1.html': ('Melody Trainer — play Irish trad tunes from sheet music | Music Arcade',
-    'Read a tune on the stave and play or sing it back into the mic — the cursor only moves when you hit the right note. 200+ Irish session tunes loaded.'),
+  'melody-trainer_1.html': ('Melody Trainer — learn tunes on banjo, guitar, fiddle or piano',
+    'Pick a tune and see every note on the stave and on your banjo, fiddle, guitar, uke or piano. Play along — the music waits for you. 260+ Irish & folk tunes.'),
   'Ear Training/pitch-practice.html': ('Pitch Practice — online ear training by scale | Music Arcade',
     'Pure ear training, no game: hear a short run of notes off a home note and name them. Start in C major and unlock new scales by playing them on your instrument.'),
   'Ear Training/play-it-back.html': (None, None),   # title + description written in the page

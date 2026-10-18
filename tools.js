@@ -227,7 +227,7 @@ var CATALOGUE = [
     mk:function(a){ return 'find-the-note.html?inst=' + (FIND_INST[a.inst] || 'piano'); } },
   { t:'Melody Trainer', h:'melody-trainer_1.html', w:15, dep:2, g:['tunes','read'], lv:[1,2,3], mic:true,
     fav:['gdae','voice'],
-    d:'Read a tune on the stave and play or sing it back. The cursor only moves when you land the right note — and 200+ trad tunes come loaded.' },
+    d:'Pick a tune and see how to play it on your banjo, fiddle, guitar, ukulele or piano, then play along — the music waits for you. 260+ trad tunes loaded.' },
   { t:'Song Trainer', h:'song-trainer.html', shelved:true, dep:2, g:['tunes','chords'], lv:[1,2], fav:['uke','gtr'],
     d:'Learn a song by its chords and strumming, play along in time, then dig into the theory behind it.' },
   { t:'Jam Track', h:'jam-track.html', w:10, dep:2, g:['tunes','rhythm','write'], lv:[2,3],
