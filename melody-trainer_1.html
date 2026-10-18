@@ -75,19 +75,14 @@
   .tabs a:active{ transform:translate(3px,3px); box-shadow:none; }
   .tabs a.cur{ background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--green); }
 
-  header{margin-bottom:26px}
-  .eyebrow{
-    font-family:'Space Mono',monospace;
-    font-size:12px;
-    letter-spacing:.18em;
-    text-transform:uppercase;
-    display:inline-block;
-    border:1.5px solid var(--ink);
-    padding:4px 10px;
-    border-radius:99px;
-    background:var(--paper);
-    margin-bottom:14px;
-  }
+  header{margin-bottom:18px}
+  /* the tune's name and key/time sit at the top of the tune box, instrument buttons beside them */
+  .tunehead{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px 20px; flex-wrap:wrap; margin-bottom:12px; }
+  /* the tune name is a box heading like "Load a tune" and "Listening post" (.card h2) */
+  .tunehead h2{ margin-bottom:0; line-height:1.3; }
+  .tunehead .meta{ margin-top:6px; }
+  .tunehead .seg{ margin-bottom:0; }
+  .tunehead .namestoggle{ display:inline-flex; margin:8px 0 0; }
   h1{
     font-family:'Syne',sans-serif;
     font-weight:800;
@@ -122,19 +117,38 @@
     margin-bottom:10px;
   }
 
-  /* tune + listening post side by side */
+  /* the tune with the tune library beside it; the listening post runs
+     full width underneath, laid out sideways */
   .topgrid{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 270px;
+    grid-template-columns:minmax(0,1fr) 300px;
     gap:20px;
     align-items:start;
     margin-bottom:20px;
   }
   .topgrid > .card{ margin-bottom:0; }
-  .topgrid .tuner{ grid-template-columns:1fr; }
-  .topgrid .meter{ width:100%; }
+  /* desktop: tune | library, listening post across the bottom.
+     phone: tune, then the listening post, then the library — so the mic
+     controls sit right under the music */
+  .topgrid{ grid-template-areas:"tune load" "listen load"; }
+  .topgrid > .loadcard{ align-self:stretch; }
+  .topgrid > .card:first-child{ grid-area:tune; }
+  .topgrid > .loadcard{ grid-area:load; }
+  .topgrid > .listen{ grid-area:listen; }
+  .loadcard .tunelist{ max-height:440px; }
+  .transport{ display:inline-flex; gap:8px; }
+  button.ib{ width:42px; height:42px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+  button.ib svg{ width:20px; height:20px; fill:var(--ink); }
+  button.ib svg.ln{ fill:none; stroke:var(--ink); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  button.ib.on{ background:var(--ink); } button.ib.on svg{ fill:var(--paper); }
+  .lp{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:26px; align-items:center; }
+  .lp .tuner{ grid-template-columns:1fr; gap:10px; }
+  .lp .meter{ width:100%; }
+  .lp .progress{ margin-top:12px; }
+  .lp-right .statusline{ margin-top:10px; }
   @media (max-width:860px){
-    .topgrid{ grid-template-columns:1fr; }
+    .topgrid{ grid-template-columns:1fr; grid-template-areas:"tune" "listen" "load"; }
+    .lp{ grid-template-columns:1fr; gap:14px; }
   }
 
   #score{width:100%;display:block}
@@ -439,53 +453,76 @@
   </nav>
 
   <header>
-    <span class="eyebrow">Melody Trainer · Prototype 002</span>
-    <h1 id="tuneTitle">Twinkle, Twinkle</h1>
-    <div class="meta" id="tuneMeta"></div>
+    <h1>Melody Trainer</h1>
   </header>
 
   <div class="topgrid">
     <div class="card">
-      <h2>The tune</h2>
+      <div class="tunehead">
+        <div>
+          <h2 id="tuneTitle">Twinkle, Twinkle</h2>
+          <div class="meta" id="tuneMeta"></div>
+          <label class="toggle namestoggle"><input type="checkbox" id="showNames" checked> show note names</label>
+        </div>
       <div class="seg" role="group" aria-label="Choose your instrument">
         <button data-inst="uke" class="on">Ukulele</button>
         <button data-inst="guitar">Guitar</button>
         <button data-inst="banjo">Tenor banjo</button>
         <button data-inst="piano">Piano</button>
       </div>
-      <div id="scoreBox"></div>
+      </div>
+      <div id="scoreBox" class="names"></div>
     </div>
 
-    <div class="card">
+    <div class="card loadcard">
+      <h2>Load a tune</h2>
+      <div class="fbmeta"><b>Beginner</b> folk songs &amp; carols, <b>Irish session</b>, <b>American fiddle</b> and <b>trad jazz &amp; blues</b> tunes — search by name, type or tradition, or paste your own ABC. Ornaments are stripped; repeats play once through.</div>
+      <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search tunes — name or type…" aria-label="Search tunes" autocomplete="off">
+      <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
+      <details class="pastewrap" hidden>
+        <summary>Paste your own ABC</summary>
+        <textarea id="abcIn" spellcheck="false" aria-label="ABC notation input"></textarea>
+        <div class="loadrow"><button class="primary" id="loadBtn">Load pasted ABC</button></div>
+      </details>
+      <div class="statusline" id="loadStatus" hidden><span class="dot"></span><span id="loadStatusText">Pick a tune from the list, or paste your own ABC.</span></div>
+    </div>
+    <div class="card listen">
       <h2>Listening post</h2>
-      <div class="tuner">
-        <div class="readout">
-          <div class="big"><span id="heardNote">·&nbsp;·</span><span class="cents" id="heardCents"></span></div>
-          <div class="sub">target&nbsp;<b id="targetNote">C4</b>&nbsp;· hold the right note for a moment to advance</div>
+      <div class="lp">
+      <div class="lp-left">
+        <div class="tuner">
+          <div class="readout">
+            <div class="big"><span id="heardNote">·&nbsp;·</span><span class="cents" id="heardCents"></span></div>
+            <div class="sub">target&nbsp;<b id="targetNote">C4</b>&nbsp;· hold the right note for a moment to advance</div>
+          </div>
+          <div class="meter" aria-hidden="true">
+            <div class="tick"></div>
+            <div class="needle idle" id="needle"></div>
+            <span class="lbl flat">♭ flat</span>
+            <span class="lbl sharp">sharp ♯</span>
+          </div>
         </div>
-        <div class="meter" aria-hidden="true">
-          <div class="tick"></div>
-          <div class="needle idle" id="needle"></div>
-          <span class="lbl flat">♭ flat</span>
-          <span class="lbl sharp">sharp ♯</span>
+
+        <div class="progress">
+          <span id="progText"></span>
+          <div class="pbar"><div class="fill" id="progFill"></div></div>
         </div>
-      </div>
 
-      <div class="progress">
-        <span id="progText"></span>
-        <div class="pbar"><div class="fill" id="progFill"></div></div>
       </div>
-
-      <div class="controls" style="margin-top:16px">
-        <button class="primary" id="micBtn">Enable microphone</button>
-        <button id="hearBtn">Hear this note</button>
-        <button id="tuneBtn">Play the tune</button>
-        <button id="resetBtn">Restart</button>
-        <button id="printBtn" title="Print this tune as a sheet — Save as PDF to keep it">🖨 Print</button>
-        <label class="toggle"><input type="checkbox" id="anyOct" checked> any octave counts</label>
-        <label class="toggle" style="margin-left:0"><input type="checkbox" id="showNames"> show note names</label>
+      <div class="lp-right">
+        <div class="controls">
+          <button class="primary" id="micBtn">Enable microphone</button>
+          <span class="transport" role="group" aria-label="Tune playback">
+            <button class="ib" id="tuneBtn" title="Play the tune" aria-label="Play the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+            <button class="ib" id="stopBtn" title="Stop" aria-label="Stop the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="1.5"/></svg></button>
+            <button class="ib" id="resetBtn" title="Start again from the first note" aria-label="Start again"><svg viewBox="0 0 24 24" aria-hidden="true" class="ln"><path d="M5 12a7 7 0 1 0 2.1-5"/><path d="M4.5 3.5v4h4"/></svg></button>
+            <button class="ib" id="printBtn" title="Print this tune as a sheet — Save as PDF to keep it" aria-label="Print the tune"><svg viewBox="0 0 24 24" aria-hidden="true" class="ln"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></svg></button>
+          </span>
+          <label class="toggle"><input type="checkbox" id="anyOct" checked> any octave counts</label>
+        </div>
+        <div class="statusline" id="status"><span class="dot"></span><span id="statusText">Microphone off — enable it to start playing.</span></div>
       </div>
-      <div class="statusline" id="status"><span class="dot"></span><span id="statusText">Microphone off — enable it to start playing.</span></div>
+      </div>
     </div>
   </div>
 
@@ -501,25 +538,13 @@
     <div id="scaleBox"></div>
   </div>
 
-  <div class="card">
-    <h2>Load a tune</h2>
-    <div class="fbmeta"><b>Beginner</b> folk songs &amp; carols, <b>Irish session</b>, <b>American fiddle</b> and <b>trad jazz &amp; blues</b> tunes — search by name, type or tradition, or paste your own ABC. Ornaments are stripped; repeats play once through.</div>
-    <input type="text" id="tuneSearch" class="tunesearch" placeholder="Search tunes — name or type…" aria-label="Search tunes" autocomplete="off">
-    <div id="tuneList" class="tunelist" aria-label="Tune library"></div>
-    <details class="pastewrap">
-      <summary>Paste your own ABC</summary>
-      <textarea id="abcIn" spellcheck="false" aria-label="ABC notation input"></textarea>
-      <div class="loadrow"><button class="primary" id="loadBtn">Load pasted ABC</button></div>
-    </details>
-    <div class="statusline" id="loadStatus"><span class="dot"></span><span id="loadStatusText">Pick a tune from the list, or paste your own ABC.</span></div>
-  </div>
 
   <div class="card tips">
     <h2>Field notes</h2>
     <p><span class="k">01</span>&nbsp; Works with ukulele, guitar, banjo, piano, whistling, singing — anything with a clear single pitch.</p>
     <p><span class="k">02</span>&nbsp; Let each note ring cleanly. For repeated notes just pluck again — the attack re-arms the listener.</p>
     <p><span class="k">03</span>&nbsp; Quiet room helps. If your instrument sits in another octave, tick <em>any octave counts</em>.</p>
-    <p><span class="k">04</span>&nbsp; <em>Hear this note</em> and <em>Play the tune</em> pause the judging, so the speaker won't accidentally play the tune for you.</p>
+    <p><span class="k">04</span>&nbsp; Click any note on the stave to hear it. While the tune plays (▶) or a clicked note sounds, the judging pauses, so the speaker won't accidentally play the tune for you. ⏸ pauses the tune where it is; ■ stops it and goes back to the start.</p>
     <p><span class="k">05</span>&nbsp; Guitar and tenor banjo read the octave clef — the little 8 under the treble clef. Same positions on the stave, sounds an octave lower, and the listener expects that octave automatically.</p>
     <p><span class="k">06</span>&nbsp; ABC support covers single melody lines: keys and modes, 4/4 · 3/4 · 2/4 · 6/8 · 9/8 and friends, dotted rhythms (<em>a&gt;b</em>), triplets <em>(3abc</em>, ties, rests. Not yet: 1st/2nd endings, chords-in-melody, grace notes.</p>
   </div>
@@ -1397,6 +1422,12 @@ function setInstrument(k){
 let audioCtx = null, analyser = null, micStream = null, timeBuf = null;
 let demoTimers = [];
 let demoVoices = [];   // oscillators scheduled by a running demo, so Stop can silence them
+let demoPos = 0;       // where a paused demo picks up again (note index); 0 = from the top
+const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>', PAUSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1"/><rect x="13.8" y="5" width="4.2" height="14" rx="1"/></svg>';
+function showPlaying(on){
+  const b = $("tuneBtn"); b.innerHTML = on ? PAUSE_ICON : PLAY_ICON; b.classList.toggle("on", on);
+  b.title = on ? "Pause" : (demoPos ? "Carry on playing" : "Play the tune"); b.setAttribute("aria-label", b.title);
+}
 
 function ensureCtx(){
   if(!audioCtx){
@@ -1541,7 +1572,7 @@ function loop(){
         }
       }
 
-      if(!state.playing && !state.rearm && onPitch){
+      if(!state.playing && performance.now() >= (state.quietUntil||0) && !state.rearm && onPitch){
         state.streak++;
         if(state.streak >= 4) accept(target);
       }else{
@@ -1590,7 +1621,7 @@ function stopDemo(){
   demoVoices.forEach(o => { try { o.stop(); } catch(e){} });   // cut any still-sounding scheduled notes
   demoVoices = [];
   state.playing = false;
-  $("tuneBtn").textContent = "Play the tune";
+  showPlaying(false);
   TUNE.forEach((t,i)=>{ const g=$("note-"+i); if(g) g.classList.remove("flash"); });
   renderFretboard(pinned !== null ? pinned : (state.done ? lastPlayableIdx() : state.idx));
 }
@@ -1598,15 +1629,19 @@ function tempoFor(){
   /* one full bar ≈ 2.2s regardless of meter — comfortable demo speed */
   return 2.2 / METER.num;   /* seconds per unit */
 }
+function pauseTune(){ stopDemo(); showPlaying(false); }                   // demoPos stays where it got to
+function stopTune(){ stopDemo(); demoPos = 0; showPlaying(false); }
 function playTune(){
-  if(state.playing){ stopDemo(); return; }
+  if(state.playing){ pauseTune(); return; }
   const ctx = ensureCtx();
+  if(demoPos >= TOTAL) demoPos = 0;
   state.playing = true;
-  $("tuneBtn").textContent = "Stop";
-  const spu = tempoFor();
+  showPlaying(true);
+  const spu = tempoFor(), from = demoPos;
   let at = ctx.currentTime + 0.08;
   let ms = 80;
   TUNE.forEach((t,i)=>{
+    if(i < from) return;
     if(!t.rest && !t.cont){
       let dur = t.d;
       let j = i+1;
@@ -1615,6 +1650,7 @@ function playTune(){
     }
     if(!t.rest){
       demoTimers.push(setTimeout(()=>{
+        demoPos = i;
         const g = $("note-"+i);
         if(g) g.classList.add("flash");
         renderFretboard(i);
@@ -1624,16 +1660,12 @@ function playTune(){
     at += t.d*spu;
     ms += t.d*spu*1000;
   });
-  demoTimers.push(setTimeout(stopDemo, ms + 300));
+  demoTimers.push(setTimeout(stopTune, ms + 300));             // played to the end: next play starts from the top
 }
 
-function hearNote(){
-  if(state.done) return;
-  voice(freqOf(TUNE[state.idx].midi + iShift()), 0.9, undefined, 0.45);
-}
 
 function reset(){
-  stopDemo();
+  stopDemo(); demoPos = 0; showPlaying(false);
   state.idx = firstPlayable();
   state.done = false;
   state.rearm = false; state.armSilent = false; state.streak = 0;
@@ -1672,6 +1704,8 @@ function finish(){
    11 · TUNE LOADING
    ============================================================ */
 function installTune(parsed){
+  if(typeof stopDemo === 'function' && state.playing) stopDemo();
+  demoPos = 0;
   TUNE = parsed.notes;
   METER = parsed.meter;
   KEY = parsed.key;
@@ -1692,7 +1726,7 @@ function installTune(parsed){
   $("overlay").classList.remove("show");
 
   $("tuneTitle").textContent = TITLE;
-  $("tuneMeta").innerHTML = `${KEY.label} · ${METER.num}/${METER.den} · <b>${PLAYABLE_TOTAL} notes</b> · play at your own pace — the cursor waits for you`;
+  $("tuneMeta").textContent = `${KEY.label} · ${METER.num}/${METER.den}`;
 
   buildScore();
   refreshUI();
@@ -1714,9 +1748,9 @@ function loadFromTextarea(){
    12 · WIRE UP
    ============================================================ */
 $("micBtn").addEventListener("click", startMic);
-$("hearBtn").addEventListener("click", hearNote);
 $("tuneBtn").addEventListener("click", playTune);
 $("resetBtn").addEventListener("click", reset);
+$("stopBtn").addEventListener("click", stopTune);
 
 /* ---- print the current tune as a plain notation sheet (Save-as-PDF to keep it) ---- */
 function printTune(){
@@ -1743,7 +1777,19 @@ $("scoreBox").addEventListener("click", e=>{
   if(!g || g.classList.contains("rst")) return;
   pinned = parseInt(g.id.slice(5), 10);
   renderFretboard(pinned);
+  hearAt(pinned);                                    // and hear it
 });
+/* Clicking a note on the stave plays it, at its own length (a held note
+   includes its tied continuation). The listener ignores what it hears while
+   it sounds, so the speaker can't count as you playing it. */
+function hearAt(i){
+  const t = TUNE[i]; if(!t || t.rest) return;
+  let d = t.d, j = i+1;
+  while(j < TOTAL && TUNE[j].cont){ d += TUNE[j].d; j++; }
+  const secs = Math.min(1.6, Math.max(0.35, d * tempoFor() * 0.92));
+  voice(freqOf(t.midi + iShift()), secs, undefined, 0.45);
+  state.quietUntil = performance.now() + secs*1000 + 300;
+}
 
 /* ---- tune library: the bundled Irish tunes + the built-in examples ---- */
 const LIBRARY = [];
@@ -1829,7 +1875,7 @@ function openRequestedTune(){
   loadTuneObj(LIBRARY[i], row);
   // bring the row into view inside the list only — the page itself should open on the tune
   if(row){ const list = $("tuneList"); list.scrollTop = row.offsetTop - list.offsetTop - list.clientHeight/2; }
-  ($("tuneTitle").closest("header") || $("tuneTitle")).scrollIntoView({ block:"start" });
+  ($("tuneTitle").closest(".card") || $("tuneTitle")).scrollIntoView({ block:"start" });
 }
 
 loadLibrary().then(openRequestedTune);
@@ -1844,7 +1890,8 @@ installTune(parseABC(PRESETS[0].abc));
   const q = new URLSearchParams(location.search);
   const want = q.get("inst");
   if(want && INSTRUMENTS[want] && want !== inst) setInstrument(want);
-  if(q.get("names") === "1"){ $("showNames").checked = true; $("scoreBox").classList.add("names"); }
+  // names are on by default; ?names=0 turns them off (?names=1 still works for older links)
+  if(q.get("names") === "0"){ $("showNames").checked = false; $("scoreBox").classList.remove("names"); }
 })();
 </script>
 <!-- more like this, at the foot of the page -->
