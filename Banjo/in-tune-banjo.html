@@ -18,6 +18,11 @@
 <meta property="og:image" content="https://themusicarcade.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <!-- /seo -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+ {"@type":"ListItem","position":1,"name":"Music Arcade","item":"https://themusicarcade.com/"},
+ {"@type":"ListItem","position":2,"name":"In Tune? tenor banjo tuning by ear"}]}
+</script>
 <meta name="description" content="The four GDAE strings play in turn — is the tenor banjo in tune, or is one string off? Ear training for tuning by ear." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +39,7 @@
   html,body{ margin:0; }
   body{
     font-family:var(--body); color:var(--ink); background:var(--paper);
-    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
   }
   body::before{
@@ -60,8 +65,10 @@
     content:attr(data-text); position:absolute; left:3px; top:3px;
     color:var(--pink); mix-blend-mode:multiply; z-index:-1;
   }
+  /* a column flex centres the big title even when it's wider than the stage */
+  h1{ margin:0; font:inherit; display:flex; flex-direction:column; align-items:center; }
   .subtitle{
-    font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
+    display:block; font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
     text-transform:uppercase; color:var(--muted); margin-top:12px;
   }
 
@@ -138,15 +145,40 @@
   }
   .score b{ display:block; font-size:1.5rem; color:var(--ink); letter-spacing:0; }
 
-  @media (max-width:380px){ .controls{ flex-direction:column; } }
+  /* link trail above the game */
+  .crumbs{ position:relative; z-index:1; width:min(440px,100%); margin-bottom:22px;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; color:var(--muted); }
+  .crumbs a{ color:var(--ink); text-decoration:none; border-bottom:1.5px solid var(--pink); }
+  .crumbs a:hover{ color:var(--blue); }
+
+  /* readable text under the game: what it's for, and where to go next */
+  .about{ position:relative; z-index:1; width:min(440px,100%); margin-top:44px; }
+  .about h2{ font-family:var(--display); font-weight:800; font-size:1.25rem; letter-spacing:-.01em;
+    text-transform:uppercase; color:var(--blue); margin:0 0 10px; }
+  .about p{ margin:0 0 12px; font-size:.98rem; }
+  .about .more{ margin-top:30px; }
+  .about ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .about li a{ display:block; padding:10px 12px; border:2px solid var(--ink); background:var(--paper);
+    box-shadow:3px 3px 0 var(--ink); color:var(--ink); text-decoration:none; font-weight:600; line-height:1.25; }
+  .about li a small{ display:block; font-weight:400; font-size:.8rem; color:var(--muted); margin-top:2px; }
+  .about li a:hover{ background:#fff; }
+  .about .back{ margin-top:18px; font-family:var(--mono); font-size:.76rem; }
+  .about .back a{ color:var(--ink); border-bottom:1.5px solid var(--pink); text-decoration:none; }
+
+  .subtitle .nw{ white-space:nowrap; }
+
+  @media (max-width:380px){ .controls{ flex-direction:column; } .about ul{ grid-template-columns:1fr; } }
   @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
 </style>
 </head>
 <body>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">Music Arcade</a> › <a href="/#tab=banjo">Banjo</a> › In Tune?
+  </nav>
   <div class="stage">
     <header>
-      <span class="title" data-text="In Tune?">In Tune?</span>
-      <div class="subtitle">tenor banjo · are all four strings in tune?</div>
+      <h1><span class="title" data-text="In Tune?">In Tune?</span>
+      <span class="subtitle"><span class="nw">Tenor banjo tuning by ear</span> · <span class="nw">are all four strings in tune?</span></span></h1>
     </header>
 
     <div class="panel">
@@ -222,6 +254,26 @@
     </div>
   </div>
 
+  <section class="about" data-rel-host>
+    <h2>How this game helps</h2>
+    <p>A tuner tells you what's wrong, but in a session you need to hear it yourself: a string that's drifted between sets, or a banjo that sounds sour against the fiddle.</p>
+    <p>In Tune? plays the four strings, G D A E, one after another. Is the banjo in tune, or is something off? Half the rounds are spot on; in the rest, anything from one string to all four has slipped. Press <em>Strum</em> to hear them together. A string that's out makes the chord wobble.</p>
+    <p>Start on <strong>Easy</strong>, where a bad string is a quarter-tone out, then move to <strong>Hard</strong>, about a fifth of a semitone, the kind of small drift you'd want to catch before the first tune.</p>
+
+    <div class="more">
+      <h2>More banjo</h2>
+      <ul>
+        <li><a href="/Banjo/out-of-tune-banjo.html">Out of Tune<small>Find the GDAE string that's out, sharp or flat</small></a></li>
+        <li><a href="/Banjo/what-note-banjo.html">What Note?<small>Learn the notes on the tenor banjo neck</small></a></li>
+        <li><a href="/tuner.html?inst=banjo">Tuner<small>Chromatic tuner with a GDAE banjo setting</small></a></li>
+        <li><a href="/learn-banjo.html">Beginner Banjo<small>Seven steps for adult tenor banjo beginners</small></a></li>
+        <li><a href="/tunes/index.html">Sheet music &amp; tab<small>250+ tunes with tenor banjo tab</small></a></li>
+        <li><a href="/scales/tenor-banjo/d-major-scale.html">D major scale<small>The first scale for most session tunes</small></a></li>
+      </ul>
+      <p class="back"><a href="/#tab=banjo">All banjo games in the Music Arcade →</a></p>
+    </div>
+  </section>
+
 <script src="../hi-scores.js"></script>
 <script>
 /* ====================================================================
@@ -239,7 +291,7 @@
      STEP      gap between strings in the sequence
    ==================================================================== */
 
-  const BASE   = [196.00, 293.66, 440.00, 659.25];   // G3 D4 A4 E5 (tenor banjo, low to high)
+  const BASE   = [98.00, 146.83, 220.00, 329.63];   // G2 D3 A3 E4 — real tenor banjo pitch, an octave below the fiddle
   const NAMES  = ['G','D','A','E'];
   const DETUNE = { easy: 50, hard: 20 };             // base cents off when a string is out
   const STEP      = 0.68;   // gap between strings in the sequence (s)
