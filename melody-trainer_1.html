@@ -99,6 +99,9 @@
     border:2px solid var(--ink); border-radius:99px; padding:3px 11px; box-shadow:2px 2px 0 rgba(23,20,14,.9); background:var(--paper); }
   .tablink:hover{ background:#fff; }
   .tablink[hidden]{ display:none; }
+  button.tablink{ cursor:pointer; line-height:inherit; display:inline-flex; align-items:center; gap:5px; }
+  button.tablink:active{ transform:translate(2px,2px); box-shadow:none; }
+  .printlink svg{ width:14px; height:14px; fill:none; stroke:var(--ink); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
   h1{
     font-family:'Syne',sans-serif;
     font-weight:800;
@@ -239,6 +242,12 @@
   #scoreBox.names .note.cur .nm{fill:#2438C8;opacity:1}
   .note{cursor:pointer}
   .note.rst{cursor:default}
+  /* the abcjs stave draws in currentColor, so a note goes green by its colour */
+  #scoreBox svg{color:#17140E}
+  #scoreBox .abcjs-note.done, #scoreBox .abcjs-rest.done, #scoreBox .abcjs-beam-elem.done{color:#1F9D55}
+  #scoreBox .abcjs-note.cur{color:#2438C8}
+  #scoreBox .abcjs-note .abcjs-chord, #scoreBox .abcjs-note .abcjs-annotation{color:#17140E}   /* chords and labels stay ink */
+  #scoreBox .abcjs-chord{font-family:'Hanken Grotesk',system-ui,sans-serif}
 
   .seg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .seg button{box-shadow:2px 2px 0 rgba(23,20,14,.9);padding:7px 13px;font-size:12.5px}
@@ -472,7 +481,9 @@
     #tuneprint .pmeta{font-family:'Space Mono',monospace;font-size:10pt;color:#333;margin:0 0 16px;letter-spacing:.04em}
     #tuneprint svg{width:100%;height:auto}
     /* neutralise the practice highlight colours so the sheet is plain black notation */
-    #tuneprint .note, #tuneprint .note *, #tuneprint .nm{fill:#000!important;stroke:#000!important}
+    #tuneprint .note:not([class*=abcjs]), #tuneprint .note:not([class*=abcjs]) *, #tuneprint .nm{fill:#000!important;stroke:#000!important}
+    #tuneprint svg, #tuneprint .abcjs-note, #tuneprint .abcjs-beam-elem{color:#000!important}
+    #tuneprint .halo{display:none}
     @page{margin:14mm}
   }
 </style>
@@ -505,6 +516,7 @@
           <div class="headtools">
             <label class="toggle namestoggle"><input type="checkbox" id="showNames" checked> show note names</label>
             <a class="tablink" id="tabLink" href="#" target="_blank" rel="noopener" hidden>See tab ↗</a>
+            <button type="button" class="tablink printlink" id="printBtn" title="Print this tune as a sheet — Save as PDF to keep it" aria-label="Print the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>Print</button>
           </div>
         </div>
       <div class="seg" role="group" aria-label="Choose your instrument">
@@ -605,7 +617,6 @@
             <button class="ib" id="tuneBtn" title="Play the tune" aria-label="Play the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
             <button class="ib" id="stopBtn" title="Stop" aria-label="Stop the tune"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="1.5"/></svg></button>
             <button class="ib" id="resetBtn" title="Start again from the first note" aria-label="Start again"><svg viewBox="0 0 24 24" aria-hidden="true" class="ln"><path d="M5 12a7 7 0 1 0 2.1-5"/><path d="M4.5 3.5v4h4"/></svg></button>
-            <button class="ib" id="printBtn" title="Print this tune as a sheet — Save as PDF to keep it" aria-label="Print the tune"><svg viewBox="0 0 24 24" aria-hidden="true" class="ln"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></svg></button>
           </span>
           <label class="toggle"><input type="checkbox" id="anyOct" checked> any octave counts</label>
         </div>
@@ -656,6 +667,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
 <script src="/musicxml-to-abc.js"></script>
 <script>
 "use strict";
@@ -744,7 +756,7 @@ function parseABC(src){
   for(const raw of String(src).split(/\r?\n/)){
     const line = raw.replace(/%.*$/,"");
     if(!line.trim()) continue;
-    const hm = line.match(/^([A-Za-z]):(.*)$/);
+    const hm = line.trim().match(/^([A-Za-z]):(.*)$/);
     if(!inBody){
       if(hm){
         const f = hm[1], v = hm[2].trim();
@@ -764,7 +776,9 @@ function parseABC(src){
       }
       continue; /* ignore stray text before K: */
     }
-    /* in body: skip lyric/info field lines */
+    /* in body: a K: line is a key change from there on (as if written [K:…]) */
+    if(hm && hm[1]==="K"){ bodyLines.push("[K:" + hm[2].trim() + "]"); continue; }
+    /* skip lyric/info field lines */
     if(hm && hm[1].length===1 && /^[wWXTZNRBSDFHIOAmPQsUV]$/.test(hm[1]) && !/^\s*\|/.test(hm[2])) continue;
     bodyLines.push(line);
   }
@@ -860,7 +874,8 @@ function parseABC(src){
     if(ch===" " || ch==="\t"){ k++; continue; }
 
     if(ch==='"'){
-      const e = S.indexOf('"', k+1);
+      let e = S.indexOf('"', k+1);
+      while(e > 0 && S[e-1] === "\\") e = S.indexOf('"', e+1);   // a \" inside the text isn't its end
       if(e > k){ pendingChord = S.slice(k+1,e); k = e+1; } else k++;
       continue;
     }
@@ -916,7 +931,9 @@ function parseABC(src){
     /* barlines: any run of | : ] [ */
     if(ch==="|" || ch===":" || ch==="]" || ch==="["){
       let j = k;
-      while(j < S.length && /[|:\]\[]/.test(S[j])) j++;
+      // a "[" here only belongs to the barline in "[|"; otherwise it opens [K:…] or a chord
+      while(j < S.length && (/[|:\]]/.test(S[j]) || (S[j] === "[" && S[j+1] === "|"))) j++;
+      if(j === k){ k++; continue; }   // a stray "[" on its own
       const tok = S.slice(k, j);
       const endBar = onset > 1e-6 ? bar : bar - 1;          // the bar this line closes
       if(onset > 1e-6){ bar++; onset = 0; measureAcc = {}; }
@@ -993,7 +1010,8 @@ function parseABC(src){
     notes,
     nBars,
     repeats: REPS,
-    warnings: warn
+    warnings: warn,
+    src: String(src)
   };
 }
 
@@ -1093,6 +1111,7 @@ const SYS_GAP = 108, SYS_TOP0 = 34;
 let NOTES_X0 = 86;
 let BAR_W = 0;
 let REPEATS = { ends:{}, starts:{}, endings:[] };   // barline kinds + 1st/2nd endings, from parseABC
+let SRC_ABC = "";                                     // the current tune's ABC, for abcjs to engrave
 
 const CLEF_PATH = "M 13.5 49 C 9.5 48.4 8 45 10 42.6 C 12 40.4 15.4 41.6 15.6 44.6 "+
   "C 15.9 40 15.2 33 15.2 28 C 15.2 18 17 12 21 6.5 C 23.8 2.6 24 -3 20.6 -5 "+
@@ -1145,7 +1164,7 @@ function beamGroupSize(){
 function sysOf(bar){ return Math.floor(bar / SYS_BARS); }
 function sysTop(bar){ return SYS_TOP0 + sysOf(bar) * SYS_GAP; }
 
-function buildScore(){
+function buildScoreHand(){
   const nAcc = Math.abs(KEY.sharps);
   NOTES_X0 = 88 + nAcc * 9;
   BAR_W = (SVG_W - 20 - NOTES_X0) / SYS_BARS;
@@ -1345,6 +1364,184 @@ function buildScore(){
   $("scoreBox").innerHTML = s;
 }
 
+/* The stave is engraved by abcjs (MIT licence), as on the tune pages. Once it
+   is drawn, each note abcjs drew is matched to its place in TUNE and given the
+   id note-<i>, a halo, its letter name and a bigger hit area, so the
+   follow-along (the ring on the note you're on, green once played, tap a note
+   to hear it) works on it just as it did on the hand-drawn stave.
+   buildScoreHand() above is the old drawing, kept for when abcjs can't load. */
+function buildScore(){
+  if(!window.ABCJS || !SRC_ABC) return buildScoreHand();
+  try{ buildScoreAbcjs(); }
+  catch(e){ console.warn("abcjs stave failed — drawing it by hand", e); buildScoreHand(); }
+}
+/* the tune's ABC as the stave wants it: no title/notes fields (the box shows
+   those), and the octave-down treble clef for guitar and tenor banjo */
+function abcForStave(){
+  const clef = INSTRUMENTS[inst].clef8 ? "treble-8" : "treble";
+  const withClef = k => /clef\s*=/.test(k) ? k.replace(/clef\s*=\s*\S+/, "clef=" + clef) : k + " clef=" + clef;
+  const head = [], music = [];
+  let inBody = false;
+  for(const raw of SRC_ABC.split(/\r?\n/)){
+    const hm = raw.trim().match(/^([A-Za-z]):(.*)$/);
+    if(!inBody){
+      if(!hm) continue;
+      if(hm[1] === "K"){ head.push("K:" + withClef(hm[2].replace(/%.*$/, "").trim())); inBody = true; }
+      else if(/^[ML]$/.test(hm[1])) head.push(raw.trim());
+      continue;
+    }
+    if(hm){   // a key, time or length change partway through goes inline; other fields are left out
+      if(/^[KML]$/.test(hm[1])) music.push("[" + hm[1] + ":" + (hm[1] === "K" ? withClef(hm[2].replace(/%.*$/, "").trim()) : hm[2].trim()) + "]");
+      continue;
+    }
+    const ln = raw.replace(/%.*$/, "").replace(/\\\s*$/, "").trim();
+    if(ln) music.push(ln.replace(/\[K:([^\]]*)\]/g, (m, k) => "[K:" + withClef(k.trim()) + "]"));
+  }
+  /* the music as one line (the lines are laid out afresh), and an end-repeat
+     straight after a start-repeat as the one two-way repeat sign */
+  return head.join("\n") + "\n" + music.join(" ").replace(/:\|\]?\s*\|:/g, "::");
+}
+/* Lines of four full bars (two on a phone), as the old stave had; a pickup
+   or a part-bar where the parts meet rides along with its line. The breaks
+   are written into the ABC, so a two-way repeat that lands at the end of a
+   line can be split as printed music does: the end-repeat closes that line
+   and the start-repeat opens the next one. abcjs finds the barlines and the
+   note lengths between them (a quick draw out of sight). */
+function staveOpts(){
+  return { add_classes: true, responsive: "resize", staffwidth: narrowStave() ? 380 : 760, scale: 1.12 };
+}
+function laidOutAbc(){
+  const flat = abcForStave();
+  const scratch = document.createElement("div");
+  scratch.style.cssText = "position:absolute;left:-9999px;top:0;width:800px;visibility:hidden";
+  document.body.appendChild(scratch);
+  let tA;
+  try { tA = ABCJS.renderAbc(scratch, flat, { add_classes: true })[0]; } finally { scratch.remove(); }
+  const perLine = narrowStave() ? 2 : 4, barLen = METER.num / METER.den;
+  const els = [];
+  (tA ? tA.lines : []).forEach(ln => {
+    const v = ln.staff && ln.staff[0] && ln.staff[0].voices[0];
+    if(v) els.push(...v);
+  });
+  const breaks = [];
+  let held = 0, full = 0;
+  els.forEach((el, k) => {
+    if(el.el_type === "note"){ held += el.duration || 0; return; }
+    if(el.el_type !== "bar") return;
+    // a part-bar (a pickup, or the end of a part) counts with the part-bar next to it;
+    // if the line is full when a part ends on one, the line ends at that repeat
+    if(held >= barLen * 0.98){ full++; held = 0; }
+    else if(held > 0 && /repeat/.test(el.type || "") && full + 1 >= perLine){ full++; held = 0; }
+    const more = els.slice(k + 1).some(e => e.el_type === "note");
+    if(full >= perLine && more){ breaks.push(el); full = 0; }
+  });
+  let out = flat;
+  breaks.sort((a, b) => b.startChar - a.startChar).forEach(el => {
+    if(el.type === "bar_dbl_repeat") out = out.slice(0, el.startChar) + ":|\n|:" + out.slice(el.endChar);
+    else out = out.slice(0, el.endChar) + "\n" + out.slice(el.endChar);
+  });
+  // a 1st/2nd-time ending that starts a line goes with it, not at the end of the line before
+  return out.replace(/([|:\]])[ \t]*\[?(\d[\d,\-]*)[ \t]*\n/g, "$1\n[$2 ");
+}
+/* The letter names need a row of their own between the lines of music. The
+   gap is a guess at first; if a row of names would run into the line below
+   (its chord symbols, 1st/2nd-time brackets, high notes) it's drawn again
+   with the gap opened up by that much. */
+function buildScoreAbcjs(){
+  const lowest = TUNE.reduce((m, t) => t.rest ? m : Math.min(m, t.step), 0);   // steps below the bottom line
+  const abc = laidOutAbc();
+  let sep = 56 + Math.max(0, -lowest) * 4;
+  for(let tries = 0; tries < 3; tries++){
+    const clash = drawStave(abc, sep);
+    if(clash <= 0) return;
+    sep += clash + 6;
+  }
+}
+/* on a phone, two bars to a line so the notes stay a readable size */
+const narrowStave = () => ($("scoreBox").clientWidth || innerWidth) < 560;
+let staveWasNarrow = null;
+addEventListener("resize", () => {
+  if(!window.ABCJS || !TUNE.length || narrowStave() === staveWasNarrow) return;
+  buildScore(); refreshUI();
+});
+function drawStave(abc, sep){
+  staveWasNarrow = narrowStave();
+  const box = $("scoreBox");
+  box.innerHTML = "";
+  const lowest = TUNE.reduce((m, t) => t.rest ? m : Math.min(m, t.step), 0);
+  const tobj = ABCJS.renderAbc(box, "%%staffsep " + Math.round(sep) + "\n" + abc, Object.assign(staveOpts(), {
+    paddingtop: 4, paddingbottom: 34 + Math.max(0, -lowest) * 5, paddingleft: 0, paddingright: 4
+  }))[0];
+  const svg = box.querySelector("svg");
+  if(!tobj || !svg) throw new Error("abcjs drew nothing");
+  svg.id = "score";
+  svg.setAttribute("aria-label", TITLE);
+
+  /* what abcjs drew, in order: notes and rests of the first voice */
+  const drawn = [];
+  tobj.lines.forEach(ln => (ln.staff || []).slice(0, 1).forEach(st => (st.voices[0] || []).forEach(e => {
+    const g = e.el_type === "note" && e.abselem && e.abselem.elemset && e.abselem.elemset[0];
+    if(g) drawn.push({ e, g });
+  })));
+
+  /* pair them with TUNE. Ours can have extra rests (a Z multi-bar rest is one
+     drawing but several rests here); abcjs can have extra ones (x spacers). */
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs) => { const el = document.createElementNS(NS, tag); for(const a in attrs) el.setAttribute(a, attrs[a]); return el; };
+  const lineOf = g => { const m = (g.getAttribute("class") || "").match(/abcjs-l(\d+)/); return m ? +m[1] : 0; };
+  const heads = [], lineLow = {};
+  let j = 0, off = 0;
+  for(let i = 0; i < TUNE.length && j < drawn.length; i++){
+    const t = TUNE[i];
+    if(!t.rest) while(j < drawn.length && drawn[j].e.rest) j++;
+    if(j >= drawn.length) break;
+    if(t.rest && !drawn[j].e.rest) continue;
+    const { e, g } = drawn[j++];
+    g.id = "note-" + i;
+    g.classList.add("note");
+    if(t.rest){ g.classList.add("rst"); continue; }
+    if(e.pitches && !e.pitches.some(p => p.pitch === t.step + 2)) off++;   // (a chord: any of its notes)
+    const head = g.querySelector(".abcjs-notehead") || g;
+    const hb = head.getBBox(), gb = g.getBBox(), li = lineOf(g);
+    lineLow[li] = Math.max(lineLow[li] || 0, gb.y + gb.height);
+    heads.push({ i, g, li, x: hb.x + hb.width / 2, y: hb.y + hb.height / 2, w: hb.width, h: hb.height, t });
+  }
+  if(off) console.warn("Stave: " + off + " notes drawn at a different pitch from the follow-along");
+
+  /* letter names sit in a row under each line of music, clear of its lowest note */
+  svg.querySelectorAll(".abcjs-staff").forEach(st => {
+    const li = lineOf(st), b = st.getBBox();
+    lineLow[li] = Math.max(lineLow[li] || 0, b.y + b.height);
+  });
+  /* the top of each line of music, chord symbols and brackets included */
+  const lineTop = {};
+  svg.querySelectorAll("[class*='abcjs-l']").forEach(el => {
+    const m = (el.getAttribute("class") || "").match(/abcjs-l(\d+)/); if(!m) return;
+    let b; try { b = el.getBBox(); } catch(e){ return; }
+    if(!b.height) return;
+    lineTop[m[1]] = Math.min(lineTop[m[1]] ?? 1e9, b.y);
+  });
+  let clash = 0;
+  for(const li in lineLow) if(lineTop[+li + 1] !== undefined) clash = Math.max(clash, lineLow[li] + 19 - lineTop[+li + 1]);
+  heads.forEach(n => {
+    const r = Math.max(9, n.h * 1.45);
+    n.g.insertBefore(mk("circle", { class: "halo", cx: n.x, cy: n.y, r }), n.g.firstChild);
+    const nm = mk("text", { class: "nm", x: n.x, y: lineLow[n.li] + 15, "text-anchor": "middle",
+      "font-family": "'Space Mono',monospace", "font-size": 12, "font-weight": 700 });
+    nm.textContent = tradName(n.t);
+    n.g.appendChild(nm);
+    n.g.appendChild(mk("circle", { class: "hit", cx: n.x, cy: n.y, r: r * 1.5, fill: "rgba(0,0,0,0)" }));
+  });
+
+  /* beams turn green when every note under them has been played */
+  svg.querySelectorAll(".abcjs-beam-elem").forEach(bm => {
+    const b = bm.getBBox(), li = lineOf(bm);
+    const ids = heads.filter(n => n.li === li && n.x > b.x - n.w * 1.2 && n.x < b.x + b.width + n.w * 1.2).map(n => n.i);
+    if(ids.length) bm.dataset.notes = ids.join(",");
+  });
+  return clash;
+}
+
 function restGlyph(t, x, top){
   const k = t.g ? t.g.kind : glyphFor(t).kind;
   if(k === "whole")  return `<rect class="restr" x="${x-7}" y="${top+10}" width="14" height="5"/>`;
@@ -1376,7 +1573,7 @@ function refreshUI(){
     g.classList.toggle("done", i < state.idx);
     g.classList.toggle("cur",  i === state.idx && !state.done);
   });
-  document.querySelectorAll(".beamline").forEach(bl=>{
+  document.querySelectorAll("#scoreBox [data-notes]").forEach(bl=>{
     const ids = bl.dataset.notes.split(",").map(Number);
     bl.classList.toggle("done", ids.every(i=> i < state.idx));
   });
@@ -1913,6 +2110,7 @@ function installTune(parsed){
   KEY = parsed.key;
   TITLE = parsed.title;
   NBARS = parsed.nBars;
+  SRC_ABC = parsed.src || "";
   REPEATS = parsed.repeats || { ends:{}, starts:{}, endings:[] };
   TOTAL = TUNE.length;
   SCALE = scaleFromKey(KEY);

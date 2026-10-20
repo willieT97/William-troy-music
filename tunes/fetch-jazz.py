@@ -73,12 +73,19 @@ def dtype(title, meter):
 # the anthology's chord font: ¨ = flat, € = flat (in 7b5 / 7b9), & = sharp,
 # º = diminished, ŒŠ„ = the major-7 triangle. Long text notes above the stave are dropped.
 CHORD_GLYPHS = [("Œ„Š", "maj"), ("¨", "♭"), ("€", "♭"), ("&", "♯"), ("º", "°")]
+# Each lead sheet has two layers of harmony: the song's own chords ("C7") and a
+# jazz reharmonisation as text notes above the stave ("^Gm7/F"). Only the first
+# is kept: stacked together they're unreadable. Text notes that aren't chords
+# ("^Verse", "^Chorus") stay.
+JAZZ_LAYER = re.compile(r"^\^[A-G][♭♯#b]?(?:m(?:aj|in)?|dim|aug|sus|add|°|ø|\+|[0-9♭♯#b()]|-)*(?:/[A-G][♭♯#b]?)?$")
 def fix_chords(line):
     def one(m):
         c = m.group(1)
         if len(c) > 30: return ""                       # a paragraph of history, not a chord
+        if JAZZ_LAYER.match(c): return ""               # the anthology's reharmonisation, written as text above
         for a, b in CHORD_GLYPHS: c = c.replace(a, b)
         return '"' + c + '"'
+    line = re.sub(r'"\^\\"[^"]*\\"', '"', line)    # a text note with \" quotes inside (a song-title aside)
     return re.sub(r'"([^"]*)"', one, line)
 
 def clean(abc, n):
