@@ -56,8 +56,10 @@
       /* below the fixed-panel breakpoint the board flows in as a sibling of
          the game stage; many game pages centre with a row-flex body, which
          would seat the board BESIDE the stage and widen the page — let the
-         body wrap so the board drops underneath instead */
-      '@media(max-width:1120px){body:has(.hsboard.hsfixed){flex-wrap:wrap;align-content:flex-start;}.hsboard.hsfixed{flex-basis:100%;}}';
+         body wrap so the board drops underneath instead. Pages with the SEO
+         text under the game ([data-rel-host]) already stack in a column, and
+         wrapping a column pins it to the left — so they're left alone */
+      '@media(max-width:1120px){body:has(.hsboard.hsfixed):not(:has([data-rel-host])){flex-wrap:wrap;align-content:flex-start;}.hsboard.hsfixed{flex-basis:100%;}}';
     const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
   }
 

@@ -45,7 +45,8 @@
       } catch (e) { return null; }
     }
     var has = [].some.call(document.querySelectorAll('a[href]'), function (a) {
-      return hubOf(a.href) && a.getClientRects().length && a.getBoundingClientRect().top + window.scrollY < 200;
+      /* an SEO link trail (.crumbs) isn't a way home — the pill still shows */
+      return hubOf(a.href) && !a.closest('.crumbs') && a.getClientRects().length && a.getBoundingClientRect().top + window.scrollY < 200;
     });
     if (has) return;
 
@@ -179,6 +180,9 @@
      child until we reach something that lays its children out in normal
      flow, and put the strip in there. */
   function hostFor() {
+    /* a page can name its own spot (the SEO "about" section under a game) */
+    var pinned = document.querySelector('[data-rel-host]');
+    if (pinned) return pinned;
     var n = document.body;
     /* one level only: stepping deeper than the body's main column starts
        landing the strip inside a game's own internals */

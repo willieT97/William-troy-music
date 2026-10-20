@@ -38,12 +38,6 @@
     content:""; position:fixed; inset:0; pointer-events:none; z-index:9; opacity:.5; mix-blend-mode:multiply;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
   }
-  .mark{ position:fixed; width:16px; height:16px; z-index:8; opacity:.6; }
-  .mark::before,.mark::after{ content:""; position:absolute; background:var(--ink); }
-  .mark::before{ left:7px; top:0; width:2px; height:16px; }
-  .mark::after{ top:7px; left:0; height:2px; width:16px; }
-  .mark.tl{ left:12px; top:12px; } .mark.tr{ right:12px; top:12px; }
-  .mark.bl{ left:12px; bottom:12px; } .mark.br{ right:12px; bottom:12px; }
 
   .wrap{ max-width:740px; margin:0 auto; padding:26px 20px 90px; position:relative; z-index:1; }
 
@@ -174,9 +168,6 @@
 </style>
 </head>
 <body>
-  <span class="mark tl"></span><span class="mark tr"></span>
-  <span class="mark bl"></span><span class="mark br"></span>
-
   <div class="wrap">
     <header class="top">
       <span class="title" data-text="The Fretboard Atlas">The Fretboard Atlas</span>

@@ -18,6 +18,11 @@
 <meta property="og:image" content="https://themusicarcade.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <!-- /seo -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+ {"@type":"ListItem","position":1,"name":"Music Arcade","item":"https://themusicarcade.com/"},
+ {"@type":"ListItem","position":2,"name":"What Note? Ukulele fretboard notes"}]}
+</script>
 <meta name="description" content="A marker lands on the ukulele fretboard — work out which note it is. Learn the first three frets of the ukulele." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +39,7 @@
   html,body{ margin:0; }
   body{
     font-family:var(--body); color:var(--ink); background:var(--paper);
-    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
   }
   body::before{
@@ -44,12 +49,6 @@
   }
   .stage{ position:relative; z-index:1; width:min(440px,100%); }
 
-  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
-  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
-  .mark::before{ left:8px; top:0; width:2px; height:18px; }
-  .mark::after{ top:8px; left:0; height:2px; width:18px; }
-  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
-  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
 
   header{ text-align:center; margin-bottom:18px; }
   .title{
@@ -57,12 +56,17 @@
     font-weight:800; font-size:clamp(2rem,7vw,3.2rem); letter-spacing:-.02em;
     line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
   }
+  /* never wider than the stage plus the page margin each side, so a centred
+     title can't run off the screen (width ≈ 11.228 × font-size) */
+  .title{ font-size:min(clamp(2rem,7vw,3.2rem), calc((min(440px + 2 * clamp(16px,4vw,48px), 100vw) - 12px) / 11.228)); }
   .title::after{
     content:attr(data-text); position:absolute; left:3px; top:3px;
     color:var(--pink); mix-blend-mode:multiply; z-index:-1;
   }
+  /* a column flex centres the big title even when it's wider than the stage */
+  h1{ margin:0; font:inherit; display:flex; flex-direction:column; align-items:center; }
   .subtitle{
-    font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
+    display:block; font-family:var(--mono); font-size:.74rem; letter-spacing:.16em;
     text-transform:uppercase; color:var(--muted); margin-top:12px;
   }
 
@@ -149,18 +153,40 @@
   }
   .score b{ display:block; font-size:1.5rem; color:var(--ink); letter-spacing:0; }
 
-  @media (max-width:380px){ .controls{ flex-direction:column; } }
+  /* way back to the arcade, above the game */
+  .crumbs{ position:relative; z-index:1; width:min(440px,100%); margin-bottom:22px;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; color:var(--muted); }
+  .crumbs a{ color:var(--ink); text-decoration:none; border-bottom:1.5px solid var(--pink); }
+  .crumbs a:hover{ color:var(--blue); }
+
+  /* readable text under the game: what it's for, and where to go next */
+  .about{ position:relative; z-index:1; width:min(440px,100%); margin-top:44px; }
+  .about h2{ font-family:var(--display); font-weight:800; font-size:1.25rem; letter-spacing:-.01em;
+    text-transform:uppercase; color:var(--blue); margin:0 0 10px; }
+  .about p{ margin:0 0 12px; font-size:.98rem; }
+  .about .more{ margin-top:30px; }
+  .about ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .about li a{ display:block; padding:10px 12px; border:2px solid var(--ink); background:var(--paper);
+    box-shadow:3px 3px 0 var(--ink); color:var(--ink); text-decoration:none; font-weight:600; line-height:1.25; }
+  .about li a small{ display:block; font-weight:400; font-size:.8rem; color:var(--muted); margin-top:2px; }
+  .about li a:hover{ background:#fff; }
+  .about .back{ margin-top:18px; font-family:var(--mono); font-size:.76rem; }
+  .about .back a{ color:var(--ink); border-bottom:1.5px solid var(--pink); text-decoration:none; }
+
+  .subtitle .nw{ white-space:nowrap; }
+
+  @media (max-width:380px){ .controls{ flex-direction:column; } .about ul{ grid-template-columns:1fr; } }
   @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
 </style>
 </head>
 <body>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">Music Arcade</a> › <a href="/#tab=ukulele">Ukulele</a> › What Note?
+  </nav>
   <div class="stage">
-    <span class="mark tl"></span><span class="mark tr"></span>
-    <span class="mark bl"></span><span class="mark br"></span>
-
     <header>
-      <span class="title" data-text="What Note?">What Note?</span>
-      <div class="subtitle">ukulele · open strings + 3 frets</div>
+      <h1><span class="title" data-text="What Note?">What Note?</span>
+      <span class="subtitle"><span class="nw">Ukulele fretboard notes</span> · <span class="nw">open strings + 3 frets</span></span></h1>
     </header>
 
     <div class="panel">
@@ -239,6 +265,26 @@
       <div>best<b id="sBest">0</b></div>
     </div>
   </div>
+
+  <section class="about" data-rel-host>
+    <h2>How this game helps</h2>
+    <p>Chord shapes get you strumming fast, but knowing the notes on the ukulele fretboard is what lets you pick out a melody, follow a song into a new key, and understand why a chord shape works.</p>
+    <p>What Note? sticks to the open strings (G C E A) and the first three frets — where nearly every beginner chord and tune lives. A marker lands on a string and fret; tap the note on the keyboard. Press <em>Hear it</em> to train your ear at the same time.</p>
+    <p>Start with <strong>Naturals</strong> (no sharps or flats), move to <strong>Chromatic</strong> when you're quick, or pick <strong>Scale</strong> to practise just the notes of one key, such as C, G or F major, the keys most ukulele songbooks use. A few minutes a day and the notes become automatic.</p>
+
+    <div class="more">
+      <h2>More ukulele games</h2>
+      <ul>
+        <li><a href="/Ukulele/in-tune.html">In Tune?<small>Is the ukulele in tune, or is one string off?</small></a></li>
+        <li><a href="/Ukulele/out-of-tune.html">Out of Tune?<small>Find the string that's out, by ear</small></a></li>
+        <li><a href="/Ukulele/chord-quiz.html">Chord Quiz<small>Build ukulele chord shapes from memory</small></a></li>
+        <li><a href="/Ukulele/chord-progress-uke.html">Uke Progress<small>Name the chord you hear</small></a></li>
+        <li><a href="/ukulele-chords.html">Ukulele Chords<small>Chord charts for every common shape</small></a></li>
+        <li><a href="/find-the-note.html?inst=ukulele">Scales<small>Where every note lives on the ukulele neck</small></a></li>
+      </ul>
+      <p class="back"><a href="/#tab=ukulele">All ukulele games in the Music Arcade →</a></p>
+    </div>
+  </section>
 
 <script src="../hi-scores.js"></script>
 <script>

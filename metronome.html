@@ -44,19 +44,18 @@
   }
   .stage{ position:relative; z-index:1; width:min(440px,100%); }
 
-  .mark{ position:absolute; width:18px; height:18px; opacity:.55; }
-  .mark::before,.mark::after{ content:""; position:absolute; background:var(--line); }
-  .mark::before{ left:8px; top:0; width:2px; height:18px; }
-  .mark::after{ top:8px; left:0; height:2px; width:18px; }
-  .mark.tl{ left:-4px; top:-4px; } .mark.tr{ right:-4px; top:-4px; }
-  .mark.bl{ left:-4px; bottom:-4px; } .mark.br{ right:-4px; bottom:-4px; }
 
-  header{ text-align:center; margin-bottom:18px; }
+  /* column flex: a title wider than the stage overhangs evenly instead of off to the right */
+
+  header{ text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:18px; }
   .title{
     position:relative; display:inline-block; font-family:var(--display);
     font-weight:800; font-size:clamp(2rem,7vw,3.2rem); letter-spacing:-.02em;
     line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--blue); mix-blend-mode:multiply;
   }
+  /* never wider than the stage plus the page margin each side, so a centred
+     title can't run off the screen (width ≈ 11.669 × font-size) */
+  .title{ font-size:min(clamp(2rem,7vw,3.2rem), calc((min(440px + 2 * clamp(16px,4vw,48px), 100vw) - 12px) / 11.669)); }
   .title::after{
     content:attr(data-text); position:absolute; left:3px; top:3px;
     color:var(--pink); mix-blend-mode:multiply; z-index:-1;
@@ -83,7 +82,6 @@
   .bpm{ text-align:center; margin:0 0 4px; }
   .bpm b{ font-family:var(--display); font-weight:800; font-size:clamp(3.4rem,15vw,5rem); line-height:1; color:var(--ink); }
   .bpm .u{ font-family:var(--mono); font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); display:block; margin-top:2px; }
-  .marking{ text-align:center; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--blue); min-height:1.1em; margin-bottom:14px; }
 
   input[type=range]{ width:100%; margin:4px 0 14px; accent-color:var(--blue); height:26px; }
 
@@ -116,9 +114,6 @@
   .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
   .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
 
-  .back{ display:block; text-align:center; margin-top:18px; font-family:var(--mono); font-size:.72rem;
-    letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; }
-  .back:hover{ color:var(--ink); }
 
   @media (max-width:380px){ .controls{ flex-direction:column; } }
   @media (prefers-reduced-motion:reduce){ .beat{ transition:none; } }
@@ -126,9 +121,6 @@
 </head>
 <body>
   <div class="stage">
-    <span class="mark tl"></span><span class="mark tr"></span>
-    <span class="mark bl"></span><span class="mark br"></span>
-
     <header>
       <span class="title" data-text="Metronome">Metronome</span>
       <div class="subtitle">keep the time · any lesson</div>
@@ -165,7 +157,6 @@
       </div>
     </div>
 
-    <a class="back" href="index.html">← back to the arcade</a>
   </div>
 
 <script>
@@ -309,5 +300,8 @@
   buildBeatLights();
   setBpm(bpm);
 </script>
+<!-- the standard "← Arcade" pill + more like this, at the foot of the page -->
+<script src="/tools.js"></script>
+<script src="/related.js"></script>
 </body>
 </html>
