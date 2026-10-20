@@ -27,6 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/families.css">
 <style>
   :root{
     --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86;
@@ -166,10 +167,11 @@
   .about p{ margin:0 0 12px; font-size:.98rem; }
   .about .more{ margin-top:30px; }
   .about ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .about li a{ display:block; padding:10px 12px; border:2px solid var(--ink); background:var(--paper);
-    box-shadow:3px 3px 0 var(--ink); color:var(--ink); text-decoration:none; font-weight:600; line-height:1.25; }
-  .about li a small{ display:block; font-weight:400; font-size:.8rem; color:var(--muted); margin-top:2px; }
-  .about li a:hover{ background:#fff; }
+  /* each box is filled with its game's family colour (families.css); learning pages stay paper */
+  .about li a{ display:block; padding:10px 12px; border:2px solid var(--ink); background:var(--fam, var(--paper));
+    box-shadow:3px 3px 0 var(--ink); color:var(--fam-ink, var(--ink)); transition:transform .08s ease, box-shadow .08s ease; text-decoration:none; font-weight:600; line-height:1.25; }
+  .about li a small{ display:block; font-weight:400; font-size:.8rem; color:var(--fam-sub, var(--muted)); margin-top:2px; }
+  .about li a:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
   .about .back{ margin-top:18px; font-family:var(--mono); font-size:.76rem; }
   .about .back a{ color:var(--ink); border-bottom:1.5px solid var(--pink); text-decoration:none; }
 

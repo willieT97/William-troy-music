@@ -1,0 +1,21 @@
+/* Game family colours — one colour per game, whatever the instrument.
+   Worked out from the link's address, so any link to a game picks up its
+   colour: the front-page cards (as --accent) and the "More … games" boxes
+   under each game (as a solid fill). To recolour a family, change it here.
+
+   --fam      the family colour
+   --fam-ink  text on a solid fill of it
+   --fam-sub  smaller text on a solid fill of it */
+
+[href*="what-note"]       { --fam:#2438C8; --fam-ink:#fff;    --fam-sub:#DCE2FF; }  /* What Note?        blue   */
+[href*="out-of-tune"]     { --fam:#1E9E6A; --fam-ink:#fff;    --fam-sub:#DDF5EA; }  /* Out of Tune       green  */
+[href*="in-tune"]         { --fam:#0E8A95; --fam-ink:#fff;    --fam-sub:#DDF6F7; }  /* In Tune?          teal   */
+[href*="chord-quiz"]      { --fam:#FF4E86; --fam-ink:#17140E; --fam-sub:#3A0E1E; }  /* Chord Quiz        pink   */
+[href*="chord-progress"]  { --fam:#FFC53D; --fam-ink:#17140E; --fam-sub:#4A3500; }  /* Progress games    gold   */
+[href*="triad-"],
+[href*="chord-catapult"],
+[href*="chord-cascade"]   { --fam:#FF7A2F; --fam-ink:#17140E; --fam-sub:#3E1800; }  /* chord-shape games orange */
+[href*="Theory/"]         { --fam:#7B4DDB; --fam-ink:#fff;    --fam-sub:#EAE1FF; }  /* theory games      purple */
+[href*="pitch-invaders"]  { --fam:#E5383B; --fam-ink:#fff;    --fam-sub:#FFE3E3; }  /* Pitch Invaders    red    */
+[href*="tuner.html"],
+[href*="metronome.html"]  { --fam:#17140E; --fam-ink:#F4EEE2; --fam-sub:#CFC7B6; }  /* tools             ink    */
