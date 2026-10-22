@@ -8,18 +8,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Cherokee Shuffle — Banjo &amp; Mandolin Tab, Sheet Music</title>
+<title>Cherokee Shuffle — Banjo &amp; Mandolin Tab, Chords</title>
 <!-- seo: written by seo.py — edit PAGES there, not here -->
 <link rel="canonical" href="https://themusicarcade.com/tunes/cherokee-shuffle.html" />
 <meta property="og:site_name" content="The Music Arcade" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://themusicarcade.com/tunes/cherokee-shuffle.html" />
-<meta property="og:title" content="Cherokee Shuffle — Banjo &amp; Mandolin Tab, Sheet Music" />
-<meta property="og:description" content="Cherokee Shuffle, an more advanced old-time fiddle reel in A major: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
+<meta property="og:title" content="Cherokee Shuffle — Banjo &amp; Mandolin Tab, Chords" />
+<meta property="og:description" content="Cherokee Shuffle, an more advanced old-time fiddle reel in A major: chords with shapes for guitar, ukulele, banjo and mandolin, sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
 <meta property="og:image" content="https://themusicarcade.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <!-- /seo -->
-<meta name="description" content="Cherokee Shuffle, an more advanced old-time fiddle reel in A major: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
+<meta name="description" content="Cherokee Shuffle, an more advanced old-time fiddle reel in A major: chords with shapes for guitar, ukulele, banjo and mandolin, sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer." />
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -28,7 +28,7 @@
  "genre": "American old-time and bluegrass fiddle music",
  "musicalKey": "A major",
  "inLanguage": "en",
- "description": "Cherokee Shuffle, an more advanced old-time fiddle reel in A major: sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.",
+ "description": "Cherokee Shuffle, an more advanced old-time fiddle reel in A major: chords with shapes for guitar, ukulele, banjo and mandolin, sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.",
  "composer": {
   "@type": "Organization",
   "name": "Traditional"
@@ -77,8 +77,8 @@
     padding:8px 15px; border:2px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); }
   .tabs a.cur{ background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--green); }
   .crumbs{ font-family:var(--mono); font-size:12px; margin-bottom:10px; } .crumbs a{ color:var(--blue); text-decoration:none; }
-  /* "Sheet Music & Tab Directory" on one line, scaled to fit; phones get two lines at a readable size */
-  h1{ font-family:var(--disp); font-weight:800; font-size:min(36px, calc((100vw - 40px) / 24)); white-space:nowrap; line-height:1.02; margin:0;
+  /* "Sheet Music, Tab & Chord Directory" on one line, scaled to fit; phones get two lines at a readable size */
+  h1{ font-family:var(--disp); font-weight:800; font-size:min(36px, calc((100vw - 40px) / 31)); white-space:nowrap; line-height:1.02; margin:0;
     text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
   .facts{ font-family:var(--mono); font-size:13px; margin:10px 0 0; }
   .lede{ max-width:64ch; margin:12px 0 18px; }
@@ -123,6 +123,27 @@
     border-radius:10px; padding:6px 11px; background:#fffdf7; } .rel a:hover{ background:#fff; }
   .credit{ font-size:13px; opacity:.8; } .credit a{ color:var(--blue); }
   .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:12px; } .foot a{ color:var(--blue); text-decoration:none; }
+
+  /* Chords: a bar-by-bar chart, then the shapes for the instrument picked */
+  .chords .chart{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:2px solid var(--ink); border-radius:8px; overflow:hidden; background:#fffdf7; margin:4px 0 6px; }
+  .chords .bar{ font-family:var(--mono); font-size:15px; padding:10px 8px; min-height:44px; border-right:1.5px solid rgba(23,20,14,.25); border-bottom:1.5px solid rgba(23,20,14,.25); }
+  .chords .bar:nth-child(4n){ border-right:0; }
+  .chords .bar b{ font-weight:700; margin-right:6px; }
+  .chords .bar.carry, .chords .bar .carry{ color:rgba(23,20,14,.35); } .chords .bar .carry{ margin-right:6px; } .chords .bar.pick{ font-size:11px; color:rgba(23,20,14,.45); text-transform:uppercase; letter-spacing:.08em; }
+  .chords .instpick{ display:flex; flex-wrap:wrap; gap:6px; margin:18px 0 6px; }
+  .chords .instpick button{ font-family:var(--mono); font-weight:700; font-size:12px; padding:7px 12px; border:2px solid var(--ink); border-radius:99px;
+    background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); cursor:pointer; }
+  .chords .instpick button.on{ background:var(--ink); color:var(--paper); }
+  .chords .shapes h3{ font-family:var(--disp); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.08em; margin:14px 0 2px; }
+  .chords.js .shapes{ display:none; } .chords.js .shapes.on{ display:block; } .chords.js .shapes h3{ margin-top:6px; }
+  .chords .boxes{ display:flex; flex-wrap:wrap; gap:10px 14px; }
+  .cbox .cn{ font-family:var(--mono); font-weight:700; font-size:12px; text-anchor:middle; fill:var(--ink); }
+  .cbox .board{ fill:#fffdf7; stroke:var(--ink); stroke-width:1.5; } .cbox .nut{ fill:var(--ink); }
+  .cbox .fw{ stroke:rgba(23,20,14,.35); stroke-width:1; } .cbox .st{ stroke:var(--ink); stroke-width:1; }
+  .cbox .dot{ fill:var(--blue); } .cbox .op{ fill:none; stroke:var(--ink); stroke-width:1.4; }
+  .cbox .mx{ font-family:var(--mono); font-size:10px; text-anchor:middle; fill:rgba(23,20,14,.55); }
+  .cbox .bf{ font-family:var(--mono); font-size:10px; text-anchor:end; fill:var(--ink); }
+  @media (max-width:520px){ .chords .chart{ grid-template-columns:repeat(2,minmax(0,1fr)); } .chords .bar:nth-child(4n){ border-right:1.5px solid rgba(23,20,14,.25); } .chords .bar:nth-child(2n){ border-right:0; } }
 </style>
 </head>
 <body>
@@ -132,7 +153,7 @@
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
   <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Tune directory</a> › Cherokee Shuffle</div>
-  <h1><span class="sr">Cherokee Shuffle — </span>Sheet Music &amp; Tab Directory</h1>
+  <h1><span class="sr">Cherokee Shuffle — </span>Sheet Music, Tab &amp; Chord Directory</h1>
   <div class="layout"><div class="main">
 
   <a class="mtbanner" href="melody-trainer_1.html?tune=Cherokee%20Shuffle">
@@ -260,6 +281,14 @@ E|------------------|------------|---------|
 C|------------------|------------|---------|
 G|------------------|------------|---------|</pre><p class="note">Numbers are frets; the top line is the A string, the bottom line the high G.</p></details>
   </section>
+
+  <section class="card chords" id="chords"><h2>Cherokee Shuffle chords</h2>
+    <p class="sub">A major · 4 chords: A, F♯m, D, E</p>
+    <div class="chart" aria-label="Chord chart, one box per bar"><div class="bar"><b>A</b></div><div class="bar carry">A</div><div class="bar carry">A</div><div class="bar"><b>F♯m</b></div><div class="bar"><b>D</b></div><div class="bar"><b>A</b></div><div class="bar"><span class="carry">A</span> <b>E</b></div><div class="bar"><b>A</b></div><div class="bar"><b>D</b></div><div class="bar"><b>A</b></div><div class="bar"><b>D</b></div><div class="bar"><b>A</b></div><div class="bar"><b>D</b></div><div class="bar"><b>A</b></div><div class="bar carry">A</div><div class="bar"><b>F♯m</b></div><div class="bar"><b>D</b> <b>E</b></div><div class="bar"><b>A</b></div><div class="bar"><b>A</b></div></div>
+    <p class="note">One box per bar, in the same order as the sheet music. A faded chord carries on from the bar before.</p>
+    <div class="instpick" role="group" aria-label="Chord shapes for"><button data-inst="guitar" class="on">Guitar</button><button data-inst="uke">Ukulele</button><button data-inst="gdae">Tenor banjo &amp; mandolin</button></div>
+<div class="shapes" data-inst="guitar"><h3>Guitar chords for Cherokee Shuffle</h3><p class="sub">Strings E A D G B E, low to high · o = open string, × = don't play it</p><div class="boxes"><svg class="cbox" viewBox="0 0 101 114" width="101" height="114" role="img" aria-label="A chord on guitar: frets x 0 2 2 2 0"><text x="52.5" y="13" class="cn">A</text><rect x="20" y="30" width="65" height="72" class="board"/><rect x="19" y="27" width="67" height="4" class="nut"/><line x1="20" x2="85" y1="48" y2="48" class="fw"/><line x1="20" x2="85" y1="66" y2="66" class="fw"/><line x1="20" x2="85" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="33" x2="33" y1="30" y2="102" class="st"/><line x1="46" x2="46" y1="30" y2="102" class="st"/><line x1="59" x2="59" y1="30" y2="102" class="st"/><line x1="72" x2="72" y1="30" y2="102" class="st"/><line x1="85" x2="85" y1="30" y2="102" class="st"/><text x="20" y="24" class="mx">×</text><circle cx="33" cy="21" r="3.6" class="op"/><circle cx="46" cy="57.0" r="5.6" class="dot"/><circle cx="59" cy="57.0" r="5.6" class="dot"/><circle cx="72" cy="57.0" r="5.6" class="dot"/><circle cx="85" cy="21" r="3.6" class="op"/></svg><svg class="cbox" viewBox="0 0 101 114" width="101" height="114" role="img" aria-label="F♯m chord on guitar: frets 2 4 4 2 2 2"><text x="52.5" y="13" class="cn">F♯m</text><rect x="20" y="30" width="65" height="72" class="board"/><rect x="19" y="27" width="67" height="4" class="nut"/><line x1="20" x2="85" y1="48" y2="48" class="fw"/><line x1="20" x2="85" y1="66" y2="66" class="fw"/><line x1="20" x2="85" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="33" x2="33" y1="30" y2="102" class="st"/><line x1="46" x2="46" y1="30" y2="102" class="st"/><line x1="59" x2="59" y1="30" y2="102" class="st"/><line x1="72" x2="72" y1="30" y2="102" class="st"/><line x1="85" x2="85" y1="30" y2="102" class="st"/><circle cx="20" cy="57.0" r="5.6" class="dot"/><circle cx="33" cy="93.0" r="5.6" class="dot"/><circle cx="46" cy="93.0" r="5.6" class="dot"/><circle cx="59" cy="57.0" r="5.6" class="dot"/><circle cx="72" cy="57.0" r="5.6" class="dot"/><circle cx="85" cy="57.0" r="5.6" class="dot"/></svg><svg class="cbox" viewBox="0 0 101 114" width="101" height="114" role="img" aria-label="D chord on guitar: frets x x 0 2 3 2"><text x="52.5" y="13" class="cn">D</text><rect x="20" y="30" width="65" height="72" class="board"/><rect x="19" y="27" width="67" height="4" class="nut"/><line x1="20" x2="85" y1="48" y2="48" class="fw"/><line x1="20" x2="85" y1="66" y2="66" class="fw"/><line x1="20" x2="85" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="33" x2="33" y1="30" y2="102" class="st"/><line x1="46" x2="46" y1="30" y2="102" class="st"/><line x1="59" x2="59" y1="30" y2="102" class="st"/><line x1="72" x2="72" y1="30" y2="102" class="st"/><line x1="85" x2="85" y1="30" y2="102" class="st"/><text x="20" y="24" class="mx">×</text><text x="33" y="24" class="mx">×</text><circle cx="46" cy="21" r="3.6" class="op"/><circle cx="59" cy="57.0" r="5.6" class="dot"/><circle cx="72" cy="75.0" r="5.6" class="dot"/><circle cx="85" cy="57.0" r="5.6" class="dot"/></svg><svg class="cbox" viewBox="0 0 101 114" width="101" height="114" role="img" aria-label="E chord on guitar: frets 0 2 2 1 0 0"><text x="52.5" y="13" class="cn">E</text><rect x="20" y="30" width="65" height="72" class="board"/><rect x="19" y="27" width="67" height="4" class="nut"/><line x1="20" x2="85" y1="48" y2="48" class="fw"/><line x1="20" x2="85" y1="66" y2="66" class="fw"/><line x1="20" x2="85" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="33" x2="33" y1="30" y2="102" class="st"/><line x1="46" x2="46" y1="30" y2="102" class="st"/><line x1="59" x2="59" y1="30" y2="102" class="st"/><line x1="72" x2="72" y1="30" y2="102" class="st"/><line x1="85" x2="85" y1="30" y2="102" class="st"/><circle cx="20" cy="21" r="3.6" class="op"/><circle cx="33" cy="57.0" r="5.6" class="dot"/><circle cx="46" cy="57.0" r="5.6" class="dot"/><circle cx="59" cy="39.0" r="5.6" class="dot"/><circle cx="72" cy="21" r="3.6" class="op"/><circle cx="85" cy="21" r="3.6" class="op"/></svg></div></div><div class="shapes" data-inst="uke"><h3>Ukulele chords for Cherokee Shuffle</h3><p class="sub">Strings G C E A, low to high · o = open string, × = don't play it</p><div class="boxes"><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="A chord on ukulele: frets 2 1 0 0"><text x="45.5" y="13" class="cn">A</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="57.0" r="5.6" class="dot"/><circle cx="37" cy="39.0" r="5.6" class="dot"/><circle cx="54" cy="21" r="3.6" class="op"/><circle cx="71" cy="21" r="3.6" class="op"/></svg><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="F♯m chord on ukulele: frets 2 1 2 0"><text x="45.5" y="13" class="cn">F♯m</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="57.0" r="5.6" class="dot"/><circle cx="37" cy="39.0" r="5.6" class="dot"/><circle cx="54" cy="57.0" r="5.6" class="dot"/><circle cx="71" cy="21" r="3.6" class="op"/></svg><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="D chord on ukulele: frets 2 2 2 0"><text x="45.5" y="13" class="cn">D</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="57.0" r="5.6" class="dot"/><circle cx="37" cy="57.0" r="5.6" class="dot"/><circle cx="54" cy="57.0" r="5.6" class="dot"/><circle cx="71" cy="21" r="3.6" class="op"/></svg><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="E chord on ukulele: frets 1 4 0 2"><text x="45.5" y="13" class="cn">E</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="39.0" r="5.6" class="dot"/><circle cx="37" cy="93.0" r="5.6" class="dot"/><circle cx="54" cy="21" r="3.6" class="op"/><circle cx="71" cy="57.0" r="5.6" class="dot"/></svg></div></div><div class="shapes" data-inst="gdae"><h3>Tenor banjo &amp; mandolin chords for Cherokee Shuffle</h3><p class="sub">Strings G D A E, low to high · o = open string, × = don't play it</p><div class="boxes"><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="A chord on tenor banjo & mandolin: frets 2 2 4 0"><text x="45.5" y="13" class="cn">A</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="57.0" r="5.6" class="dot"/><circle cx="37" cy="57.0" r="5.6" class="dot"/><circle cx="54" cy="93.0" r="5.6" class="dot"/><circle cx="71" cy="21" r="3.6" class="op"/></svg><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="F♯m chord on tenor banjo & mandolin: frets 2 4 4 2"><text x="45.5" y="13" class="cn">F♯m</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="57.0" r="5.6" class="dot"/><circle cx="37" cy="93.0" r="5.6" class="dot"/><circle cx="54" cy="93.0" r="5.6" class="dot"/><circle cx="71" cy="57.0" r="5.6" class="dot"/></svg><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="D chord on tenor banjo & mandolin: frets 2 0 0 2"><text x="45.5" y="13" class="cn">D</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="57.0" r="5.6" class="dot"/><circle cx="37" cy="21" r="3.6" class="op"/><circle cx="54" cy="21" r="3.6" class="op"/><circle cx="71" cy="57.0" r="5.6" class="dot"/></svg><svg class="cbox" viewBox="0 0 87 114" width="87" height="114" role="img" aria-label="E chord on tenor banjo & mandolin: frets 1 2 2 0"><text x="45.5" y="13" class="cn">E</text><rect x="20" y="30" width="51" height="72" class="board"/><rect x="19" y="27" width="53" height="4" class="nut"/><line x1="20" x2="71" y1="48" y2="48" class="fw"/><line x1="20" x2="71" y1="66" y2="66" class="fw"/><line x1="20" x2="71" y1="84" y2="84" class="fw"/><line x1="20" x2="20" y1="30" y2="102" class="st"/><line x1="37" x2="37" y1="30" y2="102" class="st"/><line x1="54" x2="54" y1="30" y2="102" class="st"/><line x1="71" x2="71" y1="30" y2="102" class="st"/><circle cx="20" cy="39.0" r="5.6" class="dot"/><circle cx="37" cy="57.0" r="5.6" class="dot"/><circle cx="54" cy="57.0" r="5.6" class="dot"/><circle cx="71" cy="21" r="3.6" class="op"/></svg></div></div>
+  </section>
   <section class="card"><h2>More reels and tunes like it</h2>
     <div class="rel"><a href="tunes/old-joe-clark.html">Old Joe Clark</a><a href="tunes/the-devils-dream.html">The Devil&#x27;s Dream</a><a href="tunes/bill-cheatham.html">Bill Cheatham</a><a href="tunes/sally-goodin.html">Sally Goodin</a><a href="tunes/june-apple.html">June Apple</a><a href="tunes/buffalo-gals.html">Buffalo Gals</a><a href="tunes/grey-eagle.html">Grey Eagle</a><a href="tunes/boil-the-cabbage-down.html">Boil The Cabbage Down</a></div>
   </section>
@@ -309,6 +338,20 @@ P:Part B
       if(d && d.tagName === 'DETAILS'){ d.open = true; setTimeout(function(){ d.scrollIntoView({ block:'start' }); }, 50); }
     }
     openHash(); window.addEventListener('hashchange', openHash);
+  })();
+
+  /* Chords: show one instrument's shapes at a time (every one shows without JavaScript) */
+  (function(){
+    var sec = document.querySelector('.chords'); if(!sec) return;
+    sec.classList.add('js');
+    var saved = null; try { saved = localStorage.getItem('wtm_chord_inst'); } catch(e){}
+    function pick(k){
+      sec.querySelectorAll('.instpick button').forEach(function(b){ b.classList.toggle('on', b.dataset.inst === k); });
+      sec.querySelectorAll('.shapes').forEach(function(p){ p.classList.toggle('on', p.dataset.inst === k); });
+      try { localStorage.setItem('wtm_chord_inst', k); } catch(e){}
+    }
+    sec.querySelectorAll('.instpick button').forEach(function(b){ b.addEventListener('click', function(){ pick(b.dataset.inst); }); });
+    pick(saved && sec.querySelector('.shapes[data-inst="' + saved + '"]') ? saved : 'guitar');
   })();
 </script>
 <script src="/tunes/tune-browser.js"></script>

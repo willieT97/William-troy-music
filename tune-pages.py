@@ -17,10 +17,15 @@ TO ADD TUNES: put names in BUILD (as they appear in the library), or pass
 """
 import os, re, sys, json, glob, html
 from urllib.parse import quote
+from functools import lru_cache
+import chordshapes as CS
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, 'tunes')
 BUILD = ['The Kesh']
+# tunes whose ABC carries chord symbols get a "Chords" section (chart + shapes) and
+# "Chords" in the title. Trial first: only these; None = every tune with chords.
+CHORDS_FOR = None
 
 ABCJS = 'https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js'
 LETTERS = 'CDEFGAB'
@@ -135,6 +140,70 @@ def notes_by_bar(abc, key):
     if cur: bars.append(cur)
     return bars
 
+def chords_by_bar(abc):
+    """The chord symbols of each bar, in order (only bars that hold notes count,
+    so it lines up with the music). Annotations like "^Chorus" are skipped."""
+    body = abc.split('\n')
+    i = next(n for n, ln in enumerate(body) if ln.startswith('K:')) + 1
+    s = '\n'.join(ln for ln in body[i:] if not re.match(r'^[A-Za-z]:', ln))
+    s = re.sub(r'%.*', '', s)
+    s = re.sub(r'\{[^}]*\}', '', s)
+    s = re.sub(r'![^!"\n]*!|\+[A-Za-z]+\+', '', s)    # decorations (not the + of an augmented chord like "A+")
+    s = re.sub(r'\[[A-Za-z]:[^\]]*\]', '', s)
+    bars, cur, has_note, late = [], [], False, False
+    def close():
+        if has_note or cur: bars.append({'ch': cur, 'late': late})
+    for m in re.finditer(r'"([^"]*)"|(\|+|:\|+|\|+:|::|\[\d|\|\d|:\]|\|\])|([A-Ga-g])', s):
+        if m.group(1) is not None:
+            c = CS.parse(m.group(1))
+            if c:
+                if not cur and has_note: late = True      # the bar starts on the chord before
+                cur.append(c)
+        elif m.group(2):
+            if '|' in m.group(2) or m.group(2) == '::':
+                close(); cur, has_note, late = [], False, False
+        else:
+            has_note = True
+    close()
+    return bars
+
+@lru_cache(maxsize=None)
+def chord_svg(inst, sym):
+    return CS.svg(inst, CS.parse(sym))
+
+def chords_section(name, keylabel, cbars):
+    order = []
+    for b in cbars:
+        for c in b['ch']:
+            if c['name'] not in [x['name'] for x in order]: order.append(c)
+    cells, last = [], None
+    for bb in cbars:
+        b = bb['ch']
+        if b:
+            lead = f'<span class="carry">{esc(last["name"])}</span> ' if (bb['late'] and last) else ''
+            cells.append('<div class="bar">' + lead + ' '.join(f'<b>{esc(c["name"])}</b>' for c in b) + '</div>'); last = b[-1]
+        elif last:
+            cells.append(f'<div class="bar carry">{esc(last["name"])}</div>')
+        else:
+            cells.append('<div class="bar pick">pickup</div>')
+    names = ', '.join(c['name'] for c in order)
+    slash = [c for c in order if c['bass_name']]
+    panels = ''
+    for inst in ('guitar', 'uke', 'gdae'):
+        boxes = ''.join(chord_svg(inst, c['name'].replace('♯', '#').replace('♭', 'b')) for c in order)
+        panels += (f'<div class="shapes" data-inst="{inst}"><h3>{esc(CS.INST[inst]["label"])} chords for {esc(name)}</h3>'
+                   f'<p class="sub">Strings {CS.INST[inst]["names"]}, low to high · o = open string, × = don\'t play it</p>'
+                   f'<div class="boxes">{boxes}</div></div>')
+    return f'''
+  <section class="card chords" id="chords"><h2>{esc(name)} chords</h2>
+    <p class="sub">{esc(keylabel)} · {len(order)} chord{'s' if len(order) != 1 else ''}: {esc(names)}</p>
+    <div class="chart" aria-label="Chord chart, one box per bar">{''.join(cells)}</div>
+    <p class="note">One box per bar, in the same order as the sheet music. A faded chord carries on from the bar before.{(' A slash chord like ' + esc(slash[0]['name']) + ' means play ' + esc(slash[0]['shape_name']) + ' with ' + esc(slash[0]['bass_name']) + ' as the lowest note.') if slash else ''}</p>
+    <div class="instpick" role="group" aria-label="Chord shapes for"><button data-inst="guitar" class="on">Guitar</button><button data-inst="uke">Ukulele</button><button data-inst="gdae">Tenor banjo &amp; mandolin</button></div>
+{panels}
+  </section>
+'''
+
 def trad_name(n):
     a = {1: '♯', -1: '♭', 2: '𝄪', -2: '𝄫'}.get(n['alt'], '')
     if n['oct'] >= 6: return n['L'].lower() + a + "'" * (n['oct'] - 5)
@@ -220,6 +289,43 @@ def intro(name, what, key, f):
     return s
 
 # ---------------------------------------------------------------- the page
+CSS_CHORDS = """
+  /* Chords: a bar-by-bar chart, then the shapes for the instrument picked */
+  .chords .chart{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:2px solid var(--ink); border-radius:8px; overflow:hidden; background:#fffdf7; margin:4px 0 6px; }
+  .chords .bar{ font-family:var(--mono); font-size:15px; padding:10px 8px; min-height:44px; border-right:1.5px solid rgba(23,20,14,.25); border-bottom:1.5px solid rgba(23,20,14,.25); }
+  .chords .bar:nth-child(4n){ border-right:0; }
+  .chords .bar b{ font-weight:700; margin-right:6px; }
+  .chords .bar.carry, .chords .bar .carry{ color:rgba(23,20,14,.35); } .chords .bar .carry{ margin-right:6px; } .chords .bar.pick{ font-size:11px; color:rgba(23,20,14,.45); text-transform:uppercase; letter-spacing:.08em; }
+  .chords .instpick{ display:flex; flex-wrap:wrap; gap:6px; margin:18px 0 6px; }
+  .chords .instpick button{ font-family:var(--mono); font-weight:700; font-size:12px; padding:7px 12px; border:2px solid var(--ink); border-radius:99px;
+    background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--ink); cursor:pointer; }
+  .chords .instpick button.on{ background:var(--ink); color:var(--paper); }
+  .chords .shapes h3{ font-family:var(--disp); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.08em; margin:14px 0 2px; }
+  .chords.js .shapes{ display:none; } .chords.js .shapes.on{ display:block; } .chords.js .shapes h3{ margin-top:6px; }
+  .chords .boxes{ display:flex; flex-wrap:wrap; gap:10px 14px; }
+  .cbox .cn{ font-family:var(--mono); font-weight:700; font-size:12px; text-anchor:middle; fill:var(--ink); }
+  .cbox .board{ fill:#fffdf7; stroke:var(--ink); stroke-width:1.5; } .cbox .nut{ fill:var(--ink); }
+  .cbox .fw{ stroke:rgba(23,20,14,.35); stroke-width:1; } .cbox .st{ stroke:var(--ink); stroke-width:1; }
+  .cbox .dot{ fill:var(--blue); } .cbox .op{ fill:none; stroke:var(--ink); stroke-width:1.4; }
+  .cbox .mx{ font-family:var(--mono); font-size:10px; text-anchor:middle; fill:rgba(23,20,14,.55); }
+  .cbox .bf{ font-family:var(--mono); font-size:10px; text-anchor:end; fill:var(--ink); }
+  @media (max-width:520px){ .chords .chart{ grid-template-columns:repeat(2,minmax(0,1fr)); } .chords .bar:nth-child(4n){ border-right:1.5px solid rgba(23,20,14,.25); } .chords .bar:nth-child(2n){ border-right:0; } }
+"""
+JS_CHORDS = """
+  /* Chords: show one instrument's shapes at a time (every one shows without JavaScript) */
+  (function(){
+    var sec = document.querySelector('.chords'); if(!sec) return;
+    sec.classList.add('js');
+    var saved = null; try { saved = localStorage.getItem('wtm_chord_inst'); } catch(e){}
+    function pick(k){
+      sec.querySelectorAll('.instpick button').forEach(function(b){ b.classList.toggle('on', b.dataset.inst === k); });
+      sec.querySelectorAll('.shapes').forEach(function(p){ p.classList.toggle('on', p.dataset.inst === k); });
+      try { localStorage.setItem('wtm_chord_inst', k); } catch(e){}
+    }
+    sec.querySelectorAll('.instpick button').forEach(function(b){ b.addEventListener('click', function(){ pick(b.dataset.inst); }); });
+    pick(saved && sec.querySelector('.shapes[data-inst="' + saved + '"]') ? saved : 'guitar');
+  })();
+"""
 CSS = """
   :root{ --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A; --green:#1F9D55; --inset:#FBF7EC;
     --disp:'Syne',sans-serif; --body:'Hanken Grotesk',system-ui,sans-serif; --mono:'Space Mono',monospace; }
@@ -259,8 +365,8 @@ CSS = """
     padding:8px 15px; border:2px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 rgba(23,20,14,.9); }
   .tabs a.cur{ background:var(--ink); color:var(--paper); box-shadow:3px 3px 0 var(--green); }
   .crumbs{ font-family:var(--mono); font-size:12px; margin-bottom:10px; } .crumbs a{ color:var(--blue); text-decoration:none; }
-  /* "Sheet Music & Tab Directory" on one line, scaled to fit; phones get two lines at a readable size */
-  h1{ font-family:var(--disp); font-weight:800; font-size:min(36px, calc((100vw - 40px) / 24)); white-space:nowrap; line-height:1.02; margin:0;
+  /* "Sheet Music, Tab & Chord Directory" on one line, scaled to fit; phones get two lines at a readable size */
+  h1{ font-family:var(--disp); font-weight:800; font-size:min(36px, calc((100vw - 40px) / 31)); white-space:nowrap; line-height:1.02; margin:0;
     text-shadow:2.5px 2px 0 rgba(36,56,200,.55), -2.5px -1.5px 0 rgba(255,78,134,.5); }
   .facts{ font-family:var(--mono); font-size:13px; margin:10px 0 0; }
   .lede{ max-width:64ch; margin:12px 0 18px; }
@@ -318,8 +424,14 @@ def build_page(t, lib, built, notes_by_name=None):
     keytxt = key['label'] + ('' if key['mode'] == 'major' else ' (the notes of ' + key['parent_name'] + ')')
     # instrument words first: people search "<tune> banjo" / "<tune> mandolin tab" (Search Console, Oct 2026)
     title = f'{name} — Banjo & Mandolin Tab, Sheet Music'
+    cbars = chords_by_bar(t['abc']) if (CHORDS_FOR is None or name in CHORDS_FOR) else []
+    has_chords = any(b['ch'] for b in cbars)
+    if has_chords:
+        # songs are searched as "<song> chords"; tunes as "<tune> tab", so the word order differs
+        title = (f'{name} — Chords, Tab & Sheet Music' if t['origin'] == 'Beginner' else f'{name} — Banjo & Mandolin Tab, Chords')
     what = describe(t, ttype)
-    desc = (f'{name}, {"an" if f["level"].startswith(("intermediate", "one")) else "a"} {f["level"].replace("one for the more experienced", "more advanced")} {what} in {key["label"]}: '
+    desc = (f'{name}, {"an" if f["level"].startswith(("intermediate", "one")) else "a"} {f["level"].replace("one for the more experienced", "more advanced")} {what} in {key["label"]}: ' +
+            (f'chords with shapes for guitar, ukulele, banjo and mandolin, ' if has_chords else '') +
             f'sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.')
     letters = '\n'.join(' | '.join(' '.join(trad_name(n) for n in bar) for bar in bars[i:i + 4]) for i in range(0, len(bars), 4))
     abc_render = '\n'.join(ln for ln in t['abc'].split('\n') if not re.match(r'^[TXOR]:', ln))
@@ -364,7 +476,7 @@ def build_page(t, lib, built, notes_by_name=None):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>{CSS}</style>
+<style>{CSS}{CSS_CHORDS if has_chords else ''}</style>
 </head>
 <body>
 <div class="wrap">
@@ -373,7 +485,7 @@ def build_page(t, lib, built, notes_by_name=None):
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
   <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Tune directory</a> › {esc(name)}</div>
-  <h1><span class="sr">{esc(name)} — </span>Sheet Music &amp; Tab Directory</h1>
+  <h1><span class="sr">{esc(name)} — </span>Sheet Music, Tab &amp; Chord Directory</h1>
   <div class="layout"><div class="main">
 
   <a class="mtbanner" href="{mt}">
@@ -407,7 +519,7 @@ def build_page(t, lib, built, notes_by_name=None):
   <section class="card tabs-card" id="tab"><h2>{esc(name)} — tab</h2>
     <p class="sub">Tenor banjo · mandolin · fiddle · guitar · ukulele — tap one to open it</p>
 {sections}  </section>
-  <section class="card"><h2>More {esc(ttype)}s and tunes like it</h2>
+{chords_section(name, keytxt, cbars) if has_chords else ''}  <section class="card"><h2>More {esc(ttype)}s and tunes like it</h2>
     <div class="rel">{"".join(f'<a href="{link(x)}">{esc(x["name"])}</a>' for x in rel)}</div>
   </section>
 
@@ -447,7 +559,7 @@ def build_page(t, lib, built, notes_by_name=None):
     }}
     openHash(); window.addEventListener('hashchange', openHash);
   }})();
-</script>
+{JS_CHORDS if has_chords else ''}</script>
 <script src="/tunes/tune-browser.js"></script>
 <script src="/tools.js"></script>
 <script src="/related.js"></script>
@@ -458,7 +570,7 @@ def build_page(t, lib, built, notes_by_name=None):
 TYPE_ORDER = ['reel', 'jig', 'slip jig', 'hornpipe', 'polka', 'slide', 'barndance', 'march', 'slow air', 'waltz']
 PLURAL = {'slip jig': 'Slip jigs', 'slow air': 'Slow airs', 'march': 'Marches'}
 def build_index(lib, names):
-    """tunes/index.html — the Sheet Music & Tab Directory: every tune page, by tradition then type."""
+    """tunes/index.html — the Sheet Music, Tab & Chord Directory: every tune page, by tradition then type."""
     rows = {}
     for nm in names:
         t = next((x for x in lib if x['name'] == nm), None)
@@ -486,7 +598,7 @@ def build_index(lib, names):
     rows = {k: v for o in rows.values() for k, v in o.items()}   # for the count below
     n = sum(len(v) for v in rows.values())
     n = len(names)
-    title = 'Sheet Music & Tab Directory — Irish, bluegrass, jazz & folk tunes | Music Arcade'
+    title = 'Sheet Music, Tab & Chord Directory — Irish, bluegrass, jazz & folk tunes | Music Arcade'
     desc = (f'Sheet music, note names and tab for {n} tunes — Irish session tunes, bluegrass fiddle tunes, trad jazz & blues and folk songs — '
             'for tenor banjo, mandolin, fiddle, guitar and ukulele. Free, with a play-along.')
     return f'''<!DOCTYPE html>
@@ -527,7 +639,7 @@ def build_index(lib, names):
     <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
   </nav>
   <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › Tune directory</div>
-  <h1>Sheet Music &amp; Tab Directory</h1>
+  <h1>Sheet Music, Tab &amp; Chord Directory</h1>
   <a class="mtbanner" href="melody-trainer_1.html">
     <span class="mtb-k">▶ Learn them in the Melody Trainer</span>
     <span class="mtb-t">Pick any tune and see every note on your banjo, fiddle, mandolin, guitar, ukulele or piano — then play along: the music listens and waits for you.</span>
