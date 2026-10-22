@@ -142,9 +142,9 @@
     .stave-card,.panel{ box-shadow:none; break-inside:avoid; }
     .stave-card{ border:2px solid #dfe5ef; margin:14px 0 12px; padding:12px 18px; }
     .stave-card svg{ max-height:95mm; }
-    /* on paper, the notes always print in full with every picture underneath */
+    /* on paper, always print as "Show all": every note, no pictures/words underneath */
     #stave .note{ opacity:1 !important; }
-    #lineLabels, #spaceLabels{ opacity:1 !important; }
+    #lineLabels, #spaceLabels{ display:none !important; }
     .panels{ grid-template-columns:1fr 1fr; gap:14px; margin-top:12px; }
     .panel{ padding:14px 18px 16px; }
     .acro{ gap:6px; }
@@ -390,6 +390,17 @@
   });
 
   document.getElementById('printPage').addEventListener('click', function(){ window.print(); });
+
+  // the picture labels are hidden on paper, so trim their empty strip off the bottom of the stave
+  var FULL_VB = svg.getAttribute('viewBox'), PRINT_VB = '0 -14 680 262';
+  function forPrint(on){ svg.setAttribute('viewBox', on ? PRINT_VB : FULL_VB); }
+  window.addEventListener('beforeprint', function(){ forPrint(true); });
+  window.addEventListener('afterprint', function(){ forPrint(false); });
+  if(window.matchMedia){
+    var mq = window.matchMedia('print');
+    var onMq = function(e){ forPrint(e.matches); };
+    if(mq.addEventListener) mq.addEventListener('change', onMq); else if(mq.addListener) mq.addListener(onMq);
+  }
 })();
 </script>
 <!-- more like this, at the foot of the page -->
