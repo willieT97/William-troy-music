@@ -106,7 +106,9 @@
   .chord.maj .qual{ color:var(--maj); } .chord.min .qual{ color:var(--min); }
   .chord .nm{ font-family:var(--mono); font-size:.72rem; font-weight:700; letter-spacing:.02em;
     color:var(--muted); margin-top:3px; }
-  .kbd{ width:100%; height:auto; max-width:210px; margin:9px auto 0; display:block; }
+  .kbd{ width:100%; height:auto; max-width:300px; margin:9px auto 0; display:block; }
+  /* the keyboards are an octave and a half wide, so piano cards get wider columns */
+  #chart[data-inst="piano"] .sheet{ grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); }
   .fret{ width:100%; height:auto; max-width:132px; margin:8px auto 0; display:block; }
 
   /* highlight spotlight */
@@ -125,7 +127,7 @@
   .foot a{ color:var(--maj); text-decoration:none; }
   .foot a:hover{ text-decoration:underline; }
 
-  @media (max-width:420px){ .kbd{ max-width:165px; } .chord h3{ font-size:1rem; } }
+  @media (max-width:420px){ .kbd{ max-width:none; } .chord h3{ font-size:1rem; } }
 
   @media print{
     .noprint{ display:none !important; }
@@ -139,6 +141,10 @@
     .chord{ display:inline-block; vertical-align:top; font-size:1rem; width:calc((100% - 30px) / 4);
       margin:0 10px 8px 0; page-break-inside:avoid; }
     .chord:nth-child(4n){ margin-right:0; }
+    /* piano: three to a row so the wider keyboards stay readable */
+    #chart[data-inst="piano"] .chord{ width:calc((100% - 20px) / 3); }
+    #chart[data-inst="piano"] .chord:nth-child(4n){ margin-right:10px; }
+    #chart[data-inst="piano"] .chord:nth-child(3n){ margin-right:0; }
     @page{ margin:12mm; }
   }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
@@ -329,23 +335,35 @@
   }
 
   // ---- piano keyboard ----
+  /* Always the same stretch of keys -- C up an octave and a half to the G above --
+     so every chord is seen in the same place a student finds it on a real piano.
+     The chord sits in root position from its root in the first octave; B is the
+     highest root and its fifth (F\u266f) still fits under the closing G. The Cs are
+     marked under the keys as landmarks. */
+  var KB_WHITES=[0,2,4,5,7,9,11,12,14,16,17,19];   /* C .. G above, in semitones from the bottom C */
   function keyboard(rootPc, tones, accent, tint){
-    var wW=22,wH=94,bW=13,bH=59,n=7;
-    var base=isBlack(rootPc)?(rootPc+11)%12:rootPc, start=WHITE_ORDER.indexOf(base), seq=[];
-    for(var i=0;i<n;i++) seq.push(WHITE_ORDER[(start+i)%7]);
-    var svg=el('svg'); svg.setAttribute('viewBox','0 0 '+(n*wW)+' '+(wH+2)); svg.setAttribute('class','kbd');
+    var wW=22,wH=94,bW=13,bH=59,n=KB_WHITES.length,labH=14;
+    var lit={};                                       /* semitone from the bottom C -> tone */
+    for(var k in tones){ lit[rootPc+tones[k].iv]=tones[k]; }
+    var svg=el('svg'); svg.setAttribute('viewBox','0 0 '+(n*wW)+' '+(wH+labH)); svg.setAttribute('class','kbd');
     for(var i=0;i<n;i++){
-      var pc=seq[i], x=i*wW, d=tones[pc];
+      var st=KB_WHITES[i], x=i*wW, d=lit[st];
       var r=el('rect'); r.setAttribute('x',x); r.setAttribute('y',0); r.setAttribute('width',wW); r.setAttribute('height',wH);
       r.setAttribute('rx',3); r.setAttribute('stroke','#c7cfdb'); r.setAttribute('stroke-width',1.4);
       if(d){ r.setAttribute('fill',tint); r.setAttribute('class','keytint'); r.setAttribute('data-deg',d.deg); } else r.setAttribute('fill','#fff');
       svg.appendChild(r);
       if(d) mark(svg, x+wW/2, wH-15, 8, d.lab, accent, null, '#fff', d.deg, d.note);
+      if(st%12===0){
+        var c=el('text'); c.setAttribute('x',x+wW/2); c.setAttribute('y',wH+labH-2); c.setAttribute('text-anchor','middle');
+        c.setAttribute('font-family',"'Nunito',sans-serif"); c.setAttribute('font-weight','800'); c.setAttribute('font-size','11');
+        c.setAttribute('fill','#8a93a6'); c.textContent='C';
+        svg.appendChild(c);
+      }
     }
     for(var i=0;i<n-1;i++){
-      var a=seq[i], b=seq[i+1];
-      if(((b-a+12)%12)===2){
-        var bpc=(a+1)%12, bx=(i+1)*wW-bW/2, d=tones[bpc];
+      var a=KB_WHITES[i], b=KB_WHITES[i+1];
+      if(b-a===2){
+        var bst=a+1, bx=(i+1)*wW-bW/2, d=lit[bst];
         var rr=el('rect'); rr.setAttribute('x',bx); rr.setAttribute('y',0); rr.setAttribute('width',bW); rr.setAttribute('height',bH);
         rr.setAttribute('rx',2);
         if(d){ rr.setAttribute('fill',accent); rr.setAttribute('class','keyblk'); rr.setAttribute('data-deg',d.deg); } else rr.setAttribute('fill','#2A3242');
