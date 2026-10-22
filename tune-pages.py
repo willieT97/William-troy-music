@@ -316,7 +316,8 @@ def build_page(t, lib, built, notes_by_name=None):
     mynote = (notes_by_name or {}).get(name.lower())
     mt = 'melody-trainer_1.html?tune=' + quote(name)
     keytxt = key['label'] + ('' if key['mode'] == 'major' else ' (the notes of ' + key['parent_name'] + ')')
-    title = f'{name} — Sheet Music & Tab (banjo, mandolin, fiddle, guitar)'
+    # instrument words first: people search "<tune> banjo" / "<tune> mandolin tab" (Search Console, Oct 2026)
+    title = f'{name} — Banjo & Mandolin Tab, Sheet Music'
     what = describe(t, ttype)
     desc = (f'{name}, {"an" if f["level"].startswith(("intermediate", "one")) else "a"} {f["level"].replace("one for the more experienced", "more advanced")} {what} in {key["label"]}: '
             f'sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.')
