@@ -413,6 +413,11 @@ CSS = """
   .foot{ margin-top:30px; text-align:center; font-family:var(--mono); font-size:12px; } .foot a{ color:var(--blue); text-decoration:none; }
 """
 
+# the tunes learn-banjo.html teaches: their pages link back to the course
+BEGINNER_BANJO = {'The Britches Full Of Stitches', 'Sí Bheag Sí Mhór', 'The Kesh'}
+COURSE_LINE = ('\n    <p class="course" style="margin:0 0 12px">This is one of the first tunes in '
+               '<a href="learn-banjo.html" style="color:var(--blue)">Beginner Banjo</a>, a free step-by-step tenor banjo course.</p>')
+
 def build_page(t, lib, built, notes_by_name=None):
     key = parse_key(t['key'])
     bars = notes_by_bar(t['abc'], key)
@@ -502,7 +507,7 @@ def build_page(t, lib, built, notes_by_name=None):
 
   <section class="card about"><h2>About {esc(name)}</h2>
     <p class="aboutline">{esc(intro(name, what, key, f))}</p>
-    {('<p class="mynote"><b>From William:</b> ' + esc(mynote) + '</p>') if mynote else ''}
+    {('<p class="mynote"><b>From William:</b> ' + esc(mynote) + '</p>') if mynote else ''}{COURSE_LINE if name in BEGINNER_BANJO else ''}
     <dl class="facts">
       <div><dt>Type</dt><dd>{esc(ttype.capitalize())}{(', ' + NUM.get(f['parts'], str(f['parts'])) + ' parts') if f['parts'] else ''}{', each usually played twice' if f['has_rep'] else ''}</dd></div>
       <div><dt>Key</dt><dd>{esc(keytxt)} · {esc(t['meter'])}</dd></div>

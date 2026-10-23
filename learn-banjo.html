@@ -66,6 +66,22 @@
  }
 }
 </script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {"@type": "Question", "name": "What tuning is a tenor banjo in for Irish music?",
+   "acceptedAnswer": {"@type": "Answer", "text": "G D A E, low to high. That’s the same notes as a fiddle or mandolin, an octave lower, so tunes and fingerings carry straight across."}},
+  {"@type": "Question", "name": "How long does it take to start playing tunes?",
+   "acceptedAnswer": {"@type": "Answer", "text": "At about a week a step, you’ll be playing your first polka in weeks two to four and a jig by around week nine. Ten or fifteen minutes a day does more than an hour on a Sunday."}},
+  {"@type": "Question", "name": "What’s a good first tune on tenor banjo?",
+   "acceptedAnswer": {"@type": "Answer", "text": "The Britches Full of Stitches, a short, bouncy polka that sits inside the D major scale. After that, John Ryan’s Polka, then the waltz Sí Bheag Sí Mhór."}},
+  {"@type": "Question", "name": "Can I learn tenor banjo online without a teacher?",
+   "acceptedAnswer": {"@type": "Answer", "text": "You can make a real start. The tools here tune you up, wait for each note you play, and listen through the microphone. But a teacher can hear why it doesn’t sound like the recording yet, which a tool can’t."}}
+ ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -132,6 +148,13 @@
   .uline.on path{ transition:stroke-dashoffset .55s ease-out; stroke-dashoffset:0; }
   @media (prefers-reduced-motion: reduce){ .uline path{ stroke-dashoffset:0; } }
   .lede{ max-width:52ch; margin:16px auto 0; font-size:21px; }
+  /* the one-paragraph answer search engines and AI tools quote (SEO, Oct 2026) */
+  .answer{ max-width:52ch; margin:16px auto 0; font-size:21px; }
+  .answer strong{ font-weight:400; color:var(--rust); }
+  .faq{ position:relative; isolation:isolate; padding:20px 22px 12px; margin:40px 0 0; transform:rotate(.3deg); }
+  .faq h2{ font-family:var(--script); font-weight:700; font-size:34px; margin:0 0 8px; color:var(--ink); }
+  .faq h3{ font-family:var(--script); font-weight:700; font-size:25px; line-height:1.1; margin:14px 0 2px; color:var(--rust); }
+  .faq p{ margin:0 0 8px; }
 
   /* Every box is a torn sheet of white paper laid on the parchment: an ink
      outline with rips and a folded corner, a heavy black shadow, and a strip of
@@ -196,7 +219,7 @@
   /* the shared footers/chips from other scripts keep their own look; just let them sit on the paper */
   @media (max-width:520px){ body{ font-size:18px; } .step{ padding:62px 15px 14px; } .step .num{ left:15px; top:12px; } }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } .step.arrive{ animation:none; } }
-  @media print{ body{ background:#fff; } body::before{ display:none; } .tabs,.progress,.tick{ display:none; } .step,.note,.lessons{ transform:none; } }
+  @media print{ body{ background:#fff; } body::before{ display:none; } .tabs,.progress,.tick{ display:none; } .step,.note,.faq,.lessons{ transform:none; } }
 </style>
 </head>
 <body>
@@ -212,6 +235,7 @@
   <header class="top">
     <h1 id="ttl"><span class="ttl-text">Beginner Banjo</span><span class="ttl-pen" id="ttlPen" aria-hidden="true"></span></h1>
     <svg class="uline" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 8 C 60 2, 120 11, 180 5 S 270 3, 297 7"/></svg>
+    <p class="answer"><strong>The best way to learn tenor banjo as an adult beginner</strong> is a little every day, in the right order: tune up, learn the D major scale, then play simple session tunes and pick up phrases by ear. This free seven-step course is the order William starts his own adult students in: about a week a step, ten or fifteen minutes a day.</p>
     <p class="lede">Tenor banjo for complete beginners. Never played a note? Here’s where to start — seven steps from tuning up to your first session tunes, using free tools you can open right here. No sign-up needed.</p>
   </header>
 
@@ -326,6 +350,18 @@
 
   <p class="tocome" id="toCome" hidden></p>
 
+  <section class="faq" aria-labelledby="faqTitle">
+    <h2 id="faqTitle">Questions people ask</h2>
+    <h3>What tuning is a tenor banjo in for Irish music?</h3>
+    <p>G D A E, low to high. That’s the same notes as a fiddle or mandolin, an octave lower, so tunes and fingerings carry straight across.</p>
+    <h3>How long does it take to start playing tunes?</h3>
+    <p>At about a week a step, you’ll be playing your first polka in weeks two to four and a jig by around week nine. Ten or fifteen minutes a day does more than an hour on a Sunday.</p>
+    <h3>What’s a good first tune on tenor banjo?</h3>
+    <p>The Britches Full of Stitches, a short, bouncy polka that sits inside the D major scale. After that, John Ryan’s Polka, then the waltz Sí Bheag Sí Mhór.</p>
+    <h3>Can I learn tenor banjo online without a teacher?</h3>
+    <p>You can make a real start. The tools here tune you up, wait for each note you play, and listen through the microphone. But a teacher can hear why it doesn’t sound like the recording yet, which a tool can’t.</p>
+  </section>
+
   <div class="lessons">
     <h2>Want someone to hear you play?</h2>
     <p>A tool can tell you the right note — a teacher can tell you why it doesn’t sound like the recording yet. If you’d like lessons, get in touch.</p>
@@ -406,7 +442,7 @@
     }
     svg.innerHTML = s;
   }
-  const boxes = [...document.querySelectorAll('.note, .step, .lessons')];
+  const boxes = [...document.querySelectorAll('.note, .step, .faq, .lessons')];
   const seeds = boxes.map((b, i) => 7919 * (i + 3));
   const redraw = () => boxes.forEach((b, i) => draw(b, seeds[i]));
   redraw();
