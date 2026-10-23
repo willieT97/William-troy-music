@@ -147,11 +147,11 @@
 <div class="wrap">
 
   <nav class="tabs" aria-label="Sections">
-    <a href="index.html">Arcade</a>
-    <a href="dojo.html">Courses</a>
-    <a href="resources.html" class="cur" aria-current="page">Resources</a>
-    <a href="training.html">Practice</a>
-    <a href="create.html">Create</a>
+    <a href="/">Arcade</a>
+    <a href="/dojo.html">Courses</a>
+    <a href="/resources.html" class="cur" aria-current="page">Resources</a>
+    <a href="/training.html">Practice</a>
+    <a href="/create.html">Create</a>
   </nav>
 
   <header class="top">
@@ -203,12 +203,12 @@
 <p>The <b>A major</b> scale has 7 notes: <b>A B C♯ D E F♯ G♯</b>, then A again an octave up. Its key signature has 3 sharps (C♯, F♯, G♯).</p>
 <p>A major turns up in plenty of reels and in most of the fiddle-led tunes in A.</p>
 <h2>Where the notes are, frets 0–7</h2><p>The A major scale in first position on the tenor banjo, highest string at the top. Fret numbers under each note; the root, A, in red.</p><table class="frets"><tr><th>E string</th><td><span class="">E<i>open</i></span><span class="">F♯<i>2</i></span><span class="">G♯<i>4</i></span><span class="rt">A<i>5</i></span><span class="">B<i>7</i></span></td></tr><tr><th>A string</th><td><span class="rt">A<i>open</i></span><span class="">B<i>2</i></span><span class="">C♯<i>4</i></span><span class="">D<i>5</i></span><span class="">E<i>7</i></span></td></tr><tr><th>D string</th><td><span class="">D<i>open</i></span><span class="">E<i>2</i></span><span class="">F♯<i>4</i></span><span class="">G♯<i>6</i></span><span class="rt">A<i>7</i></span></td></tr><tr><th>G string</th><td><span class="">G♯<i>1</i></span><span class="rt">A<i>2</i></span><span class="">B<i>4</i></span><span class="">C♯<i>6</i></span><span class="">D<i>7</i></span></td></tr></table>
-<h2>More tenor banjo scales</h2><p class="sibs"><a href="scales/tenor-banjo/d-major-scale.html">D major</a><a href="scales/tenor-banjo/g-major-scale.html">G major</a><a href="scales/tenor-banjo/e-minor-scale.html">E minor</a><a href="scales/tenor-banjo/a-minor-scale.html">A minor</a></p>
-<p class="morelinks"><a href="learn-banjo.html">New to the banjo? Start with Beginner Banjo →</a><a href="find-the-note.html?scale=major&amp;root=9&amp;inst=banjo">Open it in the full Scales page →</a><a href="chords.html?inst=banjo">Chords for tenor banjo →</a><a href="Banjo/what-note-banjo.html">Learn the notes on the neck: What Note? (banjo) →</a><a href="melody-trainer_1.html">Play session tunes in this key: Melody Trainer →</a></p>
+<h2>More tenor banjo scales</h2><p class="sibs"><a href="/scales/tenor-banjo/d-major-scale.html">D major</a><a href="/scales/tenor-banjo/g-major-scale.html">G major</a><a href="/scales/tenor-banjo/e-minor-scale.html">E minor</a><a href="/scales/tenor-banjo/a-minor-scale.html">A minor</a></p>
+<p class="morelinks"><a href="/learn-banjo.html">New to the banjo? Start with Beginner Banjo →</a><a href="/find-the-note.html?scale=major&amp;root=9&amp;inst=banjo">Open it in the full Scales page →</a><a href="/chords.html?inst=banjo">Chords for tenor banjo →</a><a href="/Banjo/what-note-banjo.html">Learn the notes on the neck: What Note? (banjo) →</a><a href="/melody-trainer_1.html">Play session tunes in this key: Melody Trainer →</a></p>
 </section>
 
   <div class="foot">
-    <p><a href="resources.html">&larr; Back to Resources</a></p>
+    <p><a href="/resources.html">&larr; Back to Resources</a></p>
   </div>
 
 </div>
@@ -478,8 +478,8 @@
       tip.innerHTML='The <b>'+rn+' '+SCALES[h.type].name+'</b> scale'+extra+what+
         ' — <span style="color:#E6462F;font-weight:700">root</span> in red, the rest in <span style="color:#2E77E6;font-weight:700">blue</span>. Tap any note to hear it.';
       // for the two diatonic scales the Circle of Fifths maps directly — offer a link back to that key
-      if(h.type==='major') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root%12)+12)%12)+'">See the key of '+rn+' major on the Circle of Fifths →</a>';
-      else if(h.type==='minor') backlink.innerHTML='<a href="circle-of-fifths.html?key='+(((h.root+3)%12)+12)%12+'">See '+rn+' minor on the Circle of Fifths →</a>';
+      if(h.type==='major') backlink.innerHTML='<a href="/circle-of-fifths.html?key='+(((h.root%12)+12)%12)+'">See the key of '+rn+' major on the Circle of Fifths →</a>';
+      else if(h.type==='minor') backlink.innerHTML='<a href="/circle-of-fifths.html?key='+(((h.root+3)%12)+12)%12+'">See '+rn+' minor on the Circle of Fifths →</a>';
       return; }
     var n=disp(NAMES[h.pc]);
     if(state.inst==='piano') tip.innerHTML='Every <b>'+n+'</b> on the keyboard is highlighted. Tap a key to hear it.';

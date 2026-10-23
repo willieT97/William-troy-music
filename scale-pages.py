@@ -213,6 +213,12 @@ def build(template, inst, scale, root):
   s = s.replace('<!-- more like this', HANDOVER + '<!-- more like this', 1)
   return s
 
+def root_links(s):
+  # browsers resolve these against <base href="/">, but some crawlers ignore <base> and
+  # chase /scales/tenor-banjo/... ghosts (OpenSEO audit, Oct 2026) — so write them root-relative
+  s = re.sub(r'href="index\.html"', 'href="/"', s)
+  return re.sub(r'href="(?![/#$]|[a-z][a-z0-9+.-]*:)', 'href="/', s)
+
 def main():
   template = open(os.path.join(ROOT, 'find-the-note.html'), encoding='utf-8').read()
   pages = {f'{i}/{sc}/{r}': page_path(i, sc, r) for i, sc, r in BUILD}
@@ -225,7 +231,7 @@ def main():
     path = page_path(inst, scale, root)
     full = os.path.join(ROOT, path)
     os.makedirs(os.path.dirname(full), exist_ok=True)
-    open(full, 'w', encoding='utf-8').write(build(template, inst, scale, root))
+    open(full, 'w', encoding='utf-8').write(root_links(build(template, inst, scale, root)))
     print('wrote', path)
 
 if __name__ == '__main__':

@@ -430,9 +430,15 @@ def build_page(t, lib, built, notes_by_name=None):
         # songs are searched as "<song> chords"; tunes as "<tune> tab", so the word order differs
         title = (f'{name} — Chords, Tab & Sheet Music' if t['origin'] == 'Beginner' else f'{name} — Banjo & Mandolin Tab, Chords')
     what = describe(t, ttype)
-    desc = (f'{name}, {"an" if f["level"].startswith(("intermediate", "one")) else "a"} {f["level"].replace("one for the more experienced", "more advanced")} {what} in {key["label"]}: ' +
-            (f'chords with shapes for guitar, ukulele, banjo and mandolin, ' if has_chords else '') +
-            f'sheet music, the notes as letters, and tab for tenor banjo, mandolin, fiddle, guitar and ukulele. Play along in the Melody Trainer.')
+    level = f["level"].replace("one for the more experienced", "more advanced")
+    lead = f'{name}, {"an" if level.startswith("intermediate") else "a"} {level} {what} in {key["label"]}: '
+    # Google cuts descriptions off near 160 characters: take the fullest list that fits
+    c = 'chords, ' if has_chords else ''
+    tails = [f'{c}sheet music, letter names and tab for tenor banjo, mandolin, fiddle, guitar and ukulele.',
+             f'{c}sheet music, letter names and tab for banjo, mandolin, fiddle and guitar.',
+             f'{c}sheet music and tab for banjo, mandolin, fiddle and guitar.',
+             f'{c}sheet music and tab.']
+    desc = next((lead + x for x in tails if len(lead + x) <= 160), lead + tails[-1])
     letters = '\n'.join(' | '.join(' '.join(trad_name(n) for n in bar) for bar in bars[i:i + 4]) for i in range(0, len(bars), 4))
     abc_render = '\n'.join(ln for ln in t['abc'].split('\n') if not re.match(r'^[TXOR]:', ln))
     # related: same type and same parent key first, then same type
@@ -599,8 +605,8 @@ def build_index(lib, names):
     n = sum(len(v) for v in rows.values())
     n = len(names)
     title = 'Sheet Music, Tab & Chord Directory — Irish, bluegrass, jazz & folk tunes | Music Arcade'
-    desc = (f'Sheet music, note names and tab for {n} tunes — Irish session tunes, bluegrass fiddle tunes, trad jazz & blues and folk songs — '
-            'for tenor banjo, mandolin, fiddle, guitar and ukulele. Free, with a play-along.')
+    desc = (f'Free sheet music, tab and chords for {n} Irish, bluegrass, trad jazz, blues and folk tunes '
+            '— for tenor banjo, mandolin, fiddle, guitar and ukulele.')
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -673,6 +679,12 @@ def build_index(lib, names):
 </html>
 '''
 
+def root_links(s):
+    # browsers resolve these against <base href="/">, but some crawlers ignore <base> and
+    # chase /tunes/tunes/... ghosts (OpenSEO audit, Oct 2026) — so write them root-relative
+    s = re.sub(r'href="index\.html"', 'href="/"', s)
+    return re.sub(r'href="(?![/#$]|[a-z][a-z0-9+.-]*:)', 'href="/', s)
+
 def main():
     lib = library()
     names = [t['name'] for t in lib if t['origin'] in ORIGIN] if '--all' in sys.argv else BUILD
@@ -691,9 +703,9 @@ def main():
         t = next((x for x in lib if x['name'] == nm), None)
         if not t: print('not in the library:', nm); continue
         path = os.path.join(OUT, slug(nm) + '.html')
-        open(path, 'w', encoding='utf-8').write(build_page(t, lib, built, tn))
+        open(path, 'w', encoding='utf-8').write(root_links(build_page(t, lib, built, tn)))
         print('wrote', os.path.relpath(path, ROOT))
-    open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8').write(build_index(lib, sorted(existing)))
+    open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8').write(root_links(build_index(lib, sorted(existing))))
     print('wrote tunes/index.html')
 
 if __name__ == '__main__':
