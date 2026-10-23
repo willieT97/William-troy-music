@@ -1,4 +1,4 @@
-/* Music Arcade — shared pitch-detection core (McLeod Pitch Method).
+/* The Music Arcade — shared pitch-detection core (McLeod Pitch Method).
    Used by the Listening Lab tool and the Learning to Fly course labs.
    Pure functions only — each page runs its own mic loop and capture logic. */
 (function (global) {

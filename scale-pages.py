@@ -129,7 +129,7 @@ def build(template, inst, scale, root):
   names = {pc: n for pc, n in notes}
   full = f'{rn} {sname} Scale'
   h1 = f'{full} on {iname}'
-  title = f'{h1}{" (GDAE)" if inst == "banjo" else ""} — notes & fingering | Music Arcade'
+  title = f'{h1}{" (GDAE)" if inst == "banjo" else ""} — notes & fingering | The Music Arcade'
   note_list = ' '.join(n for _, n in notes)
   desc = (f'The {rn} {sname.lower()} scale on {iname.lower()}: {note_list}. '
           f'See every note on the neck, hear it, and print it — free.')

@@ -609,7 +609,7 @@ def build_index(lib, names):
     rows = {k: v for o in rows.values() for k, v in o.items()}   # for the count below
     n = sum(len(v) for v in rows.values())
     n = len(names)
-    title = 'Sheet Music, Tab & Chord Directory — Irish, bluegrass, jazz & folk tunes | Music Arcade'
+    title = 'Sheet Music, Tab & Chord Directory — Irish, bluegrass, jazz & folk tunes | The Music Arcade'
     desc = (f'Free sheet music, tab and chords for {n} Irish, bluegrass, trad jazz, blues and folk tunes '
             '— for tenor banjo, mandolin, fiddle, guitar and ukulele.')
     return f'''<!DOCTYPE html>

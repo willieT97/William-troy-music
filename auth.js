@@ -658,7 +658,7 @@
     if (view === 'reset') return renderReset();
     // sign in / sign up
     cardBody.appendChild(header(view === 'signup' ? 'Create your account' : 'Welcome back'));
-    cardBody.appendChild(el('p', 'maa-sub', 'One account across the whole Music Arcade — save your songs, charts and solos and pick them up on any device.'));
+    cardBody.appendChild(el('p', 'maa-sub', 'One account across the whole of The Music Arcade — save your songs, charts and solos and pick them up on any device.'));
     var tabs = el('div', 'maa-tabs');
     var t1 = el('button', 'maa-tab' + (view === 'signin' ? ' on' : ''), 'Sign in'); t1.type = 'button';
     var t2 = el('button', 'maa-tab' + (view === 'signup' ? ' on' : ''), 'Create account'); t2.type = 'button';

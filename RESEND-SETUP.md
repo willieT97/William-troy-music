@@ -36,7 +36,7 @@ settings, never into the website code.
 ## 3. Point Supabase at Resend
 Supabase → **Authentication → Emails → SMTP Settings → Enable Custom SMTP**:
 - **Sender email:** `no-reply@themusicarcade.com`  (must be on the verified domain)
-- **Sender name:** `Music Arcade`
+- **Sender name:** `The Music Arcade`
 - **Host:** `smtp.resend.com`
 - **Port:** `465`
 - **Username:** `resend`
@@ -48,7 +48,7 @@ default only applied to the shared service; on your own SMTP you can lift it).
 
 ## 4. Paste the branded templates
 Supabase → **Authentication → Email Templates**:
-- **Confirm signup** → subject `Confirm your email — Music Arcade` → body = contents of `email-templates/confirm-signup.html`
+- **Confirm signup** → subject `Confirm your email — The Music Arcade` → body = contents of `email-templates/confirm-signup.html`
 - **Reset Password** → subject `Reset your Music Arcade password` → body = contents of `email-templates/reset-password.html`
 
 (Leave the `{{ .ConfirmationURL }}` placeholders exactly as they are.)
