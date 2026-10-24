@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "site_url": "https://themusicarcade.com",
+  "openseo": {
+    "url": "http://127.0.0.1:3001",
+    "status": "running"
+  },
+  "gsc": {
+    "connected": true
+  },
+  "phases": {
+    "setup": "done",
+    "audit": "done",
+    "measure": "done",
+    "ai_visibility": "done",
+    "schedule": "done"
+  },
+  "schedule": {
+    "mode": "os",
+    "time_local": "07:00",
+    "marker": ".seo-god/last-run.json"
+  },
+  "ai_prompts_locked": [
+    "is Music Arcade a good way to learn tenor banjo",
+    "is there an app like Yousician for tenor banjo",
+    "free alternatives to Yousician for ear training",
+    "thesession.org tunes with tenor banjo and mandolin tab",
+    "does Music Arcade work with a real instrument and a microphone",
+    "best way to learn tenor banjo as an adult beginner online",
+    "Website to help with playing back what I hear on my instrument",
+    "free ear training games I can play with my own instrument",
+    "easy Irish tunes for a beginner on tenor banjo",
+    "what do music teachers use to give students fun practice games"
+  ],
+  "power_ups": {
+    "dataforseo": false,
+    "llm_keys": false,
+    "telegram": false
+  },
+  "keywords": [
+    "tenor banjo lessons",
+    "tenor banjo for beginners",
+    "how to play tenor banjo",
+    "tenor banjo tab",
+    "tenor banjo chords",
+    "tenor banjo scales",
+    "irish session tunes",
+    "easy irish tunes for beginners",
+    "irish tunes mandolin tab",
+    "the kesh jig banjo",
+    "ear training game",
+    "ear training games online",
+    "music theory games",
+    "note reading game",
+    "free music games",
+    "online chromatic tuner",
+    "online metronome",
+    "ukulele chords for beginners",
+    "circle of fifths interactive",
+    "guitar fretboard notes"
+  ]
+}
