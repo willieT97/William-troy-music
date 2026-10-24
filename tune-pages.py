@@ -657,7 +657,8 @@ def build_index(lib, names):
     <span class="mtb-go">Open the Melody Trainer →</span>
   </a>
   <p class="lede">{n} tunes, each with its sheet music, the notes as letter names, and tab for tenor banjo, mandolin, fiddle, guitar and
-  ukulele. Search by name, key (try “D major” or “A dorian”) or level.</p>
+  ukulele. Search by name, key (try “D major” or “A dorian”) or level.
+  <a href="tunes/keys.html">What key are Irish session tunes in? The keys, counted →</a></p>
   <p class="jump">{jump}</p>
   <input class="search" id="q" type="search" placeholder="Search tunes — name, key or level…" aria-label="Search tunes">
 {body}
