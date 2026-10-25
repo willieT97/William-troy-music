@@ -472,6 +472,7 @@
     text-shadow:2px 1.5px 0 rgba(36,56,200,.5), -2px -1px 0 rgba(255,78,134,.45);
   }
   .overlay p{font-size:15px;margin-bottom:20px}
+  .overlay .donebtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
   .confetti{position:absolute;width:11px;height:11px;border-radius:50%;top:-14px;animation:fall 2.6s linear infinite}
   @keyframes fall{to{transform:translateY(340px) rotate(300deg)}}
 
@@ -686,7 +687,10 @@
     <h2>TUNE<br>COMPLETE</h2>
     <p id="doneMsg">Every note, in order, by ear and hand.<br>That's the whole pipeline working.</p>
     <p id="bookMsg" class="bookmsg"></p>
-    <button class="good" id="againBtn">Play it again</button>
+    <div class="donebtns">
+      <button class="good" id="againBtn">Play it again</button>
+      <button id="toBookBtn">Open my tunebook</button>
+    </div>
   </div>
 </div>
 
@@ -1981,11 +1985,20 @@ function loop(){
   analyser.getFloatTimeDomainData(timeBuf);
   const {freq, rms} = autoCorrelate(timeBuf, audioCtx.sampleRate);
 
-  const attack = rms > state.rmsSlow*2.4 && rms > 0.03;
   state.rmsSlow = state.rmsSlow*0.9 + rms*0.1;
+  state.lastRms = rms;
+  /* Same note twice in a row: the second only counts after a fresh attack.
+     The note that was just accepted is usually still swelling for a few
+     frames, so first wait for it to start dying away (below 75% of its
+     peak), then a jump back up from the lowest point since is a new pluck.
+     Silence then sound also counts. */
   if(state.rearm){
+    const r = state.re;
+    if(!r.decayed){ if(rms > r.peak) r.peak = rms; else if(rms < r.peak*0.75) { r.decayed = true; r.min = rms; } }
+    else r.min = Math.min(r.min, rms);
     if(rms < 0.012) state.armSilent = true;
-    if(attack || (state.armSilent && rms > 0.02)){
+    const fresh = r.decayed && rms > r.min*1.6 && rms > 0.02 && performance.now() - r.at > 120;
+    if(fresh || (state.armSilent && rms > 0.02)){
       state.rearm = false; state.armSilent = false;
     }
   }
@@ -2015,7 +2028,7 @@ function loop(){
       // repeated note held on one bow: no fresh attack comes, so also clear the
       // re-arm once the correct pitch has simply been sustained for a moment.
       // (Detached playing still clears it instantly via the attack test above.)
-      if(state.rearm){
+      if(state.rearm && INSTRUMENTS[inst].fretless){   // fiddle: a re-bow may bring no attack; plucked notes always do
         if(onPitch){
           if(!state.rearmHeldSince) state.rearmHeldSince = performance.now();
           else if(performance.now() - state.rearmHeldSince > 340){ state.rearm = false; state.armSilent = false; state.rearmHeldSince = 0; }
@@ -2059,6 +2072,7 @@ function accept(target){
     return;
   }
   state.rearm = (TUNE[i].midi === target.midi);
+  state.re = { at: performance.now(), peak: state.lastRms || 0, min: Infinity, decayed: false };
   state.armSilent = false;
   state.rearmHeldSince = 0;
   refreshUI();
@@ -2270,6 +2284,11 @@ function printTune(){
 }
 $("printBtn").addEventListener("click", printTune);
 $("againBtn").addEventListener("click", reset);
+$("toBookBtn").addEventListener("click", () => {            // close the popup and show the tunebook list
+  $("overlay").classList.remove("show");
+  document.querySelector('.booktabs button[data-view="book"]').click();
+  document.querySelector(".loadcard").scrollIntoView({ behavior:"smooth", block:"start" });
+});
 $("loadBtn").addEventListener("click", loadFromTextarea);
 $("showNames").addEventListener("change", e=>{
   $("scoreBox").classList.toggle("names", e.target.checked);
