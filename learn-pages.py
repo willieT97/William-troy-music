@@ -117,6 +117,19 @@ FIRST_TEN = [  # (library name, William's line)
      'Your jig, and a session staple. Jigs go in threes; once this one flows, the jigs in the tune directory are open to you.'),
 ]
 FIRST_TEN_URL = 'learn/first-session-tunes.html'
+# one recording of each, checked to exist and be embeddable (YouTube oEmbed, 2026-10-25): (video id, who's playing)
+FIRST_TEN_VIDEOS = {
+    'The Dawning Of The Day (Fáinne Geal An Lae)': ('9Bd9Kbn2Fbc', 'Mícheál Ó Súilleabháin, piano (Irish Traditional Music Archive)'),
+    'Sí Bheag Sí Mhór': ('jgU_TxYZCoQ', 'on harp, the instrument O’Carolan wrote it for (Sonja Harp)'),
+    'Fanny Power': ('nbxa4PF4Ku8', 'a fiddle trio (Katy Adelson)'),
+    'The Britches Full Of Stitches': ('MjVwy62IIN0', 'Jackie Daly and Séamus Creagh, live; it’s the second tune'),
+    "Egan's (The Kerry Polka)": ('PprQc-qtfSQ', 'Mad For Trad, live'),
+    "John Ryan's": ('8tkIYY6XQgs', 'Gaelic Storm, “An Irish Party in Third Class” from the film Titanic'),
+    'The Boys Of Bluehill': ('sBc450A0aC4', 'Séamus Ennis, uilleann pipes; it’s the first tune'),
+    'The Stack Of Barley': ('mz6VlV7pNAk', 'Johnny Connolly'),
+    'Off To California': ('nOxuHBy84bM', 'Clannad, live in Bremen, 1980; it’s the second tune'),
+    'The Kesh': ('Sk7UXx4ouS0', 'The Bothy Band; it’s the first tune in the set'),
+}
 
 def first_session_tunes(lib):
     by = {t['name']: t for t in lib}
@@ -129,7 +142,10 @@ def first_session_tunes(lib):
         tune = f'tunes/{slug(name)}.html'
         li += (f'<li><h2><a href="{tune}">{esc(name)}</a></h2><p class="tk">{esc(ty)} · {esc(k["label"])}</p>'
                f'<p>{esc(line)}</p><div class="go"><a class="main" href="{esc(mt)}">▶ Play along in the Melody Trainer</a>'
-               f'<a href="{tune}">Sheet music &amp; tab</a></div></li>\n')
+               f'<a href="{tune}">Sheet music &amp; tab</a></div>'
+               + (yt(FIRST_TEN_VIDEOS[name][0], f'{name} — {FIRST_TEN_VIDEOS[name][1]}',
+                     f'<b>Hear it:</b> {esc(FIRST_TEN_VIDEOS[name][1])}.') if name in FIRST_TEN_VIDEOS else '')
+               + '</li>\n')
         items.append({'@type': 'ListItem', 'position': i, 'name': name, 'url': SITE + tune})
     answer = ('These are the ten tunes I give new students when they want to start playing at sessions. They’re all on the notes of D or G major, '
               'they sit in first position on banjo, mandolin or fiddle, and they build up in groups: three slow tunes, three '
@@ -165,9 +181,10 @@ def first_session_tunes(lib):
     <a href="tunes/keys.html">nearly every tune you’ll hear at a session</a>. They mix slow tunes, polkas, hornpipes, a barndance
     and a jig, so you’re ready for whatever gets started. And they’re well known, so you’ll hear them, and people will join in.</p>
     <p>Not sure what makes a polka a polka? Here’s <a href="learn/hornpipe-reel-polka.html">how to tell a hornpipe, a reel and a polka apart</a>.</p>
-  </section>'''
+  </section>
+{JS_VIDEO}'''
     crumbs = '<a href="learn/">From William</a> › 10 first session tunes'
-    return page(title, desc, ld, crumbs, body), answer
+    return page(title, desc, ld, crumbs, body, css=CSS_VIDEO), answer
 
 # ---------------------------------------------------------------- article 2
 TYPES_URL = 'learn/hornpipe-reel-polka.html'
@@ -208,13 +225,16 @@ JS_VIDEO = """<script>
   });
 </script>"""
 
+def yt(vid, title, caption):
+    """A YouTube thumbnail that turns into the no-cookie player when clicked (caption is HTML)."""
+    return (f'<figure class="yt"><a class="ytp" href="https://www.youtube.com/watch?v={vid}" data-id="{vid}" data-title="{esc(title)}">'
+            f'<img src="https://i.ytimg.com/vi/{vid}/hqdefault.jpg" alt="{esc(title)} (video)" loading="lazy">'
+            f'<span class="play"><b>▶</b></span></a>'
+            f'<figcaption>{caption} <a href="https://www.youtube.com/watch?v={vid}">Watch on YouTube</a></figcaption></figure>')
+
 def video(kind):
     vid, tune, who = VIDEOS[kind]
-    t = f'{tune} — {who}'
-    return (f'<figure class="yt"><a class="ytp" href="https://www.youtube.com/watch?v={vid}" data-id="{vid}" data-title="{esc(t)}">'
-            f'<img src="https://i.ytimg.com/vi/{vid}/hqdefault.jpg" alt="{esc(t)} (video)" loading="lazy">'
-            f'<span class="play"><b>▶</b></span></a>'
-            f'<figcaption><b>Hear a {kind}:</b> {esc(tune)}, {esc(who)}. <a href="https://www.youtube.com/watch?v={vid}">Watch on YouTube</a></figcaption></figure>')
+    return yt(vid, f'{tune} — {who}', f'<b>Hear a {kind}:</b> {esc(tune)}, {esc(who)}.')
 
 def mt_link(name):
     """A tune's name, opening it in the Melody Trainer, where you see and hear how it's played."""
