@@ -55,7 +55,7 @@ def nav():
             '    <a href="training.html">Practice</a><a href="create.html">Create</a>'
             '<a href="learn/" class="cur" aria-current="page">From William</a>\n  </nav>')
 
-def page(title, desc, ld, crumbs, body, foot='<a href="learn/">&larr; From William</a>'):
+def page(title, desc, ld, crumbs, body, foot='<a href="learn/">&larr; From William</a>', css=''):
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,7 +74,7 @@ def page(title, desc, ld, crumbs, body, foot='<a href="learn/">&larr; From Willi
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>{tp.CSS}{CSS}</style>
+<style>{tp.CSS}{CSS}{css}</style>
 </head>
 <body>
 <div class="wrap">
@@ -164,11 +164,137 @@ def first_session_tunes(lib):
     <p>They’re all on the notes of D or G major, and those two key signatures cover
     <a href="tunes/keys.html">nearly every tune you’ll hear at a session</a>. They mix slow tunes, polkas, hornpipes, a barndance
     and a jig, so you’re ready for whatever gets started. And they’re well known, so you’ll hear them, and people will join in.</p>
+    <p>Not sure what makes a polka a polka? Here’s <a href="learn/hornpipe-reel-polka.html">how to tell a hornpipe, a reel and a polka apart</a>.</p>
   </section>'''
     crumbs = '<a href="learn/">From William</a> › 10 first session tunes'
     return page(title, desc, ld, crumbs, body), answer
 
+# ---------------------------------------------------------------- article 2
+TYPES_URL = 'learn/hornpipe-reel-polka.html'
+# one recording of each type, checked to exist and be embeddable (YouTube oEmbed, 2026-10-25)
+VIDEOS = {
+    'polka': ('MjVwy62IIN0', 'Bill Sullivan’s Polka / The Britches Full of Stitches',
+              'Jackie Daly and Séamus Creagh, live'),
+    'reel': ('tYQWCu-M9o0', 'Miss McLeod’s', 'The Fitzgeralds, from the National Museum of Australia'),
+    'hornpipe': ('sBc450A0aC4', 'The Boys of Bluehill / Dunphy’s Hornpipe', 'Séamus Ennis, uilleann pipes'),
+}
+CSS_VIDEO = """
+  .yt{ margin:14px 0 6px; max-width:560px; }
+  .yt a.ytp{ position:relative; display:block; aspect-ratio:16/9; border:2px solid var(--ink); border-radius:12px; overflow:hidden;
+    background:#000; box-shadow:4px 4px 0 var(--ink); }
+  .yt img{ width:100%; height:100%; object-fit:cover; display:block; opacity:.85; }
+  .yt .play{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .yt .play b{ width:68px; height:48px; border-radius:12px; background:#e33; color:#fff; font-size:22px; display:flex;
+    align-items:center; justify-content:center; }
+  .yt a.ytp:hover .play b{ background:#c00; }
+  .yt iframe{ width:100%; aspect-ratio:16/9; border:2px solid var(--ink); border-radius:12px; display:block; }
+  .yt figcaption{ font-size:14px; margin-top:8px; opacity:.85; }
+  table.cmp{ border-collapse:collapse; width:100%; margin:8px 0 6px; font-size:15px; }
+  table.cmp th, table.cmp td{ text-align:left; padding:7px 8px; border-bottom:1px solid rgba(23,20,14,.15); vertical-align:top; }
+  table.cmp thead th{ font-family:var(--disp); font-size:16px; }
+  table.cmp tbody th{ font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-weight:400; opacity:.75; }
+  .faq h3{ font-family:var(--disp); font-size:18px; margin:16px 0 4px; } .faq p{ margin:0 0 8px; max-width:68ch; }
+"""
+# loads the real player only when someone clicks; without JavaScript the thumbnail is a plain link to YouTube
+JS_VIDEO = """<script>
+  document.querySelectorAll('a.ytp').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + a.dataset.id + '?autoplay=1&rel=0';
+      f.title = a.dataset.title; f.allow = 'autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen = true;
+      a.replaceWith(f);
+    });
+  });
+</script>"""
+
+def video(kind):
+    vid, tune, who = VIDEOS[kind]
+    t = f'{tune} — {who}'
+    return (f'<figure class="yt"><a class="ytp" href="https://www.youtube.com/watch?v={vid}" data-id="{vid}" data-title="{esc(t)}">'
+            f'<img src="https://i.ytimg.com/vi/{vid}/hqdefault.jpg" alt="{esc(t)} (video)" loading="lazy">'
+            f'<span class="play"><b>▶</b></span></a>'
+            f'<figcaption><b>Hear a {kind}:</b> {esc(tune)}, {esc(who)}. <a href="https://www.youtube.com/watch?v={vid}">Watch on YouTube</a></figcaption></figure>')
+
+def tune_links(names):
+    return ', '.join(f'<a href="tunes/{slug(n)}.html">{esc(n)}</a> '
+                     f'(<a href="{esc("melody-trainer_1.html?tune=" + quote(n))}">play along</a>)' for n in names)
+
+def hornpipe_reel_polka(lib):
+    irish = [t for t in lib if t['origin'] == 'Irish session']
+    n, reels = len(irish), sum(t['type'] == 'reel' for t in irish)
+    answer = ('Count the beats and listen for the swing. A polka has two beats in a bar and bounces along quickly. A reel and a '
+              'hornpipe both have four, but a reel runs in even notes and flies along, while a hornpipe is slower and swung, '
+              'long-short, and often ends each part on three strong notes. Tap your foot and you’ll hear it.')
+    title = 'Hornpipe, Reel or Polka? How to Tell Them Apart | The Music Arcade'
+    desc = ('How to tell a hornpipe, a reel and a polka apart: count the beats, listen for the swing, and hear one of each, '
+            'from a tenor banjo and trad teacher.')
+    faq = [('Is a hornpipe just a slow reel?',
+            'No: it’s swung. Play a reel long-short and it starts to sound like a hornpipe, but hornpipes are made to sit in that '
+            'lilt, with those strong endings.'),
+           ('Why does the sheet music for a hornpipe look like a reel?',
+            'Most transcriptions write both in even notes, and players add the swing. So learn hornpipes by ear as well as from '
+            'the page.')]
+    ld = [{'@context': 'https://schema.org', '@type': 'Article', 'headline': 'Hornpipe, reel or polka? How to tell them apart',
+           'description': desc, 'url': SITE + TYPES_URL, 'datePublished': '2026-10-25', 'dateModified': '2026-10-25',
+           'author': AUTHOR, 'publisher': PUBLISHER},
+          {'@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': [
+              {'@type': 'Question', 'name': q, 'acceptedAnswer': {'@type': 'Answer', 'text': a}} for q, a in faq]}]
+    tl = lambda n: f'<a href="tunes/{slug(n)}.html">{esc(n)}</a>'
+    body = f'''  <h1>Hornpipe, reel or polka? How to tell them apart</h1>
+  <p class="byline">From William · tenor banjo and Irish trad teacher</p>
+  <p class="answer">{esc(answer)}</p>
+  <section class="card prose"><h2>At a glance</h2>
+    <table class="cmp"><thead><tr><th></th><th scope="col">Polka</th><th scope="col">Reel</th><th scope="col">Hornpipe</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Beats in a bar</th><td>2</td><td>4</td><td>4</td></tr>
+      <tr><th scope="row">Feel</th><td>bouncy</td><td>even, driving</td><td>swung, long-short</td></tr>
+      <tr><th scope="row">Speed</th><td>quick</td><td>fastest</td><td>steadier</td></tr>
+      <tr><th scope="row">Listen for</th><td>“one-and two-and”</td><td>a constant stream of notes</td><td>three “stamps” at the end of a part</td></tr>
+      <tr><th scope="row">Try</th><td>{tl("The Britches Full Of Stitches")}, {tl("Egan's (The Kerry Polka)")}</td>
+        <td>{tl("Miss McLeod's")}, {tl("Drowsy Maggie")}</td><td>{tl("The Boys Of Bluehill")}, {tl("Off To California")}</td></tr>
+    </tbody></table>
+  </section>
+  <section class="card prose"><h2>The polka</h2>
+    <p>The polka is the quickest to recognise: two beats in a bar, <i>one-and two-and</i>, short phrases that keep bouncing back.
+    It’s the music of Sliabh Luachra on the Cork–Kerry border, and it’s where I start beginners, because the tunes are short and
+    the rhythm carries you.</p>
+    <p>Try: {tune_links(["The Britches Full Of Stitches", "Egan's (The Kerry Polka)", "John Ryan's"])}.</p>
+    {video('polka')}
+  </section>
+  <section class="card prose"><h2>The reel</h2>
+    <p>Reels are the backbone of a session: {reels} of the {n} Irish tunes in my library are reels, more than any other type. Four
+    beats in a bar, filled with a steady stream of even notes, <i>di-dle-di-dle</i>. Played up to speed they fly, which is exactly
+    why I tell students to learn them slowly first.</p>
+    <p>Try: {tune_links(["Miss McLeod's", "Drowsy Maggie"])}.</p>
+    {video('reel')}
+  </section>
+  <section class="card prose"><h2>The hornpipe</h2>
+    <p>A hornpipe has the same four beats as a reel, and on paper it often looks just like one. The difference is in how it’s
+    played: swung, long-short, long-short, and steadier, with a stately lift. Listen for the end of each part, where many hornpipes
+    land on three strong, even notes, like three stamps of the foot. {tl("The Boys Of Bluehill")} and
+    {tl("The Harvest Home")} both do it.</p>
+    <p>Try: {tune_links(["The Boys Of Bluehill", "Off To California", "The Harvest Home"])}. Barndances like
+    {tl("The Stack Of Barley")} share that swung feel.</p>
+    {video('hornpipe')}
+  </section>
+  <section class="card prose"><h2>Try it yourself</h2>
+    <p>Open <a href="{esc("melody-trainer_1.html?tune=" + quote("Miss McLeod's"))}">Miss McLeod’s</a> and
+    <a href="{esc("melody-trainer_1.html?tune=" + quote("The Boys Of Bluehill"))}">The Boys of Bluehill</a> in the Melody Trainer
+    one after the other. Same four beats: tap your foot to each and you’ll feel the reel run straight and the hornpipe swing.</p>
+    <p>Starting out? My <a href="{FIRST_TEN_URL}">10 first session tunes</a> include three polkas and three hornpipes and barndances,
+    and they’re <a href="tunes/keys.html">nearly all in D or G</a>.</p>
+  </section>
+  <section class="card faq"><h2>Questions people ask</h2>
+    {''.join(f'<h3>{esc(q)}</h3><p>{esc(a)}</p>' for q, a in faq)}
+  </section>
+{JS_VIDEO}'''
+    crumbs = '<a href="learn/">From William</a> › Hornpipe, reel or polka?'
+    return page(title, desc, ld, crumbs, body, css=CSS_VIDEO), answer
+
 ARTICLES = [  # (url, title, one line) — newest first on the index
+    (TYPES_URL, 'Hornpipe, reel or polka? How to tell them apart',
+     'Count the beats, listen for the swing, and hear one of each.'),
     (FIRST_TEN_URL, '10 first session tunes for beginners',
      'The ten tunes I start new students on, in order, each with a play-along in the Melody Trainer.'),
 ]
@@ -203,3 +329,6 @@ if __name__ == '__main__':
     open(os.path.join(ROOT, FIRST_TEN_URL), 'w', encoding='utf-8').write(tp.root_links(art))
     open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8').write(tp.root_links(index(lib)))
     print('wrote', FIRST_TEN_URL, 'and learn/index.html | answer words:', len(answer.split()))
+    art, answer = hornpipe_reel_polka(lib)
+    open(os.path.join(ROOT, TYPES_URL), 'w', encoding='utf-8').write(tp.root_links(art))
+    print('wrote', TYPES_URL, '| answer words:', len(answer.split()))
