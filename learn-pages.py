@@ -216,9 +216,12 @@ def video(kind):
             f'<span class="play"><b>▶</b></span></a>'
             f'<figcaption><b>Hear a {kind}:</b> {esc(tune)}, {esc(who)}. <a href="https://www.youtube.com/watch?v={vid}">Watch on YouTube</a></figcaption></figure>')
 
+def mt_link(name):
+    """A tune's name, opening it in the Melody Trainer, where you see and hear how it's played."""
+    return f'<a href="{esc("melody-trainer_1.html?tune=" + quote(name))}">{esc(name)}</a>'
+
 def tune_links(names):
-    return ', '.join(f'<a href="tunes/{slug(n)}.html">{esc(n)}</a> '
-                     f'(<a href="{esc("melody-trainer_1.html?tune=" + quote(n))}">play along</a>)' for n in names)
+    return ', '.join(mt_link(n) for n in names)
 
 def hornpipe_reel_polka(lib):
     irish = [t for t in lib if t['origin'] == 'Irish session']
@@ -240,21 +243,10 @@ def hornpipe_reel_polka(lib):
            'author': AUTHOR, 'publisher': PUBLISHER},
           {'@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': [
               {'@type': 'Question', 'name': q, 'acceptedAnswer': {'@type': 'Answer', 'text': a}} for q, a in faq]}]
-    tl = lambda n: f'<a href="tunes/{slug(n)}.html">{esc(n)}</a>'
+    tl = mt_link
     body = f'''  <h1>Hornpipe, reel or polka? How to tell them apart</h1>
   <p class="byline">From William · tenor banjo and Irish trad teacher</p>
   <p class="answer">{esc(answer)}</p>
-  <section class="card prose"><h2>At a glance</h2>
-    <table class="cmp"><thead><tr><th></th><th scope="col">Polka</th><th scope="col">Reel</th><th scope="col">Hornpipe</th></tr></thead>
-    <tbody>
-      <tr><th scope="row">Beats in a bar</th><td>2</td><td>4</td><td>4</td></tr>
-      <tr><th scope="row">Feel</th><td>bouncy</td><td>even, driving</td><td>swung, long-short</td></tr>
-      <tr><th scope="row">Speed</th><td>quick</td><td>fastest</td><td>steadier</td></tr>
-      <tr><th scope="row">Listen for</th><td>“one-and two-and”</td><td>a constant stream of notes</td><td>three “stamps” at the end of a part</td></tr>
-      <tr><th scope="row">Try</th><td>{tl("The Britches Full Of Stitches")}, {tl("Egan's (The Kerry Polka)")}</td>
-        <td>{tl("Miss McLeod's")}, {tl("Drowsy Maggie")}</td><td>{tl("The Boys Of Bluehill")}, {tl("Off To California")}</td></tr>
-    </tbody></table>
-  </section>
   <section class="card prose"><h2>The polka</h2>
     <p>The polka is the quickest to recognise: two beats in a bar, <i>one-and two-and</i>, short phrases that keep bouncing back.
     It’s the music of Sliabh Luachra on the Cork–Kerry border, and it’s where I start beginners, because the tunes are short and
@@ -277,6 +269,17 @@ def hornpipe_reel_polka(lib):
     <p>Try: {tune_links(["The Boys Of Bluehill", "Off To California", "The Harvest Home"])}. Barndances like
     {tl("The Stack Of Barley")} share that swung feel.</p>
     {video('hornpipe')}
+  </section>
+  <section class="card prose"><h2>At a glance</h2>
+    <table class="cmp"><thead><tr><th></th><th scope="col">Polka</th><th scope="col">Reel</th><th scope="col">Hornpipe</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Beats in a bar</th><td>2</td><td>4</td><td>4</td></tr>
+      <tr><th scope="row">Feel</th><td>bouncy</td><td>even, driving</td><td>swung, long-short</td></tr>
+      <tr><th scope="row">Speed</th><td>quick</td><td>fastest</td><td>steadier</td></tr>
+      <tr><th scope="row">Listen for</th><td>“one-and two-and”</td><td>a constant stream of notes</td><td>three “stamps” at the end of a part</td></tr>
+      <tr><th scope="row">Try</th><td>{tl("The Britches Full Of Stitches")}, {tl("Egan's (The Kerry Polka)")}</td>
+        <td>{tl("Miss McLeod's")}, {tl("Drowsy Maggie")}</td><td>{tl("The Boys Of Bluehill")}, {tl("Off To California")}</td></tr>
+    </tbody></table>
   </section>
   <section class="card prose"><h2>Try it yourself</h2>
     <p>Open <a href="{esc("melody-trainer_1.html?tune=" + quote("Miss McLeod's"))}">Miss McLeod’s</a> and
