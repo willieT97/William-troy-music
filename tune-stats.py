@@ -161,7 +161,7 @@ def build():
 <div class="wrap">
   <nav class="tabs" aria-label="Sections">
     <a href="index.html">Arcade</a><a href="dojo.html">Courses</a><a href="resources.html">Resources</a>
-    <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a>
+    <a href="training.html" class="cur" aria-current="page">Practice</a><a href="create.html">Create</a><a href="learn/">From William</a>
   </nav>
   <div class="crumbs"><a href="melody-trainer_1.html">Melody Trainer</a> › <a href="tunes/">Tune directory</a> › Keys</div>
   <h1>What key are Irish session tunes in?</h1>

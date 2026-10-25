@@ -3,7 +3,7 @@
 % Irish barndances. Built by fetch-airs-marches-barndances.py — rerun it, or paste
 % more X:… blocks below, then rerun tunes/build-manifest.sh
 
-X:1
+X:13734
 T:The Stack Of Barley
 R:barndance
 O:Irish session
@@ -15,7 +15,7 @@ ga (3baf gfed|(3BBB BAB2d2|DEGA (3BBB dB|1 A2G2G2:|2 A2G2 GEDA||
 |:BGBd (3ggg gb|agfg e2d2|(3ggg fg edBd|e2(3AAA A2 ef|
 gb (3agf gfed|(3BBB BA B2d2|DEGA (3BBB dB|1 A2G2G2 GA:|2 A2G2G2||
 
-X:2
+X:1920
 T:Jimmy Duffy's
 R:barndance
 O:Irish session
@@ -29,7 +29,7 @@ gagd B2B2|BAGB d2d2|efgd BdcB|ADFA G2||
 Bd|g2gd B2B2|BAGB d2d2|efgd BdcB|AGFG ABcA|
 BGDG B2B2|BAGB d2d2|efgd BdcB|ADFA G2||
 
-X:3
+X:3515
 T:Jamesy Gannon's
 R:barndance
 O:Irish session
@@ -41,7 +41,7 @@ D2GA B2B2|(3ABA GA B<d dg|e<d ge dBGB|1 AGEF G2FE:|2 AGEF G2Gg||
 gfga bage|d^cde dBGg|gfga baga|agab a2ef|
 gfga bage|dcde d2ef|g2(3fgf (3efe dB|c2(3BcB A2(3GFE||
 
-X:4
+X:3520
 T:Lynch's
 R:barndance
 O:Irish session
@@ -53,7 +53,7 @@ D2 d2 D2 d2|B>dc>B A3 F|G>FG>B A>FD>F|1 E>GF>E D>GF>E:|2 E>GF>E D2 a>g||
 |:(3fgf d>f (3efe B>c|(3dcd (3fdB A3 F|G>Ac>e g>ec>B|A2 b2 a3 g|
 (3fgf d>f (3efe B>c|(3dcd (3fdB A3 F|G>Ac>e g>eB>c|1 (3efe d2 d2 a>g:|2 e2 d2 d4||
 
-X:5
+X:7018
 T:Oh Dear Mother My Toes Are Sore
 R:barndance
 O:Irish session

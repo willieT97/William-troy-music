@@ -256,8 +256,8 @@ def main():
   shelved = shelved_hrefs()
   files = subprocess.run(['git', 'ls-files', '*.html'], cwd=ROOT, capture_output=True, text=True).stdout.splitlines()
   files = [f.strip('"') for f in files if not f.startswith(SKIP_DIRS)]
-  # pages made by scale-pages.py count even before they are committed
-  for d, _, fs in list(os.walk(os.path.join(ROOT, 'scales'))) + list(os.walk(os.path.join(ROOT, 'tunes'))):
+  # pages made by scale-pages.py, tune-pages.py and learn-pages.py count even before they are committed
+  for d, _, fs in [w for g in ('scales', 'tunes', 'learn') for w in os.walk(os.path.join(ROOT, g))]:
     files += [os.path.relpath(os.path.join(d, f), ROOT) for f in fs if f.endswith('.html')]
   files = sorted(set(files))
   done, urls = 0, []

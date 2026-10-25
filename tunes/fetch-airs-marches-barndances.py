@@ -48,6 +48,7 @@ GROUPS = {
         454,   # Tabhair Dom Do Lamh (Give Me Your Hand)
         957,   # Fanny Power (O'Carolan)
         2407,  # Eibhli Gheal Chiuin Ni Chearbhaill
+        1441,  # The Dawning Of The Day (Fainne Geal An Lae)
     ]),
 }
 
@@ -56,21 +57,26 @@ def curl(url):
                        capture_output=True)
     return r.stdout.decode("utf-8", "replace")
 
-def first_block(abc_text):
-    """Return the first X: block of a multi-setting ABC download, as its lines."""
-    lines, started = [], False
+# a few tunes need a setting other than the first, or the name people search for
+SETTING = {1441: 2}   # setting 1 is written in doubled note values with a stray low chord
+TITLE = {1441: "The Dawning Of The Day (F\u00e1inne Geal An Lae)"}
+
+def first_block(abc_text, which=1):
+    """Return the which-th X: block (1 = first) of a multi-setting ABC download, as its lines."""
+    lines, started, seen = [], False, 0
     for ln in abc_text.split("\n"):
         if ln.startswith("X:"):
             if started:
                 break
-            started = True
+            seen += 1
+            started = seen == which
             continue
         if started:
             lines.append(ln)
     return lines
 
 def build_tune(n, tid, r_label):
-    lines = first_block(curl(f"https://thesession.org/tunes/{tid}/abc"))
+    lines = first_block(curl(f"https://thesession.org/tunes/{tid}/abc"), SETTING.get(tid, 1))
     T = M = L = K = None
     body, in_body = [], False
     for ln in lines:
@@ -90,7 +96,8 @@ def build_tune(n, tid, r_label):
     m = re.match(r"^(.*),\s*(The|A|An)$", T)      # "Minstrel Boy, The" -> "The Minstrel Boy"
     if m:
         T = m.group(2) + " " + m.group(1)
-    hdr = [f"X:{n}", f"T:{T}", f"R:{r_label}", "O:Irish session",
+    T = TITLE.get(tid, T)
+    hdr = [f"X:{tid}", f"T:{T}", f"R:{r_label}", "O:Irish session",
            f"M:{M or '4/4'}", f"L:{L or '1/8'}", f"K:{K or 'C'}"]
     return "\n".join(hdr) + "\n" + "\n".join(body) + "\n"
 
