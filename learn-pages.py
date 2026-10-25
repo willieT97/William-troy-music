@@ -117,17 +117,18 @@ FIRST_TEN = [  # (library name, William's line)
      'Your jig, and a session staple. Jigs go in threes; once this one flows, the jigs in the tune directory are open to you.'),
 ]
 FIRST_TEN_URL = 'learn/first-session-tunes.html'
-# one recording of each, checked to exist and be embeddable (YouTube oEmbed, 2026-10-25): (video id, who's playing)
+# one recording of each, checked to PLAY when embedded on another site (muted autoplay test, 2026-10-25): (video id, who's playing).
+# oEmbed alone isn't enough: label uploads ("<Artist> - Topic") can pass it and still refuse to play off YouTube.
 FIRST_TEN_VIDEOS = {
     'The Dawning Of The Day (Fáinne Geal An Lae)': ('9Bd9Kbn2Fbc', 'Mícheál Ó Súilleabháin, piano (Irish Traditional Music Archive)'),
     'Sí Bheag Sí Mhór': ('jgU_TxYZCoQ', 'on harp, the instrument O’Carolan wrote it for (Sonja Harp)'),
     'Fanny Power': ('nbxa4PF4Ku8', 'a fiddle trio (Katy Adelson)'),
     'The Britches Full Of Stitches': ('MjVwy62IIN0', 'Jackie Daly and Séamus Creagh, live; it’s the second tune'),
     "Egan's (The Kerry Polka)": ('PprQc-qtfSQ', 'Mad For Trad, live'),
-    "John Ryan's": ('8tkIYY6XQgs', 'Gaelic Storm, “An Irish Party in Third Class” from the film Titanic'),
+    "John Ryan's": ('cxUB-lezrFQ', 'the Verlander Family and Friends, live'),
     'The Boys Of Bluehill': ('sBc450A0aC4', 'Séamus Ennis, uilleann pipes; it’s the first tune'),
     'The Stack Of Barley': ('mz6VlV7pNAk', 'Johnny Connolly'),
-    'Off To California': ('nOxuHBy84bM', 'Clannad, live in Bremen, 1980; it’s the second tune'),
+    'Off To California': ('5kOPuFfbLw0', 'on concertina; it’s the first tune, before “Whiskey You’re the Devil”'),
     'The Kesh': ('Sk7UXx4ouS0', 'The Bothy Band; it’s the first tune in the set'),
 }
 
