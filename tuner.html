@@ -18,10 +18,16 @@
 <meta property="og:image" content="https://themusicarcade.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <!-- /seo -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+ {"@type":"ListItem","position":1,"name":"The Music Arcade","item":"https://themusicarcade.com/"},
+ {"@type":"ListItem","position":2,"name":"Tuner: chromatic tuner online"}]}
+</script>
 <meta name="description" content="A free chromatic tuner in your browser. Play a note and the needle shows how sharp or flat you are — guitar, ukulele, banjo, fiddle, voice, anything." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/families.css">
 <style>
   :root{
     --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --amber:#E0922A; --green:#1F9D55;
@@ -34,7 +40,7 @@
   html,body{ margin:0; }
   body{
     font-family:var(--body); color:var(--ink); background:var(--paper);
-    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
   }
   body::before{
@@ -48,6 +54,33 @@
   /* column flex: a title wider than the stage overhangs evenly instead of off to the right */
 
   header{ text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:16px; }
+  h1{ margin:0; font:inherit; display:flex; flex-direction:column; align-items:center; }
+  .subtitle .nw{ white-space:nowrap; }
+  /* the chosen instrument's tuning, e.g. "tenor banjo · G D A E"; empty on Chromatic */
+  .instline{ font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--blue); margin-top:8px; }
+  .instline:empty{ display:none; }
+
+  /* way back to the arcade, above the tuner */
+  .crumbs{ position:relative; z-index:1; width:min(420px,100%); margin-bottom:22px;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; color:var(--muted); }
+  .crumbs a{ color:var(--ink); text-decoration:none; border-bottom:1.5px solid var(--pink); }
+  .crumbs a:hover{ color:var(--blue); }
+
+  /* readable text under the tuner: what it's for, and where to go next */
+  .about{ position:relative; z-index:1; width:min(420px,100%); margin-top:44px; }
+  .about h2{ font-family:var(--display); font-weight:800; font-size:1.25rem; letter-spacing:-.01em;
+    text-transform:uppercase; color:var(--blue); margin:0 0 10px; }
+  .about p{ margin:0 0 12px; font-size:.98rem; }
+  .about .more{ margin-top:30px; }
+  .about ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  /* each box is filled with its game's family colour (families.css); learning pages stay paper */
+  .about li a{ display:block; padding:10px 12px; border:2px solid var(--ink); background:var(--fam, var(--paper));
+    box-shadow:3px 3px 0 var(--ink); color:var(--fam-ink, var(--ink)); transition:transform .08s ease, box-shadow .08s ease; text-decoration:none; font-weight:600; line-height:1.25; }
+  .about li a small{ display:block; font-weight:400; font-size:.8rem; color:var(--fam-sub, var(--muted)); margin-top:2px; }
+  .about li a:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+  .about .back{ margin-top:18px; font-family:var(--mono); font-size:.76rem; }
+  .about .back a{ color:var(--ink); border-bottom:1.5px solid var(--pink); text-decoration:none; }
+  @media (max-width:380px){ .about ul{ grid-template-columns:1fr; } }
   .title{
     position:relative; display:inline-block; font-family:var(--display);
     font-weight:800; font-size:clamp(2.2rem,8vw,3.4rem); letter-spacing:-.02em;
@@ -128,10 +161,14 @@
 </style>
 </head>
 <body>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">The Music Arcade</a> › <a href="/#tab=tools">Tools</a> › Tuner
+  </nav>
   <div class="stage">
     <header>
-      <span class="title" data-text="Tuner">Tuner</span>
-      <div class="subtitle">chromatic · any instrument</div>
+      <h1><span class="title" data-text="Tuner">Tuner</span>
+      <span class="subtitle"><span class="nw">Chromatic tuner online</span> · <span>guitar, tenor banjo, ukulele, fiddle, cello</span></span></h1>
+      <div class="instline" id="instline" aria-live="polite"></div>
     </header>
 
     <div class="panel">
@@ -164,6 +201,30 @@
       </div>
     </div>
   </div>
+
+  <section class="about" data-rel-host>
+    <h2>How this tuner helps</h2>
+    <p>Everything sounds wrong on an instrument that’s out of tune, so this comes first, every time you pick it up. Tap
+    Start, allow the microphone, and play a string: the needle shows how sharp or flat you are, and it reads “in tune” once
+    you’re within 5 cents.</p>
+    <p>Pick your instrument (guitar, tenor banjo in G D A E, ukulele, fiddle or cello) and the tuner tells you which string
+    you’re nearest and tunes you to that. Or leave it on Chromatic for any note at all: voice, whistle, mandolin, anything.
+    It’s tuned to A&nbsp;=&nbsp;440, works in the browser on your phone or laptop, and there’s nothing to install.</p>
+    <div class="more">
+      <h2>More tuning tools</h2>
+      <ul>
+        <li><a href="/Banjo/in-tune-banjo.html">In Tune? <small>Banjo: is every string in tune?</small></a></li>
+        <li><a href="/Banjo/out-of-tune-banjo.html">Out of Tune? <small>Banjo: find the string that’s out</small></a></li>
+        <li><a href="/Guitar/in-tune-guitar.html">In Tune? <small>Guitar: is every string in tune?</small></a></li>
+        <li><a href="/Guitar/out-of-tune-guitar.html">Out of Tune? <small>Guitar: find the string that’s out</small></a></li>
+        <li><a href="/Ukulele/in-tune.html">In Tune? <small>Ukulele: is every string in tune?</small></a></li>
+        <li><a href="/Ukulele/out-of-tune.html">Out of Tune? <small>Ukulele: find the string that’s out</small></a></li>
+        <li><a href="/metronome.html">Metronome <small>A steady click to practise with</small></a></li>
+        <li><a href="/learn-banjo.html">Beginner Banjo <small>Step 1: tune up, and hear when you’re out</small></a></li>
+      </ul>
+      <p class="back"><a href="/#tab=tools">All the tools in The Music Arcade →</a></p>
+    </div>
+  </section>
 
 <script>
 /* ====================================================================
@@ -402,7 +463,7 @@
     try { localStorage.setItem('wtm_tuner_inst', k); } catch(e){}
     [].forEach.call(el('insts').children, b => b.classList.toggle('on', b.dataset.k === k));
     const I = INSTRUMENTS[k], box = el('strings'); box.innerHTML = '';
-    document.querySelector('.subtitle').textContent = I.strings ? I.sub : 'chromatic · any instrument';
+    document.getElementById('instline').textContent = I.strings ? I.sub : '';   // the h1 subtitle stays fixed (it's the page's heading)
     el('stringhint').textContent = I.strings ? 'Play any string — or tap one to hold the tuner on it and hear the note.' : '';
     (I.strings || []).forEach((m, i) => {
       const b = document.createElement('button'); b.type = 'button';

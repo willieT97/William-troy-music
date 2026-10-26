@@ -18,10 +18,16 @@
 <meta property="og:image" content="https://themusicarcade.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <!-- /seo -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+ {"@type":"ListItem","position":1,"name":"The Music Arcade","item":"https://themusicarcade.com/"},
+ {"@type":"ListItem","position":2,"name":"Apple Shot: note reading game"}]}
+</script>
 <meta name="description" content="Read the note on the apple, draw the bow and loose it as your aim crosses that note. A note-reading game." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/families.css">
 <style>
   :root{
     --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --good:#1FA84C;
@@ -90,12 +96,41 @@
   /* game input: a long press or drag must never start text selection,
      the iOS callout, or the grey tap flash */
   body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
+  /* the page's heading: the game's name plus what it teaches */
+  h1{ font:inherit; display:flex; flex-direction:column; align-items:center; }
+  h1 .title, h1 .subtitle{ display:block; }
+  .subtitle .nw{ white-space:nowrap; }
+
+  /* way back to the arcade, above the game */
+  .crumbs{ width:min(560px,100%); margin-bottom:14px; font-family:'Space Mono',monospace; font-size:.72rem;
+    letter-spacing:.08em; color:#6F6757; -webkit-user-select:text; user-select:text; }
+  .crumbs a{ color:var(--ink); text-decoration:none; border-bottom:1.5px solid var(--pink); }
+  .crumbs a:hover{ color:var(--blue); }
+
+  /* readable text under the game: what it's for, and where to go next */
+  .about{ width:min(560px,100%); margin-top:44px; -webkit-user-select:text; user-select:text; }
+  .about h2{ font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; letter-spacing:-.01em;
+    text-transform:uppercase; color:var(--blue); margin:0 0 10px; }
+  .about p{ margin:0 0 12px; font-size:.98rem; line-height:1.55; }
+  .about .more{ margin-top:30px; }
+  .about ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  /* each box is filled with its game's family colour (families.css); learning pages stay paper */
+  .about li a{ display:block; padding:10px 12px; border:2px solid var(--ink); background:var(--fam, var(--paper));
+    box-shadow:3px 3px 0 var(--ink); color:var(--fam-ink, var(--ink)); transition:transform .08s ease, box-shadow .08s ease; text-decoration:none; font-weight:600; line-height:1.25; }
+  .about li a small{ display:block; font-weight:400; font-size:.8rem; color:var(--fam-sub, #6F6757); margin-top:2px; }
+  .about li a:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+  .about .back{ margin-top:18px; font-family:'Space Mono',monospace; font-size:.76rem; }
+  .about .back a{ color:var(--ink); border-bottom:1.5px solid var(--pink); text-decoration:none; }
+  @media (max-width:380px){ .about ul{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
-  <div class="title">APPLE <span class="hi">SHOT</span></div>
-  <div class="subtitle">Theory · The Music Arcade</div>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">The Music Arcade</a> › <a href="/#tab=theory">Theory</a> › Apple Shot
+  </nav>
+  <h1><span class="title">APPLE <span class="hi">SHOT</span></span>
+  <span class="subtitle"><span class="nw">Note reading game</span> · <span class="nw">treble clef lines and spaces</span></span></h1>
 
   <div class="hud">
     <div class="chip">SCORE <b id="score">0</b></div>
@@ -293,6 +328,27 @@
     The tree is ruled like a stave: <b>E</b> 1st line, <b>F</b> 1st space, <b>G</b> 2nd line, <b>A</b> 2nd space,
     <b>B</b> 3rd line, <b>C</b> 3rd space, <b>D</b> 4th line. Aim high and you clip the tree — aim low and you won't miss the fellow.
   </div>
+
+  <section class="about" data-rel-host>
+    <h2>How this game helps</h2>
+    <p>Reading music starts with knowing the lines and spaces of the stave without counting up from the bottom. Apple Shot
+    turns that into archery. The apple tree is ruled like a stave: E on the first line, F in the first space, then G, A, B, C
+    and D. An apple appears on one of them; hold Draw, and let go as your aim crosses that note.</p>
+    <p>Aim too high and you clip the tree; too low and… well, mind the fellow with the apple on his head. Start on Easy,
+    where the bow swings slowly, then move up to Medium and Hard as your reading gets quicker. Hint shows the note name if
+    you need it. Keep your streak going and the notes start to read themselves.</p>
+    <div class="more">
+      <h2>More note-reading games</h2>
+      <ul>
+        <li><a href="/Theory/note-reading.html">Note Reading <small>Name the note before the clock runs down</small></a></li>
+        <li><a href="/Theory/note-elevator.html">Note Elevator <small>Read the note, send the lift to its floor</small></a></li>
+        <li><a href="/Theory/hidden-words.html">Hidden Words <small>Notes on the stave that spell a word</small></a></li>
+        <li><a href="/Theory/note-hopper.html">Note Hopper <small>Play the note on your own instrument</small></a></li>
+        <li><a href="/note-names.html">Note Names <small>Every Good Boy Deserves Food, and FACE</small></a></li>
+      </ul>
+      <p class="back"><a href="/#tab=theory">All theory games in The Music Arcade →</a></p>
+    </div>
+  </section>
 
 <script src="../hi-scores.js"></script>
 <script>
