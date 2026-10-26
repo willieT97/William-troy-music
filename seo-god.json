@@ -17,7 +17,7 @@
   },
   "schedule": {
     "mode": "os",
-    "time_local": "07:00",
+    "time_local": "10:00",
     "marker": ".seo-god/last-run.json"
   },
   "ai_prompts_locked": [
