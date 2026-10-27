@@ -98,6 +98,14 @@
     @page{ margin:15mm; }
   }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+  /* how to use the circle, and where to go next (readable text for people and search engines) */
+  .about{ max-width:760px; margin:30px auto 0; background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(20,30,60,.10); padding:20px 22px 22px; }
+  .about h2{ font-family:var(--disp); font-weight:600; font-size:1.25rem; color:var(--ink); margin:0 0 10px; }
+  .about p{ font-size:.98rem; line-height:1.6; margin:0 0 12px; color:var(--ink); }
+  .about .links{ display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 0; }
+  .about .links a{ border:1.5px solid var(--line); border-radius:999px; padding:5px 12px; text-decoration:none; color:var(--blue);
+    font-weight:700; font-size:.85rem; background:var(--blue-tint); }
+  .about .links a:hover{ background:var(--blue); color:#fff; border-color:var(--blue); }
 </style>
 </head>
 <body>
@@ -125,6 +133,24 @@
   <p class="printrow"><button class="printbtn" id="printWheel" type="button">🖨 Print the circle</button></p>
 
   <p class="tip">Neighbouring keys share almost all their notes — that's why they sound good together. The <b>inner ring</b> shows each key's <b>relative minor</b> (same notes, different home).</p>
+
+  <section class="about" data-rel-host>
+    <h2>How to use the circle of fifths</h2>
+    <p>The circle of fifths puts all twelve keys in order. Each step clockwise adds a sharp to the key signature; each step
+    anticlockwise adds a flat. C major, with none, sits at the top.</p>
+    <p>Click a key and the circle shows its key signature, its scale and its diatonic chords, and lets you hear it. The keys
+    either side of it are its closest neighbours: they share all but one note, which is why songs move between them so
+    easily. The inner ring gives each key’s relative minor, the minor key with the same notes and a different home note.
+    Print the circle and keep it on your music stand.</p>
+    <h2 style="margin-top:16px">Related</h2>
+    <p class="links">
+      <a href="scale-theory.html">Scale theory: how scales are built</a>
+      <a href="chord-theory.html">Chord theory: major, minor, diminished, augmented</a>
+      <a href="find-the-note.html">Scales: any scale on your instrument</a>
+      <a href="chords.html">Chord charts to print</a>
+      <a href="tunes/keys.html">What key are Irish session tunes in?</a>
+    </p>
+  </section>
 
   <div class="foot">
     <p><a href="resources.html">&larr; Back to Resources</a></p>

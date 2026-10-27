@@ -77,6 +77,12 @@
   .fb{ font-weight:700; font-size:.9rem; margin-top:12px; min-height:1.2em; } .fb.ok{ color:var(--green); } .fb.no{ color:#C0453B; }
   .note{ color:var(--muted); font-size:.74rem; font-weight:700; margin-top:10px; } .note a{ color:var(--blue); text-decoration:none; }
   .foot{ margin-top:26px; text-align:center; color:var(--muted); font-weight:700; font-size:.82rem; } .foot a{ color:var(--blue); text-decoration:none; }
+  /* what the lab is for, and where to go next (readable text for people and search engines) */
+  .about p{ font-size:.95rem; line-height:1.6; max-width:70ch; margin:0 0 12px; }
+  .about .links{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .about .links a{ border:2px solid var(--ink); border-radius:999px; padding:5px 12px; text-decoration:none; color:var(--ink);
+    font-weight:700; font-size:.84rem; background:#fff; }
+  .about .links a:hover{ background:var(--ink); color:var(--card); }
 </style>
 </head>
 <body>
@@ -137,6 +143,25 @@
     <h2>Your recipes <span class="sub">— save a practice setup, reopen it any day</span></h2>
     <div id="recipes"></div>
   </div>
+
+  <section class="card about" data-rel-host>
+    <h2>What the Listening Lab is for</h2>
+    <p>Improvising is easier to learn when you can see what you played. Pick a chart (a one-chord groove, a 12-bar blues,
+    a minor blues or a jazz blues) in any key and at any tempo, and take a chorus on your own instrument. The lab listens
+    through the microphone and writes your notes out on the staff.</p>
+    <p>You decide what counts as a good note: the notes of a scale such as the major or minor pentatonic or the blues
+    scale, the blue note, or “anything goes” if you just want your solo written out. Each note comes back green if it fits
+    your rules, blue if it’s spice, and red if it’s outside them. Save a setup as a recipe and you can open the same practice
+    any day.</p>
+    <h2 style="margin-top:16px">Related</h2>
+    <p class="links">
+      <a href="learning-to-fly.html">Learning to Fly: the improvising course</a>
+      <a href="jam-track.html">Jam Track: a backing track for any chart</a>
+      <a href="Ear%20Training/play-it-back.html">Play It Back: hear a phrase, play it back</a>
+      <a href="phrasebook.html">Phrasebook: write down the licks you like</a>
+      <a href="blues-theory.html">Blues theory: the blues scale and the 12-bar</a>
+    </p>
+  </section>
 
   <div class="foot"><p><a href="training.html">&larr; Back to Practice</a></p></div>
 </div>
