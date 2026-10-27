@@ -162,7 +162,7 @@
         <button class="btn" id="leftBtn" aria-label="Scroll left">◀</button>
         <button class="btn" id="rightBtn" aria-label="Scroll right">▶</button>
       </div>
-      <div class="hint">Drag the keyboard, use ◀ ▶ or the arrow keys to scroll. Green = lined up.</div>
+      <div class="hint">Drag the keyboard, use ◀ ▶ or the arrow keys to scroll. Green = landed right.</div>
     </div>
   </div>
 
@@ -304,14 +304,15 @@
     piece.pegOff.forEach((off,i)=>{
       const x=ANCHOR+off, black=piece.pegBlack[i];
       const w=black?BLACK_W:WHITE_W-6, h=30;
-      const fill = ev.match ? '#1E9E6A' : (black?'#17140E':'#FBF7EE');
-      const stroke = ev.match ? '#0E5F40' : '#17140E';
-      gd.appendChild(mk('line',{x1:x,y1:pieceY+h/2,x2:x,y2:KEY_Y,stroke: ev.match?'#1E9E6A':'#B9AE97','stroke-width':2,'stroke-dasharray':'4 4',opacity:.7}));
+      // no live 'lined up' colour while falling: that would give the answer away
+      const fill = black?'#17140E':'#FBF7EE';
+      const stroke = '#17140E';
+      gd.appendChild(mk('line',{x1:x,y1:pieceY+h/2,x2:x,y2:KEY_Y,stroke:'#B9AE97','stroke-width':2,'stroke-dasharray':'4 4',opacity:.7}));
       g.appendChild(mk('rect',{x:x-w/2,y:pieceY-h/2,width:w,height:h,rx:3,fill,stroke,'stroke-width':2.5}));
     });
   }
 
-  function highlight(ev){ resetKeys(); tintKeys(ev.midis, ev.match?'#1E9E6A':'#9FB4F2'); }
+  function highlight(ev){ resetKeys(); tintKeys(ev.midis,'#9FB4F2'); }
 
   function spawn(){ makePiece(); state='fall'; const ev=evalK(); highlight(ev); drawPiece(ev);
     setFeedback('Scroll to line up '+piece.ch.name+'.',''); }
