@@ -330,8 +330,20 @@
     if(audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
   }
+  /* phones pause the audio clock a lot; a note scheduled on a paused clock may
+     never sound, or several fire at once when it wakes. So wait for it to run,
+     and only play the latest note asked for. */
+  let pluckTok = 0;
   function pluck(freq, when=0, dur=1.2, amp=0.3){
-    const c = ensureAudio(), t = c.currentTime + when;
+    const c = ensureAudio(), tok = ++pluckTok;
+    if(c.state !== 'running'){
+      c.resume().then(() => { if(tok === pluckTok) sound(c, freq, when, dur, amp); }).catch(()=>{});
+      return;
+    }
+    sound(c, freq, when, dur, amp);
+  }
+  function sound(c, freq, when, dur, amp){
+    const t = c.currentTime + when;
     const out = c.createGain(); out.connect(c.destination);
     out.gain.setValueAtTime(0.0001, t);
     out.gain.exponentialRampToValueAtTime(amp, t+0.02);
@@ -404,6 +416,7 @@
 
   function newRound(){
     clearKeys();
+    strings.forEach((_,i)=>setActive(i,false));
     makeRound();
     drawDot(false);
     phase='guess';
@@ -414,8 +427,9 @@
   function playNote(){
     ensureAudio();
     pluck(BASE[stringIdx] * Math.pow(2, fret/12));
-    setActive(stringIdx,true);
-    setTimeout(()=>setActive(stringIdx,false), 560);
+    const s = stringIdx;                            // this string, even if the next question has come up
+    setActive(s,true);
+    setTimeout(()=>setActive(s,false), 560);
   }
 
   function guess(pc){
