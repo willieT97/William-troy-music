@@ -87,6 +87,8 @@
 
   .feedback{ min-height:1.4em; font-family:var(--display); font-weight:700; font-size:1rem; text-align:center; color:var(--muted); margin:14px 0 8px; }
   .feedback.good{ color:var(--green); } .feedback.bad{ color:var(--pink); }
+  .lives{ letter-spacing:2px; font-size:.95rem; color:var(--pink); margin-left:8px; }
+  .lives .gone{ color:#C4B79B; }
 
   .traylabel{ text-align:center; font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
   .tray{ display:flex; flex-wrap:wrap; gap:9px; justify-content:center; min-height:66px; padding:10px; border:2px dashed #C4B79B; transition:opacity .15s ease; }
@@ -118,8 +120,8 @@
 
     <div class="panel">
       <div class="topbar">
-        <span><b id="levelName">Level 1 · The Cracked Half</b></span>
-        <span><b>Fixed </b><b id="sFixed">0</b>&nbsp;·&nbsp;<b>Streak </b><b id="sStreak">0</b>&nbsp;·&nbsp;<b>Best </b><b id="sBest">0</b></span>
+        <span><b id="levelName">Level 1 · The Cracked Half</b><span class="lives" id="lives" title="lives"></span></span>
+        <span><b>Fixed </b><b id="sFixed">0</b>&nbsp;·&nbsp;<b>Run </b><b id="sStreak">0</b>&nbsp;·&nbsp;<b>Best </b><b id="sBest">0</b></span>
       </div>
 
       <div class="prompt" id="prompt">Tap the cracked plank to pull it out.</div>
@@ -138,7 +140,7 @@
         <button class="btn" id="clearBtn">Clear gap</button>
         <button class="btn" id="newBtn">New bar</button>
       </div>
-      <div class="hint">Pull out the cracked note, then lay smaller planks to rebuild its length — the exact-size plank isn't in your pile.</div>
+      <div class="hint">Pull out the cracked note, then lay smaller planks to rebuild its length — the exact-size plank isn't in your pile. Lay one that's too long and you lose a life.</div>
     </div>
   </div>
 
@@ -149,6 +151,8 @@
    Pull the broken plank out, then rebuild its length from smaller planks
    (never the exact-equal note), so you think in equivalences: a broken
    half note becomes two crotchets, a crotchet becomes two quavers…
+   The pile holds spare planks too, some longer than the gap: lay one that
+   overshoots and you lose a life. Three lives; the run is the bars fixed.
    ==================================================================== */
 
   // shrinks on narrow screens so a 4-beat beam plus the time-signature badge
@@ -159,11 +163,11 @@
   const EPS=1e-6;
 
   const LEVELS=[
-    {name:'The Cracked Half', meters:['4/4'],            barDurs:[2,1],        fill:[1,0.5],           decoys:0, adv:4},
-    {name:'Splinters',        meters:['4/4','3/4'],      barDurs:[2,1],        fill:[1,0.5],           decoys:1, adv:4},
-    {name:'Dotted Timber',    meters:['4/4','3/4'],      barDurs:[2,1.5,1],    fill:[1.5,1,0.75,0.5],  decoys:1, adv:5},
-    {name:'Compound',         meters:['6/8'],            barDurs:[1.5,1,0.5],  fill:[1,0.75,0.5,0.25], decoys:1, adv:5},
-    {name:'Fine Grain',       meters:['4/4','3/4','5/8'],barDurs:[2,1.5,1,0.5],fill:[1,0.75,0.5,0.25], decoys:2, adv:5},
+    {name:'The Cracked Half', meters:['4/4'],            barDurs:[2,1],        fill:[1,0.5],           decoys:3, spares:[1.5],     adv:4},
+    {name:'Splinters',        meters:['4/4','3/4'],      barDurs:[2,1],        fill:[1,0.5],           decoys:3, spares:[1.5,3],   adv:4},
+    {name:'Dotted Timber',    meters:['4/4','3/4'],      barDurs:[2,1.5,1],    fill:[1.5,1,0.75,0.5],  decoys:4, spares:[2,3],     adv:5},
+    {name:'Compound',         meters:['6/8'],            barDurs:[1.5,1,0.5],  fill:[1,0.75,0.5,0.25], decoys:4, spares:[1.5,2],   adv:5},
+    {name:'Fine Grain',       meters:['4/4','3/4','5/8'],barDurs:[2,1.5,1,0.5],fill:[1,0.75,0.5,0.25], decoys:5, spares:[1.5,2,3], adv:5},
   ];
 
   const el=id=>document.getElementById(id);
@@ -198,7 +202,10 @@
   }
 
   // ---- state ----
+  // streak = bars fixed this run (three lives); best = best run this visit
   let levelIdx=0, fixed=0, streak=0, best=0, puz=null, tray=[], bid=0, winLock=false;
+  const LIVES_MAX=3; let lives=LIVES_MAX;
+  function renderLives(){ let h=''; for(let i=0;i<LIVES_MAX;i++) h+= i<lives ? '♥' : '<span class="gone">♡</span>'; el('lives').innerHTML=h; }
 
   function trySolution(total,durs){ let rem=total,sol=[],g=0;
     while(rem>EPS){ const fit=durs.filter(d=>d<=rem+EPS); if(!fit.length)return null;
@@ -222,7 +229,10 @@
     let sol=null,g=0; while(!sol && g++<300) sol=trySolution(brokenDur,fillDurs);
     if(!sol) sol=[brokenDur/2,brokenDur/2];
     const pieces=sol.map(d=>({dur:d, id:'p'+(bid++)}));
-    for(let i=0;i<lv.decoys;i++) pieces.push({dur:fillDurs[rnd(fillDurs.length)], id:'p'+(bid++)});
+    // spares: the level's filler and bar sizes plus a few longer ones, never the
+    // forbidden exact plank, so some overshoot the gap and laying them costs a life
+    const spare=[...new Set(lv.fill.concat(lv.barDurs, lv.spares))].filter(d=>Math.abs(d-brokenDur)>EPS && d<=total);
+    for(let i=0;i<lv.decoys;i++) pieces.push({dur:spare[rnd(spare.length)], id:'p'+(bid++)});
     shuffle(pieces);
     puz={total, tokens, brokenIndex, brokenDur, removed:false, placed:[]}; tray=pieces; winLock=false;
     el('timesig').innerHTML='<span>'+N+'</span><span>'+D+'</span>';
@@ -262,7 +272,12 @@
   function place(id){
     if(!puz.removed){ shake(); setFeedback('Pull the cracked plank out first.','bad'); return; }
     const i=tray.findIndex(b=>b.id===id); if(i<0||winLock) return; const b=tray[i];
-    if(used()+b.dur > puz.brokenDur+EPS){ shake(); setFeedback('Too long — only '+fmt(puz.brokenDur-used())+' beat(s) of gap left.','bad'); return; }
+    if(used()+b.dur > puz.brokenDur+EPS){
+      shake(); lives--; renderLives();
+      setFeedback('Too long — that '+NAME[b.dur]+' is '+fmt(b.dur)+' beat'+(b.dur===1?'':'s')+', only '+fmt(puz.brokenDur-used())+' left.  −1 life','bad');
+      if(lives<=0) gameOver();
+      return;
+    }
     tray.splice(i,1); puz.placed.push(b); render();
     if(Math.abs(used()-puz.brokenDur)>=EPS) setFeedback(fmt(puz.brokenDur-used())+' beat(s) still open.','');
   }
@@ -284,28 +299,32 @@
   el('beam').addEventListener('click', e=>{ const bp=e.target.closest('.plank.broken'); if(bp){ removeBroken(); return; } const p=e.target.closest('.gapcell .plank'); if(p) unplace(p.dataset.id); });
   el('tray').addEventListener('click', e=>{ const t=e.target.closest('.tile'); if(t) place(t.dataset.id); });
   el('clearBtn').addEventListener('click', ()=>{ if(winLock||!puz.removed) return; tray=tray.concat(puz.placed); puz.placed=[]; render(); setFeedback('',''); });
-  el('newBtn').addEventListener('click', ()=>{ streak=0; genPuzzle(); });
+  el('newBtn').addEventListener('click', ()=>{ if(winLock) return; genPuzzle(); });   // skip this bar: no points, run goes on
+
+  function gameOver(){
+    winLock=true; el('tray').className='tray locked';
+    const run=streak;
+    el('prompt').textContent='Out of lives!';
+    setFeedback('Out of lives — you fixed '+run+' bar'+(run===1?'':'s')+'. Starting again…','bad');
+    setTimeout(()=>{ fixed=0; streak=0; levelIdx=0; lives=LIVES_MAX; renderLives(); genPuzzle(); }, 2200);
+  }
 
   function setFeedback(m,c){ const f=el('feedback'); f.textContent=m; f.className='feedback'+(c?' '+c:''); }
   function updateHud(){ el('sFixed').textContent=fixed; el('sStreak').textContent=streak; el('sBest').textContent=best; }
 
-  genPuzzle();
+  renderLives(); genPuzzle();
 
-/* ---- leaderboard: best streak ---- */
+/* ---- leaderboard: bars fixed in a run (recorded when lives run out) ---- */
 (function(){
   if(typeof HiScores==='undefined') return;
   var GAME='fix-the-plank';
   var host=document.querySelector('.score')||document.querySelector('.panel')||document.body;
   var box=document.createElement('div');
   if(host.parentNode){ host.parentNode.insertBefore(box, host.nextSibling); } else { host.appendChild(box); }
-  var board=HiScores.mountBoard(box, GAME, {n:5, title:'Longest Streaks', fixed:true});
+  var board=HiScores.mountBoard(box, GAME, {n:5, title:'Bars Fixed', fixed:true});
   if(HiScores.track) HiScores.track(GAME, function(){ return (typeof streak==='number')?streak:0; });   // not lost if they leave mid-run
-  var prev=(typeof streak==='number')?streak:0;
-  setInterval(function(){
-    var s=(typeof streak==='number')?streak:0;
-    if(s<prev && prev>0){ board.submitIfHigh(prev); }
-    prev=s;
-  }, 250);
+  var _go=gameOver;
+  gameOver=function(){ var run=streak; _go(); board.submitIfHigh(run); };
 })();
 </script>
 <!-- more like this, at the foot of the page -->
