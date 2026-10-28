@@ -215,7 +215,8 @@
 /* ====================================================================
    CHORD CATAPULT (piano) — launch a note in a gravity arc and strike the
    keys that spell the named chord. Ten fixed levels; clear each by building
-   3 chords cleanly (no wrong notes). Twists: tree obstacle, hidden spelling,
+   3 chords cleanly (no wrong notes). Hints fade as you climb (key letters,
+   then the chord letters one by one). Twists: tree obstacle,
    ordered / inversion hits, fading aim guide, crosswind, 7th chords.
    ==================================================================== */
 
@@ -247,24 +248,30 @@
   const HARD=SEV.concat(DIM7,NINTH);
   const POOLS={ wmaj:WMAJ, white:WHITE, all:ALL, dimaug:DIMAUG, sevenths:SEV, dim7:DIM7, ninth:NINTH, hard:HARD };
 
-  // ---- level ladder (twists accumulate; spelling stays hidden once dropped) ----
+  // ---- level ladder (twists accumulate). Hints fade as you climb:
+  //   keys — note letters printed on the keyboard (gone after level 2)
+  //   hide — how many chord letters are held back: one more each level from 4,
+  //          the 5th first, then the 3rd, then the root, until it's all theory ----
+  const NONE=99;
   const LEVELS=[
-    {name:'Warm-up',             pool:'wmaj',   tree:false, cloud:false, wind:false, spell:true,  order:'none'},
-    {name:'Minor Key',           pool:'white',  tree:false, cloud:false, wind:false, spell:true,  order:'none'},
-    {name:'In the Trees',        pool:'white',  tree:true,  cloud:false, wind:false, spell:true,  order:'none'},
-    {name:'Accidentals',         pool:'all',    tree:true,  cloud:false, wind:false, spell:true,  order:'none'},
-    {name:'Dim &amp; Aug',       pool:'dimaug', tree:true,  cloud:false, wind:false, spell:true,  order:'none'},
-    {name:'In Order',            pool:'all',    tree:true,  cloud:false, wind:false, spell:true,  order:'ascending'},
-    {name:'Inversions',          pool:'all',    tree:true,  cloud:false, wind:false, spell:true,  order:'inversion'},
-    {name:'Name Only',           pool:'all',    tree:true,  cloud:false, wind:false, spell:false, order:'none'},
-    {name:'Clouds',              pool:'all',    tree:true,  cloud:true,  wind:false, spell:false, order:'none'},
-    {name:'Crosswind',           pool:'all',    tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
-    {name:'Sevenths',            pool:'sevenths',tree:true, cloud:true,  wind:true,  spell:false, order:'none'},
-    {name:'Diminished 7ths',     pool:'dim7',   tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
-    {name:'Ninth Chords',        pool:'ninth',  tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
-    {name:'Seventh Inversions',  pool:'sevenths',tree:true, cloud:true,  wind:true,  spell:false, order:'inversion'},
-    {name:"Maestro's Gauntlet",  pool:'hard',   tree:true,  cloud:true,  wind:true,  spell:false, order:'none'},
+    {name:'Warm-up',             pool:'wmaj',   tree:false, cloud:false, wind:false, keys:true,  hide:0,    order:'none'},
+    {name:'Minor Key',           pool:'white',  tree:false, cloud:false, wind:false, keys:true,  hide:0,    order:'none'},
+    {name:'In the Trees',        pool:'white',  tree:true,  cloud:false, wind:false, keys:false, hide:0,    order:'none'},
+    {name:'Accidentals',         pool:'all',    tree:true,  cloud:false, wind:false, keys:false, hide:1,    order:'none'},
+    {name:'Dim &amp; Aug',       pool:'dimaug', tree:true,  cloud:false, wind:false, keys:false, hide:2,    order:'none'},
+    {name:'In Order',            pool:'all',    tree:true,  cloud:false, wind:false, keys:false, hide:NONE, order:'ascending'},
+    {name:'Inversions',          pool:'all',    tree:true,  cloud:false, wind:false, keys:false, hide:NONE, order:'inversion'},
+    {name:'Name Only',           pool:'all',    tree:true,  cloud:false, wind:false, keys:false, hide:NONE, order:'none'},
+    {name:'Clouds',              pool:'all',    tree:true,  cloud:true,  wind:false, keys:false, hide:NONE, order:'none'},
+    {name:'Crosswind',           pool:'all',    tree:true,  cloud:true,  wind:true,  keys:false, hide:NONE, order:'none'},
+    {name:'Sevenths',            pool:'sevenths',tree:true, cloud:true,  wind:true,  keys:false, hide:NONE, order:'none'},
+    {name:'Diminished 7ths',     pool:'dim7',   tree:true,  cloud:true,  wind:true,  keys:false, hide:NONE, order:'none'},
+    {name:'Ninth Chords',        pool:'ninth',  tree:true,  cloud:true,  wind:true,  keys:false, hide:NONE, order:'none'},
+    {name:'Seventh Inversions',  pool:'sevenths',tree:true, cloud:true,  wind:true,  keys:false, hide:NONE, order:'inversion'},
+    {name:"Maestro's Gauntlet",  pool:'hard',   tree:true,  cloud:true,  wind:true,  keys:false, hide:NONE, order:'none'},
   ];
+  // which chord tones (by root-position index) are held back: the top ones go first
+  const heldBack=(n,hide)=>{ const h=new Set(); for(let j=n-1;j>=0 && h.size<hide;j--) h.add(j); return h; };
   const CLEAR_REQ=3;
   const INV_LABEL=['root position','1st inversion','2nd inversion','3rd inversion'];
 
@@ -410,8 +417,8 @@
       if(round.order!=='none' && i>0){ c.appendChild(mk2('span','arrow','→')); }
       const d=document.createElement('div');
       const shown=round.revealed[i];
-      d.className='chip'+(shown?' hit':(round.spell?'':' mystery'));
-      d.textContent= shown ? round.nameOf[pc] : (round.spell? round.nameOf[pc] : '?');
+      d.className='chip'+(shown?' hit':(round.given[i]?'':' mystery'));
+      d.textContent= shown || round.given[i] ? round.nameOf[pc] : '?';
       if(shown) d.classList.add('hit');
       d.id='chip'+i;
       c.appendChild(d);
@@ -471,7 +478,7 @@
     round={
       name:chord.name, pcs:chord.pcs.slice(), need:new Set(chord.pcs),
       display, revealed:display.map(()=>false), next:0, guide:true,
-      order:cfg.order, inv, spell:cfg.spell,
+      order:cfg.order, inv,
       tree: cfg.tree?makeTree():null,
       cloud: cfg.cloud?makeCloud():null,
       wind: cfg.wind? ((rnd(2)?1:-1)*(0.03+Math.random()*0.05)) : 0,
@@ -479,9 +486,11 @@
     };
     round.hit=new Set();
     round.nameOf={}; chord.names.forEach((nm,j)=> round.nameOf[chord.pcs[j]]=nm);
+    const held=heldBack(chord.pcs.length, cfg.hide);
+    round.given=display.map(pc=>!held.has(chord.pcs.indexOf(pc)));
     computeVoicing();
     state='aim';
-    resetKeys(); showKeyLetters(true); drawObstacles(); drawHud(); renderChips(); updateLevelBar();
+    resetKeys(); showKeyLetters(cfg.keys); drawObstacles(); drawHud(); renderChips(); updateLevelBar();
     el('chordName').textContent=chord.name + (cfg.order==='inversion'? ' / '+INV_LABEL[inv] : '');
     setFeedback('Build '+chord.name+orderName()+'.','');
     ball={x:AX,y:AY,vx:0,vy:0};
@@ -528,6 +537,13 @@
   function startLevel(idx){
     curLevel=idx; cleanCount=0; lives=LIVES_MAX;
     renderLives(); updateLevelBar(); newRound();
+    // say so when a hint fades
+    const cfg=LEVELS[idx], prev=LEVELS[idx-1];
+    const fade = !prev ? ''
+      : (prev.keys && !cfg.keys) ? 'The keys lose their letters now.'
+      : (cfg.hide>prev.hide) ? (cfg.hide>=NONE ? 'No letters given now — it’s all theory.' : 'One less letter given.')
+      : '';
+    if(fade) setFeedback(fade+'  Build '+round.name+orderName()+'.','');
   }
   function endShot(){ state='done'; setTimeout(()=>{ if(state==='done'){ state='aim'; ball={x:AX,y:AY,vx:0,vy:0}; drawAim(); drawBall(); } }, 480); }
 
