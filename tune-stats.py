@@ -90,9 +90,9 @@ def build():
     answer = (f'Mostly D major and G major. Of the {n} popular session tunes I’ve gathered here, {dg} use the key '
               f'signature of D or G major, one or two sharps. About a quarter are in E or A dorian, which use those same notes. '
               f'That’s why I start every new banjo student on the D scale, then G: between them, they cover nearly every tune at a session.')
-    title = f'What Key Are Irish Session Tunes In? Keys of {n} Trad Tunes | The Music Arcade'
+    title = 'What Key Are Irish Session Tunes In? | The Music Arcade'
     desc = (f'{dg} of {n} popular Irish session tunes use the key signature of D or G major. '
-            f'Keys, modes and tune types counted from real tunes, by tenor banjo teacher William Troy.')
+            f'Keys, modes and tune types, counted by tenor banjo teacher William Troy.')
     faq = [
         ('What is the most common key in Irish traditional music?',
          f'D major, then G major. In this collection {keys["D major"]} of {n} tunes are in D major and {keys["G major"]} in G major, '

@@ -181,7 +181,10 @@ UNLISTED = {
 SKIP_DIRS = ('email-templates/', 'supabase/', 'chorales/', 'songs/', 'tunes/', 'node_modules/')
 
 def url_for(path):
-  return SITE if path == 'index.html' else SITE + quote(path)
+  if path == 'index.html': return SITE
+  # the menus link to /learn/ and /tunes/, so a folder's index page goes by the folder's address
+  if path.endswith('/index.html'): return SITE + quote(path[:-len('index.html')])
+  return SITE + quote(path)
 
 def shelved_hrefs():
   src = open(os.path.join(ROOT, 'tools.js'), encoding='utf-8').read()
