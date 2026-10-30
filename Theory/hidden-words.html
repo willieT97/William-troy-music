@@ -43,6 +43,7 @@
   .chip.best b{color:var(--blue)}
 
   /* ===== staff ===== */
+  .relhost{width:100%;max-width:660px}
   .stafframe{width:100%;max-width:660px;background:#fff;border:4px solid var(--ink);box-shadow:var(--shadow);padding:10px 8px 6px}
   .staff{position:relative;height:210px}
   .clef{position:absolute;left:12px;top:24px;height:118px;pointer-events:none}
@@ -140,6 +141,10 @@
     Every note sits on its own line or space: <b>E</b> 1st line, <b>F</b> 1st space, <b>G</b> 2nd line,
     <b>A</b> 2nd space, <b>B</b> 3rd line, <b>C</b> 3rd space, <b>D</b> 4th line. Spell the word and it plays back to you.
   </div>
+
+  <div id="hsBox"></div>
+  <!-- "more like this" goes here, under the game, not inside the staff box -->
+  <div class="relhost" data-rel-host></div>
 
 <script src="../hi-scores.js"></script>
 <script>
@@ -309,10 +314,8 @@
 
   /* ---- leaderboard: best streak ---- */
   if(typeof HiScores!=='undefined'){
-    var _hsHost=document.querySelector('.score')||document.querySelector('.panel')||document.body;
-    var _hsBox=document.createElement('div');
-    if(_hsHost.parentNode){ _hsHost.parentNode.insertBefore(_hsBox,_hsHost.nextSibling); } else { _hsHost.appendChild(_hsBox); }
-    var _hsBoard=HiScores.mountBoard(_hsBox, 'hidden-words', {n:5,title:'Longest Streaks',fixed:true});
+    var _hsBox=document.getElementById('hsBox');   // no .panel here: anchor the side panel to the staff
+    var _hsBoard=HiScores.mountBoard(_hsBox, 'hidden-words', {n:5,title:'Longest Streaks',fixed:true,anchor:document.querySelector('.stafframe')});
     if(HiScores.track) HiScores.track('hidden-words', function(){ return (typeof streak==='number')?streak:0; });   // not lost if they leave mid-run
     var _hsPrev=(typeof streak==='number')?streak:0;
     setInterval(function(){ var s=(typeof streak==='number')?streak:0; if(s<_hsPrev&&_hsPrev>0){ _hsBoard.submitIfHigh(_hsPrev); } _hsPrev=s; },250);
