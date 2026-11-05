@@ -232,6 +232,11 @@
   link.href = '/start.html';
   link.textContent = saved ? 'See your plan →' : "Answer three questions and we'll point you somewhere →";
   foot.appendChild(link);
+  foot.appendChild(document.createTextNode(' · '));
+  var pv = document.createElement('a');
+  pv.href = '/privacy.html';
+  pv.textContent = 'Privacy';
+  foot.appendChild(pv);
   inner.appendChild(foot);
 
   box.appendChild(inner);

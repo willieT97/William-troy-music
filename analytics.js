@@ -64,7 +64,7 @@
     var txt = document.createElement('div');
     txt.style.cssText = 'flex:1 1 240px;min-width:200px;';
     txt.innerHTML = 'This site uses cookies to measure anonymous visits with Google Analytics. ' +
-      'No ads, no tracking beyond that.';
+      'No ads, no tracking beyond that. <a href="/privacy.html" style="color:inherit;font-weight:700;">Privacy</a>';
 
     var btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:8px;flex:0 0 auto;';

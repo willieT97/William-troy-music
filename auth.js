@@ -695,6 +695,9 @@
         doReset(em).then(function (r) { if (r && r.error) return setMsg(msg, prettyErr(r.error), 'err'); setMsg(msg, 'Check your email for a link to reset your password.', 'ok'); })
           .catch(function (er) { setMsg(msg, prettyErr(er), 'err'); }); });
       cardBody.appendChild(fp);
+    } else {
+      var pv = el('a', 'maa-forgot', 'How your account data is used'); pv.href = '/privacy.html'; pv.target = '_blank';
+      cardBody.appendChild(pv);
     }
 
     form.addEventListener('submit', function (e) {
