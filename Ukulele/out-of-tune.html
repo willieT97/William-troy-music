@@ -109,13 +109,6 @@
   .btn:disabled{ opacity:.4; box-shadow:none; cursor:default; }
   .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; }
 
-  .diffrow{
-    display:flex; align-items:center; gap:10px; justify-content:center;
-    font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
-    text-transform:uppercase; color:var(--muted);
-  }
-  .diffrow b{ color:var(--ink); }
-  .diffrow > span{ text-align:center; }
 
   .askbox{
     border:2.5px solid var(--ink); background:#FBF7EE; padding:14px;
@@ -240,7 +233,7 @@
       </div>
 
       <div class="askbox tutbox hidden" id="tutbox" aria-live="polite">
-        <div class="askq">Level 6: sharp or flat?</div>
+        <div class="askq">New: sharp or flat?</div>
         <p>From now on, once you've found the string, say which way it's out.</p>
         <p><strong>♯ Sharp</strong> = too high, so you'd tune it down.<br><strong>♭ Flat</strong> = too low, so you'd tune it up.</p>
         <p>Have a listen. Each plays the <span id="tutName">A</span> string in tune, then out:</p>
@@ -256,10 +249,6 @@
         <button class="btn" id="againBtn" disabled>↺ Hear again</button>
         <button class="btn" id="strumBtn" disabled>♬ Strum</button>
       </div>
-
-      <div class="diffrow">
-        <span>level <b id="lvlNum">1</b> · out by ~<b id="lvlCents">50</b>¢ · <span id="lvlAsk">find the string</span></span>
-      </div>
     </div>
 
     <div class="score">
@@ -273,7 +262,7 @@
     <h2>How this game helps</h2>
     <p>When your ukulele sounds wrong, the quickest fix is to work out which string is off and whether it needs to go up or down. That's an ear skill, and it's what this game trains.</p>
     <p>Out of Tune plays the four strings (G C E A, with the high G) with one of them out. Tap the string you think is wrong, then decide whether it was sharp (too high) or flat (too low). <em>Compare again</em> plays it beside how it should sound.</p>
-    <p>It gets harder as you go. The first rounds put the string a quarter-tone out and you only have to find it. From level 6 you also say sharp or flat, and each right answer brings the string closer to true, down to about a tenth of a semitone. A wrong answer takes you back to level 1. Once you can hear that, tuning by ear gets quick, and so does spotting when a clip-on tuner has misread a string.</p>
+    <p>It gets harder as you go. The first rounds put the string a quarter-tone out and you only have to find it. After five right in a row you also say sharp or flat, and each right answer brings the string closer to true, down to about a tenth of a semitone. A wrong answer starts you back at the beginning. Once you can hear that, tuning by ear gets quick, and so does spotting when a clip-on tuner has misread a string.</p>
 
     <div class="more">
       <h2>More ukulele games</h2>
@@ -378,7 +367,7 @@
     if(then === 'round'){
       clearMarks(); badIndex = -1;   // nothing to replay until the round starts
       el('againBtn').disabled = true; el('strumBtn').disabled = true;
-      setFeedback('Nice run! Something new at level 6.', 'good');
+      setFeedback('Five in a row! Something new.', 'good');
     }
   }
   function closeTutorial(){
@@ -467,15 +456,8 @@
   function hideBox(){ el('askbox').classList.add('hidden'); }
 
   function setFeedback(msg,cls){ const f=el('feedback'); f.textContent=msg; f.className='feedback'+(cls?' '+cls:''); }
-  function updateScore(){ el('sCorrect').textContent=correct; el('sStreak').textContent=streak; el('sBest').textContent=best; showLevel(); }
+  function updateScore(){ el('sCorrect').textContent=correct; el('sStreak').textContent=streak; el('sBest').textContent=best; }
 
-  // the level shown is the one the NEXT round will be played at
-  function showLevel(){
-    const L = streak + 1;
-    el('lvlNum').textContent = L;
-    el('lvlCents').textContent = Math.round(centsFor(L));
-    el('lvlAsk').textContent = L < ASK_DIR_FROM ? 'find the string' : 'string + sharp or flat';
-  }
 
   // ---- wiring ----
   document.querySelectorAll('.hit').forEach(h => h.addEventListener('click', () => guess(+h.dataset.i)));
