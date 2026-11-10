@@ -114,20 +114,17 @@
     font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
     text-transform:uppercase; color:var(--muted);
   }
-  .seg{ display:flex; border:2px solid var(--ink); }
-  .seg button{
-    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em;
-    text-transform:uppercase; padding:7px 14px; border:0;
-    background:var(--paper); cursor:pointer; color:var(--ink);
-  }
-  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
-  .seg button:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+  .diffrow b{ color:var(--ink); }
+  .diffrow > span{ text-align:center; }
 
   .askbox{
     border:2.5px solid var(--ink); background:#FBF7EE; padding:14px;
     margin:0 0 14px; text-align:center; box-shadow:4px 4px 0 var(--ink);
   }
   .askbox.hidden{ display:none; }
+  /* one-off sharp/flat explainer, shown the first time a run reaches level 6 */
+  .tutbox p{ margin:0 0 10px; font-size:.95rem; line-height:1.4; }
+  .tutbox .tutgo{ width:100%; margin-top:2px; }
   .askq{ font-family:var(--display); font-weight:700; font-size:1.05rem; margin-bottom:12px; }
   .askbtns{ display:flex; gap:10px; margin-bottom:10px; }
   .ask{
@@ -243,6 +240,19 @@
           <button class="ask flat" id="flatBtn">♭ Flat</button>
         </div>
         <button class="askcompare" id="compareBtn">↺ Compare again</button>
+        <button class="askcompare" id="tutAgainBtn">What's sharp / flat?</button>
+      </div>
+
+      <div class="askbox tutbox hidden" id="tutbox" aria-live="polite">
+        <div class="askq">Level 6: sharp or flat?</div>
+        <p>From now on, once you've found the string, say which way it's out.</p>
+        <p><strong>♯ Sharp</strong> = too high, so you'd tune it down.<br><strong>♭ Flat</strong> = too low, so you'd tune it up.</p>
+        <p>Have a listen. Each plays the <span id="tutName">A</span> string in tune, then out:</p>
+        <div class="askbtns">
+          <button class="ask sharp" id="tutSharpBtn">▶ Hear sharp</button>
+          <button class="ask flat" id="tutFlatBtn">▶ Hear flat</button>
+        </div>
+        <button class="btn primary tutgo" id="tutGoBtn">Got it, play the round ▶</button>
       </div>
 
       <div class="controls">
@@ -252,11 +262,7 @@
       </div>
 
       <div class="diffrow">
-        <span>ears:</span>
-        <div class="seg" role="group" aria-label="Difficulty">
-          <button id="easyBtn" aria-pressed="true">Easy</button>
-          <button id="hardBtn" aria-pressed="false">Hard</button>
-        </div>
+        <span>level <b id="lvlNum">1</b> · out by ~<b id="lvlCents">50</b>¢ · <span id="lvlAsk">find the string</span></span>
       </div>
     </div>
 
@@ -271,7 +277,7 @@
     <h2>How this game helps</h2>
     <p>Knowing your banjo is out is half the job. The other half is knowing which string, and which way to turn the peg.</p>
     <p>Out of Tune plays the four GDAE strings with one of them off. Tap the string you think is wrong, then say whether it was sharp (too high) or flat (too low). <em>Compare again</em> plays it next to how it should sound, so you can hear the difference.</p>
-    <p>That's exactly what you do when tuning by ear, at home or before a session: find the string, decide up or down, turn. <strong>Easy</strong> puts the string a quarter-tone out; <strong>Hard</strong> narrows it to about a fifth of a semitone.</p>
+    <p>That's exactly what you do when tuning by ear, at home or before a session: find the string, decide up or down, turn. It gets harder as you go: at first the string is a quarter-tone out and you only have to find it. From level 6 you also say sharp or flat, and each right answer brings the string closer to true, down to about a tenth of a semitone. A wrong answer takes you back to level 1.</p>
     <p>GDAE is the fiddle and mandolin tuning too, so the same ear carries straight over.</p>
 
     <div class="more">
@@ -296,13 +302,21 @@
    Self-contained: the four strings are synthesised plucks (exact
    frequencies), with one detuned by DETUNE cents. Tunables up top:
      BASE      open-string pitches (GDAE, low to high)
-     DETUNE    cents off for easy / hard
+     DETUNE    the per-level difficulty ramp (see below)
      STEP      seconds between strings in the sequence
    ==================================================================== */
 
-  const BASE  = [98.00, 146.83, 220.00, 329.63];   // G2 D3 A3 E4 — real tenor banjo pitch, an octave below the fiddle
+  // G2 D3 A3 E4 — real tenor banjo pitch, an octave below the fiddle; exact from A = 440
+  const BASE  = [43, 50, 57, 64].map(m => 440 * Math.pow(2, (m - 69) / 12));
   const NAMES = ['G','D','A','E'];
-  const DETUNE = { easy: 50, hard: 22 };             // cents
+  // Difficulty climbs with the current streak (level = streak + 1):
+  //   level 1 = 50 cents out (old Easy), level 11 = 22 cents (old Hard),
+  //   easing on down to a 10-cent floor.
+  //   Levels 1-5: just find the string. From level 6: also say sharp or flat.
+  // A miss resets the streak, so every run starts at level 1 (keeps streaks fair).
+  const DETUNE = { start: 50, at11: 22, floor: 10 };
+  const ASK_DIR_FROM = 6;
+  const centsFor = lvl => Math.max(DETUNE.floor, DETUNE.start * Math.pow(DETUNE.at11/DETUNE.start, (lvl-1)/10));
   const STEP = 0.7;                                  // seconds between strings
 
   // ---- audio ----
@@ -328,14 +342,14 @@
   }
 
   // ---- state ----
-  let badIndex = -1, badDir = 1, diff = 'easy';
+  let badIndex = -1, badDir = 1, roundLevel = 1;   // level is fixed when the round starts
   let phase = 'idle', triedWrong = false;   // 'idle' | 'string' | 'direction' | 'done'
   let correct = 0, streak = 0, best = 0;
   const el = id => document.getElementById(id);
   const strings = [0,1,2,3].map(i => el('str'+i));
 
   const freqFor = (i, withDetune) =>
-    BASE[i] * ((withDetune && i === badIndex) ? Math.pow(2, DETUNE[diff]*badDir/1200) : 1);
+    BASE[i] * ((withDetune && i === badIndex) ? Math.pow(2, centsFor(roundLevel)*badDir/1200) : 1);
 
   function setActive(i, on){ strings[i].classList.toggle('active', on); }
 
@@ -356,11 +370,45 @@
 
   function clearMarks(){ strings.forEach(s => s.classList.remove('correct','wrong','active')); }
 
+  // ---- level-6 tutorial: sharp vs flat, shown once per browser ----
+  const TUT_KEY = 'ma_outoftune_sharpflat_tut', TUT_STRING = 2;
+  let tutSeenMem = false, tutThen = 'round';
+  function tutSeen(){ if(tutSeenMem) return true; try { return localStorage.getItem(TUT_KEY) === '1'; } catch(e){ return false; } }
+  function markTutSeen(){ tutSeenMem = true; try { localStorage.setItem(TUT_KEY, '1'); } catch(e){} }
+  function showTutorial(then){
+    tutThen = then; phase = 'tutorial';
+    hideBox();
+    el('tutName').textContent = NAMES[TUT_STRING];
+    el('tutbox').classList.remove('hidden');
+    if(then === 'round'){
+      clearMarks(); badIndex = -1;   // nothing to replay until the round starts
+      el('againBtn').disabled = true; el('strumBtn').disabled = true;
+      setFeedback('Nice run! Something new at level 6.', 'good');
+    }
+  }
+  function closeTutorial(){
+    if(phase !== 'tutorial') return;
+    markTutSeen();
+    el('tutbox').classList.add('hidden');
+    if(tutThen === 'question'){ phase = 'direction'; showBox(); }
+    else { phase = 'idle'; newRound(); }
+  }
+  function tutDemo(dir){   // in tune, then a quarter-tone sharp or flat
+    ensureAudio();
+    const f = BASE[TUT_STRING];
+    pluck(f, 0, 1.1);
+    pluck(f * Math.pow(2, dir*50/1200), 0.78, 1.1);
+    setActive(TUT_STRING, true);
+    setTimeout(() => setActive(TUT_STRING, false), 1700);
+  }
+
   function newRound(){
     ensureAudio();
+    if(streak + 1 === ASK_DIR_FROM && !tutSeen()){ showTutorial('round'); return; }
     clearMarks(); hideBox();
     badIndex = Math.floor(Math.random()*4);
     badDir   = Math.random() < 0.5 ? 1 : -1;
+    roundLevel = streak + 1;
     phase = 'string'; triedWrong = false;
     el('againBtn').disabled = false;
     el('strumBtn').disabled = false;
@@ -372,6 +420,16 @@
     if(phase !== 'string') return;
     if(i === badIndex){
       strings[i].classList.add('correct');
+      if(roundLevel < ASK_DIR_FROM){
+        // early levels: finding the string wins the round; still say which way it was
+        phase = 'done';
+        correct++;
+        if(!triedWrong){ streak++; best = Math.max(best, streak); }
+        setFeedback('Right! The ' + NAMES[i] + ' string was ' + (badDir > 0 ? 'sharp' : 'flat') + '. Here it is, then in tune.', 'good');
+        setTimeout(playCompare, 320);   // hear it, then how it should sound
+        updateScore();
+        return;
+      }
       phase = 'direction';
       el('askq').textContent = 'The ' + NAMES[i] + ' string — was it sharp or flat?';
       showBox();
@@ -414,12 +472,14 @@
   function hideBox(){ el('askbox').classList.add('hidden'); }
 
   function setFeedback(msg,cls){ const f=el('feedback'); f.textContent=msg; f.className='feedback'+(cls?' '+cls:''); }
-  function updateScore(){ el('sCorrect').textContent=correct; el('sStreak').textContent=streak; el('sBest').textContent=best; }
+  function updateScore(){ el('sCorrect').textContent=correct; el('sStreak').textContent=streak; el('sBest').textContent=best; showLevel(); }
 
-  function setDiff(d){
-    diff = d;
-    el('easyBtn').setAttribute('aria-pressed', d==='easy');
-    el('hardBtn').setAttribute('aria-pressed', d==='hard');
+  // the level shown is the one the NEXT round will be played at
+  function showLevel(){
+    const L = streak + 1;
+    el('lvlNum').textContent = L;
+    el('lvlCents').textContent = Math.round(centsFor(L));
+    el('lvlAsk').textContent = L < ASK_DIR_FROM ? 'find the string' : 'string + sharp or flat';
   }
 
   // ---- wiring ----
@@ -427,11 +487,13 @@
   el('newBtn').addEventListener('click', newRound);
   el('againBtn').addEventListener('click', () => { if(badIndex>=0) playSequence(true); });
   el('strumBtn').addEventListener('click', () => { if(badIndex>=0) strum(true); });
-  el('easyBtn').addEventListener('click', () => setDiff('easy'));
-  el('hardBtn').addEventListener('click', () => setDiff('hard'));
   el('sharpBtn').addEventListener('click', () => guessDirection('sharp'));
   el('flatBtn').addEventListener('click', () => guessDirection('flat'));
   el('compareBtn').addEventListener('click', () => { if(badIndex>=0) playCompare(); });
+  el('tutAgainBtn').addEventListener('click', () => { if(phase === 'direction') showTutorial('question'); });
+  el('tutSharpBtn').addEventListener('click', () => tutDemo(1));
+  el('tutFlatBtn').addEventListener('click', () => tutDemo(-1));
+  el('tutGoBtn').addEventListener('click', closeTutorial);
   // keyboard: G C E A pick a string; then S/↑ = sharp, F/↓ = flat; Enter = new round
   window.addEventListener('keydown', e => {
     if(phase === 'string'){
@@ -442,6 +504,7 @@
       if(e.key === 'ArrowUp' || k === 'S'){ e.preventDefault(); guessDirection('sharp'); return; }
       if(e.key === 'ArrowDown' || k === 'F'){ e.preventDefault(); guessDirection('flat'); return; }
     }
+    if(phase === 'tutorial'){ if(e.key === 'Enter'){ e.preventDefault(); closeTutorial(); } return; }
     if(e.key === 'Enter' && (phase === 'idle' || phase === 'done')) newRound();
   });
 
