@@ -172,6 +172,7 @@ PRIVATE = {
   'rollbook.html', 'account.html', 'workshop-lab.html', 'reading.html', 'shelf.html',
   'learning-to-fly-listen.html', 'arcade-index.html', 'Theory/fix-the-bridge.html',
   'Theory/gap-fill.html', 'irish-releases-admin.html', 'lab.html',
+  'Theory/scale-brawl-puppets.html',
 }
 # old prototypes nothing links to any more: tagged, but kept out of the sitemap
 # (move one into PAGES with a real title/description if it comes back)

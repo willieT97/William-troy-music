@@ -288,6 +288,7 @@
   </section>
 
 <script src="/note-input.js"></script>
+<script src="/Theory/scale-brawl-puppet.js"></script>
 <script src="../hi-scores.js"></script>
 <script>
 (function(){
@@ -548,7 +549,15 @@
   let banner = null;            // {big, small, t, dur}
   let bubble = null;            // the Baron's speech {text, t}
   let sparks = [], floaters = [];
-  let shake = 0;
+  /* impact. The music and the notes run on the song clock and are never
+     paused; hit-stop and slow motion only freeze or slow what you SEE of the
+     fighters and the sparks, so a heavy hit can't throw your timing. */
+  let trauma = 0;               // screen shake builds with each hit and fades (offset ∝ trauma²)
+  let hitStop = 0, slowmo = 0;  // seconds left
+  let flash = 0;                // white flash, 0…1
+  let vdt = 0, vclock = 0;      // the visual clock: what hit-stop and slow-mo act on
+  const cam = {z:1, x:W/2, y:H/2, tz:1, tx:W/2, ty:H/2, hold:0};
+  let fx = [];                  // starbursts, streaks, rings, speed lines
   let pPose = {k:'idle', t:0}, bPose = {k:'idle', t:0};
   let roundWinner = null;
   let ribbon = null;            // a new belt, shown across the stage
@@ -582,7 +591,7 @@
   function startRound(){
     hp = {p:MAX_HP, b:MAX_HP}; shownHp = {p:MAX_HP, b:MAX_HP};
     clock = ROUND_SECS; volley = null; salvo = null; volleysThisRound = 0; tookDamageThisRound = false;
-    sparks = []; floaters = []; pPose = {k:'idle',t:0}; bPose = {k:'idle',t:0}; roundWinner = null;
+    sparks = []; fx = []; floaters = []; pPose = {k:'idle',t:0}; bPose = {k:'idle',t:0}; roundWinner = null;
     const label = bout > 1 && mode === 'ai' ? 'Bout ' + bout + ' · Round ' + round : 'Round ' + round;
     banner = rhythmRound()
       ? {big: label, small: 'On the beat! Play each note as it hits the ring', t:0, dur:2.4}
@@ -628,9 +637,10 @@
 
   // flight path: from the Baron's baton to the player's chest, with a little arc
   const HAND = {x:BX-62, y:FLOOR-128}, CHEST = {x:PX+30, y:FLOOR-118};
-  function pathAt(f){
-    const x = HAND.x + (CHEST.x - HAND.x)*f;
-    const y = HAND.y + (CHEST.y - HAND.y)*f - Math.sin(f*Math.PI)*46;
+  function pathAt(f, from){
+    const h = from || HAND;
+    const x = h.x + (CHEST.x - h.x)*f;
+    const y = h.y + (CHEST.y - h.y)*f - Math.sin(f*Math.PI)*46;
     return {x, y};
   }
   // and the way back: from your fist to the Baron's chest
@@ -712,11 +722,13 @@
         return;
       }
       if(x.aiBlock && songT >= x.aiAt){
-        x.st = 'blocked'; burst(x.x, x.y, '#F4EEE2', 12);
-        if(ac) baronTone(x.n.m); bPose = {k:'throw', t:0};
+        x.st = 'blocked'; burst(x.x, x.y, '#F4EEE2', 8);
+        impact(x.x, x.y, .35, {stop:0, c:'#FFFFFF', c2:'#CFC7B6', notes:2});
+        if(ac) baronTone(x.n.m); bPose = {k:'block', t:0};
         floaters.push({text:'BLOCKED', x:BX-40, y:FLOOR-215, t:0, c:'#CFC7B6'});
       } else if(x.t >= s.flight){
-        x.st = 'hit'; burst(BCHEST.x, BCHEST.y, '#FF4E86', 16);
+        x.st = 'hit'; burst(BCHEST.x, BCHEST.y, '#FF4E86', 10);
+        impact(BCHEST.x, BCHEST.y, 1, {c:'#FFFFFF', c2:'#FF4E86'});
         hurt('b', MY_DMG());
         floaters.push({text:'-' + MY_DMG(), x:BX-20, y:FLOOR-215, t:0, c:'#FF4E86'});
         addScore(60*bout);
@@ -754,7 +766,8 @@
         }
         tg.st = 'block'; tg.judge = Math.abs(d) <= PERFECT ? 'perfect' : 'good';
         if(volley.remote) send('res', {i:tg.idx, blocked:true});
-        burst(CHEST.x, CHEST.y, tg.judge === 'perfect' ? '#FFC53D' : '#F4EEE2', tg.judge === 'perfect' ? 20 : 12);
+        burst(CHEST.x, CHEST.y, tg.judge === 'perfect' ? '#FFC53D' : '#F4EEE2', tg.judge === 'perfect' ? 12 : 8);
+        impact(CHEST.x, CHEST.y, tg.judge === 'perfect' ? .55 : .3, {stop: tg.judge === 'perfect' ? .03 : 0, c:'#FFFFFF', c2: tg.judge === 'perfect' ? '#FFC53D' : '#CFC7B6', notes: tg.judge === 'perfect' ? 4 : 1});
         const pts = (tg.judge === 'perfect' ? 20 : 10)*bout;
         floaters.push({text: tg.judge === 'perfect' ? 'PERFECT' : (d < 0 ? 'GOOD · a bit early' : 'GOOD · a bit late'),
           x:PX+40, y:FLOOR-210, t:0, c: tg.judge === 'perfect' ? '#FFC53D' : '#F4EEE2'});
@@ -766,7 +779,8 @@
       tg.st = 'block';
       if(volley.remote) send('res', {i:tg.idx, blocked:true});
       const at = wasFlying ? {x:tg.x, y:tg.y} : HAND;
-      burst(at.x, at.y, '#FFC53D', 14);
+      burst(at.x, at.y, '#FFC53D', 8);
+      impact(at.x, at.y, .4, {stop:0, c:'#FFFFFF', c2:'#FFC53D', notes:2});
       const pts = 10*bout + (wasFlying ? Math.round(10*(1 - tg.t/volley.flight)) : 15);
       addScore(pts, at.x, at.y - 18);
       pPose = {k:'jab', t:0};
@@ -788,13 +802,39 @@
     if(who === 'p' && mode === 'pvp') send('hp', {hp: hp.p});   // you're the judge of your own health
     if(who === 'p'){ tookDamageThisRound = true; pPose = {k:'hurt', t:0}; }
     else bPose = {k:'hurt', t:0};
-    if(!small){ shake = REDUCED ? 0 : .25; thud(who === 'p' ? 70 : 90, .4, .25); }
-    else thud(200, .1, .06);
+    if(!small){ thud(who === 'p' ? 70 : 90, .4, .25); }
+    else { thud(200, .1, .06); addTrauma(.12); }
   }
+  function addTrauma(a){ if(!REDUCED) trauma = Math.min(1, trauma + a); }
+  // one call per hit: power ~ .3 (a block) … 1 (a hit) … 2 (a K.O.)
+  function impact(x, y, power, o){
+    o = o || {};
+    if(!REDUCED){
+      hitStop = Math.max(hitStop, o.stop != null ? o.stop : .035 + .045*Math.min(1, power));
+      addTrauma(.18 + .28*Math.min(1.5, power));
+    }
+    if(o.flash) flash = Math.max(flash, o.flash);
+    const c = o.c || '#FFFFFF', c2 = o.c2 || '#FFC53D';
+    fx.push({type:'star', x, y, t:0, life:.12 + .05*power, r:22 + 26*power, c, rot:Math.random()*Math.PI});
+    fx.push({type:'streaks', x, y, t:0, life:.2, n:Math.round(7 + 5*power), r:26 + 34*power, c:c2, seed:Math.random()*6.3});
+    fx.push({type:'ring', x, y, t:0, life:.28, r:18 + 30*power, c:c2});
+    noteBurst(x, y, o.notes != null ? o.notes : Math.round(3 + 4*power), c2);
+  }
+  // little ♪ ♫ flying out of a hit
+  function noteBurst(x, y, n, c){
+    const G = ['♪','♫','♩','♬'];
+    for(let i=0;i<n;i++){
+      const a = -Math.PI/2 + (Math.random()-.5)*2.6, sp = 120 + Math.random()*170;
+      sparks.push({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, t:0, life:.55 + Math.random()*.35, c,
+        glyph:G[i % G.length], size:15 + Math.random()*9, rot:(Math.random()-.5)*.6, spin:(Math.random()-.5)*7, g:520});
+    }
+  }
+  // the camera leans in on something for a moment
+  function camPunch(x, y, z, hold){ cam.tx = x; cam.ty = y; cam.tz = z; cam.hold = hold; }
   function burst(x, y, c, n){
     for(let i=0;i<n;i++){
       const a = Math.random()*Math.PI*2, s = 60 + Math.random()*160;
-      sparks.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 40, t:0, life:.45 + Math.random()*.3, c});
+      sparks.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 40, t:0, life:.45 + Math.random()*.3, c, r:2 + Math.random()*2.5});
     }
   }
   function updateHud(){
@@ -809,14 +849,15 @@
     phaseT += dt;
     if(phase === 'calib'){ if(dt > 0) calTick(dt); return; }
     if(dt > 0) music(dt);
-    pPose.t += dt; bPose.t += dt;
+    pPose.t += vdt; bPose.t += vdt;
     if(banner){ banner.t += dt; if(banner.t > banner.dur) banner = null; }
     if(ribbon){ ribbon.t += dt; if(ribbon.t > 3.2) ribbon = null; else if(ribbon.t >= 0 && !ribbon.played){ ribbon.played = true; fanfare(true); setTimeout(() => fanfare(true), 420); } }
     if(bubble){ bubble.t += dt; if(bubble.t > bubble.dur) bubble = null; }
-    shake = Math.max(0, shake - dt);
+    trauma = Math.max(0, trauma - 1.6*dt);
     ['p','b'].forEach(k => { shownHp[k] += (hp[k] - shownHp[k]) * Math.min(1, dt*6); });
-    sparks.forEach(s => { s.t += dt; s.x += s.vx*dt; s.y += s.vy*dt; s.vy += 420*dt; });
+    sparks.forEach(s => { s.t += vdt; s.x += s.vx*vdt; s.y += s.vy*vdt; s.vy += (s.g == null ? 420 : s.g)*vdt; if(s.spin) s.rot += s.spin*vdt; });
     sparks = sparks.filter(s => s.t < s.life);
+    fx.forEach(e => { e.t += vdt; }); fx = fx.filter(e => e.t < e.life);
     floaters.forEach(f => { f.t += dt; f.y -= 34*dt; });
     floaters = floaters.filter(f => f.t < 1.1);
 
@@ -849,7 +890,7 @@
         // each note leaves the baton on its beat
         v.notes.forEach(n => {
           if(n.st === 'wait' && songT >= n.spawnAt){
-            n.st = 'fly'; n.t = songT - n.spawnAt;
+            n.st = 'fly'; n.t = songT - n.spawnAt; n.from = baronTip();
             if(ac) baronTone(n.n.m, atAudio(n.spawnAt));
             bPose = {k:'throw', t:0};
           }
@@ -857,9 +898,10 @@
         v.notes.forEach(n => {
           if(n.st !== 'fly') return;
           n.t = songT - n.spawnAt;
-          const p = pathAt(Math.min(v.rhythm ? 1.12 : 1, Math.max(0, n.t - (v.rhythm ? visShift() : 0)) / v.flight)); n.x = p.x; n.y = p.y;
+          const p = pathAt(Math.min(v.rhythm ? 1.12 : 1, Math.max(0, n.t - (v.rhythm ? visShift() : 0)) / v.flight), n.from); n.x = p.x; n.y = p.y;
           if(n.t >= v.flight + (v.rhythm ? goodWin() + LAT.audio : 0)){
-            n.st = 'miss'; burst(n.x, n.y, '#E5383B', 10);
+            n.st = 'miss'; burst(n.x, n.y, '#E5383B', 8);
+            impact(n.x, n.y, 1, {c:'#FFFFFF', c2:'#E5383B'});
             if(v.remote) send('res', {i:n.idx, blocked:false});
             hurt('p', HIT_DMG());
             floaters.push({text:'-' + HIT_DMG(), x:PX, y:FLOOR-200, t:0, c:'#E5383B'});
@@ -897,6 +939,13 @@
     roundWinner = w; wins[w]++;
     volley = null; salvo = null;
     const ko = koFlag != null ? koFlag : (hp.p <= 0 || hp.b <= 0);
+    if(ko){                                               // the big moment: freeze, flash, lean in, slow fall
+      const lx = w === 'p' ? BX - 10 : PX + 10, ly = FLOOR - 120;
+      impact(lx, ly, 2, {stop:.2, flash:.85, c:'#FFFFFF', c2: w === 'p' ? '#FF4E86' : '#2438C8', notes:12});
+      fx.push({type:'speed', x:lx, y:ly, t:0, life:.7, seed:Math.random()*6.3});
+      // they fall backwards, away from the other fighter: aim the camera at where they'll land
+      if(!REDUCED){ slowmo = 1.1; camPunch(w === 'p' ? BX + 25 : PX - 25, ly + 35, 1.22, 1.5); }
+    }
     // how did that round go, against how strong an opponent?
     const oppR = mode === 'pvp' ? (net && net.opp ? net.opp.r : R0) + 120*myHC() - 120*oppHC() : anchor(bout, round);
     const newBelt = Rating.update(oppR, roundScore(hp.p, hp.b, w === 'p'));
@@ -1067,8 +1116,33 @@
     ctx.restore();
   }
 
-  // Baron von Baton: tailcoat, monocle, a moustache you could hang washing on
+  /* Baron von Baton, as a cut-out puppet (scale-brawl-puppet.js). The game's
+     pose names become puppet moves; he conducts in time with the real beat and
+     sags as his health drops. A Rive / Spine Baron can replace this later. */
+  const baronPuppet = window.BrawlPuppet ? BrawlPuppet.baron() : null;
+  const PUPPET_SCALE = 1;
+  const POSE_TO_CLIP = {idle:'idle', windup:'windup', throw:'throw', hurt:'hit', ko:'ko', win:'win', block:'block'};
+  let baronPoseSeen = null, baronLastT = null;
   function drawBaron(time){
+    if(!baronPuppet){ drawBaronOld(time); return; }
+    const dt = baronLastT == null ? 0 : Math.min(.05, Math.max(0, time - baronLastT)); baronLastT = time;
+    if(bPose !== baronPoseSeen){ baronPoseSeen = bPose; baronPuppet.play(POSE_TO_CLIP[bPose.k] || 'idle'); }
+    const live = phase === 'intro' || phase === 'fight' || phase === 'roundEnd';
+    const beat = (((songT - visShift())/beatLen()) % 1 + 1) % 1;
+    baronPuppet.update(dt, {beat: live ? beat : null, hp: hp.b/MAX_HP});
+    const flick = bPose.k === 'hurt' && bPose.t < .3 && Math.floor(time*30) % 2;
+    // a warm rim of stage light round his outline, so the dark tailcoat doesn't vanish into the backdrop
+    baronPuppet.draw(ctx, BX, FLOOR, {flip:true, scale:PUPPET_SCALE, alpha: flick ? .6 : 1, glow:'rgba(255,197,61,.5)', glowBlur:10});
+  }
+  // the baton's tip on screen: his notes fly from here
+  function baronTip(){
+    if(!baronPuppet || mode === 'pvp') return null;
+    const t = BrawlPuppet.BATON_TIP;
+    return baronPuppet.point(t.bone, t.x, t.y, BX, FLOOR, {flip:true, scale:PUPPET_SCALE});
+  }
+
+  // the original drawn-in-code Baron, kept as a fallback if the puppet script doesn't load
+  function drawBaronOld(time){
     const k = bPose.k, t = bPose.t;
     let dx = 0, lean = 0, armUp = .2, flash = 0, bob = Math.sin(time*3+1)*2;
     if(k === 'windup'){ armUp = -1.2*ease(t/.4); lean = -.05; }
@@ -1297,6 +1371,41 @@
     return w + 6;
   }
 
+  // starbursts, streaks, rings and K.O. speed lines
+  function drawFx(){
+    fx.forEach(e => {
+      const u = e.t/e.life, a = 1 - u;
+      ctx.save(); ctx.translate(e.x, e.y);
+      if(e.type === 'star'){
+        const r = e.r*(.55 + .6*EASE_OUT(u)), n = 8;
+        ctx.rotate(e.rot); ctx.beginPath();
+        for(let i=0;i<n*2;i++){ const rr = i % 2 ? r*.38 : r*(i % 4 ? .8 : 1); const ang = i/(n*2)*Math.PI*2; ctx[i ? 'lineTo' : 'moveTo'](Math.cos(ang)*rr, Math.sin(ang)*rr); }
+        ctx.closePath();
+        ctx.globalAlpha = Math.min(1, a*1.6); ctx.fillStyle = e.c; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke();
+      } else if(e.type === 'streaks'){
+        ctx.globalAlpha = a; ctx.strokeStyle = e.c; ctx.lineCap = 'round';
+        for(let i=0;i<e.n;i++){
+          const ang = e.seed + i*(Math.PI*2/e.n) + (i % 2)*.2, r0 = e.r*(.3 + .9*EASE_OUT(u)), r1 = r0 + e.r*.55*(1 - u);
+          ctx.lineWidth = 4*(1 - u) + 1; ctx.beginPath(); ctx.moveTo(Math.cos(ang)*r0, Math.sin(ang)*r0); ctx.lineTo(Math.cos(ang)*r1, Math.sin(ang)*r1); ctx.stroke();
+        }
+      } else if(e.type === 'ring'){
+        ctx.globalAlpha = a*.9; ctx.strokeStyle = e.c; ctx.lineWidth = 5*(1 - u) + 1;
+        ctx.beginPath(); ctx.arc(0, 0, e.r*(.4 + 1.2*EASE_OUT(u)), 0, Math.PI*2); ctx.stroke();
+      } else if(e.type === 'speed'){                      // manga speed lines round the fallen fighter
+        ctx.globalAlpha = Math.min(1, a*1.4)*.75; ctx.fillStyle = '#FFFFFF';
+        for(let i=0;i<34;i++){
+          const ang = e.seed + i*(Math.PI*2/34) + Math.sin(i*12.9)*.05, r0 = 120 + 60*Math.abs(Math.sin(i*7.1)), r1 = 900;
+          const w = .018 + .012*Math.abs(Math.sin(i*3.3));
+          ctx.beginPath(); ctx.moveTo(Math.cos(ang - w)*r1, Math.sin(ang - w)*r1); ctx.lineTo(Math.cos(ang)*r0, Math.sin(ang)*r0); ctx.lineTo(Math.cos(ang + w)*r1, Math.sin(ang + w)*r1); ctx.closePath(); ctx.fill();
+        }
+      }
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+  }
+  const EASE_OUT = t => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+
   function drawTag(text, c){
     ctx.font = '700 12px "Space Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const tw = ctx.measureText(text).width + 22, a = .6 + .4*Math.abs(Math.sin(performance.now()/400));
@@ -1335,9 +1444,23 @@
     ctx.restore();
   }
 
+  function updateCam(dt){
+    if(cam.hold > 0) cam.hold -= dt; else { cam.tz = 1; cam.tx = W/2; cam.ty = H/2; }
+    const k = 1 - Math.pow(.0001, dt);                  // smooth, frame-rate independent
+    cam.z += (cam.tz - cam.z)*k; cam.x += (cam.tx - cam.x)*k; cam.y += (cam.ty - cam.y)*k;
+  }
   function draw(time){
     ctx.save();
-    if(shake > 0){ ctx.translate((Math.random()-.5)*14*shake/.25, (Math.random()-.5)*10*shake/.25); }
+    // ---- the world: camera + shake ----
+    ctx.save();
+    const z = cam.z, hw = W/(2*z), hh = H/(2*z);
+    const cx = Math.max(hw, Math.min(W - hw, cam.x)), cy = Math.max(hh, Math.min(H - hh, cam.y));
+    ctx.translate(W/2, H/2); ctx.scale(z, z); ctx.translate(-cx, -cy);
+    if(trauma > 0){
+      const q = trauma*trauma, t = performance.now()/1000;
+      ctx.translate(16*q*Math.sin(t*97.3), 11*q*Math.sin(t*83.1 + 1.7));
+      ctx.rotate(.025*q*Math.sin(t*61.7 + 3.1));
+    }
     stageBg();
     // shadows
     ctx.fillStyle = 'rgba(23,20,14,.3)';
@@ -1348,8 +1471,20 @@
     if(phase === 'fight' && rhythmRound()) drawRing(salvo ? BCHEST : CHEST);
     if(volley) volley.notes.forEach(n => { if(n.st === 'fly') drawProjectile(n, time); });
     if(salvo) salvo.notes.forEach(n => { if(n.st === 'fly') drawProjectile(n, time, true); });
-    sparks.forEach(s => { ctx.globalAlpha = 1 - s.t/s.life; ctx.fillStyle = s.c; ctx.fillRect(s.x-3, s.y-3, 6, 6); });
+    drawFx();
+    sparks.forEach(s => {
+      const a = 1 - s.t/s.life; ctx.globalAlpha = Math.max(0, a);
+      if(s.glyph){
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.rot || 0);
+        ctx.font = '700 ' + Math.round(s.size) + 'px "Noto Music", serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.strokeText(s.glyph, 0, 0); ctx.fillStyle = s.c; ctx.fillText(s.glyph, 0, 0);
+        ctx.restore();
+      } else { ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, s.r || 3, 0, Math.PI*2); ctx.fill(); }
+    });
     ctx.globalAlpha = 1;
+    if(flash > 0){ ctx.fillStyle = 'rgba(255,255,255,' + Math.min(1, flash) + ')'; ctx.fillRect(-W, -H, W*3, H*3); }
+    ctx.restore();
+    // ---- the HUD: no camera, no shake ----
     drawCard(time);
     floaters.forEach(f => {
       ctx.globalAlpha = Math.max(0, 1 - f.t/1.1);
@@ -1379,9 +1514,15 @@
   function loop(now){
     const dt = Math.min(.05, (now - last)/1000); last = now;
     frameAt = now;
+    // what you see can freeze (hit-stop) or slow (K.O.); the music and the notes never do
+    vdt = hitStop > 0 ? 0 : dt*(slowmo > 0 ? .35 : 1);
+    hitStop = Math.max(0, hitStop - dt); slowmo = Math.max(0, slowmo - dt);
+    vclock += vdt;
     if(phase !== 'title' && phase !== 'over') update(dt);
-    else { update(0); pPose.t += dt; bPose.t += dt; if(bubble){ bubble.t += dt; if(bubble.t > bubble.dur) bubble = null; } }
-    draw(now/1000);
+    else { update(0); if(bubble){ bubble.t += dt; if(bubble.t > bubble.dur) bubble = null; } }   // update(0) still moves the visual timers by vdt
+    updateCam(dt);
+    flash = Math.max(0, flash - dt*6);
+    draw(vclock);
     requestAnimationFrame(loop);
   }
 
@@ -1675,10 +1816,12 @@
     if(!salvo) return;
     const x = salvo.notes.find(n => n.slot === i && n.st === 'fly'); if(!x) return;
     if(blocked){
-      x.st = 'blocked'; burst(x.x, x.y, '#F4EEE2', 12);
+      x.st = 'blocked'; burst(x.x, x.y, '#F4EEE2', 8);
+      impact(x.x, x.y, .35, {stop:0, c:'#FFFFFF', c2:'#CFC7B6', notes:2});
       floaters.push({text:'BLOCKED', x:BX-40, y:FLOOR-215, t:0, c:'#CFC7B6'});
     } else {
-      x.st = 'hit'; burst(BCHEST.x, BCHEST.y, '#FF4E86', 16);
+      x.st = 'hit'; burst(BCHEST.x, BCHEST.y, '#FF4E86', 10);
+      impact(BCHEST.x, BCHEST.y, 1, {c:'#FFFFFF', c2:'#FF4E86'});
       floaters.push({text:'HIT!', x:BX-20, y:FLOOR-215, t:0, c:'#FF4E86'});
       thud(90, .3, .2);
     }
@@ -1920,7 +2063,7 @@
     if(HiScores.track) HiScores.track(GAME, function(){ return phase === 'title' || mode === 'pvp' ? 0 : score; });
   })();
   // test hook
-  window.__brawl = { get phase(){ return phase; }, get volley(){ return volley; }, get hp(){ return hp; }, get wins(){ return wins; }, get bout(){ return bout; }, get score(){ return score; }, get salvo(){ return salvo; }, get mode(){ return mode; }, Rating, setRating: r => { Rating._set(r); refreshRatingUi(); }, get net(){ return net; }, get songT(){ return songT; }, get floaters(){ return floaters; }, startGame, tick: dt => { update(dt); frameAt = performance.now(); }, get LAT(){ return LAT; }, get calib(){ return calib; } };
+  window.__brawl = { get phase(){ return phase; }, get volley(){ return volley; }, get hp(){ return hp; }, get wins(){ return wins; }, get bout(){ return bout; }, get score(){ return score; }, get salvo(){ return salvo; }, get mode(){ return mode; }, Rating, setRating: r => { Rating._set(r); refreshRatingUi(); }, get net(){ return net; }, get songT(){ return songT; }, get floaters(){ return floaters; }, startGame, tick: dt => { vdt = dt; vclock += dt; update(dt); frameAt = performance.now(); }, get LAT(){ return LAT; }, impact: (x, y, p, o) => impact(x, y, p, o), freeze: sec => { hitStop = sec; }, camPunch: (x, y, z, h) => camPunch(x, y, z, h), addFx: e => fx.push(e), get calib(){ return calib; } };
 })();
 </script>
 <script src="/tools.js"></script>
