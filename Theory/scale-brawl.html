@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/analytics.js" defer></script>
+<script src="/auth.js" defer data-chip="off"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Scale Brawl — a music fighting game: play the notes back to block | The Music Arcade</title>
+<!-- seo: written by seo.py — edit PAGES there, not here -->
+<link rel="canonical" href="https://themusicarcade.com/Theory/scale-brawl.html" />
+<meta property="og:site_name" content="The Music Arcade" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://themusicarcade.com/Theory/scale-brawl.html" />
+<meta property="og:title" content="Scale Brawl — a music fighting game: play the notes back to block | The Music Arcade" />
+<meta property="og:description" content="A music fighting game for one or two players. Echo the notes thrown at you to block, then fire your own back. Fight Baron von Baton or a friend online." />
+<meta property="og:image" content="https://themusicarcade.com/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- /seo -->
+<meta name="description" content="A music fighting game for one or two players. Echo the notes thrown at you to block, then fire your own back. Fight Baron von Baton or a friend online." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&family=Noto+Music&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/families.css">
+<style>
+  :root{
+    --paper:#F4EEE2; --ink:#17140E; --blue:#2438C8; --pink:#FF4E86; --green:#1E9E6A; --gold:#FFC53D;
+    --purple:#7B4DDB; --red:#E5383B; --muted:#6F6757; --line:#17140E;
+    --display:"Syne",system-ui,sans-serif;
+    --body:"Hanken Grotesk",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--paper);
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:clamp(16px,4vw,48px); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .stage{ position:relative; z-index:1; width:min(780px,100%); }
+
+  header{ text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:18px; }
+  h1{ margin:0; display:flex; flex-direction:column; align-items:center; font-weight:inherit; }
+  .title{
+    position:relative; display:inline-block; font-family:var(--display);
+    font-weight:800; font-size:clamp(1.8rem,6vw,2.8rem); letter-spacing:-.02em;
+    line-height:.9; white-space:nowrap; text-transform:uppercase; color:var(--purple); mix-blend-mode:multiply;
+  }
+  /* never wider than the stage plus the page margin (width ≈ 7.2 × font-size) */
+  .title{ font-size:min(clamp(1.8rem,6vw,2.8rem), calc((min(780px + 2 * clamp(16px,4vw,48px), 100vw) - 12px) / 7.2)); }
+  .title::after{
+    content:attr(data-text); position:absolute; left:3px; top:3px;
+    color:var(--pink); mix-blend-mode:multiply; z-index:-1;
+  }
+  .subtitle{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--muted); margin-top:12px;
+  }
+  .subtitle .nw{ white-space:nowrap; }
+
+  .panel{
+    position:relative; background:var(--paper); border:2.5px solid var(--line);
+    box-shadow:8px 8px 0 var(--ink); padding:14px;
+  }
+  .hud{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .hud b{ color:var(--purple); }
+
+  .arena{ position:relative; border:2px solid var(--ink); background:#2A1E3A; line-height:0; }
+  canvas{ display:block; width:100%; height:auto; aspect-ratio:760/400; touch-action:manipulation; }
+
+  /* start / game-over card over the arena */
+  .overlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(23,20,14,.55); line-height:1.45; padding:12px;
+  }
+  .overlay[hidden]{ display:none; }
+  .card{
+    background:var(--paper); border:2.5px solid var(--ink); box-shadow:6px 6px 0 var(--pink);
+    padding:18px 20px; max-width:440px; width:100%; text-align:center; max-height:100%; overflow:auto;
+  }
+  .card h2{ font-family:var(--display); font-weight:800; text-transform:uppercase; margin:0 0 6px;
+    font-size:1.5rem; letter-spacing:-.01em; color:var(--purple); line-height:1; }
+  .card p{ margin:0 0 10px; font-size:.95rem; }
+  .card .big{ font-family:var(--display); font-weight:800; font-size:2.4rem; line-height:1; margin:6px 0 2px; }
+  .card .small{ font-family:var(--mono); font-size:.72rem; color:var(--muted); letter-spacing:.04em; }
+  .btn{
+    font-family:var(--mono); font-weight:700; font-size:.9rem; letter-spacing:.08em; text-transform:uppercase;
+    border:2.5px solid var(--ink); background:var(--gold); color:var(--ink); padding:10px 22px; cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink); transition:transform .08s ease, box-shadow .08s ease; margin-top:4px;
+  }
+  .btn:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
+  .btn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+
+  /* your belt (the rating, shown kid-style) */
+  .beltline{ font-family:var(--mono); font-size:.74rem; color:var(--ink); margin:4px 0 12px; line-height:1.5; }
+  .beltline .belt{ display:inline-block; width:26px; height:9px; border:2px solid var(--ink); vertical-align:0; margin-right:6px; }
+  .beltline .bar{ display:block; width:min(220px,80%); height:7px; margin:6px auto 0; border:1.5px solid var(--ink); background:#fff; }
+  .beltline .bar i{ display:block; height:100%; background:var(--pink); }
+  .beltline .linkbtn{ margin-top:2px; }
+  .btn.alt{ background:#fff; margin-top:10px; }
+  .fld{ display:block; text-align:left; font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:8px 0; }
+  .fld input, .fld select, .joinrow input{ display:block; width:100%; margin-top:4px; font:600 1rem var(--body); color:var(--ink);
+    border:2px solid var(--ink); background:#fff; padding:8px 10px; text-transform:none; letter-spacing:0; }
+  .joinrow{ display:flex; gap:8px; align-items:stretch; }
+  .joinrow input{ margin:0; text-transform:uppercase; font-family:var(--mono); font-weight:700; letter-spacing:.2em; }
+  .joinrow .btn{ margin:0; }
+  #onlineCard.joining .pv-make, #onlineCard.joining .pv-intro{ display:none; }
+  #onlineCard:not(.joining) .pv-own{ display:none; }
+  .card .or{ font-family:var(--mono); font-size:.72rem; color:var(--muted); margin:12px 0 6px; }
+  .card .code{ font-family:var(--mono); font-weight:700; font-size:2.6rem; letter-spacing:.3em; color:var(--purple); line-height:1.1; }
+  .linkbtn{ font:inherit; font-family:var(--mono); font-size:.75rem; background:none; border:0; padding:0; cursor:pointer;
+    color:var(--ink); border-bottom:1.5px solid var(--pink); margin-top:8px; }
+
+  /* inputs strip */
+  .inputs{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    margin-top:12px; font-family:var(--mono); font-size:.72rem; letter-spacing:.03em; color:var(--muted);
+  }
+  .inputs kbd{ font-family:var(--mono); border:1.5px solid var(--ink); border-bottom-width:3px; padding:0 4px;
+    background:#fff; color:var(--ink); font-size:.7rem; }
+  .midibtn{
+    font-family:var(--mono); font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    border:2px solid var(--ink); background:#fff; padding:6px 10px; cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+  }
+  .midibtn.on{ background:var(--green); color:#fff; }
+  #midiStatus{ display:block; margin-top:4px; }
+
+  /* on-screen keys */
+  .keys{ position:relative; height:118px; margin-top:12px; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+  .key{ position:absolute; top:0; border:2px solid var(--ink); cursor:pointer; display:flex; flex-direction:column;
+    justify-content:flex-end; align-items:center; padding-bottom:6px; font-family:var(--mono); line-height:1.1; }
+  .key.w{ height:100%; background:#fff; z-index:1; font-size:.8rem; font-weight:700; }
+  .key.b{ height:62%; background:var(--ink); color:#CFC7B6; z-index:2; font-size:.62rem; }
+  .key small{ font-size:.62rem; font-weight:400; color:var(--muted); margin-top:2px; }
+  .key.b small{ color:#8A8272; }
+  .key.down.w{ background:var(--gold); }
+  .key.down.b{ background:var(--purple); }
+  .key.hint.w{ box-shadow:inset 0 -6px 0 var(--pink); }
+
+  .crumbs{ position:relative; z-index:1; width:min(780px,100%); margin-bottom:22px;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; color:var(--muted); }
+  .crumbs a{ color:var(--ink); text-decoration:none; border-bottom:1.5px solid var(--pink); }
+  .crumbs a:hover{ color:var(--blue); }
+
+  .about{ position:relative; z-index:1; width:min(780px,100%); margin-top:44px; }
+  .about h2{ font-family:var(--display); font-weight:800; font-size:1.25rem; letter-spacing:-.01em;
+    text-transform:uppercase; color:var(--purple); margin:0 0 10px; }
+  .about p{ margin:0 0 12px; font-size:.98rem; max-width:62ch; }
+
+  @media (max-width:520px){ .keys{ height:96px; } .key small{ display:none; } }
+  /* phones: the stage is too short to hold a card, so cards sit under it instead */
+  @media (max-width:600px){
+    .arena .overlay{ position:relative; inset:auto; background:var(--paper); padding:10px 4px 6px; }
+    .arena .overlay .card{ max-height:none; box-shadow:4px 4px 0 var(--pink); }
+  }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">The Music Arcade</a> › <a href="/#tab=theory">Theory</a> › Scale Brawl
+  </nav>
+  <div class="stage">
+    <header>
+      <h1><span class="title" data-text="Scale Brawl">Scale Brawl</span>
+      <span class="subtitle"><span class="nw">A music fighting game</span> · <span class="nw">echo the notes to block</span></span></h1>
+    </header>
+
+    <div class="panel">
+      <div class="hud">
+        <span>Score <b id="score">0</b></span>
+        <span><span id="boutLbl">Bout</span> <b id="bout">1</b></span>
+        <span id="bestWrap">Best <b id="best">0</b></span>
+        <span id="roomTag" hidden>Room <b id="roomCode"></b></span>
+      </div>
+
+      <div class="arena">
+        <canvas id="cv" width="760" height="400" aria-label="The fight: Baron von Baton throws notes at you; play them back to block"></canvas>
+
+        <div class="overlay" id="startCard">
+          <div class="card">
+            <h2>Baron von Baton</h2>
+            <p>He throws notes at you, <strong>written on the card</strong> at the top. Play them back <strong>in order</strong> before they land.</p>
+            <p>Block them and it’s <strong>your turn to fire</strong>: play notes and they fly at him. Every one he can’t echo back hurts.</p>
+            <p class="small">Round 2 is on the beat. Any octave counts. Win 2 rounds to take the bout.</p>
+            <div class="beltline" id="beltLine"></div>
+            <button class="btn" id="startBtn">▶ Fight the Baron</button>
+            <div><button class="btn alt" id="pvpBtn">⚔ Play a friend online</button></div>
+          </div>
+        </div>
+
+        <div class="overlay" id="onlineCard" hidden>
+          <div class="card">
+            <h2>Play a friend</h2>
+            <p class="small pv-intro">Each of you opens this page on your own device. One makes a room, the other joins with its code.</p>
+            <label class="fld">Your name <input id="pvName" maxlength="16" autocomplete="off" spellcheck="false"></label>
+            <div id="pvSetup">
+              <div class="pv-make">
+              <label class="fld">Level <select id="pvLevel">
+                <option value="0" selected>Auto · matched to you both</option>
+                <option value="1">1 · Starter: C D E, slow</option>
+                <option value="2">2 · C major</option>
+                <option value="3">3 · G major</option>
+                <option value="4">4 · C major + F♯ and B♭</option>
+              </select></label>
+              <button class="btn" id="pvCreate">Make a room</button>
+              <p class="or">or join one</p>
+              </div>
+              <div class="joinrow"><input id="pvCode" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false"><button class="btn" id="pvJoin">Join</button></div>
+              <button class="linkbtn pv-own" id="pvOwn">or make your own room</button>
+            </div>
+            <div id="pvRoom" hidden>
+              <p class="small">Your room code</p>
+              <div class="code" id="pvCodeBig"></div>
+              <p class="small">Tell your friend the code, or <button class="linkbtn" id="pvCopy">copy the link</button> and send it.</p>
+            </div>
+            <p class="small" id="pvStatus" role="status"></p>
+            <button class="linkbtn" id="pvBack">← Back</button>
+          </div>
+        </div>
+
+        <div class="overlay" id="overCard" hidden>
+          <div class="card">
+            <h2 id="overTitle">K.O.</h2>
+            <p id="overText"></p>
+            <div class="big" id="overScore">0</div>
+            <p class="small">points</p>
+            <div class="beltline" id="overBelt"></div>
+            <button class="btn" id="againBtn">▶ Fight again</button>
+            <div><button class="linkbtn" id="leaveBtn" hidden>Leave the room</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="keys" id="keys" aria-label="On-screen keyboard"></div>
+
+      <div class="inputs">
+        <span>Laptop: <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>H</kbd> <kbd>J</kbd> <kbd>K</kbd> = C D E F G A B C · <kbd>Z</kbd>/<kbd>X</kbd> octave</span>
+        <span><button class="midibtn on" id="beatBtn" aria-pressed="true">♪ Beat on</button> <button class="midibtn" id="midiBtn">🎹 Use a MIDI keyboard</button></span>
+      </div>
+      <span class="inputs" id="midiStatus"></span>
+    </div>
+  </div>
+
+  <section class="about" data-rel-host>
+    <h2>How this game helps</h2>
+    <p>Hearing or seeing a short run of notes and playing it straight back is the start of learning tunes by ear and reading at sight. Scale Brawl turns it into a fight: the faster and cleaner you echo, the harder you hit.</p>
+    <p>The first bout stays on the white notes of C major, starting with just three notes. Each round adds notes and speed. Play on a MIDI keyboard, your laptop keys, or tap the keys on screen.</p>
+    <p>It works both ways. Block his notes and you earn shots to fire back, and now the Baron has to read and echo <em>your</em> phrase. Making up a short phrase on the spot is the first step to improvising.</p>
+    <p>Play a friend online: one of you makes a room, the other joins with its 4-letter code on their own device. Great for a lesson, a teacher against a pupil, or two pupils practising between lessons.</p>
+    <p>A band plays under the fight, so every note sits in a key and on a beat. In round 2 timing counts too: the Baron plays a bar of rhythm and you echo it in time, the way a teacher plays a phrase for you to copy.</p>
+  </section>
+
+<script src="/note-input.js"></script>
+<script src="../hi-scores.js"></script>
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  const W = 760, H = 400, FLOOR = 352;
+  const PX = 175, BX = 590;                  // where the two fighters stand
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ------------------------------------------------------------------ *
+   *  Tunables
+   * ------------------------------------------------------------------ */
+  const ROUND_SECS = 60;
+  const MAX_HP = 100;
+  // the notes the Baron throws, by bout and round. {m: midi, l: letter, a: accidental}
+  const N = (m, l, a) => ({ m, l, a: a || '' });
+  const C4=N(60,'C'),D4=N(62,'D'),E4=N(64,'E'),F4=N(65,'F'),G4=N(67,'G'),A4=N(69,'A'),B4=N(71,'B'),C5=N(72,'C'),D5=N(74,'D');
+  const FS4=N(66,'F','♯'), BB4=N(70,'B','♭');
+  function pool(bout, round){
+    if(bout === 1) return [[C4,D4,E4],[C4,D4,E4,F4,G4],[C4,D4,E4,F4,G4,A4,B4,C5]][round-1];
+    if(bout === 2) return [C4,D4,E4,F4,G4,A4,B4,C5];
+    if(bout === 3) return [D4,E4,FS4,G4,A4,B4,C5,D5];          // G major
+    return [C4,D4,E4,F4,FS4,G4,A4,BB4,B4,C5];                   // C major + a couple of visitors
+  }
+  const level = () => (bout-1)*3 + round;                       // 1, 2, 3, 4…
+  const volleyLen = () => Math.min(7, [2,3,4][round-1] + (bout-1) + (volleysThisRound >= 3 ? 1 : 0));
+  const flightSecs = () => Math.max(2.4, 5.6 - 0.32*(level()-1));   // time for one note to cross the arena
+  const HIT_DMG   = () => (mode === 'pvp' ? 15 : 9) + 2*(bout-1);   // online turns are slower, so hits land harder
+  // the backing band: tempo rises each bout; round 2 of every bout is played on the beat
+  const BPM       = () => Math.min(140, 88 + 10*(bout-1));
+  const beatLen   = () => 60 / BPM();
+  const rhythmRound = () => round === 2;
+  const restChance  = () => bout === 1 ? 0 : Math.min(.35, .15 + .07*(bout-2));
+  const PERFECT = .075, GOOD = .16;          // seconds either side of the beat
+  // one chord a bar under the fight (bass notes), in the bout's key
+  const PROG = { C:[48,45,41,43], G:[43,40,48,50] };     // I vi IV V
+  const keyOf = () => bout === 3 ? 'G' : 'C';
+  const WRONG_DMG = 3;
+
+  /* ------------------------------------------------------------------ *
+   *  Rating: an Elo-style skill number.
+   *  The Baron's bouts are fixed "anchor" ratings, so every round against
+   *  him tells the game how good you are, even if you never play online.
+   *  This (kids') arcade version shows it as BELTS that only ever go up and
+   *  keeps the number hidden. SHOW_RATING = true is for the Steam build,
+   *  where teens and adults see the number itself.
+   * ------------------------------------------------------------------ */
+  const SHOW_RATING = false;
+  const R0 = 800;
+  const anchor = (b, r) => 800 + 150*(b-1) + 40*((r || 1)-1);      // the Baron at bout b, round r
+  const BELTS = [
+    {name:'White',  at:0,    c:'#FFFFFF'}, {name:'Yellow', at:850,  c:'#FFC53D'},
+    {name:'Orange', at:1000, c:'#FF7A2F'}, {name:'Green',  at:1150, c:'#1E9E6A'},
+    {name:'Blue',   at:1300, c:'#2438C8'}, {name:'Black',  at:1450, c:'#17140E'}
+  ];
+  const beltFor = r => { let i = 0; BELTS.forEach((b, k) => { if(r >= b.at) i = k; }); return i; };
+  const startBoutFor = r => { let b = 1; for(let k=1;k<=6;k++) if(anchor(k,1) <= r - 30) b = k; return b; };
+  // how a round went, 0…1: a clean K.O. is 1, a scrape is .6, a narrow loss .4ish, a wipe-out 0
+  const roundScore = (myHp, oppHp, won) => won ? .6 + .4*(myHp/MAX_HP) : .4*(1 - oppHp/MAX_HP);
+  const Rating = (function(){
+    const KEY = 'scale-brawl.rating', KIND = 'ratings', TITLE = 'scale-brawl';
+    const blank = () => ({r:R0, n:0, belt:0, at:0});
+    let d = blank(), rowId = null, signed = false, pushT = null;
+    try{ const x = JSON.parse(localStorage.getItem(KEY) || 'null'); if(x && typeof x.r === 'number') d = Object.assign(blank(), x); }catch(e){}
+    const keep = () => { try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} };
+    const A = () => window.MAAuth;
+    function push(){
+      clearTimeout(pushT);
+      pushT = setTimeout(() => {
+        const a = A(); if(!a || !a.user || !a.user()) return;
+        a.creations.save(KIND, {id:rowId, title:TITLE, data:d}).then(row => { if(row && row.id) rowId = row.id; }).catch(() => {});
+      }, 1200);
+    }
+    // signed in: the account follows you between devices; the newer record wins, belts never drop
+    function pull(){
+      A().creations.list(KIND).then(rows => {
+        const row = rows.find(x => x.title === TITLE);
+        if(row){
+          rowId = row.id;
+          const t = row.data || {};
+          if(typeof t.r === 'number' && (t.at || 0) > (d.at || 0)){
+            const belt = Math.max(d.belt, t.belt || 0); d = Object.assign(blank(), t, {belt}); keep(); refreshRatingUi();
+          } else if((d.at || 0) > (t.at || 0)) push();
+        } else if(d.n) push();
+      }).catch(() => {});
+    }
+    (function arm(tries){
+      const a = A();
+      if(a && a.onChange) a.onChange(u => { const now = !!u; if(now && !signed) pull(); signed = now; });
+      else if(tries < 50) setTimeout(() => arm(tries + 1), 200);
+    })(0);
+    return {
+      get r(){ return d.r; }, get n(){ return d.n; },
+      beltIndex: () => d.belt, belt: () => BELTS[d.belt],
+      progress(){                                        // how far from your belt to the next one
+        const nx = BELTS[d.belt+1]; if(!nx) return 1;
+        const lo = d.belt === 0 ? 750 : BELTS[d.belt].at;
+        return Math.max(0, Math.min(1, (d.r - lo)/(nx.at - lo)));
+      },
+      startBout: () => startBoutFor(d.r),
+      // one round's result against an opponent rated `opp`; returns the new belt if you earned one
+      update(opp, S){
+        const E = 1/(1 + Math.pow(10, (opp - d.r)/400)), K = Math.max(32, 100 - 8*d.n);   // big steps while the game is still finding your level
+        const before = d.belt;
+        d.r = Math.round(d.r + K*(S - E)); d.n++; d.at = Date.now();
+        d.belt = Math.max(d.belt, beltFor(d.r));
+        keep(); push();
+        return d.belt > before ? BELTS[d.belt] : null;
+      },
+      _set(r){ d.r = r; d.belt = Math.max(d.belt, beltFor(r)); keep(); }   // test hook
+    };
+  })();
+
+  // your turn to fire: one shot per note you blocked (+1 for a clean block)
+  const AIM_SECS   = 6;                                         // echo rounds: time to fire your shots
+  const MY_DMG     = () => 16 + 2*(bout-1);
+  const AI_BLOCK   = () => Math.min(.78, .25 + .12*(bout-1));     // chance the Baron echoes each of your notes
+
+  /* ------------------------------------------------------------------ *
+   *  Sound — a small synth so laptop and screen keys can be heard
+   * ------------------------------------------------------------------ */
+  let ac = null, master = null;
+  function audio(){
+    if(!ac){
+      const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+      ac = new AC(); master = ac.createGain(); master.gain.value = .5; master.connect(ac.destination);
+    }
+    if(ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  const hz = m => 440*Math.pow(2,(m-69)/12);
+  function tone(m, dur, type, vol){
+    const a = audio(); if(!a) return;
+    const t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'triangle'; o.frequency.value = hz(m);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || .3, t+.008);
+    g.gain.exponentialRampToValueAtTime(.0008, t+dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.05);
+  }
+  function baronTone(m, when){                 // a reedier sound for his notes
+    const a = audio(); if(!a) return;
+    const t = when != null ? when : a.currentTime, o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();
+    o.type = 'square'; o.frequency.value = hz(m); f.type = 'lowpass'; f.frequency.value = 1400;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.11,t+.01); g.gain.exponentialRampToValueAtTime(.0008,t+.45);
+    o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t+.5);
+  }
+  function thud(lo, vol, dur){
+    const a = audio(); if(!a) return;
+    const t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(lo*2.6, t); o.frequency.exponentialRampToValueAtTime(lo, t+dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t+dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.05);
+    // a little noise on top for the smack
+    const n = a.createBuffer(1, Math.floor(a.sampleRate*.08), a.sampleRate), d = n.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1)*(1-i/d.length);
+    const s = a.createBufferSource(), sg = a.createGain(); s.buffer = n; sg.gain.value = vol*.5;
+    s.connect(sg); sg.connect(master); s.start(t);
+  }
+  /* the backing beat — scheduled against the game's own song clock so the
+     Baron's throws and the drums agree, and it all stops when the game does */
+  let songT = 0, nextBeat = 0, beatBus = null, noiseBuf = null, beatOn = true;
+  try{ beatOn = localStorage.getItem('scale-brawl.beat') !== 'off'; }catch(e){}
+  function bbus(){
+    if(!beatBus){ beatBus = ac.createGain(); beatBus.gain.value = beatOn ? .6 : 0; beatBus.connect(master); }
+    return beatBus;
+  }
+  function noise(){
+    if(!noiseBuf){
+      noiseBuf = ac.createBuffer(1, Math.floor(ac.sampleRate*.3), ac.sampleRate);
+      const d = noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+    }
+    return noiseBuf;
+  }
+  // song time → audio time, early by the output latency so what you HEAR lands on the beat you SEE
+  function atAudio(t){ const lat = ac.outputLatency || ac.baseLatency || 0; return Math.max(ac.currentTime, ac.currentTime + (t - songT) - lat); }
+  function kick(w){
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.setValueAtTime(130, w); o.frequency.exponentialRampToValueAtTime(42, w+.16);
+    g.gain.setValueAtTime(.9, w); g.gain.exponentialRampToValueAtTime(.001, w+.32);
+    o.connect(g); g.connect(bbus()); o.start(w); o.stop(w+.35);
+  }
+  function snare(w){
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = noise(); f.type = 'bandpass'; f.frequency.value = 1900; f.Q.value = .8;
+    g.gain.setValueAtTime(.55, w); g.gain.exponentialRampToValueAtTime(.001, w+.16);
+    s.connect(f); f.connect(g); g.connect(bbus()); s.start(w); s.stop(w+.2);
+    const o = ac.createOscillator(), og = ac.createGain(); o.frequency.value = 190;
+    og.gain.setValueAtTime(.25, w); og.gain.exponentialRampToValueAtTime(.001, w+.08);
+    o.connect(og); og.connect(bbus()); o.start(w); o.stop(w+.1);
+  }
+  function hat(w, v){
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = noise(); f.type = 'highpass'; f.frequency.value = 7000;
+    g.gain.setValueAtTime(v, w); g.gain.exponentialRampToValueAtTime(.001, w+.045);
+    s.connect(f); f.connect(g); g.connect(bbus()); s.start(w); s.stop(w+.06);
+  }
+  function bassNote(m, w, dur){
+    const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.value = hz(m - 12); f.type = 'lowpass'; f.frequency.value = 420;
+    g.gain.setValueAtTime(0, w); g.gain.linearRampToValueAtTime(.32, w+.01); g.gain.setValueAtTime(.32, w+dur*.7);
+    g.gain.exponentialRampToValueAtTime(.001, w+dur);
+    o.connect(f); f.connect(g); g.connect(bbus()); o.start(w); o.stop(w+dur+.02);
+  }
+  function music(dt){
+    songT += dt;
+    const bl = beatLen();
+    if(!ac || ac.state !== 'running'){ nextBeat = Math.max(nextBeat, Math.ceil(songT/bl)); return; }
+    while(nextBeat*bl < songT + .22){
+      const t = nextBeat*bl, w = atAudio(t), b = nextBeat % 4, root = PROG[keyOf()][Math.floor(nextBeat/4) % 4];
+      if(t >= songT - .03){
+        if(b === 0 || b === 2) kick(w);
+        if(b === 1 || b === 3) snare(w);
+        hat(w, b === 0 ? .2 : .12); hat(atAudio(t + bl/2), .07);
+        bassNote(b === 2 ? root + 7 : root, w, bl*.9);
+        if(b === 3) bassNote(root + 12, atAudio(t + bl/2), bl*.4);
+      }
+      nextBeat++;
+    }
+  }
+  const beatsNow   = () => songT / beatLen();
+  const nextBeatAt = (after, every) => { const bl = beatLen()*(every || 1); return Math.ceil(after/bl - 1e-6)*bl; };
+
+  function fanfare(up){
+    const seq = up ? [60,64,67,72] : [67,63,60,55];
+    seq.forEach((m,i) => setTimeout(() => tone(m, .35, 'triangle', .22), i*120));
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Game state
+   * ------------------------------------------------------------------ */
+  let phase = 'title';          // title · intro · fight · roundEnd · over
+  let phaseT = 0;
+  let bout = 1, round = 1, wins = {p:0, b:0};
+  let hp = {p:MAX_HP, b:MAX_HP}, shownHp = {p:MAX_HP, b:MAX_HP};
+  let clock = ROUND_SECS;
+  let score = 0, best = 0;
+  let volley = null;            // {notes:[{n, st:'wait'|'fly'|'block'|'miss', x, y, t}], stage, t, spawned}
+  let mode = 'ai', net = null;  // 'ai' = vs the Baron · 'pvp' = vs a friend online (see the online section)
+  let salvo = null;             // YOUR attack on the Baron: {notes, stage:'aim'|'fly', rhythm, start, shots}
+  let volleysThisRound = 0, tookDamageThisRound = false;
+  let banner = null;            // {big, small, t, dur}
+  let bubble = null;            // the Baron's speech {text, t}
+  let sparks = [], floaters = [];
+  let shake = 0;
+  let pPose = {k:'idle', t:0}, bPose = {k:'idle', t:0};
+  let roundWinner = null;
+  let ribbon = null;            // a new belt, shown across the stage
+
+  try{ best = +localStorage.getItem('scale-brawl.best') || 0; }catch(e){}
+  $('best').textContent = best;
+
+  const TAUNTS = [
+    'Echo me, if you can!', 'From the top!', 'Tempo, tempo!', 'Again! With feeling!',
+    'You call that a C?', 'Sloppy. Very sloppy.', 'Silence in the hall!', 'Watch the baton!'
+  ];
+  const say = (text, dur) => { bubble = {text, t:0, dur: dur || 2.2}; };
+
+  function setPhase(p){ phase = p; phaseT = 0; }
+
+  let fromBoutOne = false;                         // "start from Bout 1 instead"
+  function startGame(){
+    audio();
+    if(net) leaveRoom(true);
+    mode = 'ai'; showRoomHud();
+    bout = fromBoutOne ? 1 : Rating.startBout(); score = 0; updateHud();
+    if(bout > 1) setTimeout(() => say('Ah, a ' + Rating.belt().name + ' belt. We begin at bout ' + bout + '.', 2.6), 50);
+    $('startCard').hidden = true; $('overCard').hidden = true;
+    startBout();
+  }
+  function startBout(){
+    round = 1; wins = {p:0, b:0};
+    songT = 0; nextBeat = 0;
+    startRound();
+  }
+  function startRound(){
+    hp = {p:MAX_HP, b:MAX_HP}; shownHp = {p:MAX_HP, b:MAX_HP};
+    clock = ROUND_SECS; volley = null; salvo = null; volleysThisRound = 0; tookDamageThisRound = false;
+    sparks = []; floaters = []; pPose = {k:'idle',t:0}; bPose = {k:'idle',t:0}; roundWinner = null;
+    const label = bout > 1 && mode === 'ai' ? 'Bout ' + bout + ' · Round ' + round : 'Round ' + round;
+    banner = rhythmRound()
+      ? {big: label, small: 'On the beat! Play each note as it hits the ring', t:0, dur:2.4}
+      : {big: label, small: '', t:0, dur:1.3};
+    if(mode === 'pvp') bubble = null;
+    else if(rhythmRound()) say('Now, in time! One, two, three, four!', 2.6);
+    else if(round === 1) say(bout === 1 ? 'Echo me, if you can!' : ['I have been practising.','No more Mr Nice Baton.','Now in a NEW KEY!'][Math.min(bout-2,2)], 2.4);
+    setPhase('intro');
+    updateHud();
+  }
+
+  function pick(p, prev){
+    let n; do { n = p[Math.floor(Math.random()*p.length)]; } while(p.length > 1 && n === prev);
+    return n;
+  }
+  function newVolley(){
+    const p = pool(bout, round), notes = [], bl = beatLen();
+    let prev = null;
+    if(rhythmRound()){
+      // one bar of 4 beats: the Baron plays it, it lands on the same beats a bar later
+      const start = nextBeatAt(songT + .9, 4), flight = 4*bl;
+      let slots;
+      do { slots = [0,1,2,3].map(() => Math.random() >= restChance()); } while(slots.filter(Boolean).length < 2);
+      slots.forEach((on, i) => {
+        if(!on){ notes.push({rest:true, st:'rest', slot:i}); return; }
+        const n = pick(p, prev); prev = n;
+        notes.push({n, st:'wait', x:HAND.x, y:HAND.y, t:0, slot:i, spawnAt:start + i*bl, landAt:start + i*bl + flight});
+      });
+      volley = {notes, stage:'windup', t:0, rhythm:true, throwAt:start, flight};
+    } else {
+      const len = volleyLen(), start = nextBeatAt(songT + .75), gap = bl, flight = flightSecs();
+      for(let i=0;i<len;i++){
+        const n = pick(p, prev); prev = n;
+        notes.push({n, st:'wait', x:HAND.x, y:HAND.y, t:0, slot:i, spawnAt:start + i*gap, landAt:start + i*gap + flight});
+      }
+      volley = {notes, stage:'windup', t:0, rhythm:false, throwAt:start, flight};
+    }
+    volleysThisRound++;
+    bPose = {k:'windup', t:0};
+  }
+  const target = () => volley ? volley.notes.find(n => n.st === 'wait' || n.st === 'fly') : null;
+  const live = n => !n.rest;
+
+  // flight path: from the Baron's baton to the player's chest, with a little arc
+  const HAND = {x:BX-62, y:FLOOR-128}, CHEST = {x:PX+30, y:FLOOR-118};
+  function pathAt(f){
+    const x = HAND.x + (CHEST.x - HAND.x)*f;
+    const y = HAND.y + (CHEST.y - HAND.y)*f - Math.sin(f*Math.PI)*46;
+    return {x, y};
+  }
+  // and the way back: from your fist to the Baron's chest
+  const FIST = {x:PX+56, y:FLOOR-116}, BCHEST = {x:BX-30, y:FLOOR-126};
+  function shotAt(f){
+    const x = FIST.x + (BCHEST.x - FIST.x)*f;
+    const y = FIST.y + (BCHEST.y - FIST.y)*f - Math.sin(f*Math.PI)*40;
+    return {x, y};
+  }
+
+  /* your turn: fire notes back. Only the round's notes count (the same ones he
+     uses on you), so it stays fair when a second player takes the Baron's side. */
+  function startSalvo(shots, rhythm, clean){
+    shots = Math.max(1, Math.min(rhythm ? 4 : 7, shots) - myHC());
+    const bl = beatLen();
+    const notes = rhythm ? [0,1,2,3].map(i => ({slot:i, st:'empty'})) : Array.from({length:shots}, (_, i) => ({slot:i, st:'empty'}));
+    salvo = {notes, shots, used:0, stage:'aim', rhythm, t:0, flight: rhythm ? 4*bl : flightSecs()*.9,
+             start: rhythm ? nextBeatAt(songT + .3, 4) : songT};
+    volley = null;
+    if(clean) floaters.push({text:'CLEAN! +1 shot', x:PX+40, y:FLOOR-230, t:0, c:'#FFC53D'});
+    banner = {big:'Fire!', small: rhythm ? 'Your bar: play on the beats' : 'Play ' + shots + (shots === 1 ? ' note' : ' notes') + ' to fire', t:0, dur:1.1};
+  }
+  function fire(ev){
+    const s = salvo, p = pool(bout, round);
+    const n = p.find(x => ((x.m % 12) + 12) % 12 === ev.pc);
+    if(!n){
+      floaters.push({text:'Use ' + p.map(x => x.l + x.a).filter((v,i,a) => a.indexOf(v) === i).join(' '), x:PX+40, y:FLOOR-215, t:0, c:'#FF7A2F'});
+      return;
+    }
+    let slot;
+    if(s.rhythm){
+      const bl = beatLen(), pos = (songT - s.start)/bl, i = Math.round(pos);
+      if(i < 0 || i > 3 || Math.abs(pos - i)*bl > GOOD){
+        floaters.push({text: i < 0 ? 'Wait for your bar' : 'Off the beat', x:PX+40, y:FLOOR-215, t:0, c:'#FF7A2F'}); return;
+      }
+      slot = s.notes[i];
+      if(slot.st !== 'empty') return;                     // one note per beat
+      if(s.used >= s.shots){ floaters.push({text:'Out of shots', x:PX+40, y:FLOOR-215, t:0, c:'#FF7A2F'}); return; }
+      slot.spawnAt = s.start + i*bl;
+    } else {
+      slot = s.notes.find(x => x.st === 'empty'); if(!slot) return;
+      slot.spawnAt = songT;
+    }
+    s.used++;
+    Object.assign(slot, {n, st:'fly', t:0, x:FIST.x, y:FIST.y, landAt: slot.spawnAt + s.flight});
+    // the Baron decides now whether he'll echo it, and when (later notes in a phrase are harder to hold in your head)
+    const order = s.notes.filter(x => x.st !== 'empty' && x.st !== 'rest').length - 1;
+    slot.aiBlock = Math.random() < AI_BLOCK() * (1 - .06*order);
+    slot.aiAt = s.rhythm ? slot.landAt + (Math.random() - .5)*.08 : slot.spawnAt + s.flight*(.45 + Math.random()*.4);
+    if(mode === 'pvp'){
+      slot.aiBlock = false; slot.aiAt = Infinity;
+      if(!s.rhythm) send('shot', {i:slot.slot, m:n.m, l:n.l, a:n.a});   // your friend sees it fly at once
+    }
+    pPose = {k:'jab', t:0};
+  }
+  function updateSalvo(dt){
+    const s = salvo; s.t += dt;
+    const bl = beatLen();
+    if(s.stage === 'aim'){
+      const done = s.rhythm ? songT >= s.start + 4*bl - GOOD : (s.used >= s.shots || s.t >= AIM_SECS);
+      if(s.rhythm) s.notes.forEach((x, i) => { if(x.st === 'empty' && songT > s.start + i*bl + GOOD) x.st = 'rest'; });
+      if(done){
+        s.stage = 'fly';
+        s.notes.forEach(x => { if(x.st === 'empty') x.st = 'rest'; });
+        if(mode === 'pvp'){
+          if(s.rhythm) send('bar', {notes: s.notes.map(x => x.st === 'fly' ? {i:x.slot, m:x.n.m, l:x.n.l, a:x.n.a} : null)});
+          else send('end', {count: s.used});
+        }
+      }
+    }
+    s.notes.forEach(x => {
+      if(x.st !== 'fly') return;
+      x.t = songT - x.spawnAt;
+      // online, a shot hangs just short of your friend until their device says what happened
+      const p = shotAt(Math.min(mode === 'pvp' ? .94 : 1, x.t / s.flight)); x.x = p.x; x.y = p.y;
+      if(mode === 'pvp'){
+        if(x.t > s.flight*3 + 6) x.st = 'blocked';        // lost message: don't hang the fight
+        return;
+      }
+      if(x.aiBlock && songT >= x.aiAt){
+        x.st = 'blocked'; burst(x.x, x.y, '#F4EEE2', 12);
+        if(ac) baronTone(x.n.m); bPose = {k:'throw', t:0};
+        floaters.push({text:'BLOCKED', x:BX-40, y:FLOOR-215, t:0, c:'#CFC7B6'});
+      } else if(x.t >= s.flight){
+        x.st = 'hit'; burst(BCHEST.x, BCHEST.y, '#FF4E86', 16);
+        hurt('b', MY_DMG());
+        floaters.push({text:'-' + MY_DMG(), x:BX-20, y:FLOOR-215, t:0, c:'#FF4E86'});
+        addScore(60*bout);
+      }
+    });
+    if(s.stage === 'fly' && s.notes.every(x => x.st === 'rest' || x.st === 'hit' || x.st === 'blocked')){
+      const hits = s.notes.filter(x => x.st === 'hit').length;
+      if(mode === 'ai' && hits === 0 && s.used > 0) say(['Ha! Every one.', 'Predictable.', 'I know that tune.'][Math.floor(Math.random()*3)], 1.3);
+      salvo = null; restT = .5;
+      if(mode === 'pvp') net.waiting = true;             // their move: they'll fire back, or tell us to go again
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Playing a note
+   * ------------------------------------------------------------------ */
+  NoteInput.on(ev => {
+    if(document.getElementById('hsName')) return;        // typing a name for the high-score table
+    tone(ev.midi, .5, 'triangle', .28 * (ev.source === 'midi' ? Math.max(.4, ev.velocity) : 1));
+    lightKey(ev.midi, true);
+    if(ev.source !== 'midi') setTimeout(() => lightKey(ev.midi, false), 160);
+    if(phase !== 'fight') return;
+    if(salvo){ if(salvo.stage === 'aim') fire(ev); return; }
+    if(!volley) return;
+    const tg = target();
+    if(!tg) return;
+    if(ev.pc === ((tg.n.m % 12) + 12) % 12){
+      if(volley.rhythm){
+        const d = songT - tg.landAt;
+        if(d < -goodWin()){                              // right note, too soon
+          hurt('p', WRONG_DMG, true);
+          floaters.push({text:'EARLY', x:PX+30, y:FLOOR-200, t:0, c:'#FF7A2F'});
+          return;
+        }
+        tg.st = 'block'; tg.judge = Math.abs(d) <= PERFECT ? 'perfect' : 'good';
+        if(volley.remote) send('res', {i:tg.idx, blocked:true});
+        burst(CHEST.x, CHEST.y, tg.judge === 'perfect' ? '#FFC53D' : '#F4EEE2', tg.judge === 'perfect' ? 20 : 12);
+        const pts = (tg.judge === 'perfect' ? 20 : 10)*bout;
+        floaters.push({text: tg.judge === 'perfect' ? 'PERFECT' : (d < 0 ? 'GOOD · a bit early' : 'GOOD · a bit late'),
+          x:PX+40, y:FLOOR-210, t:0, c: tg.judge === 'perfect' ? '#FFC53D' : '#F4EEE2'});
+        addScore(pts);
+        pPose = {k:'jab', t:0}; thud(140, .18, .09);
+        return;
+      }
+      const wasFlying = tg.st === 'fly';
+      tg.st = 'block';
+      if(volley.remote) send('res', {i:tg.idx, blocked:true});
+      const at = wasFlying ? {x:tg.x, y:tg.y} : HAND;
+      burst(at.x, at.y, '#FFC53D', 14);
+      const pts = 10*bout + (wasFlying ? Math.round(10*(1 - tg.t/volley.flight)) : 15);
+      addScore(pts, at.x, at.y - 18);
+      pPose = {k:'jab', t:0};
+      thud(140, .18, .09);
+    } else {
+      hurt('p', WRONG_DMG, true);
+      floaters.push({text:'✗ ' + ev.name, x:PX+20, y:FLOOR-190, t:0, c:'#E5383B'});
+    }
+  });
+  NoteInput.onOff(ev => lightKey(ev.midi, false));
+
+  function addScore(n, x, y){
+    if(mode === 'pvp') return;                            // friendly matches aren't scored
+    score += n; updateHud();
+    if(x != null) floaters.push({text:'+' + n, x, y, t:0, c:'#FFC53D'});
+  }
+  function hurt(who, dmg, small){
+    hp[who] = Math.max(0, hp[who] - dmg);
+    if(who === 'p' && mode === 'pvp') send('hp', {hp: hp.p});   // you're the judge of your own health
+    if(who === 'p'){ tookDamageThisRound = true; pPose = {k:'hurt', t:0}; }
+    else bPose = {k:'hurt', t:0};
+    if(!small){ shake = REDUCED ? 0 : .25; thud(who === 'p' ? 70 : 90, .4, .25); }
+    else thud(200, .1, .06);
+  }
+  function burst(x, y, c, n){
+    for(let i=0;i<n;i++){
+      const a = Math.random()*Math.PI*2, s = 60 + Math.random()*160;
+      sparks.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 40, t:0, life:.45 + Math.random()*.3, c});
+    }
+  }
+  function updateHud(){
+    $('score').textContent = score; $('bout').textContent = bout;
+    if(score > best){ best = score; $('best').textContent = best; try{ localStorage.setItem('scale-brawl.best', best); }catch(e){} }
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Update
+   * ------------------------------------------------------------------ */
+  function update(dt){
+    phaseT += dt;
+    if(dt > 0) music(dt);
+    pPose.t += dt; bPose.t += dt;
+    if(banner){ banner.t += dt; if(banner.t > banner.dur) banner = null; }
+    if(ribbon){ ribbon.t += dt; if(ribbon.t > 3.2) ribbon = null; else if(ribbon.t >= 0 && !ribbon.played){ ribbon.played = true; fanfare(true); setTimeout(() => fanfare(true), 420); } }
+    if(bubble){ bubble.t += dt; if(bubble.t > bubble.dur) bubble = null; }
+    shake = Math.max(0, shake - dt);
+    ['p','b'].forEach(k => { shownHp[k] += (hp[k] - shownHp[k]) * Math.min(1, dt*6); });
+    sparks.forEach(s => { s.t += dt; s.x += s.vx*dt; s.y += s.vy*dt; s.vy += 420*dt; });
+    sparks = sparks.filter(s => s.t < s.life);
+    floaters.forEach(f => { f.t += dt; f.y -= 34*dt; });
+    floaters = floaters.filter(f => f.t < 1.1);
+
+    if(phase === 'intro'){
+      const introLen = rhythmRound() ? 3.1 : 2.0;
+      if(phaseT > introLen - .7 && !banner){ banner = {big:'Fight!', small:'', t:0, dur:.7}; }
+      if(phaseT > introLen){
+        setPhase('fight'); restT = .2;
+        if(mode === 'pvp'){ if(!(volley && volley.remote)) volley = null; takeTurn(net.first, baseShots()); }
+        else volley = null;
+      }
+      return;
+    }
+    if(phase === 'fight') fight(dt);
+    if(phase === 'roundEnd' && phaseT > 2.6){ if(mode === 'pvp') afterRoundPvp(); else afterRound(); }
+  }
+
+  let restT = 0;
+  function fight(dt){
+    clock = Math.max(0, clock - dt);
+    if(salvo){
+      updateSalvo(dt);
+    } else if(!volley){
+      if(mode === 'ai'){ restT -= dt; if(restT <= 0) newVolley(); }
+    } else {
+      const v = volley; v.t += dt;
+      if(v.stage === 'windup'){
+        if(songT >= v.throwAt - .05){ v.stage = 'throw'; v.t = 0; }
+      } else if(v.stage === 'throw'){
+        // each note leaves the baton on its beat
+        v.notes.forEach(n => {
+          if(n.st === 'wait' && songT >= n.spawnAt){
+            n.st = 'fly'; n.t = songT - n.spawnAt;
+            if(ac) baronTone(n.n.m, atAudio(n.spawnAt));
+            bPose = {k:'throw', t:0};
+          }
+        });
+        v.notes.forEach(n => {
+          if(n.st !== 'fly') return;
+          n.t = songT - n.spawnAt;
+          const p = pathAt(Math.min(v.rhythm ? 1.12 : 1, n.t / v.flight)); n.x = p.x; n.y = p.y;
+          if(n.t >= v.flight + (v.rhythm ? goodWin() : 0)){
+            n.st = 'miss'; burst(n.x, n.y, '#E5383B', 10);
+            if(v.remote) send('res', {i:n.idx, blocked:false});
+            hurt('p', HIT_DMG());
+            floaters.push({text:'-' + HIT_DMG(), x:PX, y:FLOOR-200, t:0, c:'#E5383B'});
+          }
+        });
+        const allIn = !v.remote || (v.expected != null && v.notes.filter(live).length >= v.expected);
+        if(allIn && v.notes.every(n => n.st === 'block' || n.st === 'miss' || n.st === 'rest')){
+          const blocked = v.notes.filter(n => n.st === 'block').length, clean = blocked === v.notes.filter(live).length;
+          if(mode === 'pvp') defenderDone(blocked, clean);
+          else if(blocked > 0) startSalvo(blocked + (clean ? 1 : 0), v.rhythm, clean);
+          else { volley = null; restT = 1.2; if(Math.random() < .5) say(TAUNTS[Math.floor(Math.random()*TAUNTS.length)], 1.1); }
+        }
+      }
+    }
+
+    if(mode === 'pvp'){
+      // the host referees: K.O. or time, then tells the other device
+      if(net.role === 'host' && (hp.p <= 0 || hp.b <= 0 || clock <= 0)){
+        const w = hp.b <= 0 && hp.p > 0 ? 'p' : hp.p <= 0 && hp.b > 0 ? 'b' : (hp.p >= hp.b ? 'p' : 'b');
+        const ko = hp.p <= 0 || hp.b <= 0;
+        send('roundEnd', {winner: w === 'p' ? 'host' : 'guest', ko});
+        endRound(w, ko);
+      }
+      return;
+    }
+    if(hp.p <= 0 || hp.b <= 0 || clock <= 0) endRound();
+  }
+
+  function endRound(force, koFlag){
+    let w;
+    if(force) w = force;
+    else if(hp.b <= 0 && hp.p > 0) w = 'p';
+    else if(hp.p <= 0 && hp.b > 0) w = 'b';
+    else w = hp.p >= hp.b ? 'p' : 'b';                    // time up: more health wins
+    roundWinner = w; wins[w]++;
+    volley = null; salvo = null;
+    const ko = koFlag != null ? koFlag : (hp.p <= 0 || hp.b <= 0);
+    // how did that round go, against how strong an opponent?
+    const oppR = mode === 'pvp' ? (net && net.opp ? net.opp.r : R0) + 120*myHC() - 120*oppHC() : anchor(bout, round);
+    const newBelt = Rating.update(oppR, roundScore(hp.p, hp.b, w === 'p'));
+    if(newBelt){ ribbon = {belt:newBelt, t:-1.2}; }
+    if(mode === 'pvp'){
+      if(w === 'p'){ bPose = {k:'ko', t:0}; pPose = {k:'win', t:0}; fanfare(true); }
+      else { pPose = {k:'ko', t:0}; bPose = {k:'win', t:0}; fanfare(false); }
+      banner = {big: ko ? 'K.O.!' : 'Time!', small: w === 'p' ? 'You win the round' : oppName() + ' takes the round', t:0, dur:2.4};
+      setPhase('roundEnd');
+      return;
+    }
+    if(w === 'p'){
+      bPose = {k:'ko', t:0}; pPose = {k:'win', t:0};
+      let bonus = 200*bout + Math.round(clock*5);
+      if(!tookDamageThisRound){ bonus += 500; floaters.push({text:'PERFECT!', x:W/2, y:200, t:0, c:'#FFC53D'}); }
+      addScore(bonus);
+      banner = {big: ko ? 'K.O.!' : 'Time!', small:'You win the round', t:0, dur:2.4};
+      fanfare(true);
+    } else {
+      pPose = {k:'ko', t:0}; bPose = {k:'win', t:0};
+      banner = {big: ko ? 'K.O.' : 'Time!', small:'The Baron takes the round', t:0, dur:2.4};
+      say(['Bravo. For me.', 'And THAT is how it goes.', 'Back to your scales!'][Math.floor(Math.random()*3)], 2.2);
+      fanfare(false);
+    }
+    setPhase('roundEnd');
+  }
+
+  function afterRound(){
+    if(wins.p >= 2){ bout++; startBout(); return; }
+    if(wins.b >= 2){ gameOver(); return; }
+    round++; startRound();
+  }
+
+  function beltHtml(withLink){
+    const b = Rating.belt(), nx = BELTS[Rating.beltIndex() + 1];
+    let h = '<span class="belt" style="background:' + b.c + '"></span>' + b.name + ' belt' + (SHOW_RATING ? ' · ' + Rating.r : '');
+    if(nx) h += '<span class="bar" title="On the way to ' + nx.name + ' belt"><i style="width:' + Math.round(Rating.progress()*100) + '%"></i></span>';
+    if(withLink){
+      const sb = Rating.startBout();
+      if(Rating.n === 0) h += '<br>Win rounds to earn your next belt.';
+      else if(sb > 1) h += '<br>' + (fromBoutOne ? 'Starting at bout 1. <button class="linkbtn" id="fromHere">Start at bout ' + sb + '</button>'
+                                                : 'You start at bout ' + sb + '. <button class="linkbtn" id="fromOne">Start at bout 1 instead</button>');
+    }
+    return h;
+  }
+  function refreshRatingUi(){
+    $('beltLine').innerHTML = beltHtml(true);
+    const f1 = $('fromOne'), fh = $('fromHere');
+    if(f1) f1.onclick = () => { fromBoutOne = true; refreshRatingUi(); };
+    if(fh) fh.onclick = () => { fromBoutOne = false; refreshRatingUi(); };
+  }
+  function gameOver(){
+    setPhase('over');
+    $('overBelt').innerHTML = beltHtml(false); refreshRatingUi();
+    $('overTitle').textContent = 'K.O.';
+    $('overText').textContent = bout === 1
+      ? 'The Baron wins this one. Echo the card note by note and you’ll have him.'
+      : 'You beat the Baron ' + (bout-1) + (bout === 2 ? ' time' : ' times') + ' before he got you.';
+    $('overScore').textContent = score;
+    $('overCard').hidden = false;
+    if(board) board.submitIfHigh(score);
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Drawing
+   * ------------------------------------------------------------------ */
+  const INK = '#17140E', PAPER = '#F4EEE2';
+
+  function stageBg(){
+    // back wall + velvet curtains
+    const g = ctx.createLinearGradient(0,0,0,FLOOR);
+    g.addColorStop(0,'#2A1E3A'); g.addColorStop(1,'#4A3466');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,FLOOR);
+    for(let side=0; side<2; side++){
+      ctx.save(); if(side){ ctx.translate(W,0); ctx.scale(-1,1); }
+      ctx.fillStyle = '#8E1E3C';
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(96,0);
+      ctx.quadraticCurveTo(70,FLOOR*.5, 40, FLOOR); ctx.lineTo(0,FLOOR); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 3;
+      for(let i=1;i<4;i++){ ctx.beginPath(); ctx.moveTo(i*22,0); ctx.quadraticCurveTo(i*16,FLOOR*.5, i*9, FLOOR); ctx.stroke(); }
+      ctx.restore();
+    }
+    // pelmet
+    ctx.fillStyle = '#8E1E3C'; ctx.fillRect(0,0,W,18);
+    ctx.fillStyle = '#FFC53D'; for(let x=8;x<W;x+=26){ ctx.beginPath(); ctx.arc(x,18,4,0,Math.PI); ctx.fill(); }
+    // spotlights
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    [[PX,'rgba(80,110,255,.13)'],[BX,'rgba(255,78,134,.12)']].forEach(([x,c]) => {
+      const rg = ctx.createRadialGradient(x,FLOOR-40,10,x,FLOOR-40,190);
+      rg.addColorStop(0,c); rg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = rg; ctx.fillRect(x-200,FLOOR-240,400,260);
+    });
+    ctx.restore();
+    // floor boards
+    ctx.fillStyle = '#B9874F'; ctx.fillRect(0,FLOOR,W,H-FLOOR);
+    ctx.strokeStyle = 'rgba(23,20,14,.35)'; ctx.lineWidth = 1.5;
+    for(let x=-40;x<W+40;x+=48){ ctx.beginPath(); ctx.moveTo(W/2 + (x-W/2)*.7, FLOOR); ctx.lineTo(W/2 + (x-W/2)*1.2, H); ctx.stroke(); }
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0,FLOOR); ctx.lineTo(W,FLOOR); ctx.stroke();
+    // footlights
+    for(let x=60;x<W;x+=80){ ctx.fillStyle = '#FFC53D'; ctx.beginPath(); ctx.ellipse(x,H-10,10,5,0,Math.PI,0); ctx.fill(); }
+  }
+
+  function limb(x1,y1,x2,y2,w,c){
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = INK; ctx.lineWidth = w+5; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.strokeStyle = c;   ctx.lineWidth = w;   ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  }
+  function blob(x,y,r,c){ ctx.fillStyle = c; ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
+  function rrect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  const ease = t => 1 - Math.pow(1-Math.min(1,Math.max(0,t)),3);
+
+  // the player: a busker in a blue hoodie with pink headphones
+  function drawPlayer(time){
+    const k = pPose.k, t = pPose.t;
+    let dx = 0, lean = 0, fist = {x:40, y:-112}, fist2 = {x:26, y:-104}, bob = Math.sin(time*4)*2, flash = 0;
+    if(k === 'jab' && t < .18){ const s = Math.sin(t/.18*Math.PI); fist = {x:40+34*s, y:-114}; lean = .08*s; }
+    if(k === 'dash'){
+      const f = t < .28 ? ease(t/.28) : t < .5 ? 1 : 1 - ease((t-.5)/.25);
+      dx = f*(BX - PX - 120); lean = .16*f; fist = {x:40+44*f, y:-118};
+    }
+    if(k === 'hurt' && t < .35){ lean = -.22*Math.sin(t/.35*Math.PI); dx = -10*Math.sin(t/.35*Math.PI); flash = 1 - t/.35; }
+    if(k === 'win'){ fist = {x:14, y:-178 - Math.abs(Math.sin(time*6))*6}; bob = 0; }
+    if(k === 'ko'){
+      ctx.save(); ctx.translate(PX - 40, FLOOR - 14); ctx.rotate(-Math.PI/2*ease(t/.4));
+      ctx.translate(0, 14); drawBusker(0, 0, {x:30,y:-90}, {x:20,y:-80}, 0); ctx.restore(); return;
+    }
+    ctx.save(); ctx.translate(PX + dx, FLOOR); ctx.rotate(lean); ctx.translate(0, bob);
+    if(flash > 0 && Math.floor(time*30) % 2) ctx.globalAlpha = .45;
+    drawBusker(0, 0, fist, fist2, flash);
+    ctx.restore();
+  }
+  const RIVAL = {SKIN:'#B9825C', HOOD:'#FF4E86', JEANS:'#3B2A3F', PHONES:'#2438C8'};
+  function drawBusker(x, y, fist, fist2, flash, pal){
+    pal = pal || {};
+    const SKIN = pal.SKIN || '#E8B48C', HOOD = pal.HOOD || '#2438C8', JEANS = pal.JEANS || '#26305A', PHONES = pal.PHONES || '#FF4E86';
+    limb(-6,-70,-22,-2,11,JEANS); limb(8,-70,22,-2,11,JEANS);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    rrect(-34,-8,22,10,4); ctx.fill(); ctx.stroke(); rrect(14,-8,22,10,4); ctx.fill(); ctx.stroke();
+    limb(-10,-118,fist2.x,fist2.y,10,HOOD);                // back arm
+    blob(fist2.x,fist2.y,8,SKIN);
+    ctx.fillStyle = HOOD; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    rrect(-26,-130,52,68,12); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFC53D'; ctx.font = '700 18px "Noto Music", serif'; ctx.textAlign = 'center'; ctx.fillText('♪', 0, -86);
+    blob(0,-152,20,SKIN);                                   // head
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(0,-156,20,Math.PI*1.05,Math.PI*1.95); ctx.lineTo(16,-162); ctx.lineTo(-18,-160); ctx.fill();
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(8,-151,2.2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4,-141); ctx.lineTo(13,-142); ctx.stroke();
+    ctx.strokeStyle = PHONES; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0,-154,24,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+    ctx.fillStyle = PHONES; ctx.strokeStyle = INK; ctx.lineWidth = 2; rrect(-26,-162,9,16,3); ctx.fill(); ctx.stroke();
+    limb(14,-118,fist.x,fist.y,10,HOOD);                   // front arm
+    blob(fist.x,fist.y,9,SKIN);
+  }
+
+  // online: your friend is a second busker, in pink, facing you
+  function drawRival(time){
+    const k = bPose.k, t = bPose.t;
+    let dx = 0, lean = 0, fist = {x:40, y:-112}, fist2 = {x:26, y:-104}, bob = Math.sin(time*4+1.3)*2, flash = 0;
+    if((k === 'throw' || k === 'windup') && t < .18){ const s = Math.sin(t/.18*Math.PI); fist = {x:40+34*s, y:-114}; lean = .08*s; }
+    if(k === 'hurt' && t < .35){ lean = -.22*Math.sin(t/.35*Math.PI); dx = -10*Math.sin(t/.35*Math.PI); flash = 1 - t/.35; }
+    if(k === 'win'){ fist = {x:14, y:-178 - Math.abs(Math.sin(time*6))*6}; bob = 0; }
+    if(k === 'ko'){
+      ctx.save(); ctx.translate(BX + 40, FLOOR - 14); ctx.scale(-1,1); ctx.rotate(-Math.PI/2*ease(t/.4));
+      ctx.translate(0, 14); drawBusker(0, 0, {x:30,y:-90}, {x:20,y:-80}, 0, RIVAL); ctx.restore(); return;
+    }
+    ctx.save(); ctx.translate(BX, FLOOR); ctx.scale(-1,1); ctx.translate(dx, 0); ctx.rotate(lean); ctx.translate(0, bob);
+    if(flash > 0 && Math.floor(time*30) % 2) ctx.globalAlpha = .45;
+    drawBusker(0, 0, fist, fist2, flash, RIVAL);
+    ctx.restore();
+  }
+
+  // Baron von Baton: tailcoat, monocle, a moustache you could hang washing on
+  function drawBaron(time){
+    const k = bPose.k, t = bPose.t;
+    let dx = 0, lean = 0, armUp = .2, flash = 0, bob = Math.sin(time*3+1)*2;
+    if(k === 'windup'){ armUp = -1.2*ease(t/.4); lean = -.05; }
+    if(k === 'throw'){ const s = t < .2 ? t/.2 : 1; armUp = -1.2 + 1.7*ease(s); lean = .06*(1-s); }
+    if(k === 'hurt' && t < .45){ const s = Math.sin(t/.45*Math.PI); lean = -.25*s; dx = 22*s; flash = 1 - t/.45; armUp = -.6; }
+    if(k === 'win'){ armUp = -1.4 + Math.sin(time*8)*.25; }
+    if(k === 'ko'){
+      ctx.save(); ctx.translate(BX + 40, FLOOR - 14); ctx.rotate(Math.PI/2*ease(t/.4)); ctx.translate(0,14);
+      ctx.scale(-1,1); drawConductor(.5, 0); ctx.restore(); return;
+    }
+    ctx.save(); ctx.translate(BX + dx, FLOOR); ctx.scale(-1,1); ctx.rotate(lean); ctx.translate(0, bob);
+    if(flash > 0 && Math.floor(time*30) % 2) ctx.globalAlpha = .45;
+    drawConductor(armUp, flash);
+    ctx.restore();
+  }
+  function drawConductor(armUp, flash){
+    const SKIN = '#F0C9A6', COAT = '#1F1A2E';
+    limb(-6,-74,-16,-2,12,COAT); limb(8,-74,18,-2,12,COAT);
+    ctx.fillStyle = INK; rrect(-30,-8,24,10,4); ctx.fill(); rrect(10,-8,26,10,4); ctx.fill();
+    // coat tails behind
+    ctx.fillStyle = COAT; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(-24,-90); ctx.lineTo(-44,-40); ctx.lineTo(-20,-52); ctx.closePath(); ctx.fill(); ctx.stroke();
+    limb(-12,-130,-28,-96,10,COAT); blob(-28,-94,7,'#fff');          // back arm, white glove
+    ctx.fillStyle = COAT; rrect(-26,-142,52,74,10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(-8,-142); ctx.lineTo(10,-142); ctx.lineTo(1,-96); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FF4E86'; ctx.beginPath(); ctx.moveTo(1,-136); ctx.lineTo(-9,-142); ctx.lineTo(-9,-130); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(1,-136); ctx.lineTo(11,-142); ctx.lineTo(11,-130); ctx.closePath(); ctx.fill();
+    // head + swept grey hair
+    ctx.fillStyle = '#C9C3B6'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(-18,-170); ctx.quadraticCurveTo(-46,-186,-40,-150); ctx.quadraticCurveTo(-30,-158,-20,-150); ctx.closePath(); ctx.fill(); ctx.stroke();
+    blob(0,-164,21,SKIN);
+    ctx.fillStyle = '#C9C3B6'; ctx.beginPath(); ctx.arc(-2,-170,21,Math.PI*1.08,Math.PI*1.85); ctx.quadraticCurveTo(0,-176,-20,-166); ctx.fill();
+    // brow, eye, monocle, nose, moustache
+    ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(4,-174); ctx.lineTo(16,-170); ctx.stroke();
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(10,-164,2.3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#FFC53D'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(10,-164,6.5,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(10,-157.5); ctx.quadraticCurveTo(4,-140,-6,-132); ctx.stroke();
+    ctx.fillStyle = SKIN; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(18,-164); ctx.lineTo(26,-156); ctx.lineTo(18,-153); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#C9C3B6'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(18,-151); ctx.quadraticCurveTo(34,-152,36,-162); ctx.quadraticCurveTo(30,-146,16,-146);
+    ctx.quadraticCurveTo(4,-146,0,-158); ctx.quadraticCurveTo(6,-150,18,-151); ctx.fill(); ctx.stroke();
+    // baton arm
+    const sx = 14, sy = -130, ua = armUp, fx = sx + Math.cos(ua)*30, fy = sy + Math.sin(ua)*30 + 8;
+    const hx = fx + Math.cos(ua*.6)*24, hy = fy + Math.sin(ua*.6)*24;
+    limb(sx,sy,fx,fy,10,COAT); limb(fx,fy,hx,hy,9,COAT);
+    blob(hx,hy,7,'#fff');
+    const ba = ua*.6 - .15;
+    ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(hx+Math.cos(ba)*46, hy+Math.sin(ba)*46); ctx.stroke();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(hx+Math.cos(ba)*45, hy+Math.sin(ba)*45); ctx.stroke();
+    ctx.fillStyle = '#B9874F'; ctx.beginPath(); ctx.arc(hx-Math.cos(ba)*2, hy-Math.sin(ba)*2, 4, 0, Math.PI*2); ctx.fill();
+  }
+
+  // timing rounds: the ring the notes must be played in, pulsing on every beat
+  function drawRing(at){
+    const f = beatsNow() % 1, pulse = 1 + .18*Math.pow(1 - f, 3);
+    ctx.save(); ctx.translate(at.x, at.y);
+    ctx.strokeStyle = INK; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0,0,26*pulse,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#FFC53D'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(0,0,26*pulse,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // one thrown note: a big notehead with its letter on it
+  function drawProjectile(n, time, mine){
+    const r = 15;
+    ctx.save(); ctx.translate(n.x, n.y);
+    ctx.globalAlpha = .25; ctx.fillStyle = '#FFC53D';
+    ctx.beginPath(); ctx.ellipse(18, 4, 16, 9, -.3, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.rotate(-.35 + Math.sin(time*10 + n.x*.05)*.08);
+    const isTarget = !mine && n === target();
+    ctx.fillStyle = mine ? '#9FB4FF' : isTarget ? '#FFC53D' : '#F4EEE2'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(0,0,r*1.25,r,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(r*1.2,-3); ctx.lineTo(r*1.2,-44); ctx.stroke();
+    ctx.rotate(.35);
+    ctx.fillStyle = INK; ctx.font = '800 17px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(n.n.l + n.n.a, 0, 1);
+    if(isTarget){ ctx.strokeStyle = '#FF4E86'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,r+9+Math.sin(time*12)*2,0,Math.PI*2); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  // the attack card: the volley written on a treble stave, letter names underneath
+  function drawCard(time){
+    const att = salvo || volley; if(!att) return;
+    const mine = att === salvo;                               // your attack, written as you play it
+    const notes = att.notes, len = notes.length, rh = att.rhythm, bl = beatLen();
+    const first = rh ? 112 : 92;                              // room for a 4/4 in timing rounds
+    const gap = 9, cw = Math.max(250, first + 18 + len*52), ch = 112;
+    const x0 = W/2 - cw/2, y0 = 58;
+    let appear = mine ? ease(att.t/.25) : att.stage === 'windup' ? ease(att.t/.25) : 1;
+    ctx.save(); ctx.globalAlpha = appear;
+    ctx.translate(0, (1-appear)*-14);
+    ctx.fillStyle = mine ? '#2438C8' : INK; ctx.fillRect(x0+5, y0+5, cw, ch);
+    ctx.fillStyle = PAPER; ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.fillRect(x0, y0, cw, ch); ctx.strokeRect(x0, y0, cw, ch);
+    // stave
+    const bottom = y0 + 66;                                   // the E4 line
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.3;
+    for(let i=0;i<5;i++){ ctx.beginPath(); ctx.moveTo(x0+12, bottom - i*gap*2 + .5); ctx.lineTo(x0+cw-12, bottom - i*gap*2 + .5); ctx.stroke(); }
+    ctx.fillStyle = INK; ctx.font = '64px "Noto Music", serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('𝄞', x0+14, bottom + 13);
+    if(rh){
+      ctx.font = '800 21px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('4', x0+70, bottom - gap*6 + 1); ctx.fillText('4', x0+70, bottom - gap*2 + 1);
+    }
+    const label = mine ? (rh ? 'YOUR BAR · ON THE BEAT' : 'YOUR ATTACK') : (rh ? 'ON THE BEAT' : '');
+    if(label){
+      // a tag hanging under the card, so it never collides with the clef or the notes
+      ctx.font = '700 11px "Space Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(label).width + 16;
+      ctx.fillStyle = mine ? '#2438C8' : '#7B4DDB'; ctx.fillRect(W/2 - tw/2, y0+ch+2, tw, 18);
+      ctx.fillStyle = '#fff'; ctx.fillText(label, W/2, y0+ch+11.5);
+    }
+    if(mine && !rh && att.stage === 'aim'){                   // time left to fire
+      const f = Math.max(0, 1 - att.t/AIM_SECS);
+      ctx.fillStyle = '#2438C8'; ctx.fillRect(x0, y0+ch-3, cw*f, 3);
+    }
+    const tg = mine ? (rh ? notes[Math.round((songT - att.start)/bl)] : notes.find(n => n.st === 'empty')) : target();
+    notes.forEach((n, i) => {
+      const nx = x0 + first + i*52;
+      if(rh){                                                 // count the beats along the top
+        const when = mine && att.stage === 'aim' ? att.start + i*bl : n.landAt;
+        const lit = when != null ? Math.abs(songT - when) < bl/2 : false;
+        ctx.fillStyle = lit ? '#FF4E86' : '#A39A88'; ctx.font = '700 10px "Space Mono", monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i+1), nx, y0+10);
+      }
+      if(n.st === 'empty'){                                   // a shot you haven't fired yet
+        if(n === tg && (!rh || att.stage === 'aim')){ ctx.fillStyle = 'rgba(36,56,200,.12)'; ctx.fillRect(nx-22, y0+6, 44, ch-12); }
+        ctx.strokeStyle = '#2438C8'; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.ellipse(nx, bottom - 4*gap, gap*1.15, gap*.82, -.35, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+        return;
+      }
+      if(n.rest || n.st === 'rest'){
+        ctx.fillStyle = INK; ctx.font = '38px "Noto Music", serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText('𝄽', nx, bottom - gap*2.6);
+        ctx.font = '700 11px "Space Mono", monospace'; ctx.fillStyle = '#A39A88'; ctx.fillText('rest', nx, y0 + ch - 10);
+        return;
+      }
+      const step = 7*Math.floor(n.n.m/12 - 1) + 'CDEFGAB'.indexOf(n.n.l);   // diatonic step, C4 = 28
+      const ny = bottom - (step - 30)*gap;                                   // E4 = 30 sits on the bottom line
+      let col = mine ? '#2438C8' : INK;
+      if(n.st === 'block' || n.st === 'hit') col = '#1E9E6A';
+      if(n.st === 'miss')  col = '#E5383B';
+      if(n.st === 'blocked') col = '#A39A88';
+      if(n === tg && !mine){
+        ctx.fillStyle = 'rgba(255,78,134,.16)'; ctx.fillRect(nx-22, y0+6, 44, ch-12);
+      }
+      // ledger lines below (C4) and above (A5+)
+      ctx.strokeStyle = col; ctx.lineWidth = 1.3;
+      for(let s=28; s>=step; s-=2){ if(s < 30){ ctx.beginPath(); ctx.moveTo(nx-15, bottom-(s-30)*gap+.5); ctx.lineTo(nx+15, bottom-(s-30)*gap+.5); ctx.stroke(); } }
+      for(let s=40; s<=step; s+=2){ ctx.beginPath(); ctx.moveTo(nx-15, bottom-(s-30)*gap+.5); ctx.lineTo(nx+15, bottom-(s-30)*gap+.5); ctx.stroke(); }
+      if(n.n.a){ ctx.fillStyle = col; ctx.font = '26px "Noto Music", serif'; ctx.textAlign = 'right'; ctx.fillText(n.n.a, nx-11, ny+9); }
+      ctx.save(); ctx.translate(nx, ny); ctx.rotate(-.35);
+      ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(0,0,gap*1.15,gap*.82,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+      ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.beginPath();
+      if(step < 34){ ctx.moveTo(nx+gap*1.05, ny-2); ctx.lineTo(nx+gap*1.05, ny-gap*6.4); }
+      else         { ctx.moveTo(nx-gap*1.05, ny+2); ctx.lineTo(nx-gap*1.05, ny+gap*6.4); }
+      ctx.stroke();
+      // letter name under the stave
+      ctx.fillStyle = col; ctx.font = '800 18px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText(n.n.l + n.n.a, nx, y0 + ch - 9);
+      if(n.st === 'block' || n.st === 'miss' || n.st === 'hit' || n.st === 'blocked'){
+        ctx.font = '700 13px "Space Mono", monospace'; ctx.fillText(n.st === 'block' || n.st === 'hit' ? '✓' : '✗', nx + 16, y0 + ch - 10);
+      }
+    });
+    ctx.restore();
+  }
+
+  function drawBars(){
+    const bw = 290, bh = 20, y = 14;
+    [['p', 22, mode === 'pvp' && net ? net.name.toUpperCase() + ' (YOU)' : 'YOU', '#2438C8'], ['b', W-22-bw, oppName().toUpperCase(), '#FF4E86']].forEach(([k,x,name,c]) => {
+      ctx.fillStyle = INK; ctx.fillRect(x+3, y+3, bw, bh);
+      ctx.fillStyle = '#5A2230'; ctx.fillRect(x, y, bw, bh);
+      const f = Math.max(0, shownHp[k]/MAX_HP), real = Math.max(0, hp[k]/MAX_HP);
+      ctx.fillStyle = '#FFC53D';
+      if(k === 'p') ctx.fillRect(x, y, bw*f, bh); else ctx.fillRect(x + bw*(1-f), y, bw*f, bh);
+      ctx.fillStyle = c;
+      if(k === 'p') ctx.fillRect(x, y, bw*real, bh); else ctx.fillRect(x + bw*(1-real), y, bw*real, bh);
+      ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.strokeRect(x, y, bw, bh);
+      ctx.fillStyle = PAPER; ctx.font = '700 11px "Space Mono", monospace'; ctx.textBaseline = 'top';
+      ctx.textAlign = k === 'p' ? 'left' : 'right';
+      // belt (and, in the Steam build, the rating) next to each name; the Baron has none
+      let label = name, bi = null;
+      if(k === 'p'){ bi = Rating.beltIndex(); if(SHOW_RATING) label += ' · ' + Rating.r; }
+      else if(mode === 'pvp' && net && net.opp){ bi = net.opp.belt; if(SHOW_RATING) label += ' · ' + net.opp.r; }
+      const hc = mode === 'pvp' ? (k === 'p' ? myHC() : oppHC()) : 0;
+      if(hc) label += ' · HANDICAP ' + '●'.repeat(hc);
+      if(bi != null){
+        if(k === 'p'){ const off = beltChip(x, y+bh+8, bi, false); ctx.fillStyle = PAPER; ctx.fillText(label, x + off, y+bh+6); }
+        else { const off = beltChip(x+bw, y+bh+8, bi, true); ctx.fillStyle = PAPER; ctx.fillText(label, x + bw - off, y+bh+6); }
+      } else ctx.fillText(label, k === 'p' ? x : x+bw, y+bh+6);
+      // round pips
+      for(let i=0;i<2;i++){
+        const px = k === 'p' ? x + bw - 10 - i*18 : x + 10 + i*18;
+        ctx.fillStyle = wins[k] > i ? '#FFC53D' : 'rgba(244,238,226,.18)'; ctx.strokeStyle = PAPER; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(px, y+bh+13, 5.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      }
+    });
+    // clock
+    ctx.fillStyle = PAPER; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    ctx.fillRect(W/2-28, 8, 56, 36); ctx.strokeRect(W/2-28, 8, 56, 36);
+    ctx.fillStyle = clock < 10 && phase === 'fight' ? '#E5383B' : INK;
+    ctx.font = '800 24px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(Math.ceil(clock)), W/2, 27);
+  }
+
+  // a new belt: a ribbon across the stage
+  function drawRibbon(){
+    if(!ribbon || ribbon.t < 0) return;
+    const t = ribbon.t, a = Math.min(1, t*5, (3.2 - t)*3), b = ribbon.belt;
+    if(a <= 0) return;
+    ctx.save(); ctx.globalAlpha = a;
+    const y = 322, h = 50, sl = ease(t/.35);                // low across the stage, clear of the K.O. banner
+    ctx.fillStyle = INK; ctx.fillRect(0, y - h/2 + 5, W*sl, h);
+    ctx.fillStyle = b.c; ctx.fillRect(0, y - h/2, W*sl, h);
+    ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.strokeRect(-4, y - h/2, W*sl + 8, h);
+    ctx.font = '800 30px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6; ctx.strokeStyle = b.name === 'Black' ? '#FFC53D' : INK; ctx.lineJoin = 'round';
+    const txt = b.name.toUpperCase() + ' BELT!';
+    ctx.fillStyle = b.name === 'White' || b.name === 'Yellow' ? INK : '#fff';
+    if(b.name !== 'White' && b.name !== 'Yellow') ctx.strokeText(txt, W/2, y);
+    ctx.fillText(txt, W/2, y);
+    ctx.restore();
+  }
+  function beltChip(x, y, idx, right){
+    const b = BELTS[idx || 0], w = 22, h = 8, bx = right ? x - w : x;
+    ctx.fillStyle = b.c; ctx.fillRect(bx, y, w, h);
+    ctx.strokeStyle = PAPER; ctx.lineWidth = 1.5; ctx.strokeRect(bx, y, w, h);
+    return w + 6;
+  }
+
+  function drawTag(text, c){
+    ctx.font = '700 12px "Space Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(text).width + 22, a = .6 + .4*Math.abs(Math.sin(performance.now()/400));
+    ctx.globalAlpha = a; ctx.fillStyle = c; ctx.fillRect(W/2 - tw/2, 96, tw, 24);
+    ctx.fillStyle = '#fff'; ctx.fillText(text, W/2, 108.5); ctx.globalAlpha = 1;
+  }
+
+  function drawBubble(){
+    if(!bubble) return;
+    if(volley || salvo){ bubble = null; return; }   // never cover the written notes
+    const a = Math.min(1, bubble.t*6, (bubble.dur - bubble.t)*4);
+    ctx.save(); ctx.globalAlpha = Math.max(0,a);
+    ctx.font = '600 15px "Hanken Grotesk", sans-serif';
+    const tw = ctx.measureText(bubble.text).width + 24, x = BX - 70 - tw, y = FLOOR - 236;
+    ctx.fillStyle = PAPER; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    rrect(x, y, tw, 34, 8); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x+tw-24, y+33); ctx.lineTo(x+tw+14, y+52); ctx.lineTo(x+tw-8, y+33); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x+tw-24, y+34); ctx.lineTo(x+tw+14, y+52); ctx.lineTo(x+tw-8, y+34); ctx.stroke();
+    ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(bubble.text, x+tw/2, y+17);
+    ctx.restore();
+  }
+
+  function drawBanner(){
+    if(!banner) return;
+    const t = banner.t, a = Math.min(1, t*8, (banner.dur - t)*5), s = 1 + .25*(1-ease(t/.25));
+    ctx.save(); ctx.globalAlpha = Math.max(0,a); ctx.translate(W/2, 200); ctx.scale(s,s);
+    ctx.font = '800 64px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = INK; ctx.strokeText(banner.big.toUpperCase(), 4, 4);
+    ctx.fillStyle = '#FF4E86'; ctx.fillText(banner.big.toUpperCase(), 4, 4);
+    ctx.strokeText(banner.big.toUpperCase(), 0, 0); ctx.fillStyle = '#FFC53D'; ctx.fillText(banner.big.toUpperCase(), 0, 0);
+    if(banner.small){
+      ctx.font = '700 16px "Space Mono", monospace'; ctx.lineWidth = 6; ctx.strokeText(banner.small, 0, 50);
+      ctx.fillStyle = PAPER; ctx.fillText(banner.small, 0, 50);
+    }
+    ctx.restore();
+  }
+
+  function draw(time){
+    ctx.save();
+    if(shake > 0){ ctx.translate((Math.random()-.5)*14*shake/.25, (Math.random()-.5)*10*shake/.25); }
+    stageBg();
+    // shadows
+    ctx.fillStyle = 'rgba(23,20,14,.3)';
+    ctx.beginPath(); ctx.ellipse(PX, FLOOR+4, 46, 8, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(BX, FLOOR+4, 46, 8, 0, 0, Math.PI*2); ctx.fill();
+    if(mode === 'pvp') drawRival(time); else drawBaron(time);
+    drawPlayer(time);
+    if(phase === 'fight' && rhythmRound()) drawRing(salvo ? BCHEST : CHEST);
+    if(volley) volley.notes.forEach(n => { if(n.st === 'fly') drawProjectile(n, time); });
+    if(salvo) salvo.notes.forEach(n => { if(n.st === 'fly') drawProjectile(n, time, true); });
+    sparks.forEach(s => { ctx.globalAlpha = 1 - s.t/s.life; ctx.fillStyle = s.c; ctx.fillRect(s.x-3, s.y-3, 6, 6); });
+    ctx.globalAlpha = 1;
+    drawCard(time);
+    floaters.forEach(f => {
+      ctx.globalAlpha = Math.max(0, 1 - f.t/1.1);
+      ctx.font = '800 20px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 5; ctx.strokeStyle = INK; ctx.strokeText(f.text, f.x, f.y); ctx.fillStyle = f.c; ctx.fillText(f.text, f.x, f.y);
+    });
+    ctx.globalAlpha = 1;
+    drawBubble();
+    if(mode === 'pvp' && phase === 'fight' && !volley && !salvo && net && net.waiting) drawTag(oppName().toUpperCase() + '’S TURN…', '#FF4E86');
+    drawBars();
+    drawBanner();
+    drawRibbon();
+    ctx.restore();
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Canvas sizing + loop
+   * ------------------------------------------------------------------ */
+  function fit(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  fit(); addEventListener('resize', fit);
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(.05, (now - last)/1000); last = now;
+    if(phase !== 'title' && phase !== 'over') update(dt);
+    else { update(0); pPose.t += dt; bPose.t += dt; if(bubble){ bubble.t += dt; if(bubble.t > bubble.dur) bubble = null; } }
+    draw(now/1000);
+    requestAnimationFrame(loop);
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  On-screen keys C4–E5, labelled with note + laptop key
+   * ------------------------------------------------------------------ */
+  const keyEls = {};
+  function buildKeys(){
+    const box = $('keys'); box.innerHTML = '';
+    const whites = [], LO = 60, HI = 76;
+    for(let m=LO; m<=HI; m++) if([0,2,4,5,7,9,11].includes(m%12)) whites.push(m);
+    const ww = 100/whites.length;
+    for(let m=LO; m<=HI; m++){
+      const black = ![0,2,4,5,7,9,11].includes(m%12);
+      const el = document.createElement('div');
+      el.className = 'key ' + (black ? 'b' : 'w');
+      const wi = whites.indexOf(black ? m-1 : m);
+      el.style.left = black ? `calc(${(wi+1)*ww}% - ${ww*0.3}%)` : `${wi*ww}%`;
+      el.style.width = black ? `${ww*0.6}%` : `calc(${ww}% + 2px)`;
+      el.dataset.m = m;
+      el.innerHTML = (black ? '' : NoteInput.nameOf(m)) + '<small></small>';
+      el.addEventListener('pointerdown', e => { e.preventDefault(); NoteInput.press(m, 'screen'); });
+      box.appendChild(el); keyEls[m] = el;
+    }
+    labelKeys();
+  }
+  function labelKeys(){
+    for(const m in keyEls){ keyEls[m].querySelector('small').textContent = NoteInput.keyLabel(+m); }
+  }
+  function lightKey(m, on){
+    // light the on-screen key with the same pitch class nearest the middle
+    let el = keyEls[m];
+    if(!el){ const pc = m%12; el = keyEls[60+pc] || keyEls[72+pc]; }
+    if(el) el.classList.toggle('down', on);
+  }
+  buildKeys();
+
+  /* ------------------------------------------------------------------ *
+   *  MIDI button
+   * ------------------------------------------------------------------ */
+  const midiBtn = $('midiBtn'), midiStatus = $('midiStatus');
+  function showMidi(list){
+    if(list.length){
+      midiBtn.classList.add('on'); midiBtn.textContent = '🎹 MIDI on';
+      midiStatus.textContent = 'Playing from: ' + list.join(', ');
+    } else {
+      midiBtn.classList.remove('on'); midiBtn.textContent = '🎹 Use a MIDI keyboard';
+      midiStatus.textContent = 'MIDI is on, but no keyboard is plugged in. Plug one in and it will be picked up.';
+    }
+  }
+  function enableMidi(){
+    NoteInput.enableMidi().then(r => {
+      if(!r.ok){ midiStatus.textContent = r.why; return; }
+      showMidi(r.inputs);
+    });
+  }
+  midiBtn.addEventListener('click', enableMidi);
+  const beatBtn = $('beatBtn');
+  function showBeat(){ beatBtn.classList.toggle('on', beatOn); beatBtn.setAttribute('aria-pressed', beatOn); beatBtn.textContent = beatOn ? '♪ Beat on' : '♪ Beat off'; }
+  beatBtn.addEventListener('click', () => {
+    beatOn = !beatOn; showBeat();
+    try{ localStorage.setItem('scale-brawl.beat', beatOn ? 'on' : 'off'); }catch(e){}
+    if(beatBus) beatBus.gain.setTargetAtTime(beatOn ? .6 : 0, ac.currentTime, .03);
+  });
+  showBeat();
+  NoteInput.onMidiChange((list, why) => { if(why === 'octave') labelKeys(); else showMidi(list); });
+  if(!NoteInput.midiSupported()){ midiBtn.disabled = true; midiBtn.style.opacity = .5; midiStatus.textContent = 'This browser can’t use MIDI keyboards (Safari). Laptop keys and the screen keys work.'; }
+  else if(navigator.permissions && navigator.permissions.query){
+    navigator.permissions.query({name:'midi'}).then(p => { if(p.state === 'granted') enableMidi(); }).catch(() => {});
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Start / restart
+   * ------------------------------------------------------------------ */
+  $('startBtn').addEventListener('click', startGame);
+  refreshRatingUi();
+  $('againBtn').addEventListener('click', () => {
+    $('overScore').nextElementSibling.hidden = false; $('againBtn').textContent = '▶ Fight again';
+    if(mode === 'pvp' && net) askRematch(); else startGame();
+  });
+  addEventListener('keydown', e => {
+    if(document.getElementById('hsName') || !$('onlineCard').hidden || mode === 'pvp') return;
+    if(e.target && e.target.closest && e.target.closest('input,select,textarea,button')) return;
+    if((e.key === 'Enter' || e.key === ' ') && (phase === 'title' || phase === 'over')){ e.preventDefault(); startGame(); }
+  });
+
+  // draw with the music font once it's in, so the clef doesn't flash as a box
+  (document.fonts && document.fonts.load ? document.fonts.load('40px "Noto Music"', '𝄞') : Promise.resolve()).catch(()=>{});
+  // the title screen idles with the Baron mid-taunt
+  say('Echo me, if you can!', 999);
+  requestAnimationFrame(loop);
+
+  /* ------------------------------------------------------------------ *
+   *  Online: two players, two devices.
+   *  Rides on Supabase Realtime "broadcast" (via the site's own client in
+   *  auth.js) — nothing is stored, so no tables or SQL. A room is a channel
+   *  named by a 4-letter code.
+   *
+   *  Fairness rules, so network lag never decides a block:
+   *   · each player judges their own blocks and reports their own health;
+   *   · attacks travel as notes (and, in timing rounds, as beat positions),
+   *     and are replayed on the defender's own beat;
+   *   · the host referees rounds (K.O. / time) and tells the guest.
+   *
+   *  Messages (event 'g', payload {t, …}):
+   *   start {level,name}  host → guest: begin a match
+   *   round {round,first} host → guest: next round, who attacks first
+   *   shot {i,m,l,a}      attacker → defender: one note, echo rounds (sent as played)
+   *   end {count}         attacker → defender: that's all my notes
+   *   bar {notes[4]}      attacker → defender: a whole bar, timing rounds (null = rest)
+   *   res {i,blocked}     defender → attacker: what happened to note i
+   *   turn {attacker,shots} defender → attacker: who fires next, with how many shots
+   *   hp {hp}             my health after a change
+   *   roundEnd {winner,ko} host → guest
+   *   rematch / bye
+   * ------------------------------------------------------------------ */
+  const PVP_ROUND_SECS = 90;
+  const myRole  = () => net && net.role;
+  const oppRole = () => net && (net.role === 'host' ? 'guest' : 'host');
+  function oppName(){ return mode === 'pvp' ? ((net && net.opp && net.opp.name) || 'Rival') : 'Baron von Baton'; }
+  const baseShots = () => rhythmRound() ? 4 : Math.min(7, [2,3,4][round-1] + (bout-1));
+  /* handicap: when ratings are far apart, the stronger player gets a harder fight —
+     fewer shots, faster notes to block, a tighter timing window. 0 = none, up to 3. */
+  const handicapFor = gap => gap < 150 ? 0 : Math.min(3, 1 + Math.floor((gap - 150)/150));
+  function myHC(){ return mode === 'pvp' && net && net.hc && net.hc.who === net.role ? net.hc.h : 0; }
+  function oppHC(){ return mode === 'pvp' && net && net.hc && net.hc.who !== net.role ? net.hc.h : 0; }
+  const goodWin = () => GOOD*(1 - .2*myHC());
+  function send(t, data){
+    if(!net || !net.ch) return;
+    try{ net.ch.send({type:'broadcast', event:'g', payload:Object.assign({t}, data || {})}); }catch(e){}
+  }
+  function showRoomHud(){
+    const on = mode === 'pvp' && net;
+    $('bestWrap').hidden = !!on; $('roomTag').hidden = !on;
+    if(on) $('roomCode').textContent = net.code;
+    $('boutLbl').textContent = on ? 'Level' : 'Bout';
+  }
+
+  // ---- lobby ----
+  function randomCode(){ const A = 'ABCDEFGHJKMNPQRSTUVWXYZ'; let c = ''; for(let i=0;i<4;i++) c += A[Math.floor(Math.random()*A.length)]; return c; }
+  function pvStatus(t){ $('pvStatus').textContent = t; }
+  function openOnline(code){
+    $('startCard').hidden = true; $('overCard').hidden = true; $('onlineCard').hidden = false;
+    let nm = ''; try{ nm = localStorage.getItem('scale-brawl.name') || ''; }catch(e){}
+    try{ if(!nm && window.MAAuth && MAAuth.profile && MAAuth.profile()) nm = MAAuth.profile().username || ''; }catch(e){}
+    if(!$('pvName').value) $('pvName').value = nm;
+    if(code) $('pvCode').value = code;
+    $('onlineCard').classList.toggle('joining', !!code);      // came from a friend's link: just name + Join
+    $('pvSetup').hidden = false; $('pvRoom').hidden = true; pvStatus('');
+  }
+  function myName(){
+    const v = ($('pvName').value || '').trim().slice(0, 16) || 'Player';
+    try{ localStorage.setItem('scale-brawl.name', v); }catch(e){}
+    return v;
+  }
+  async function connect(code, role){
+    audio();
+    if(!window.MAAuth || !MAAuth.client){ pvStatus('Online play needs the site’s connection script, which didn’t load. Try reloading the page.'); return; }
+    pvStatus('Connecting…');
+    let client;
+    try{ client = await MAAuth.client(); }catch(e){ pvStatus('Couldn’t connect. Check your internet and try again.'); return; }
+    if(net) leaveRoom(true);
+    const id = Math.random().toString(36).slice(2, 10);
+    const ch = client.channel('scale-brawl:' + code, { config:{ broadcast:{ self:false }, presence:{ key:id } } });
+    net = {ch, client, code, role, id, name:myName(), levelPick: role === 'host' ? +$('pvLevel').value : 0, level:1, hc:null, opp:null, live:false, waiting:false, wantRe:{}};
+    const mine = net;
+    ch.on('broadcast', {event:'g'}, msg => { if(net === mine) onNet(msg.payload || {}); });
+    ch.on('presence', {event:'sync'}, () => { if(net === mine) onPresence(); });
+    ch.subscribe(status => {
+      if(net !== mine) return;
+      if(status === 'SUBSCRIBED'){
+        ch.track({name: mine.name, role, r: Rating.r, belt: Rating.beltIndex()});
+        $('pvSetup').hidden = true;
+        $('pvRoom').hidden = role !== 'host'; $('pvCodeBig').textContent = code;
+        pvStatus(role === 'host' ? 'Waiting for your friend to join…' : 'Looking for room ' + code + '…');
+        if(role === 'guest') setTimeout(() => { if(net === mine && !mine.live) pvStatus('No one is waiting in room ' + code + '. Check the code with your friend.'); }, 6000);
+      } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
+        pvStatus('Couldn’t reach the game server. Try again in a moment.');
+      }
+    });
+  }
+  function onPresence(){
+    const st = net.ch.presenceState(), others = [];
+    for(const k in st){ if(k !== net.id) (st[k] || []).forEach(p => others.push(Object.assign({key:k}, p))); }
+    const opp = others.find(p => p.role !== net.role);
+    if(net.live){
+      // the 'start' message can beat the presence list here, so match on role, not on a key we may not have yet;
+      // and give a dropped connection a few seconds to come back before calling it
+      if(opp){ if(net.opp && !net.opp.key) net.opp.key = opp.key; clearTimeout(net.goneT); net.goneT = null; }
+      else if(!net.goneT){
+        const was = net;
+        net.goneT = setTimeout(() => {
+          if(net !== was || !net.live) return;
+          const st2 = net.ch.presenceState();
+          const back = Object.keys(st2).some(k => k !== net.id && (st2[k] || []).some(p => p.role !== net.role));
+          net.goneT = null;
+          if(!back) opponentLeft();
+        }, 4000);
+      }
+      return;
+    }
+    if(!opp) return;
+    net.opp = {name: opp.name || 'Rival', key: opp.key, r: +opp.r || R0, belt: Math.max(0, Math.min(BELTS.length-1, +opp.belt || 0))};
+    if(net.role === 'host') hostStart();
+  }
+  // the host settles the level (Auto = right for the weaker player) and any handicap, then starts
+  function hostStart(){
+    const mine = Rating.r, theirs = net.opp.r;
+    const level = net.levelPick || Math.max(1, Math.min(4, startBoutFor(Math.min(mine, theirs))));
+    const h = handicapFor(Math.abs(mine - theirs));
+    net.level = level; net.hc = {who: mine >= theirs ? 'host' : 'guest', h};
+    send('start', {level, name: net.name, hc: net.hc, r: mine, belt: Rating.beltIndex()});
+    startMatchPvp();
+  }
+  function leaveRoom(silent){
+    if(!net) return;
+    const n = net; net = null;
+    try{ n.ch.send({type:'broadcast', event:'g', payload:{t:'bye'}}); }catch(e){}
+    try{ n.client.removeChannel(n.ch); }catch(e){ try{ n.ch.unsubscribe(); }catch(e2){} }
+    mode = 'ai'; showRoomHud();
+    if(!silent){ volley = null; salvo = null; setPhase('title'); $('overCard').hidden = true; $('startCard').hidden = false; }
+  }
+  addEventListener('pagehide', () => { if(net) leaveRoom(true); });
+
+  // ---- the match ----
+  function startMatchPvp(){
+    mode = 'pvp'; net.live = true; net.wantRe = {};
+    bout = net.level; score = 0; wins = {p:0, b:0}; songT = 0; nextBeat = 0;
+    ['onlineCard','overCard','startCard'].forEach(id => $(id).hidden = true);
+    $('leaveBtn').hidden = true;
+    showRoomHud(); updateHud();
+    startRoundPvp(1, 'host');
+  }
+  function startRoundPvp(r, first){
+    round = r; startRound();
+    if(r === 1 && net.hc && net.hc.h){
+      const strong = net.hc.who === net.role ? 'You' : oppName(), weak = net.hc.who === net.role ? oppName() : 'you';
+      banner.small = strong + (strong === 'You' ? ' give ' : ' gives ') + weak + ' a head start'; banner.dur = 2.4;
+    }
+    clock = PVP_ROUND_SECS; net.first = first; net.waiting = first !== myRole();
+  }
+  function takeTurn(who, shots){
+    if(who === myRole()){ net.waiting = false; startSalvo(shots, rhythmRound(), false); }
+    else net.waiting = true;
+  }
+  // I've finished defending: if I blocked any, I fire back; if not, they go again
+  function defenderDone(blocked, clean){
+    volley = null;
+    if(blocked > 0){
+      const shots = blocked + (clean ? 1 : 0);
+      if(clean) floaters.push({text:'CLEAN! +1 shot', x:PX+40, y:FLOOR-230, t:0, c:'#FFC53D'});
+      send('turn', {attacker: myRole(), shots}); takeTurn(myRole(), shots);
+    } else {
+      send('turn', {attacker: oppRole(), shots: baseShots()}); takeTurn(oppRole(), baseShots());
+    }
+  }
+  function remoteNote(m){ return {m:+m.m, l:String(m.l || 'C').slice(0,1), a:m.a === '♯' || m.a === '♭' ? m.a : ''}; }
+  function incomingShot(m){
+    if(phase !== 'fight' && phase !== 'intro') return;
+    if(!volley || !volley.remote || volley.rhythm || volley.expected != null){
+      volley = {notes:[], stage:'throw', t:0, rhythm:false, flight:flightSecs()*(1 - .12*myHC()), remote:true, expected:null};
+    }
+    net.waiting = false;
+    const n = remoteNote(m);
+    volley.notes.push({n, st:'fly', t:0, x:HAND.x, y:HAND.y, slot:volley.notes.length, idx:m.i, spawnAt:songT, landAt:songT + volley.flight});
+    baronTone(n.m); bPose = {k:'throw', t:0};
+  }
+  function incomingEnd(count){
+    if(phase !== 'fight') return;
+    if(!count){                                          // they didn't fire: our turn, full shots
+      volley = null; send('turn', {attacker: myRole(), shots: baseShots()}); takeTurn(myRole(), baseShots());
+      return;
+    }
+    if(volley && volley.remote && !volley.rhythm) volley.expected = count;
+  }
+  function incomingBar(list){
+    if(phase !== 'fight') return;
+    list = Array.isArray(list) ? list.slice(0, 4) : [];
+    while(list.length < 4) list.push(null);
+    if(!list.some(Boolean)){ incomingEnd(0); return; }
+    // replay their bar on OUR beat: thrown in our next bar, landing the bar after
+    const bl = beatLen(), start = nextBeatAt(songT + .9, 4), flight = 4*bl, notes = [];
+    list.forEach((x, i) => {
+      if(!x){ notes.push({rest:true, st:'rest', slot:i}); return; }
+      notes.push({n:remoteNote(x), st:'wait', x:HAND.x, y:HAND.y, t:0, slot:i, idx:x.i, spawnAt:start + i*bl, landAt:start + i*bl + flight});
+    });
+    volley = {notes, stage:'windup', t:0, rhythm:true, throwAt:start, flight, remote:true, expected:notes.filter(live).length};
+    net.waiting = false; bPose = {k:'windup', t:0};
+  }
+  function shotResult(i, blocked){
+    if(!salvo) return;
+    const x = salvo.notes.find(n => n.slot === i && n.st === 'fly'); if(!x) return;
+    if(blocked){
+      x.st = 'blocked'; burst(x.x, x.y, '#F4EEE2', 12);
+      floaters.push({text:'BLOCKED', x:BX-40, y:FLOOR-215, t:0, c:'#CFC7B6'});
+    } else {
+      x.st = 'hit'; burst(BCHEST.x, BCHEST.y, '#FF4E86', 16);
+      floaters.push({text:'HIT!', x:BX-20, y:FLOOR-215, t:0, c:'#FF4E86'});
+      thud(90, .3, .2);
+    }
+  }
+  function afterRoundPvp(){
+    if(wins.p >= 2 || wins.b >= 2){ matchOverPvp(); return; }
+    if(net && net.role === 'host'){
+      const r = round + 1, first = r === 2 ? 'guest' : 'host';
+      send('round', {round:r, first}); startRoundPvp(r, first);
+    }                                                    // the guest waits for the host's 'round'
+  }
+  function matchOverPvp(){
+    setPhase('over');
+    const won = wins.p >= 2;
+    $('overTitle').textContent = won ? 'You win!' : oppName() + ' wins';
+    $('overText').textContent = 'Rounds ' + wins.p + '–' + wins.b + '.';
+    $('overScore').textContent = ''; $('overScore').nextElementSibling.hidden = true;
+    $('againBtn').textContent = '▶ Rematch'; $('againBtn').hidden = false;
+    $('leaveBtn').hidden = false;
+    $('overBelt').innerHTML = beltHtml(false);
+    $('overCard').hidden = false;
+  }
+  function askRematch(){
+    if(!net) return;
+    net.wantRe.me = true; send('rematch'); rematchCheck();
+  }
+  function rematchCheck(){
+    if(!net) return;
+    const w = net.wantRe;
+    if(net.role === 'host' && w.me && w.opp){ hostStart(); return; }
+    if(phase === 'over') $('overText').textContent = w.me ? 'Waiting for ' + oppName() + '…' : w.opp ? oppName() + ' wants a rematch!' : $('overText').textContent;
+  }
+  function opponentLeft(){
+    const who = oppName();
+    leaveRoom(true);
+    volley = null; salvo = null; setPhase('over');
+    $('overTitle').textContent = 'Match over';
+    $('overText').textContent = who + ' left the room.';
+    $('overScore').textContent = ''; $('overScore').nextElementSibling.hidden = true;
+    $('againBtn').textContent = '▶ Fight the Baron'; $('leaveBtn').hidden = true;
+    $('overCard').hidden = false;
+  }
+  function onNet(m){
+    switch(m.t){
+      case 'start':
+        if(net.role !== 'guest') break;
+        net.level = Math.max(1, Math.min(4, +m.level || 1));
+        net.hc = m.hc && (m.hc.who === 'host' || m.hc.who === 'guest') ? {who:m.hc.who, h:Math.max(0, Math.min(3, +m.hc.h || 0))} : null;
+        if(!net.opp) net.opp = {name: String(m.name || 'Rival').slice(0, 16)};
+        net.opp.r = +m.r || net.opp.r || R0; net.opp.belt = Math.max(0, Math.min(BELTS.length-1, +m.belt || net.opp.belt || 0));
+        startMatchPvp(); break;
+      case 'round':    if(net.role === 'guest') startRoundPvp(+m.round || 1, m.first === 'guest' ? 'guest' : 'host'); break;
+      case 'roundEnd': if(net.role === 'guest' && phase === 'fight') endRound(m.winner === 'guest' ? 'p' : 'b', !!m.ko); break;
+      case 'hp':
+        if(phase !== 'fight') break;
+        if(+m.hp < hp.b) bPose = {k:'hurt', t:0};
+        hp.b = Math.max(0, Math.min(MAX_HP, +m.hp)); break;
+      case 'shot':  incomingShot(m); break;
+      case 'end':   incomingEnd(+m.count || 0); break;
+      case 'bar':   incomingBar(m.notes); break;
+      case 'res':   shotResult(+m.i, !!m.blocked); break;
+      case 'turn':  if(phase === 'fight') takeTurn(m.attacker === 'guest' ? 'guest' : 'host', Math.max(1, Math.min(7, +m.shots || 1))); break;
+      case 'rematch': net.wantRe.opp = true; rematchCheck(); break;
+      case 'bye':   if(net.live) opponentLeft(); break;
+    }
+  }
+
+  $('pvpBtn').addEventListener('click', () => openOnline(''));
+  $('pvBack').addEventListener('click', () => { leaveRoom(true); $('onlineCard').hidden = true; $('startCard').hidden = false; });
+  $('pvCreate').addEventListener('click', () => connect(randomCode(), 'host'));
+  $('pvJoin').addEventListener('click', () => {
+    const code = ($('pvCode').value || '').toUpperCase().replace(/[^A-Z]/g, '');
+    if(code.length !== 4){ pvStatus('Room codes are 4 letters.'); return; }
+    connect(code, 'guest');
+  });
+  $('pvOwn').addEventListener('click', () => $('onlineCard').classList.remove('joining'));
+  $('pvCode').addEventListener('keydown', e => { if(e.key === 'Enter') $('pvJoin').click(); });
+  $('pvCopy').addEventListener('click', () => {
+    const link = location.origin + location.pathname + '?room=' + (net ? net.code : '');
+    (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(
+      () => pvStatus('Link copied. Send it to your friend.'),
+      () => pvStatus('Your link: ' + link));
+  });
+  $('leaveBtn').addEventListener('click', () => leaveRoom(false));
+  (function(){                                           // arrived from a friend's link
+    const m = /[?&]room=([A-Za-z]{4})/.exec(location.search);
+    if(m) openOnline(m[1].toUpperCase());
+  })();
+
+  /* ---- leaderboard ---- */
+  var board = null;
+  (function(){
+    if(typeof HiScores === 'undefined') return;
+    var GAME = 'scale-brawl';
+    var host = document.querySelector('.stage');
+    var box = document.createElement('div');
+    host.parentNode.insertBefore(box, host.nextSibling);
+    board = HiScores.mountBoard(box, GAME, { n:5, title:'High Scores', fixed:true });
+    if(HiScores.track) HiScores.track(GAME, function(){ return phase === 'title' || mode === 'pvp' ? 0 : score; });
+  })();
+  // test hook
+  window.__brawl = { get phase(){ return phase; }, get volley(){ return volley; }, get hp(){ return hp; }, get wins(){ return wins; }, get bout(){ return bout; }, get score(){ return score; }, get salvo(){ return salvo; }, get mode(){ return mode; }, Rating, setRating: r => { Rating._set(r); refreshRatingUi(); }, get net(){ return net; }, get songT(){ return songT; }, get floaters(){ return floaters; }, startGame, tick: dt => update(dt) };
+})();
+</script>
+<script src="/tools.js"></script>
+<script src="/related.js"></script>
+</body>
+</html>

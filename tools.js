@@ -207,6 +207,8 @@ var CATALOGUE = [
     d:'Read the note, press its floor, send the lift there. Faster and faster as you go.' },
   { t:'Note Hopper', h:'Theory/note-hopper.html', feat:4, dep:1, g:['read'], lv:[1,2], mic:true, fav:['gdae'],
     d:'A frog crosses the river on lily pads, each marked with a note. Play it on your own instrument and the frog hops on — but dither and the pad drifts away.' },
+  { t:'Scale Brawl', h:'Theory/scale-brawl.html', feat:5, dep:1, g:['read'], lv:[1,2], fav:['pno'],
+    d:'A music fighting game. Echo the notes thrown at you to block, then fire your own back. Fight Baron von Baton or a friend online. MIDI keyboard, laptop keys or screen.' },
 
   /* ---- depth 2 · a proper tool ---- */
   { t:'Tuner', h:'tuner.html', feat:1, dep:2, g:['ears'], lv:[1], mic:true,

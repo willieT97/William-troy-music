@@ -151,6 +151,8 @@ PAGES = {
     'Read the note, press its floor and send the lift there — faster and faster. A fun way to learn to read music.'),
   'Theory/note-hopper.html': ('Note Hopper — play the note on your instrument to cross the river | The Music Arcade',
     'A frog crosses the river on lily pads, each marked with a note. Play it on your own instrument and the frog hops on. A mic-powered music game.'),
+  'Theory/scale-brawl.html': ('Scale Brawl — a music fighting game: play the notes back to block | The Music Arcade',
+    'A music fighting game for one or two players. Echo the notes thrown at you to block, then fire your own back. Fight Baron von Baton or a friend online.'),
   'Theory/apple-shot.html': ('Apple Shot — note reading archery game | The Music Arcade',
     'Read the note on the apple, draw the bow and loose it as your aim crosses that note. A note-reading game.'),
   'Theory/hidden-words.html': ('Hidden Words — spell words with notes on the stave | The Music Arcade',
