@@ -92,6 +92,11 @@
   M.CATALOGUE.forEach(function (x) { if (!me && pathOf(x) === here) me = x; });
   if (!me) return;                                     // not a tool page — say nothing
 
+  /* a game page: count the play and hand out badges (badges.js) */
+  if (me.dep === 1 && !window.MABadges && !document.querySelector('script[src$="badges.js"]')) {
+    var bj = document.createElement('script'); bj.src = '/badges.js'; document.head.appendChild(bj);
+  }
+
   /* ---------- the three closest things ----------
      Shared goals carry it. After that: something one step deeper is the
      natural next stop, a whole course is a bigger ask than "more like

@@ -127,6 +127,32 @@
     .game.hero-game .game-body{ padding:1.9rem 2rem; }
   }
 
+  /* ---------- your badges (badges.js) ----------
+     Hidden until the first game has been played, so a new visitor's page
+     is unchanged. Medals + the Favourite ribbon are drawn on the cards. */
+  .mab-strip{ margin-bottom:clamp(1.6rem,4vw,2.4rem); background:var(--paper); color:var(--ink);
+    border:3px solid var(--ink); border-radius:4px; box-shadow:6px 6px 0 var(--gold); padding:1.1rem 1.2rem 1.2rem; }
+  .mab-strip[hidden]{ display:none; }
+  .mab-head{ display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.3rem 1rem; margin-bottom:.9rem; }
+  .mab-head h2{ font-family:var(--display); font-weight:800; font-size:1.35rem; line-height:1.1; margin:0; }
+  .mab-head span{ font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; opacity:.7; }
+  .mab-row{ list-style:none; margin:0; padding:0; display:grid; gap:.9rem .6rem; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); }
+  .mab-b{ display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .mab-b svg{ width:58px; height:58px; margin-bottom:.35rem; filter:drop-shadow(3px 3px 0 var(--ink)); }
+  .mab-b.locked svg{ filter:none; }
+  .mab-n{ font-family:var(--display); font-weight:800; font-size:.86rem; line-height:1.1; }
+  .mab-s{ font-family:var(--mono); font-size:.62rem; line-height:1.35; margin-top:.2rem; opacity:.75; }
+  .mab-b.locked .mab-n{ opacity:.5; }
+  .mab-s i{ font-style:normal; opacity:.45; }
+  .mab-s i.on{ opacity:1; font-weight:700; color:var(--blue); }
+  @media(max-width:560px){                       /* phones: 3 across so the games stay near the top */
+    .mab-strip{ padding:.9rem .8rem 1rem; }
+    .mab-row{ grid-template-columns:repeat(3,1fr); gap:.8rem .4rem; }
+    .mab-b svg{ width:44px !important; height:44px !important; }
+    .mab-n{ font-size:.76rem; }
+    .mab-s{ font-size:.56rem; }
+  }
+
   /* ---------- section tabs ----------
      Everything from here to .show-all only applies once scripting has been
      flagged on <html>. Without it the sections just stack, as they always did. */
@@ -501,6 +527,10 @@
       </div>
     </a>
   </section>
+
+  <div class="wrap">
+    <section class="mab-strip" id="myBadges" aria-label="Your badges" hidden></section>
+  </div>
 
   <!-- ═══════════ THE SECTIONS — one at a time ═══════════
        Each section below is a tab. A tab shows only its short "start here"
@@ -2170,6 +2200,17 @@
 
 <!-- ═══════════ search + "I want to…" goal strip ═══════════ -->
 <script src="/tools.js"></script>
+<script src="/badges.js"></script>
+<script>
+/* medals + Favourite ribbon on the cards, and the "Your badges" strip */
+(function () {
+  if (!window.MABadges) return;
+  function draw() { try { MABadges.decorate({ strip: document.getElementById('myBadges') }); } catch (e) {} }
+  draw(); MABadges.onChange(draw);
+  // back from a game via the browser's back button: the page comes from cache, so re-read the counts
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { MABadges.refresh(); draw(); } });
+})();
+</script>
 <script src="/search.js"></script>
 
 <!-- ═══════════ section tabs + the short list on each ═══════════ -->
