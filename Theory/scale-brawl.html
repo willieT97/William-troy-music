@@ -121,6 +121,18 @@
   .linkbtn{ font:inherit; font-family:var(--mono); font-size:.75rem; background:none; border:0; padding:0; cursor:pointer;
     color:var(--ink); border-bottom:1.5px solid var(--pink); margin-top:8px; }
 
+  /* timing setup: while a test runs the card drops to the bottom so the stage stays visible */
+  #calibCard.running{ align-items:flex-end; background:transparent; pointer-events:none; }
+  #calibCard.running .card{ pointer-events:auto; max-width:380px; padding:10px 14px; }
+  #calibCard.running h2, #calibCard.running #calTxt{ display:none; }
+  #calibCard.running .tapbtn{ padding:10px; margin:0 0 4px; }
+  .tapbtn{ width:100%; font-size:1.2rem; padding:14px; touch-action:manipulation; }
+  .nudges{ font-family:var(--mono); font-size:.8rem; margin:4px 0 10px; }
+  .nudges div{ display:flex; align-items:center; justify-content:center; gap:8px; margin:6px 0; }
+  .nudges span{ min-width:96px; text-align:right; color:var(--muted); }
+  .nudges b{ min-width:64px; }
+  .nb{ font:700 1rem var(--mono); width:30px; height:30px; border:2px solid var(--ink); background:#fff; cursor:pointer; box-shadow:2px 2px 0 var(--ink); }
+
   /* inputs strip */
   .inputs{
     display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
@@ -199,6 +211,20 @@
           </div>
         </div>
 
+        <div class="overlay" id="calibCard" hidden>
+          <div class="card">
+            <h2>Timing setup</h2>
+            <p id="calTxt"></p>
+            <div class="nudges" id="calNudge" hidden>
+              <div><span>Sound delay</span> <button class="nb" data-k="audio" data-d="-5" aria-label="Sound delay down 5 milliseconds">−</button> <b id="calA"></b> <button class="nb" data-k="audio" data-d="5" aria-label="Sound delay up 5 milliseconds">+</button></div>
+              <div><span>Screen delay</span> <button class="nb" data-k="video" data-d="-5" aria-label="Screen delay down 5 milliseconds">−</button> <b id="calV"></b> <button class="nb" data-k="video" data-d="5" aria-label="Screen delay up 5 milliseconds">+</button></div>
+            </div>
+            <button class="btn" id="calGo">▶ Start</button>
+            <button class="btn tapbtn" id="calTap" hidden>TAP</button>
+            <div><button class="linkbtn" id="calReset" hidden>Reset to zero</button> &nbsp; <button class="linkbtn" id="calDone">Close</button></div>
+          </div>
+        </div>
+
         <div class="overlay" id="onlineCard" hidden>
           <div class="card">
             <h2>Play a friend</h2>
@@ -246,7 +272,7 @@
 
       <div class="inputs">
         <span>Laptop: <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>H</kbd> <kbd>J</kbd> <kbd>K</kbd> = C D E F G A B C · <kbd>Z</kbd>/<kbd>X</kbd> octave</span>
-        <span><button class="midibtn on" id="beatBtn" aria-pressed="true">♪ Beat on</button> <button class="midibtn" id="midiBtn">🎹 Use a MIDI keyboard</button></span>
+        <span><button class="midibtn on" id="beatBtn" aria-pressed="true">♪ Beat on</button> <button class="midibtn" id="calBtn">⏱ Timing setup</button> <button class="midibtn" id="midiBtn">🎹 Use a MIDI keyboard</button></span>
       </div>
       <span class="inputs" id="midiStatus"></span>
     </div>
@@ -485,6 +511,22 @@
   const beatsNow   = () => songT / beatLen();
   const nextBeatAt = (after, every) => { const bl = beatLen()*(every || 1); return Math.ceil(after/bl - 1e-6)*bl; };
 
+  /* ------------------------------------------------------------------ *
+   *  Timing calibration (the standard rhythm-game "tap to the beat")
+   *   audio: tap with clicks you HEAR. That's the delay from your speakers /
+   *          headphones / keyboard, and judging takes it off your taps.
+   *   video: tap with flashes you SEE. That's your screen's delay; notes are
+   *          drawn (audio − video) later, so they reach the ring as the beat sounds.
+   * ------------------------------------------------------------------ */
+  let LAT = {audio:0, video:0, set:false};
+  try{ const x = JSON.parse(localStorage.getItem('scale-brawl.latency') || 'null'); if(x && typeof x.audio === 'number') LAT = Object.assign(LAT, x); }catch(e){}
+  const saveLat = () => { try{ localStorage.setItem('scale-brawl.latency', JSON.stringify(LAT)); }catch(e){} };
+  const visShift = () => LAT.audio - LAT.video;
+  // songT only moves once a frame; a key press lands between frames, so add the time since
+  let frameAt = performance.now();
+  const nowSong  = () => songT + Math.min(.05, Math.max(0, (performance.now() - frameAt)/1000));
+  const judgeNow = () => nowSong() - LAT.audio;
+
   function fanfare(up){
     const seq = up ? [60,64,67,72] : [67,63,60,55];
     seq.forEach((m,i) => setTimeout(() => tone(m, .35, 'triangle', .22), i*120));
@@ -620,7 +662,7 @@
     }
     let slot;
     if(s.rhythm){
-      const bl = beatLen(), pos = (songT - s.start)/bl, i = Math.round(pos);
+      const bl = beatLen(), pos = (judgeNow() - s.start)/bl, i = Math.round(pos);
       if(i < 0 || i > 3 || Math.abs(pos - i)*bl > GOOD){
         floaters.push({text: i < 0 ? 'Wait for your bar' : 'Off the beat', x:PX+40, y:FLOOR-215, t:0, c:'#FF7A2F'}); return;
       }
@@ -648,8 +690,9 @@
     const s = salvo; s.t += dt;
     const bl = beatLen();
     if(s.stage === 'aim'){
-      const done = s.rhythm ? songT >= s.start + 4*bl - GOOD : (s.used >= s.shots || s.t >= AIM_SECS);
-      if(s.rhythm) s.notes.forEach((x, i) => { if(x.st === 'empty' && songT > s.start + i*bl + GOOD) x.st = 'rest'; });
+      const jt = songT - LAT.audio;
+      const done = s.rhythm ? jt >= s.start + 4*bl - GOOD : (s.used >= s.shots || s.t >= AIM_SECS);
+      if(s.rhythm) s.notes.forEach((x, i) => { if(x.st === 'empty' && jt > s.start + i*bl + GOOD) x.st = 'rest'; });
       if(done){
         s.stage = 'fly';
         s.notes.forEach(x => { if(x.st === 'empty') x.st = 'rest'; });
@@ -695,6 +738,7 @@
     tone(ev.midi, .5, 'triangle', .28 * (ev.source === 'midi' ? Math.max(.4, ev.velocity) : 1));
     lightKey(ev.midi, true);
     if(ev.source !== 'midi') setTimeout(() => lightKey(ev.midi, false), 160);
+    if(phase === 'calib'){ calTap(); return; }
     if(phase !== 'fight') return;
     if(salvo){ if(salvo.stage === 'aim') fire(ev); return; }
     if(!volley) return;
@@ -702,7 +746,7 @@
     if(!tg) return;
     if(ev.pc === ((tg.n.m % 12) + 12) % 12){
       if(volley.rhythm){
-        const d = songT - tg.landAt;
+        const d = judgeNow() - tg.landAt;
         if(d < -goodWin()){                              // right note, too soon
           hurt('p', WRONG_DMG, true);
           floaters.push({text:'EARLY', x:PX+30, y:FLOOR-200, t:0, c:'#FF7A2F'});
@@ -763,6 +807,7 @@
    * ------------------------------------------------------------------ */
   function update(dt){
     phaseT += dt;
+    if(phase === 'calib'){ if(dt > 0) calTick(dt); return; }
     if(dt > 0) music(dt);
     pPose.t += dt; bPose.t += dt;
     if(banner){ banner.t += dt; if(banner.t > banner.dur) banner = null; }
@@ -812,8 +857,8 @@
         v.notes.forEach(n => {
           if(n.st !== 'fly') return;
           n.t = songT - n.spawnAt;
-          const p = pathAt(Math.min(v.rhythm ? 1.12 : 1, n.t / v.flight)); n.x = p.x; n.y = p.y;
-          if(n.t >= v.flight + (v.rhythm ? goodWin() : 0)){
+          const p = pathAt(Math.min(v.rhythm ? 1.12 : 1, Math.max(0, n.t - (v.rhythm ? visShift() : 0)) / v.flight)); n.x = p.x; n.y = p.y;
+          if(n.t >= v.flight + (v.rhythm ? goodWin() + LAT.audio : 0)){
             n.st = 'miss'; burst(n.x, n.y, '#E5383B', 10);
             if(v.remote) send('res', {i:n.idx, blocked:false});
             hurt('p', HIT_DMG());
@@ -1078,7 +1123,7 @@
 
   // timing rounds: the ring the notes must be played in, pulsing on every beat
   function drawRing(at){
-    const f = beatsNow() % 1, pulse = 1 + .18*Math.pow(1 - f, 3);
+    const f = (((songT - visShift())/beatLen()) % 1 + 1) % 1, pulse = 1 + .18*Math.pow(1 - f, 3);
     ctx.save(); ctx.translate(at.x, at.y);
     ctx.strokeStyle = INK; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0,0,26*pulse,0,Math.PI*2); ctx.stroke();
     ctx.strokeStyle = '#FFC53D'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(0,0,26*pulse,0,Math.PI*2); ctx.stroke();
@@ -1261,7 +1306,8 @@
 
   function drawBubble(){
     if(!bubble) return;
-    if(volley || salvo){ bubble = null; return; }   // never cover the written notes
+    if(volley || salvo){ bubble = null; return; }
+    if(calib && !$('calibCard').hidden) return;   // never cover the written notes
     const a = Math.min(1, bubble.t*6, (bubble.dur - bubble.t)*4);
     ctx.save(); ctx.globalAlpha = Math.max(0,a);
     ctx.font = '600 15px "Hanken Grotesk", sans-serif';
@@ -1316,6 +1362,7 @@
     drawBars();
     drawBanner();
     drawRibbon();
+    if(calib && !$('calibCard').hidden) drawCalib();
     ctx.restore();
   }
 
@@ -1331,6 +1378,7 @@
   let last = performance.now();
   function loop(now){
     const dt = Math.min(.05, (now - last)/1000); last = now;
+    frameAt = now;
     if(phase !== 'title' && phase !== 'over') update(dt);
     else { update(0); pPose.t += dt; bPose.t += dt; if(bubble){ bubble.t += dt; if(bubble.t > bubble.dur) bubble = null; } }
     draw(now/1000);
@@ -1415,7 +1463,7 @@
     if(mode === 'pvp' && net) askRematch(); else startGame();
   });
   addEventListener('keydown', e => {
-    if(document.getElementById('hsName') || !$('onlineCard').hidden || mode === 'pvp') return;
+    if(document.getElementById('hsName') || !$('onlineCard').hidden || !$('calibCard').hidden || mode === 'pvp') return;
     if(e.target && e.target.closest && e.target.closest('input,select,textarea,button')) return;
     if((e.key === 'Enter' || e.key === ' ') && (phase === 'title' || phase === 'over')){ e.preventDefault(); startGame(); }
   });
@@ -1720,6 +1768,146 @@
     if(m) openOnline(m[1].toUpperCase());
   })();
 
+
+  /* ---- timing setup screen ---- */
+  const CAL_BPM = 100, CAL_COUNT = 4, CAL_TAPS = 10;
+  let calib = null, calBack = null;
+  const ms = x => (x >= 0 ? '+' : '−') + Math.abs(Math.round(x*1000)) + ' ms';
+  function showCalBtn(){ $('calBtn').textContent = LAT.set ? '⏱ Timing ' + ms(LAT.audio) : '⏱ Timing setup'; $('calBtn').classList.toggle('on', !!LAT.set); }
+  function calCard(txt, go, opts){
+    opts = opts || {};
+    $('calTxt').textContent = txt;
+    $('calGo').hidden = !go; if(go) $('calGo').textContent = go;
+    $('calTap').hidden = !opts.running;
+    $('calNudge').hidden = !opts.nudge; $('calReset').hidden = !opts.nudge;
+    $('calDone').textContent = opts.nudge ? 'Done' : 'Close';
+    $('calibCard').classList.toggle('running', !!opts.running);
+    $('calA').textContent = ms(LAT.audio); $('calV').textContent = ms(LAT.video);
+  }
+  function openCalib(){
+    if(phase !== 'title' && phase !== 'over') return;     // not in the middle of a fight
+    audio();
+    calBack = {start: !$('startCard').hidden, over: !$('overCard').hidden, phase};
+    ['startCard','overCard','onlineCard'].forEach(id => $(id).hidden = true);
+    $('calibCard').hidden = false;
+    calib = {step:'intro', taps:[]};
+    if(LAT.set) calCard('Your timing is set. Fine-tune it with − and +, or run the two tests again.', '▶ Run the tests', {nudge:true});
+    else calCard('Two quick tests so the beat feels right on your setup. Use the keyboard and the speakers or headphones you play with. Wireless headphones add a lot of delay.', '▶ Start');
+  }
+  function closeCalib(){
+    calib = null; $('calibCard').hidden = true; $('calibCard').classList.remove('running');
+    setPhase(calBack ? calBack.phase : 'title');
+    if(calBack && calBack.over) $('overCard').hidden = false; else $('startCard').hidden = false;
+    showCalBtn();
+  }
+  function calStep(step){
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    const bl = 60/CAL_BPM;
+    songT = 0;
+    calib = {step, bl, start:1.2, total:CAL_COUNT + CAL_TAPS, next:0, taps:[], hit:{}, done:false};
+    setPhase('calib');
+    calCard(step === 'audio'
+      ? 'Listen. Tap any key, or TAP, on every click. Four clicks count you in.'
+      : 'Sound off. Tap any key, or TAP, every time the ring flashes. Four flashes count you in.', '', {running:true});
+  }
+  function calClick(w, accent){
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = accent ? 1000 : 1600;
+    g.gain.setValueAtTime(.5, w); g.gain.exponentialRampToValueAtTime(.001, w + .05);
+    o.connect(g); g.connect(master); o.start(w); o.stop(w + .06);
+  }
+  function calTick(dt){
+    songT += dt;
+    const c = calib; if(!c || c.done) return;
+    while(c.next < c.total && c.start + c.next*c.bl < songT + .2){
+      const t = c.start + c.next*c.bl;
+      if(c.step === 'audio' && ac && ac.state === 'running' && t >= songT - .02) calClick(atAudio(t), c.next < CAL_COUNT);
+      c.next++;
+    }
+    if(songT > c.start + c.total*c.bl + .3) calFinish();
+  }
+  function calTap(){
+    const c = calib; if(!c || phase !== 'calib' || c.done) return;
+    const t = nowSong(), i = Math.round((t - c.start)/c.bl);
+    if(i < CAL_COUNT || i >= c.total || c.hit[i]) return;
+    const off = t - (c.start + i*c.bl);
+    if(Math.abs(off) > c.bl*.45) return;
+    c.hit[i] = 1; c.taps.push(off);
+  }
+  // middle value, so one stray tap can't throw it
+  const median = a => { const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m-1] + b[m])/2; };
+  function calFinish(){
+    const c = calib; c.done = true;
+    setPhase('title');                                   // the clicks stop; the scene stays up
+    if(c.taps.length < 6){
+      calCard('I only caught ' + c.taps.length + ' of ' + CAL_TAPS + ' taps. Let’s try that one again: tap on every ' + (c.step === 'audio' ? 'click' : 'flash') + '.', '▶ Try again');
+      c.retry = c.step; return;
+    }
+    const med = median(c.taps);
+    if(c.step === 'audio'){
+      LAT.audio = med; c.retry = null;
+      calCard('Sound: you tap ' + Math.abs(Math.round(med*1000)) + ' ms ' + (med >= 0 ? 'after' : 'before') + ' the click. Now the screen test.', '▶ Screen test');
+    } else {
+      LAT.video = med; LAT.set = true; saveLat(); c.retry = null; c.step = 'result'; showCalBtn();
+      calCard('All set. The game now allows for your sound and screen. If round 2 still feels early or late, nudge it here.', '▶ Run the tests again', {nudge:true});
+    }
+  }
+  $('calBtn').addEventListener('click', openCalib);
+  $('calGo').addEventListener('click', () => {
+    const c = calib;
+    if(c && c.retry) calStep(c.retry);
+    else if(c && c.step === 'audio' && c.done) calStep('video');
+    else calStep('audio');
+  });
+  $('calTap').addEventListener('pointerdown', e => { e.preventDefault(); calTap(); });
+  cv.addEventListener('pointerdown', () => { if(phase === 'calib') calTap(); });
+  $('calDone').addEventListener('click', closeCalib);
+  $('calReset').addEventListener('click', () => { LAT = {audio:0, video:0, set:false}; saveLat(); calCard('Back to zero. Run the tests whenever you like.', '▶ Start'); calib = {step:'intro', taps:[]}; showCalBtn(); });
+  document.querySelectorAll('#calNudge .nb').forEach(b => b.addEventListener('click', () => {
+    LAT[b.dataset.k] = Math.max(-.3, Math.min(.5, LAT[b.dataset.k] + (+b.dataset.d)/1000)); LAT.set = true; saveLat();
+    $('calA').textContent = ms(LAT.audio); $('calV').textContent = ms(LAT.video); showCalBtn();
+  }));
+  addEventListener('keydown', e => {
+    if(phase === 'calib' && (e.key === ' ' || e.key === 'Enter') && !e.repeat){ e.preventDefault(); calTap(); }
+  });
+  showCalBtn();
+
+  // what the stage shows during the tests
+  function drawCalib(){
+    const c = calib, cx = W/2, cy = 158;
+    ctx.fillStyle = 'rgba(23,20,14,.55)'; ctx.fillRect(0, 0, W, H);
+    let lit = 0, count = '';
+    if(c.step === 'video' && phase === 'calib' && !c.done){
+      const i = Math.floor((songT - c.start)/c.bl), since = songT - (c.start + i*c.bl);
+      if(i >= 0 && i < c.total && since < .1) lit = 1 - since/.1;
+      if(i >= 0 && i < CAL_COUNT) count = String(CAL_COUNT - i);
+    }
+    ctx.lineWidth = 8; ctx.strokeStyle = INK; ctx.fillStyle = lit ? 'rgba(255,197,61,' + (.35 + .65*lit) + ')' : 'rgba(244,238,226,.08)';
+    ctx.beginPath(); ctx.arc(cx, cy, 52, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 4; ctx.strokeStyle = '#FFC53D'; ctx.beginPath(); ctx.arc(cx, cy, 52, 0, Math.PI*2); ctx.stroke();
+    ctx.font = '800 34px Syne, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = PAPER;
+    ctx.fillText(count || (c.step === 'audio' && !c.done ? '♪' : ''), cx, cy + 2);
+    if(phase === 'calib' && !c.done){                      // the instruction, up top, while the card is out of the way
+      ctx.font = '700 15px "Space Mono", monospace'; ctx.fillStyle = PAPER;
+      ctx.fillText(c.step === 'audio' ? 'LISTEN · TAP ON EVERY CLICK' : 'SOUND OFF · TAP ON EVERY FLASH', cx, 80);
+    }
+    // every tap, early ← | → late
+    if(c.taps && (c.step === 'audio' || c.step === 'video')){
+      const y = cy + 76, half = 150;
+      ctx.strokeStyle = PAPER; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx - half, y); ctx.lineTo(cx + half, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, y - 10); ctx.lineTo(cx, y + 10); ctx.stroke();
+      ctx.font = '700 11px "Space Mono", monospace'; ctx.fillStyle = '#CFC7B6';
+      ctx.fillText('early', cx - half - 26, y); ctx.fillText('late', cx + half + 22, y);
+      c.taps.forEach(o => {
+        const x = cx + Math.max(-1, Math.min(1, o/.25))*half;
+        ctx.fillStyle = '#FFC53D'; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2); ctx.fill();
+      });
+      ctx.fillStyle = PAPER; ctx.fillText(c.taps.length + ' / ' + CAL_TAPS, cx, y - 16);
+    }
+  }
+
   /* ---- leaderboard ---- */
   var board = null;
   (function(){
@@ -1732,7 +1920,7 @@
     if(HiScores.track) HiScores.track(GAME, function(){ return phase === 'title' || mode === 'pvp' ? 0 : score; });
   })();
   // test hook
-  window.__brawl = { get phase(){ return phase; }, get volley(){ return volley; }, get hp(){ return hp; }, get wins(){ return wins; }, get bout(){ return bout; }, get score(){ return score; }, get salvo(){ return salvo; }, get mode(){ return mode; }, Rating, setRating: r => { Rating._set(r); refreshRatingUi(); }, get net(){ return net; }, get songT(){ return songT; }, get floaters(){ return floaters; }, startGame, tick: dt => update(dt) };
+  window.__brawl = { get phase(){ return phase; }, get volley(){ return volley; }, get hp(){ return hp; }, get wins(){ return wins; }, get bout(){ return bout; }, get score(){ return score; }, get salvo(){ return salvo; }, get mode(){ return mode; }, Rating, setRating: r => { Rating._set(r); refreshRatingUi(); }, get net(){ return net; }, get songT(){ return songT; }, get floaters(){ return floaters; }, startGame, tick: dt => { update(dt); frameAt = performance.now(); }, get LAT(){ return LAT; }, get calib(){ return calib; } };
 })();
 </script>
 <script src="/tools.js"></script>
