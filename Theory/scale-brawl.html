@@ -657,9 +657,10 @@
   }
   // and the way back: from your fist to the Baron's chest
   const FIST = {x:PX+56, y:FLOOR-116}, BCHEST = {x:BX-30, y:FLOOR-126};
-  function shotAt(f){
-    const x = FIST.x + (BCHEST.x - FIST.x)*f;
-    const y = FIST.y + (BCHEST.y - FIST.y)*f - Math.sin(f*Math.PI)*40;
+  function shotAt(f, from){
+    const h = from || FIST;
+    const x = h.x + (BCHEST.x - h.x)*f;
+    const y = h.y + (BCHEST.y - h.y)*f - Math.sin(f*Math.PI)*40;
     return {x, y};
   }
 
@@ -697,7 +698,8 @@
       slot.spawnAt = songT;
     }
     s.used++;
-    Object.assign(slot, {n, st:'fly', t:0, x:FIST.x, y:FIST.y, landAt: slot.spawnAt + s.flight});
+    const from = playerFist() || FIST;
+    Object.assign(slot, {n, st:'fly', t:0, x:from.x, y:from.y, from, landAt: slot.spawnAt + s.flight});
     // the Baron decides now whether he'll echo it, and when (later notes in a phrase are harder to hold in your head)
     const order = s.notes.filter(x => x.st !== 'empty' && x.st !== 'rest').length - 1;
     slot.aiBlock = Math.random() < AI_BLOCK() * (1 - .06*order);
@@ -728,7 +730,7 @@
       if(x.st !== 'fly') return;
       x.t = songT - x.spawnAt;
       // online, a shot hangs just short of your friend until their device says what happened
-      const p = shotAt(Math.min(mode === 'pvp' ? .94 : 1, x.t / s.flight)); x.x = p.x; x.y = p.y;
+      const p = shotAt(Math.min(mode === 'pvp' ? .94 : 1, x.t / s.flight), x.from); x.x = p.x; x.y = p.y;
       if(mode === 'pvp'){
         if(x.t > s.flight*3 + 6) x.st = 'blocked';        // lost message: don't hang the fight
         return;
@@ -1128,7 +1130,41 @@
   const ease = t => 1 - Math.pow(1-Math.min(1,Math.max(0,t)),3);
 
   // the player: a busker in a blue hoodie with pink headphones
+  /* you, and your online rival: busker puppets (scale-brawl-puppet.js) */
+  const playerPuppet = window.BrawlPuppet ? BrawlPuppet.busker('player') : null;
+  const rivalPuppet  = window.BrawlPuppet ? BrawlPuppet.busker('rival') : null;
+  const BUSKER_CLIP = {idle:'idle', jab:'jab', dash:'cross', hurt:'hit', ko:'ko', win:'win', windup:'windup', throw:'throw', block:'block'};
+  let pSeen = null, pLastT = null, pJabs = 0, rSeen = null, rLastT = null, rThrows = 0;
+  function playerFist(){ return playerPuppet ? playerPuppet.point('handF', 0, 8, PX, FLOOR) : null; }
   function drawPlayer(time){
+    if(!playerPuppet){ drawPlayerOld(time); return; }
+    const dt = pLastT == null ? 0 : Math.min(.05, Math.max(0, time - pLastT)); pLastT = time;
+    if(pPose !== pSeen){
+      pSeen = pPose;
+      let clip = BUSKER_CLIP[pPose.k] || 'idle';
+      if(clip === 'jab') clip = (pJabs++ % 2) ? 'cross' : 'jab';             // one-two: alternate hands
+      playerPuppet.play(clip);
+    }
+    const live = phase === 'intro' || phase === 'fight' || phase === 'roundEnd';
+    playerPuppet.update(dt, {beat: live ? BEAT.ph : null, hp: hp.p/MAX_HP});
+    const flick = pPose.k === 'hurt' && pPose.t < .3 && Math.floor(time*30) % 2;
+    playerPuppet.draw(ctx, PX, FLOOR, {alpha: flick ? .6 : 1, glow:'rgba(150,175,255,.4)', glowBlur:8});
+  }
+  function drawRivalPuppet(time){
+    const dt = rLastT == null ? 0 : Math.min(.05, Math.max(0, time - rLastT)); rLastT = time;
+    if(bPose !== rSeen){
+      rSeen = bPose;
+      let clip = BUSKER_CLIP[bPose.k] || 'idle';
+      if(clip === 'throw' && (rThrows++ % 2)) clip = 'cross';
+      rivalPuppet.play(clip);
+    }
+    const live = phase === 'intro' || phase === 'fight' || phase === 'roundEnd';
+    rivalPuppet.update(dt, {beat: live ? BEAT.ph : null, hp: hp.b/MAX_HP});
+    const flick = bPose.k === 'hurt' && bPose.t < .3 && Math.floor(time*30) % 2;
+    rivalPuppet.draw(ctx, BX, FLOOR, {flip:true, alpha: flick ? .6 : 1, glow:'rgba(255,150,190,.4)', glowBlur:8});
+  }
+  // the original drawn-in-code busker, kept as a fallback
+  function drawPlayerOld(time){
     const k = pPose.k, t = pPose.t;
     let dx = 0, lean = 0, fist = {x:40, y:-112}, fist2 = {x:26, y:-104}, bob = 3.5*BEAT.pulse + Math.sin(time*2)*.8, flash = 0;   // bounces on the beat
     if(k === 'jab' && t < .18){ const s = Math.sin(t/.18*Math.PI); fist = {x:40+34*s, y:-114}; lean = .08*s; }
@@ -1171,6 +1207,7 @@
 
   // online: your friend is a second busker, in pink, facing you
   function drawRival(time){
+    if(rivalPuppet){ drawRivalPuppet(time); return; }
     const k = bPose.k, t = bPose.t;
     let dx = 0, lean = 0, fist = {x:40, y:-112}, fist2 = {x:26, y:-104}, bob = 3.5*BEAT.pulse + Math.sin(time*2 + 1.3)*.8, flash = 0;
     if((k === 'throw' || k === 'windup') && t < .18){ const s = Math.sin(t/.18*Math.PI); fist = {x:40+34*s, y:-114}; lean = .08*s; }
@@ -1206,7 +1243,8 @@
   }
   // the baton's tip on screen: his notes fly from here
   function baronTip(){
-    if(!baronPuppet || mode === 'pvp') return null;
+    if(mode === 'pvp') return rivalPuppet ? rivalPuppet.point('handF', 0, 8, BX, FLOOR, {flip:true}) : null;
+    if(!baronPuppet) return null;
     const t = BrawlPuppet.BATON_TIP;
     return baronPuppet.point(t.bone, t.x, t.y, BX, FLOOR, {flip:true, scale:PUPPET_SCALE});
   }
@@ -1860,7 +1898,7 @@
     }
     net.waiting = false;
     const n = remoteNote(m);
-    volley.notes.push({n, st:'fly', t:0, x:HAND.x, y:HAND.y, slot:volley.notes.length, idx:m.i, spawnAt:songT, landAt:songT + volley.flight});
+    volley.notes.push({n, st:'fly', t:0, x:HAND.x, y:HAND.y, from:baronTip(), slot:volley.notes.length, idx:m.i, spawnAt:songT, landAt:songT + volley.flight});
     baronTone(n.m); bPose = {k:'throw', t:0};
   }
   function incomingEnd(count){

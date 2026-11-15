@@ -547,9 +547,242 @@
     });
   }
 
+
+  /* ------------------------------------------------------------------ *
+   *  The busker: you (blue hoodie, pink headphones) and, online, your
+   *  rival (pink hoodie, blue headphones, a beanie). A guitar on the back,
+   *  a boxer's guard, and straight punches that alternate hands.
+   * ------------------------------------------------------------------ */
+  const BUSKER_PAL = {
+    player: { hood: '#2B44D6', hoodSh: '#1A2B99', hoodHi: '#6F84F0', lining: '#16206E',
+              phones: '#FF4E86', phonesSh: '#C92D62', skin: '#E8B48C', skinSh: '#C98F68',
+              hair: '#2B2118', hairHi: '#5A4636', jeans: '#2D3B6E', jeansSh: '#1F2A52', jeansHi: '#5466A3',
+              stripe: '#FF4E86', beanie: null },
+    rival:  { hood: '#FF4E86', hoodSh: '#C92D62', hoodHi: '#FF9CBD', lining: '#8E1E48',
+              phones: '#2B44D6', phonesSh: '#1A2B99', skin: '#B9825C', skinSh: '#94623F',
+              hair: '#4A2C1A', hairHi: '#7A5236', jeans: '#3B2F4A', jeansSh: '#2A2036', jeansHi: '#6A5A80',
+              stripe: '#2B44D6', beanie: '#FFC53D' }
+  };
+  const B = {};
+  B.torso = (() => { const p = new Path2D();
+    p.moveTo(-17, 6); p.bezierCurveTo(-22, -16, -21, -40, -14, -54);
+    p.quadraticCurveTo(-4, -61, 6, -59); p.quadraticCurveTo(16, -57, 18, -47);
+    p.bezierCurveTo(23, -30, 22, -10, 16, 6); p.closePath(); return p; })();
+  B.hem = (() => { const p = new Path2D(); p.moveTo(-17.5, 0); p.lineTo(16.8, 0); p.lineTo(16, 6); p.lineTo(-17, 6); p.closePath(); return p; })();
+  B.pocket = (() => { const p = new Path2D(); p.moveTo(3, -2); p.lineTo(18.5, -2); p.quadraticCurveTo(20, -14, 17, -21); p.lineTo(7, -21); p.quadraticCurveTo(5, -12, 3, -2); p.closePath(); return p; })();
+  B.hood = (() => { const p = new Path2D(); p.moveTo(-7, -2); p.bezierCurveTo(-15, 6, -13, 22, -2, 25); p.bezierCurveTo(9, 23, 11, 8, 7, -2); p.closePath(); return p; })();
+  B.hoodIn = (() => { const p = new Path2D(); p.ellipse(0, 9, 4.5, 8, 0, 0, TAU); return p; })();
+  B.seat = (() => { const p = new Path2D(); p.moveTo(-16, -4); p.quadraticCurveTo(-17, 10, -6, 11); p.lineTo(9, 11); p.quadraticCurveTo(16, 8, 14, -4); p.closePath(); return p; })();
+  B.thigh = capsule(0, 10, 41, 8.5);
+  B.shin = capsule(0, 8.5, 40, 7.6);
+  B.roll = capsule(32, 8.6, 38, 8.6);
+  B.upper = capsule(0, 8.6, 28, 7.6);
+  B.fore = capsule(0, 7.6, 25, 6.8);
+  B.cuffS = capsule(21, 7, 26, 7);
+  B.fist = (() => { const p = new Path2D(); p.moveTo(-7, -1); p.quadraticCurveTo(-8.5, 12, 0, 12.5); p.quadraticCurveTo(9, 12.5, 8, 2); p.quadraticCurveTo(7.5, -3, 0, -3); p.closePath(); return p; })();
+  B.shoe = (() => { const p = new Path2D();
+    p.moveTo(-10, -3); p.lineTo(-11, 9); p.lineTo(23, 9); p.quadraticCurveTo(27, 8, 25, 2); p.quadraticCurveTo(19, -3, 8, -4); p.lineTo(-6, -6); p.closePath(); return p; })();
+  B.sole = (() => { const p = new Path2D(); p.moveTo(-11, 5); p.lineTo(25.6, 5); p.quadraticCurveTo(26, 9, 23, 9.5); p.lineTo(-11, 9.5); p.closePath(); return p; })();
+  B.neck = (() => { const p = new Path2D(); p.moveTo(-4, -1); p.lineTo(-3.5, -10); p.lineTo(6, -10); p.lineTo(5.5, -1); p.closePath(); return p; })();
+  B.skull = (() => { const p = new Path2D(); p.ellipse(2, -22, 15.5, 16.5, 0, 0, TAU); return p; })();
+  B.hair = (() => { const p = new Path2D();
+    p.moveTo(-13, -14); p.bezierCurveTo(-19, -32, -6, -43, 8, -39);
+    p.quadraticCurveTo(16, -37, 17, -30); p.lineTo(9, -31); p.quadraticCurveTo(0, -30, -4, -22);
+    p.quadraticCurveTo(-8, -14, -13, -14); p.closePath(); return p; })();
+  B.fringe = (() => { const p = new Path2D();                  // a spiky fringe that flops (spring bone)
+    p.moveTo(-6, -2); p.lineTo(-2, 14); p.lineTo(1, 6); p.lineTo(5, 15); p.lineTo(6, 4); p.lineTo(10, 10); p.lineTo(8, -3); p.closePath(); return p; })();
+  B.nose = (() => { const p = new Path2D(); p.moveTo(15, -23); p.quadraticCurveTo(22, -19, 19.5, -15.5); p.lineTo(15, -15.5); p.closePath(); return p; })();
+  B.cup = (() => { const p = new Path2D(); p.ellipse(-1, -21, 6.6, 8.6, 0, 0, TAU); return p; })();
+  B.beanie = (() => { const p = new Path2D(); p.moveTo(-15, -26); p.bezierCurveTo(-15, -44, 18, -46, 18, -27); p.lineTo(18, -24); p.lineTo(-15, -23); p.closePath(); return p; })();
+  B.beanieBand = (() => { const p = new Path2D(); p.moveTo(-16, -29); p.lineTo(18.5, -30); p.lineTo(18.5, -23); p.lineTo(-16, -22); p.closePath(); return p; })();
+  B.gBody = (() => { const p = new Path2D(); p.ellipse(0, 14, 12, 15, 0, 0, TAU); p.ellipse(0, -2, 9, 10, 0, 0, TAU); return p; })();
+  B.gNeck = (() => { const p = new Path2D(); p.rect(-3, -64, 6, 58); return p; })();
+  B.gHead = (() => { const p = new Path2D(); p.moveTo(-4.5, -64); p.lineTo(-5, -78); p.lineTo(5, -80); p.lineTo(4.5, -64); p.closePath(); return p; })();
+
+  function drawBuskerHead(c, P, pal) {
+    const e = P.expr, hurt = e === 'ouch' || e === 'ko';
+    paint(c, B.neck, pal.skin, x => { x.fillStyle = pal.skinSh; x.fillRect(-8, -12, 6, 14); });
+    paint(c, B.skull, pal.skin, x => {
+      x.fillStyle = pal.skinSh; x.beginPath(); x.ellipse(-8, -20, 11, 18, 0, 0, TAU); x.fill();
+      if (e === 'happy' || e === 'shout') { x.fillStyle = 'rgba(242,120,120,.45)'; x.beginPath(); x.ellipse(10, -15, 5, 3, 0, 0, TAU); x.fill(); }
+    });
+    if (!pal.beanie) paint(c, B.hair, pal.hair, x => { x.strokeStyle = pal.hairHi; x.lineWidth = 2; x.beginPath(); x.moveTo(-6, -36); x.quadraticCurveTo(4, -40, 12, -36); x.stroke(); });
+    // eye + brow by expression
+    const ex = 10.5, ey = -22;
+    c.fillStyle = INK; c.strokeStyle = INK; c.lineCap = 'round';
+    if (e === 'ko') { c.lineWidth = 2.4; c.beginPath(); c.moveTo(ex - 3, ey - 3); c.lineTo(ex + 3, ey + 3); c.moveTo(ex + 3, ey - 3); c.lineTo(ex - 3, ey + 3); c.stroke(); }
+    else if (e === 'ouch') { c.lineWidth = 2.4; c.beginPath(); c.moveTo(ex - 3.5, ey - 3); c.lineTo(ex + 2, ey); c.lineTo(ex - 3.5, ey + 3); c.stroke(); }
+    else if (e === 'happy') { c.lineWidth = 2.4; c.beginPath(); c.arc(ex, ey + 2, 3.4, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); }
+    else {
+      c.fillStyle = '#fff'; c.beginPath(); c.ellipse(ex, ey, 3.6, e === 'focus' ? 2.6 : 4, 0, 0, TAU); c.fill(); c.lineWidth = 1.4; c.stroke();
+      c.fillStyle = INK; c.beginPath(); c.arc(ex + 1.3, ey + .2, e === 'shout' ? 1.5 : 1.9, 0, TAU); c.fill();
+    }
+    const tilt = { focus: .3, shout: .35, ouch: -.4, ko: -.3, happy: -.3 }[e] || .12;
+    c.save(); c.translate(ex - .5, ey - 7); c.rotate(tilt);
+    c.strokeStyle = pal.hair; c.lineWidth = 3.2; c.beginPath(); c.moveTo(-4.5, 0); c.lineTo(4.5, 0); c.stroke();
+    c.restore();
+    paint(c, B.nose, pal.skin, x => { x.fillStyle = pal.skinSh; x.fillRect(12, -18, 12, 4); });
+    // mouth
+    c.strokeStyle = INK; c.lineWidth = 2;
+    if (e === 'shout' || e === 'ouch') {
+      const mo = new Path2D(); mo.ellipse(13.5, -10.5, e === 'shout' ? 3.6 : 2.8, e === 'shout' ? 3.4 : 2.4, 0, 0, TAU);
+      paint(c, mo, '#5A1A2A');
+    } else if (e === 'happy') { c.beginPath(); c.arc(12, -13, 4, .2, Math.PI - .5); c.stroke(); }
+    else if (e === 'ko') { c.beginPath(); c.moveTo(10, -10); c.quadraticCurveTo(13, -12, 16, -9.5); c.stroke(); }
+    else { c.beginPath(); c.moveTo(10.5, -10.5); c.lineTo(15.5, -11); c.stroke(); }
+    // beanie (the rival) — over the hair line
+    if (pal.beanie) {
+      paint(c, B.beanie, pal.beanie, x => { x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(-20, -50, 12, 30); });
+      paint(c, B.beanieBand, pal.beanie, x => { x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 1.2; for (let i = -12; i < 18; i += 4) { x.beginPath(); x.moveTo(i, -29); x.lineTo(i, -22); x.stroke(); } });
+      const pom = new Path2D(); pom.arc(2, -44, 4.5, 0, TAU); paint(c, pom, '#FFFFFF');
+    }
+    // headphones: knocked crooked when hit
+    c.save(); if (hurt) { c.translate(-1, -21); c.rotate(-.28); c.translate(1, 21); }
+    c.strokeStyle = INK; c.lineWidth = 7; c.beginPath(); c.arc(1.5, -22, 18.5, Math.PI * 1.08, Math.PI * 1.92); c.stroke();
+    c.strokeStyle = pal.phones; c.lineWidth = 4; c.beginPath(); c.arc(1.5, -22, 18.5, Math.PI * 1.08, Math.PI * 1.92); c.stroke();
+    paint(c, B.cup, pal.phones, x => { x.fillStyle = pal.phonesSh; x.fillRect(-12, -32, 7, 24); x.fillStyle = 'rgba(255,255,255,.55)'; x.beginPath(); x.ellipse(1, -25, 1.6, 2.6, 0, 0, TAU); x.fill(); });
+    c.restore();
+  }
+
+  function buskerDef(pal) {
+    const sleeve = (k) => c => paint(c, k === 'upper' ? B.upper : B.fore, pal.hood, x => { shadeBack(pal.hoodSh, 2.5)(x); hiLine(x, 4, 3, k === 'upper' ? 24 : 18, pal.hoodHi); });
+    return {
+      bones: [
+        { name: 'root' },
+        { name: 'ikF', parent: 'root', x: 16, y: -9 },
+        { name: 'ikB', parent: 'root', x: -15, y: -9 },
+        { name: 'hips', parent: 'root', y: -86 },
+        { name: 'thighB', parent: 'hips', x: -5, y: 2 },
+        { name: 'shinB', parent: 'thighB', y: 41 },
+        { name: 'footB', parent: 'shinB', y: 40 },
+        { name: 'torso', parent: 'hips', y: -2, rot: .05 },
+        { name: 'guitar', parent: 'torso', x: -15, y: -28, rot: -.5 },
+        { name: 'hood', parent: 'torso', x: -9, y: -55, rot: 1.1 },
+        { name: 'upperArmB', parent: 'torso', x: -4, y: -51, rot: -.3 },
+        { name: 'foreArmB', parent: 'upperArmB', y: 28, rot: -1.9 },
+        { name: 'handB', parent: 'foreArmB', y: 25, rot: -.1 },
+        { name: 'head', parent: 'torso', x: 4, y: -58, sx: 1.28, sy: 1.28 },
+        { name: 'fringe', parent: 'head', x: 9, y: -37, rot: -.9 },
+        { name: 'thighF', parent: 'hips', x: 5, y: 2 },
+        { name: 'shinF', parent: 'thighF', y: 41 },
+        { name: 'footF', parent: 'shinF', y: 40 },
+        { name: 'upperArmF', parent: 'torso', x: 6, y: -51, rot: -.72 },
+        { name: 'foreArmF', parent: 'upperArmF', y: 28, rot: -1.85 },
+        { name: 'handF', parent: 'foreArmF', y: 25, rot: -.2 }
+      ],
+      ik: [
+        { upper: 'thighF', lower: 'shinF', target: 'ikF', len1: 41, len2: 40 },
+        { upper: 'thighB', lower: 'shinB', target: 'ikB', len1: 41, len2: 40 }
+      ],
+      level: ['footF', 'footB'],
+      springs: {
+        hood: { stiff: 150, damp: 10, drag: -.004, maxLag: .7 },
+        fringe: { stiff: 260, damp: 13, drag: -.003, maxLag: .5 }
+      },
+      clips: (function () {
+        const JAB = { hips: { x: 6, y: -84 }, torso: { rot: .15 }, head: { rot: .05 },
+          upperArmF: { rot: -1.5 }, foreArmF: { rot: -.08 }, handF: { rot: -.1 },
+          upperArmB: { rot: -.15 }, foreArmB: { rot: -2.2 }, ikF: { x: 20 }, expr: 'shout' };
+        const CROSS = { hips: { x: 9, y: -84 }, torso: { rot: .24, sx: .97 }, head: { rot: .08 },
+          upperArmB: { rot: -1.52 }, foreArmB: { rot: -.05 }, handB: { rot: -.05 },
+          upperArmF: { rot: -.25 }, foreArmF: { rot: -2.35 }, ikF: { x: 21 }, ikB: { x: -12 }, expr: 'shout' };
+        const WIND = { hips: { x: -5, y: -83 }, torso: { rot: -.16 }, head: { rot: -.06 },
+          upperArmB: { rot: .9 }, foreArmB: { rot: -2.4 }, upperArmF: { rot: -1.0 }, foreArmF: { rot: -1.6 },
+          ikF: { x: 19 }, expr: 'focus' };
+        const BLOCK = { hips: { x: -3, y: -84 }, torso: { rot: .1 }, head: { rot: .18 },
+          upperArmF: { rot: -.45 }, foreArmF: { rot: -2.6 }, handF: { rot: -.3 },
+          upperArmB: { rot: -.55 }, foreArmB: { rot: -2.45 }, expr: 'focus' };
+        const HIT1 = { hips: { x: -13, y: -86 }, torso: { rot: -.38, sx: 1.06, sy: .92 }, head: { rot: -.4 },
+          upperArmF: { rot: 2.4 }, foreArmF: { rot: .6 }, upperArmB: { rot: 2.1 }, foreArmB: { rot: .7 },
+          ikF: { x: 10 }, ikB: { x: -21 }, expr: 'ouch' };
+        const HIT2 = { hips: { x: -9, y: -86 }, torso: { rot: -.18 }, head: { rot: -.15 },
+          upperArmF: { rot: .2 }, foreArmF: { rot: -1.4 }, upperArmB: { rot: .4 }, foreArmB: { rot: -1.4 },
+          ikF: { x: 10 }, ikB: { x: -21 }, expr: 'ouch' };
+        const STAGGER = { hips: { x: -20, y: -80 }, torso: { rot: -.48 }, head: { rot: -.6 },
+          upperArmF: { rot: 1.3 }, foreArmF: { rot: -.2 }, upperArmB: { rot: 1.9 }, foreArmB: { rot: .4 },
+          ikF: { x: 4 }, ikB: { x: -24 }, expr: 'ko' };
+        const TOPPLE = Object.assign({}, STAGGER, { root: { rot: -.75, x: 22 }, hips: { x: -16, y: -82 } });
+        const DOWN = { root: { rot: -1.62, y: -18, x: 60 }, hips: { x: -6, y: -86 }, torso: { rot: -.06 }, head: { rot: -.25 },
+          upperArmF: { rot: 2.3 }, foreArmF: { rot: .3 }, upperArmB: { rot: 2.8 }, foreArmB: { rot: .2 },
+          ikF: { x: 6 }, ikB: { x: -10 }, expr: 'ko' };
+        const DOWNSETTLE = Object.assign({}, DOWN, { root: { rot: -1.55, y: -22, x: 60 } });
+        const WIN1 = { hips: { y: -88 }, torso: { rot: -.08 }, head: { rot: -.2 },
+          upperArmF: { rot: 2.95 }, foreArmF: { rot: -.25 }, handF: { rot: 0 },
+          upperArmB: { rot: -.4 }, foreArmB: { rot: -2.1 }, expr: 'happy' };
+        const WIN2 = { hips: { y: -82 }, torso: { rot: .05 }, head: { rot: -.05 },
+          upperArmF: { rot: 2.6 }, foreArmF: { rot: -.7 },
+          upperArmB: { rot: -.3 }, foreArmB: { rot: -2.0 }, ikF: { x: 17 }, expr: 'happy' };
+        return {
+          idle:   { dur: 1, loop: true, mix: .14, keys: [[0, {}], [1, {}]] },
+          jab:    { dur: .26, mix: .02, keys: [[0, {}], [.05, JAB, 'snap'], [.1, JAB, 'lin'], [.26, {}, 'io']] },
+          cross:  { dur: .3, mix: .02, keys: [[0, {}], [.06, CROSS, 'snap'], [.12, CROSS, 'lin'], [.3, {}, 'io']] },
+          windup: { dur: .28, hold: true, mix: .06, keys: [[0, { expr: 'focus' }], [.28, WIND, 'back']] },
+          throw:  { dur: .36, mix: .02, keys: [[0, WIND], [.06, CROSS, 'snap'], [.14, CROSS, 'lin'], [.36, {}, 'io']] },
+          block:  { dur: .38, mix: .03, keys: [[0, {}], [.06, BLOCK, 'snap'], [.2, BLOCK, 'lin'], [.38, {}, 'io']] },
+          hit:    { dur: .5, mix: .02, keys: [[0, HIT1], [.05, HIT1, 'snap'], [.2, HIT2, 'out'], [.5, {}, 'io']] },
+          ko:     { dur: 1.2, hold: true, mix: .03, keys: [[0, HIT1], [.08, HIT1, 'snap'], [.42, STAGGER, 'out'], [.7, TOPPLE, 'in'], [.98, DOWN, 'in'], [1.2, DOWNSETTLE, 'out']] },
+          win:    { dur: .8, loop: true, mix: .12, keys: [[0, WIN1], [.4, WIN2, 'io'], [.8, WIN1, 'io']] }
+        };
+      })(),
+      layers(p, P, inp) {
+        const beat = inp.beat == null ? (P.time * 1.3) % 1 : inp.beat;
+        const pulse = Math.pow(1 - beat, 3);
+        if (P.state === 'idle') {
+          p.hips.y += 3.5 * pulse;                            // bounce in the guard, on the beat
+          p.head.rot += .06 * pulse;
+          p.foreArmF.rot += .1 * pulse; p.foreArmB.rot -= .08 * pulse;
+          p.upperArmF.rot += .04 * Math.sin(P.time * 2.1);    // fists never quite still
+        }
+        p.torso.sy *= 1 + .014 * Math.sin(P.time * 2.6);
+        const hurt = 1 - Math.max(0, Math.min(1, inp.hp == null ? 1 : inp.hp));
+        if (P.state !== 'ko') { p.torso.rot += .07 * hurt; p.head.rot += .1 * hurt; p.hips.y += 5 * hurt; }
+        if (P.state === 'windup' && P.t > .28) p.upperArmB.rot += .03 * Math.sin(P.time * 40);
+      },
+      parts: [
+        { bone: 'guitar', draw: c => {
+            paint(c, B.gNeck, '#7A4A22', x => { x.fillStyle = '#5A3415'; x.fillRect(-4, -66, 3, 62); });
+            paint(c, B.gHead, '#3A2412', x => { x.fillStyle = '#E8E2D6'; [-74, -69].forEach(yy => { x.beginPath(); x.arc(-5, yy, 1.6, 0, TAU); x.arc(5, yy - 1, 1.6, 0, TAU); x.fill(); }); });
+            paint(c, B.gBody, '#D98A3A', x => { x.fillStyle = '#B2682A'; x.fillRect(-14, -14, 9, 46); });
+          } },
+        { bone: 'upperArmB', draw: c => paint(c, B.upper, pal.hoodSh) },
+        { bone: 'foreArmB', draw: c => { paint(c, B.fore, pal.hoodSh); paint(c, B.cuffS, pal.lining); } },
+        { bone: 'handB', draw: c => paint(c, B.fist, pal.skinSh) },
+        { bone: 'thighB', draw: c => paint(c, B.thigh, pal.jeansSh) },
+        { bone: 'shinB', draw: c => { paint(c, B.shin, pal.jeansSh); paint(c, B.roll, pal.jeansSh); } },
+        { bone: 'footB', draw: c => { paint(c, B.shoe, '#E4DED0'); paint(c, B.sole, '#B8B0A0'); } },
+        { bone: 'hood', draw: c => { paint(c, B.hood, pal.hood, x => { x.fillStyle = pal.hoodSh; x.fillRect(-20, -6, 16, 36); }); paint(c, B.hoodIn, pal.lining); } },
+        { bone: 'hips', draw: c => paint(c, B.seat, pal.jeans, shadeBack(pal.jeansSh, 3)) },
+        { bone: 'thighF', draw: c => paint(c, B.thigh, pal.jeans, x => { shadeBack(pal.jeansSh, 3)(x); hiLine(x, 5, 4, 36, pal.jeansHi); }) },
+        { bone: 'shinF', draw: c => { paint(c, B.shin, pal.jeans, x => { shadeBack(pal.jeansSh, 2.5)(x); hiLine(x, 4, 3, 30, pal.jeansHi); }); paint(c, B.roll, pal.jeans, x => { x.fillStyle = pal.jeansHi; x.fillRect(-12, 33, 24, 2); }); } },
+        { bone: 'footF', draw: c => {
+            paint(c, B.shoe, '#FFFFFF', x => { x.fillStyle = '#E4DED0'; x.fillRect(-14, -8, 9, 18);
+              x.strokeStyle = pal.stripe; x.lineWidth = 3; x.beginPath(); x.moveTo(-2, 4); x.quadraticCurveTo(8, -2, 16, 3); x.stroke(); });
+            paint(c, B.sole, '#D8D0C0'); } },
+        { bone: 'torso', draw: c => {
+            paint(c, B.torso, pal.hood, x => {
+              x.fillStyle = pal.hoodSh; x.fillRect(-40, -70, 32, 90);
+              x.strokeStyle = pal.hoodHi; x.lineWidth = 2.5; x.beginPath(); x.moveTo(19, -44); x.quadraticCurveTo(22, -28, 18, -12); x.stroke();
+            });
+            paint(c, B.hem, pal.hoodSh);
+            paint(c, B.pocket, pal.hood, x => { x.fillStyle = pal.hoodSh; x.fillRect(0, -24, 6, 24); });
+            c.strokeStyle = '#FFFFFF'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(11, -53); c.lineTo(12, -39); c.moveTo(15, -52); c.lineTo(16.5, -39); c.stroke();
+            c.fillStyle = INK; [[12, -38], [16.5, -38]].forEach(([x, y]) => { c.fillRect(x - 1.2, y, 2.4, 3.5); });
+            c.font = '700 13px "Noto Music", serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+            c.fillStyle = '#FFC53D'; c.fillText('♪', 6, -30);
+          } },
+        { bone: 'head', draw: (c, P) => drawBuskerHead(c, P, pal) },
+        { bone: 'fringe', draw: c => { if (!pal.beanie) paint(c, B.fringe, pal.hair); } },
+        { bone: 'upperArmF', draw: sleeve('upper') },
+        { bone: 'foreArmF', draw: c => { sleeve('fore')(c); paint(c, B.cuffS, pal.lining); } },
+        { bone: 'handF', draw: c => paint(c, B.fist, pal.skin, x => { x.fillStyle = pal.skinSh; x.fillRect(-12, -6, 7, 22); x.strokeStyle = pal.skinSh; x.lineWidth = 1.3; x.beginPath(); x.moveTo(1, 5); x.lineTo(7, 5); x.moveTo(1, 8.5); x.lineTo(7, 8.5); x.stroke(); }) }
+      ]
+    };
+  }
+
   global.BrawlPuppet = {
     Puppet, EASE,
     baron: () => new Puppet(BARON),
+    busker: kind => new Puppet(buskerDef(BUSKER_PAL[kind] || BUSKER_PAL.player)),
     // where the baton's tip is, in this character's own space
     BATON_TIP: { bone: 'baton', x: 0, y: 57 }
   };

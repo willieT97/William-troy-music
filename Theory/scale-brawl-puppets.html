@@ -26,10 +26,11 @@
 <body>
 <div class="wrap">
   <h1>Puppet preview</h1>
-  <p>Baron von Baton, built from bones (scale-brawl-puppet.js). Play a move, slow it down, show the skeleton. Pink dots are the springy parts (coat tails, hair).</p>
+  <p>The fighters, built from bones (scale-brawl-puppet.js). Play a move, slow it down, show the skeleton. Pink dots are the springy parts (coat tails, hair, hood).</p>
   <canvas id="cv" width="760" height="400"></canvas>
   <div class="row" id="moves"></div>
   <div class="row">
+    <label>Character <select id="who"><option value="baron">Baron</option><option value="player">Busker (you)</option><option value="rival">Rival (online)</option></select></label>
     <label>Speed <select id="speed"><option value="1">1×</option><option value="0.5">½×</option><option value="0.25">¼×</option><option value="0.1">⅒×</option></select></label>
     <button id="pause">Pause</button>
     <button id="step">Step</button>
@@ -45,14 +46,21 @@
   const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
   const W = 760, H = 400, FLOOR = 352;
   const dpr = Math.min(2, devicePixelRatio || 1); cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-  const P = BrawlPuppet.baron(), P2 = BrawlPuppet.baron();
-  const MOVES = ['idle','windup','throw','block','hit','ko','win'];
+  const make = w => w === 'baron' ? BrawlPuppet.baron() : BrawlPuppet.busker(w);
+  const q0 = new URLSearchParams(location.search), who0 = q0.get('who') || 'baron';
+  document.getElementById('who').value = who0;
+  let P = make(who0), P2 = make(who0), MOVES = [];
   const box = document.getElementById('moves');
-  MOVES.forEach(m => {
-    const b = document.createElement('button'); b.textContent = m; b.dataset.m = m;
-    b.onclick = () => { P.play(m); P2.play(m); mark(); };
-    box.appendChild(b);
-  });
+  function buildMoves(){
+    box.innerHTML = ''; MOVES = Object.keys(P.clips);
+    MOVES.forEach(m => {
+      const b = document.createElement('button'); b.textContent = m; b.dataset.m = m;
+      b.onclick = () => { P.play(m); P2.play(m); mark(); };
+      box.appendChild(b);
+    });
+  }
+  buildMoves();
+  document.getElementById('who').onchange = e => { P = make(e.target.value); P2 = make(e.target.value); buildMoves(); mark(); };
   const mark = () => box.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === P.state));
   mark();
   let GLOW = null;
@@ -60,7 +68,7 @@
   document.getElementById('speed').onchange = e => speed = +e.target.value;
   document.getElementById('pause').onclick = e => { paused = !paused; e.target.textContent = paused ? 'Play' : 'Pause'; };
   document.getElementById('step').onclick = () => { paused = true; stepOnce = true; document.getElementById('pause').textContent = 'Play'; };
-  addEventListener('keydown', e => { const i = +e.key - 1; if(i >= 0 && i < MOVES.length){ P.play(MOVES[i]); P2.play(MOVES[i]); mark(); } });
+  addEventListener('keydown', e => { if(e.target.tagName === 'SELECT') return; const i = +e.key - 1; if(i >= 0 && i < MOVES.length){ P.play(MOVES[i]); P2.play(MOVES[i]); mark(); } });
 
   function bg(){
     const g = ctx.createLinearGradient(0,0,0,FLOOR); g.addColorStop(0,'#2A1E3A'); g.addColorStop(1,'#4A3466');
@@ -82,9 +90,8 @@
     const showBones = document.getElementById('bones').checked;
     P2.draw(ctx, 230, FLOOR, {scale:1, bones:showBones, glow: showBones ? null : GLOW});            // facing right (as built)
     P.draw(ctx, 560, FLOOR, {flip:true, scale:1, bones:showBones, glow: showBones ? null : GLOW});  // facing left (as in the game)
-    const tip = P.point('baton', 0, 57, 560, FLOOR, {flip:true});
-    ctx.fillStyle = '#FFC53D'; ctx.beginPath(); ctx.arc(tip.x, tip.y, 3, 0, Math.PI*2); ctx.fill();
-    document.getElementById('info').textContent = P.state + ' · ' + P.t.toFixed(2) + 's · ' + P.expr + ' · keys 1–7';
+    if(P.m.baton){ const tip = P.point('baton', 0, 57, 560, FLOOR, {flip:true}); ctx.fillStyle = '#FFC53D'; ctx.beginPath(); ctx.arc(tip.x, tip.y, 3, 0, Math.PI*2); ctx.fill(); }
+    document.getElementById('info').textContent = P.state + ' · ' + P.t.toFixed(2) + 's · ' + P.expr + ' · keys 1–' + MOVES.length;
     mark();
     requestAnimationFrame(frame);
   }
