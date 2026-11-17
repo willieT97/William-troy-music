@@ -31,8 +31,9 @@
           the flag and it is back everywhere. Shelved tools are listed for
           teachers on shelf.html, and the Rollbook can still link them: it
           reads CATALOGUE, the menus read listed().
-      hero  true on the one game in the banner above the tabs. It keeps its
-          place on its own tab as well — the banner is an extra, not a move.
+      hero  true on the three "Legends" games in the row above the tabs. Each
+          keeps its place on its own tab as well — the row is an extra, not a
+          move. (Documentation only: the Legends markup is hand-written.)
       mk  builds the href from the answers, for pages that take ?inst=
 
    Exposed as window.MATools:
@@ -205,9 +206,9 @@ var CATALOGUE = [
     d:'A note appears on the stave — name it before the clock runs down.' },
   { t:'Note Elevator', h:'Theory/note-elevator.html', dep:1, g:['read'], lv:[2],
     d:'Read the note, press its floor, send the lift there. Faster and faster as you go.' },
-  { t:'Note Hopper', h:'Theory/note-hopper.html', feat:4, dep:1, g:['read'], lv:[1,2], mic:true, fav:['gdae'],
+  { t:'Note Hopper', h:'Theory/note-hopper.html', feat:4, hero:true, dep:1, g:['read'], lv:[1,2], mic:true, fav:['gdae'],
     d:'A frog crosses the river on lily pads, each marked with a note. Play it on your own instrument and the frog hops on — but dither and the pad drifts away.' },
-  { t:'Scale Brawl', h:'Theory/scale-brawl.html', feat:5, dep:1, g:['read'], lv:[1,2], fav:['pno'],
+  { t:'Scale Brawl', h:'Theory/scale-brawl.html', feat:5, hero:true, dep:1, g:['read'], lv:[1,2], fav:['pno'],
     d:'A music fighting game. Echo the notes thrown at you to block, then fire your own back. Fight Baron von Baton or a friend online. MIDI keyboard, laptop keys or screen.' },
 
   /* ---- depth 2 · a proper tool ---- */

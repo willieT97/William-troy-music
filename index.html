@@ -105,26 +105,23 @@
   .hero-cta{ color:var(--gold); opacity:.95; text-decoration:underline; text-underline-offset:3px; }
   .hero-cta:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
 
-  /* ---------- the one game above the tabs ---------- */
-  .herogame-row{ padding-bottom:clamp(1.6rem,4vw,2.4rem); }
+  /* ---------- the legends: three flagship games above the tabs ---------- */
+  .legends{ padding-bottom:clamp(1.6rem,4vw,2.4rem); }
+  .legends-head{ text-align:center; margin-bottom:1.5rem; }
+  .legends-head h2{
+    font-family:var(--pixel); font-weight:400; font-size:clamp(1.05rem,2.8vw,1.5rem);
+    margin:0 0 .6rem; color:var(--gold); text-shadow:3px 3px 0 var(--pink);
+  }
+  .legends-head .cat-note{ display:block; }
+  .legends-grid{ display:grid; grid-template-columns:1fr; gap:1.5rem; }
+  @media(min-width:860px){ .legends-grid{ grid-template-columns:repeat(3,1fr); } }
   .game.hero-game .game-art{ height:220px; }
-  .game.hero-game .game-art svg{ height:198px; }
-  .game.hero-game h2{
-    font-family:var(--display); font-weight:800; letter-spacing:-0.01em; line-height:1.05;
-    font-size:clamp(1.7rem,1.3rem + 1.6vw,2.3rem); margin:0 0 .6rem;
-  }
-  .game.hero-game p{ font-size:1.02rem; max-width:44ch; }
+  .game.hero-game .game-art svg{ height:196px; max-width:94%; }
+  .game.hero-game h3{ font-size:clamp(1.5rem,1.3rem + .8vw,1.8rem); }
   .game.hero-game .play{
-    margin-top:auto; align-self:flex-start; font-family:var(--pixel); font-weight:400; font-size:.7rem;
+    margin-top:auto; align-self:flex-start; font-family:var(--pixel); font-weight:400; font-size:.65rem;
     background:var(--pink); color:#fff; border:3px solid var(--ink); border-radius:5px;
-    padding:.85rem 1.2rem; box-shadow:4px 4px 0 var(--ink);
-  }
-  @media(min-width:760px){
-    .game.hero-game{ flex-direction:row; }
-    .game.hero-game .game-art{ flex:0 0 42%; height:auto; min-height:270px;
-      border-bottom:none; border-right:3px solid var(--ink); }
-    .game.hero-game .game-art svg{ height:236px; }
-    .game.hero-game .game-body{ padding:1.9rem 2rem; }
+    padding:.8rem 1.1rem; box-shadow:4px 4px 0 var(--ink);
   }
 
   /* ---------- your badges (badges.js) ----------
@@ -451,7 +448,7 @@
       <span>Insert coin</span>
     </div>
     <h1>The Music Arcade</h1>
-    <p class="hero-sub">Little browser games for training your musical ear. Start with the one below, then pick your instrument.</p>
+    <p class="hero-sub">Little browser games for training your musical ear. Start with one of the legends below, then pick your instrument.</p>
     <div class="hero-links">
       <!-- for anyone who would rather be told where to begin -->
       <a class="hero-cta" href="start.html">Not sure where to start? Three questions →</a>
@@ -474,58 +471,164 @@
 
 <main>
 
-  <!-- ═══════════ THE ONE GAME — first thing anyone sees ═══════════
-       One obvious thing to do before any choosing. Which game sits here is
-       the row marked hero:true in tools.js; the art and words are below.
-       It is also still a card on the Ear Training tab. -->
-  <section class="wrap herogame-row" aria-labelledby="hgTitle">
-    <a class="game hero-game" href="Ear%20Training/pitch-invaders_2.html" style="--art-bg:#EDE4CE;">
-      <div class="game-art">
-      <svg viewBox="0 0 300 300" role="img" aria-label="Pitch Invaders: a pixel alien descending toward a cannon over note lanes C D E">
-        <!-- note lanes -->
-        <line x1="90"  y1="18" x2="90"  y2="252" stroke="#2438C8" stroke-opacity="0.15" stroke-width="2"/>
-        <line x1="150" y1="18" x2="150" y2="252" stroke="#2438C8" stroke-opacity="0.15" stroke-width="2"/>
-        <line x1="210" y1="18" x2="210" y2="252" stroke="#2438C8" stroke-opacity="0.15" stroke-width="2"/>
-        <!-- rising shot -->
-        <rect x="148.5" y="186" width="3" height="12" fill="#FF4E86"/>
-        <!-- invader (the game's own sprite) -->
-        <g fill="#2438C8">
-          <rect x="94" y="44" width="16" height="16"/>
-          <rect x="190" y="44" width="16" height="16"/>
-          <rect x="110" y="60" width="16" height="16"/>
-          <rect x="174" y="60" width="16" height="16"/>
-          <rect x="94" y="76" width="112" height="16"/>
-          <rect x="78" y="92" width="32" height="16"/>
-          <rect x="126" y="92" width="48" height="16"/>
-          <rect x="190" y="92" width="32" height="16"/>
-          <rect x="62" y="108" width="176" height="16"/>
-          <rect x="62" y="124" width="16" height="16"/>
-          <rect x="94" y="124" width="112" height="16"/>
-          <rect x="222" y="124" width="16" height="16"/>
-          <rect x="62" y="140" width="16" height="16"/>
-          <rect x="94" y="140" width="16" height="16"/>
-          <rect x="190" y="140" width="16" height="16"/>
-          <rect x="222" y="140" width="16" height="16"/>
-          <rect x="110" y="156" width="32" height="16"/>
-          <rect x="158" y="156" width="32" height="16"/>
-        </g>
-        <!-- ground + cannon -->
-        <rect x="20" y="252" width="260" height="3" fill="#17140E"/>
-        <rect x="138" y="242" width="24" height="10" fill="#17140E"/>
-        <rect x="147" y="228" width="6" height="14" fill="#17140E"/>
-        <!-- note labels -->
-        <text x="90"  y="280" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#2438C8" text-anchor="middle">C</text>
-        <text x="150" y="280" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#2438C8" text-anchor="middle">D</text>
-        <text x="210" y="280" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#2438C8" text-anchor="middle">E</text>
-      </svg>
-      </div>
-      <div class="game-body">
-        <span class="tag">Start here</span>
-        <h2 id="hgTitle">Pitch Invaders</h2>
-        <p>Aliens fall down the lane of their note — tap the note you hear to shoot them down. No instrument needed, and it starts with just three notes.</p>
-        <span class="play">Play now</span>
-      </div>
-    </a>
+  <!-- ═══════════ LEGENDS — first thing anyone sees ═══════════
+       The three flagship games, side by side above the tabs (stacked on a
+       phone). The rows marked hero:true in tools.js; the art and words are
+       below. Each is also still a card on its own tab — this is an extra,
+       not a move. -->
+  <section class="wrap legends" aria-labelledby="lgTitle">
+    <div class="legends-head">
+      <h2 id="lgTitle">Legends</h2>
+      <span class="cat-note">The arcade's finest — start with any of these</span>
+    </div>
+    <div class="legends-grid">
+      <a class="game hero-game" href="Ear%20Training/pitch-invaders_2.html" style="--art-bg:#EDE4CE;">
+        <div class="game-art">
+        <svg viewBox="0 0 300 300" role="img" aria-label="Pitch Invaders: a pixel alien descending toward a cannon over note lanes C D E">
+          <!-- note lanes -->
+          <line x1="90"  y1="18" x2="90"  y2="252" stroke="#2438C8" stroke-opacity="0.15" stroke-width="2"/>
+          <line x1="150" y1="18" x2="150" y2="252" stroke="#2438C8" stroke-opacity="0.15" stroke-width="2"/>
+          <line x1="210" y1="18" x2="210" y2="252" stroke="#2438C8" stroke-opacity="0.15" stroke-width="2"/>
+          <!-- rising shot -->
+          <rect x="148.5" y="186" width="3" height="12" fill="#FF4E86"/>
+          <!-- invader (the game's own sprite) -->
+          <g fill="#2438C8">
+            <rect x="94" y="44" width="16" height="16"/>
+            <rect x="190" y="44" width="16" height="16"/>
+            <rect x="110" y="60" width="16" height="16"/>
+            <rect x="174" y="60" width="16" height="16"/>
+            <rect x="94" y="76" width="112" height="16"/>
+            <rect x="78" y="92" width="32" height="16"/>
+            <rect x="126" y="92" width="48" height="16"/>
+            <rect x="190" y="92" width="32" height="16"/>
+            <rect x="62" y="108" width="176" height="16"/>
+            <rect x="62" y="124" width="16" height="16"/>
+            <rect x="94" y="124" width="112" height="16"/>
+            <rect x="222" y="124" width="16" height="16"/>
+            <rect x="62" y="140" width="16" height="16"/>
+            <rect x="94" y="140" width="16" height="16"/>
+            <rect x="190" y="140" width="16" height="16"/>
+            <rect x="222" y="140" width="16" height="16"/>
+            <rect x="110" y="156" width="32" height="16"/>
+            <rect x="158" y="156" width="32" height="16"/>
+          </g>
+          <!-- ground + cannon -->
+          <rect x="20" y="252" width="260" height="3" fill="#17140E"/>
+          <rect x="138" y="242" width="24" height="10" fill="#17140E"/>
+          <rect x="147" y="228" width="6" height="14" fill="#17140E"/>
+          <!-- note labels -->
+          <text x="90"  y="280" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#2438C8" text-anchor="middle">C</text>
+          <text x="150" y="280" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#2438C8" text-anchor="middle">D</text>
+          <text x="210" y="280" font-family="'Space Mono',monospace" font-size="16" font-weight="700" fill="#2438C8" text-anchor="middle">E</text>
+        </svg>
+        </div>
+        <div class="game-body">
+          <span class="tag">Start here</span>
+          <h3>Pitch Invaders</h3>
+          <p>Aliens fall down the lane of their note — tap the note you hear to shoot them down. No instrument needed, and it starts with just three notes.</p>
+          <span class="play">Play now</span>
+        </div>
+      </a>
+
+      <a class="game hero-game" href="Theory/note-hopper.html" style="--art-bg:#EAF0FB;">
+        <div class="game-art">
+          <svg viewBox="0 0 300 168" role="img" aria-label="Note Hopper: a frog crossing a river on lily pads, each marked with a note name">
+            <!-- far bank, river, near bank -->
+            <rect x="24" y="10" width="252" height="26" fill="#BFE0C6"/>
+            <rect x="24" y="36" width="252" height="96" fill="#CFE0F3"/>
+            <rect x="24" y="132" width="252" height="26" fill="#BFE0C6"/>
+            <line x1="24" y1="36" x2="276" y2="36" stroke="#17140E" stroke-width="1.5"/>
+            <line x1="24" y1="132" x2="276" y2="132" stroke="#17140E" stroke-width="1.5"/>
+            <g stroke="#2438C8" stroke-width="1.5" opacity="0.3">
+              <line x1="40" y1="60" x2="58" y2="60"/><line x1="104" y1="60" x2="122" y2="60"/><line x1="214" y1="60" x2="232" y2="60"/>
+              <line x1="62" y1="92" x2="80" y2="92"/><line x1="226" y1="92" x2="244" y2="92"/><line x1="40" y1="122" x2="58" y2="122"/><line x1="236" y1="122" x2="254" y2="122"/>
+            </g>
+            <!-- the landing stone on the far bank -->
+            <ellipse cx="188" cy="23" rx="20" ry="10" fill="#D9D2C2" stroke="#17140E" stroke-width="1.5"/>
+            <!-- lily pads, each with its note; the gold one is next and drifting -->
+            <g stroke="#17140E" stroke-width="1.5" fill="#7CC79A">
+              <path d="M174 54 L186 44 A18 18 0 1 0 190 52 Z"/>
+              <path d="M118 84 L130 74 A18 18 0 1 0 134 82 Z"/>
+              <path d="M160 116 L172 106 A18 18 0 1 0 176 114 Z"/>
+            </g>
+            <circle cx="146" cy="84" r="18" fill="none" stroke="#17140E" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.35"/>
+            <g font-family="'Space Mono',monospace" font-size="12" font-weight="700" text-anchor="middle">
+              <rect x="163" y="45" width="22" height="18" rx="4" fill="#F4EEE2" stroke="#17140E" stroke-width="2"/><text x="174" y="58" fill="#17140E">D</text>
+              <rect x="107" y="75" width="22" height="18" rx="4" fill="#FFC53D" stroke="#17140E" stroke-width="2"/><text x="118" y="88" fill="#17140E">B</text>
+            </g>
+            <!-- the frog, on the pad it has just reached -->
+            <g transform="translate(160 117)">
+              <g fill="#14784F"><rect x="-15" y="3" width="6" height="8"/><rect x="9" y="3" width="6" height="8"/><rect x="-17" y="9" width="9" height="3"/><rect x="8" y="9" width="9" height="3"/><rect x="-14" y="-8" width="5" height="6"/><rect x="9" y="-8" width="5" height="6"/></g>
+              <rect x="-10" y="-10" width="20" height="21" rx="7" fill="#1E9E6A" stroke="#17140E" stroke-width="1.5"/>
+              <g fill="#FBF7EE" stroke="#17140E" stroke-width="1.5"><rect x="-9" y="-14" width="7" height="7"/><rect x="2" y="-14" width="7" height="7"/></g>
+              <g fill="#17140E"><rect x="-7" y="-13" width="3" height="3"/><rect x="4" y="-13" width="3" height="3"/></g>
+            </g>
+            <rect x="24" y="10" width="252" height="148" fill="none" stroke="#17140E" stroke-width="2.5"/>
+          </svg>
+        </div>
+        <div class="game-body">
+          <span class="tag">Find the note</span>
+          <span class="mic">🎤 listens to your playing</span>
+          <h3>Note Hopper</h3>
+          <p>A frog crosses the river on lily pads, each marked with a note from G major. Play that note on your own instrument and it hops on — any octave counts. Take too long and the pad drifts away.</p>
+          <span class="play">Play now</span>
+        </div>
+      </a>
+
+      <a class="game hero-game" href="Theory/scale-brawl.html" style="--art-bg:#2A1E3A;">
+        <div class="game-art">
+          <svg viewBox="0 0 300 168" role="img" aria-label="Scale Brawl: a busker in a blue hoodie faces a conductor who flings notes at them across a stage">
+            <rect x="24" y="10" width="252" height="148" fill="#3A2A52"/>
+            <path d="M24 10 h40 q-10 60 -22 120 h-18 z" fill="#8E1E3C"/>
+            <path d="M276 10 h-40 q10 60 22 120 h18 z" fill="#8E1E3C"/>
+            <rect x="24" y="130" width="252" height="28" fill="#B9874F"/>
+            <line x1="24" y1="130" x2="276" y2="130" stroke="#17140E" stroke-width="2"/>
+            <!-- health bars -->
+            <rect x="36" y="20" width="96" height="9" fill="#2438C8" stroke="#17140E" stroke-width="1.5"/>
+            <rect x="168" y="20" width="96" height="9" fill="#5A2230" stroke="#17140E" stroke-width="1.5"/>
+            <rect x="200" y="20" width="64" height="9" fill="#FF4E86" stroke="#17140E" stroke-width="1.5"/>
+            <!-- the busker -->
+            <g stroke="#17140E" stroke-width="2">
+              <line x1="78" y1="104" x2="70" y2="130" stroke-width="6" stroke="#26305A"/>
+              <line x1="86" y1="104" x2="94" y2="130" stroke-width="6" stroke="#26305A"/>
+              <rect x="68" y="76" width="28" height="32" rx="6" fill="#2438C8"/>
+              <circle cx="82" cy="64" r="11" fill="#E8B48C"/>
+              <path d="M70 62 a13 13 0 0 1 24 0" fill="none" stroke="#FF4E86" stroke-width="3"/>
+              <line x1="94" y1="84" x2="112" y2="80" stroke-width="5" stroke="#2438C8"/>
+              <circle cx="114" cy="80" r="5" fill="#E8B48C"/>
+            </g>
+            <!-- the Baron -->
+            <g stroke="#17140E" stroke-width="2">
+              <line x1="222" y1="102" x2="216" y2="130" stroke-width="6" stroke="#1F1A2E"/>
+              <line x1="230" y1="102" x2="236" y2="130" stroke-width="6" stroke="#1F1A2E"/>
+              <rect x="212" y="70" width="28" height="36" rx="5" fill="#1F1A2E"/>
+              <path d="M222 70 h8 l-4 18 z" fill="#fff" stroke="none"/>
+              <circle cx="226" cy="56" r="11" fill="#F0C9A6"/>
+              <path d="M214 52 a12 12 0 0 1 22 -4" fill="#C9C3B6"/>
+              <path d="M214 60 q6 4 12 0 q-2 6 -12 0z" fill="#C9C3B6"/>
+              <circle cx="220" cy="55" r="3.5" fill="none" stroke="#FFC53D"/>
+              <line x1="212" y1="78" x2="196" y2="66" stroke-width="5" stroke="#1F1A2E"/>
+              <line x1="196" y1="66" x2="176" y2="52" stroke="#fff" stroke-width="2"/>
+            </g>
+            <!-- notes in flight -->
+            <g stroke="#17140E" stroke-width="2">
+              <ellipse cx="160" cy="62" rx="9" ry="7" fill="#F4EEE2" transform="rotate(-20 160 62)"/>
+              <ellipse cx="135" cy="70" rx="9" ry="7" fill="#FFC53D" transform="rotate(-20 135 70)"/>
+            </g>
+            <circle cx="135" cy="70" r="14" fill="none" stroke="#FF4E86" stroke-width="2"/>
+            <text x="160" y="66" font-family="Syne, sans-serif" font-weight="800" font-size="9" text-anchor="middle" fill="#17140E">E</text>
+            <text x="135" y="74" font-family="Syne, sans-serif" font-weight="800" font-size="9" text-anchor="middle" fill="#17140E">C</text>
+            <rect x="24" y="10" width="252" height="148" fill="none" stroke="#17140E" stroke-width="2.5"/>
+          </svg>
+        </div>
+        <div class="game-body">
+          <span class="tag">Fighting game</span>
+          <h3>Scale Brawl</h3>
+          <p>Notes fly at you, written on a card: play them back to block, then fire your own. Fight Baron von Baton, or a friend online. MIDI keyboard, laptop keys or the screen.</p>
+          <span class="play">Play now</span>
+        </div>
+      </a>
+    </div>
   </section>
 
   <div class="wrap">
